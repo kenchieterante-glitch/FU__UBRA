@@ -1,0 +1,364 @@
+/* ═══════════════════════════════════════════════════════════════
+   DASHBOARD — dashboard.css
+   Extends base.css — never redefines base rules
+════════════════════════════════════════════════════════════════ */
+
+/* ── Stat card extras ────────────────────────────────────────── */
+.sc-link {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--maroon);
+    text-decoration: none;
+    margin-top: 6px;
+}
+
+.sc-link:hover {
+    text-decoration: underline;
+}
+
+.stat-card .trend {
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.stat-card .trend.up {
+    color: var(--green);
+}
+
+.stat-card .trend.down {
+    color: var(--red);
+}
+
+.stat-card .trend.neutral {
+    color: var(--muted);
+}
+
+.stat-card.accent-red {
+    border-top: 3px solid var(--red);
+}
+
+.stat-card.accent-red .value {
+    color: var(--red);
+}
+
+.stat-card.accent-amber {
+    border-top: 3px solid var(--amber);
+}
+
+.stat-card.accent-amber .value {
+    color: var(--amber);
+}
+
+.stat-card.accent-green {
+    border-top: 3px solid var(--green);
+}
+
+.stat-card.accent-green .value {
+    color: var(--green);
+}
+
+.stat-card.accent-maroon {
+    border-top: 3px solid var(--maroon);
+}
+
+.stat-card.accent-maroon .value {
+    color: var(--maroon);
+}
+
+/* ── Dash grid (2-col) ───────────────────────────────────────── */
+.dash-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 1100px) {
+    .dash-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* card helpers */
+.card-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--maroon);
+    text-decoration: none;
+}
+
+.card-link:hover {
+    text-decoration: underline;
+}
+
+.empty-cell {
+    color: var(--muted);
+    text-align: center;
+    padding: 20px;
+    font-size: 13px;
+}
+
+/* ── Safety overview panel ───────────────────────────────────── */
+.dsafe-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.dsafe-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    border: 1px solid var(--line);
+    transition: all .2s;
+}
+
+.dsafe-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .08);
+    border-color: transparent;
+}
+
+.dsafe-item i {
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.dsafe-val {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.dsafe-lbl {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 2px;
+}
+
+.dsafe-sub {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.dsafe-fire {
+    background: #fff5f5;
+}
+
+.dsafe-fire i {
+    color: #dc2626;
+}
+
+.dsafe-fire .dsafe-val {
+    color: #dc2626;
+}
+
+.dsafe-clean {
+    background: #fffbeb;
+}
+
+.dsafe-clean i {
+    color: #d97706;
+}
+
+.dsafe-clean .dsafe-val {
+    color: #d97706;
+}
+
+.dsafe-key {
+    background: #f0fdf4;
+}
+
+.dsafe-key i {
+    color: #16a34a;
+}
+
+.dsafe-key .dsafe-val {
+    color: #16a34a;
+}
+
+.dsafe-wo {
+    background: #fdf2f2;
+}
+
+.dsafe-wo i {
+    color: var(--maroon);
+}
+
+.dsafe-wo .dsafe-val {
+    color: var(--maroon);
+}
+
+.dsafe-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px;
+    border-radius: 9px;
+    background: var(--maroon);
+    color: #fff;
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 700;
+    transition: background .2s;
+}
+
+.dsafe-btn:hover {
+    background: var(--maroon-dark);
+}
+
+/* ── Module Quick-Access Grid ────────────────────────────────── */
+.module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.module-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    text-decoration: none;
+    box-shadow: var(--shadow);
+    transition: all .18s;
+}
+
+.module-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .09);
+    border-color: var(--maroon);
+}
+
+.module-card-ai {
+    border: 1.5px solid #2b2b2b;
+    background: #111;
+}
+
+.module-card-ai:hover {
+    border-color: var(--gold);
+}
+
+.mc-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.mc-maroon {
+    background: #fdf2f2;
+    color: var(--maroon);
+}
+
+.mc-gold {
+    background: #fdf6e7;
+    color: var(--gold);
+}
+
+.mc-green {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.mc-blue {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.mc-red {
+    background: #fff5f5;
+    color: #dc2626;
+}
+
+.mc-amber {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.mc-gray {
+    background: #f9fafb;
+    color: #6b7280;
+}
+
+.mc-dark {
+    background: #1f1f1f;
+    color: var(--gold);
+}
+
+.mc-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.mc-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.module-card-ai .mc-title {
+    color: #fff;
+}
+
+.mc-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.module-card-ai .mc-sub {
+    color: #888;
+}
+
+.mc-arrow {
+    color: var(--line);
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+.module-card:hover .mc-arrow {
+    color: var(--maroon);
+}
+
+.mc-ai-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #38d66b;
+    flex-shrink: 0;
+    animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(56, 214, 107, .5);
+    }
+
+    50% {
+        box-shadow: 0 0 0 5px rgba(56, 214, 107, 0);
+    }
+}

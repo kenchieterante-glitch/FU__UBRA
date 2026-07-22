@@ -1,0 +1,1097 @@
+/* ═══════════════════════════════════════════════════════════════
+   TRAVEL MANAGEMENT — travel.css
+   Theme: FU-UBRA maroon  (#800000 / #9B1B1B)
+   Matches: dashboard.css / personnel.css conventions
+════════════════════════════════════════════════════════════════ */
+
+:root {
+    --maroon: #800000;
+    --maroon-dark: #5a0909;
+    --maroon-light: #9B1B1B;
+    --gold: #C9A84C;
+    --surface: #ffffff;
+    --surface-alt: #f8f4f4;
+    --border: #e0d5d5;
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --success: #16a34a;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --info: #2563eb;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(123, 13, 13, .08);
+}
+
+/* ── Layout ──────────────────────────────────────────────────── */
+.travel-wrapper {
+    padding: 1.5rem 2rem;
+}
+
+/* ── Page Header ─────────────────────────────────────────────── */
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+
+.compact-header {
+    align-items: center;
+}
+
+.page-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--maroon);
+    margin: 0;
+}
+
+.page-subtitle {
+    color: var(--text-muted);
+    font-size: .875rem;
+    margin: .25rem 0 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: .6rem;
+    flex-wrap: wrap;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn-primary {
+    background: var(--maroon);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: .5rem 1.1rem;
+    font-size: .85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    transition: background .2s;
+}
+
+.btn-primary:hover {
+    background: var(--maroon-dark);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--maroon);
+    border: 1.5px solid var(--maroon);
+    border-radius: var(--radius);
+    padding: .45rem 1rem;
+    font-size: .85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    transition: all .2s;
+}
+
+.btn-outline:hover {
+    background: var(--maroon);
+    color: #fff;
+}
+
+.btn-outline-sm {
+    background: transparent;
+    color: var(--maroon);
+    border: 1.5px solid var(--maroon);
+    border-radius: 6px;
+    padding: .3rem .75rem;
+    font-size: .78rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+}
+
+/* ── Flash Messages ──────────────────────────────────────────── */
+.flash {
+    padding: .75rem 1.1rem;
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    font-size: .875rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    transition: opacity .5s;
+}
+
+.flash-success {
+    background: #dcfce7;
+    color: #166534;
+    border-left: 4px solid var(--success);
+}
+
+.flash-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border-left: 4px solid var(--danger);
+}
+
+/* ── Summary Cards ───────────────────────────────────────────── */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+
+.summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .85rem .9rem;
+    box-shadow: var(--shadow);
+    border-top: 3px solid var(--border);
+}
+
+.summary-card.pending {
+    border-top-color: var(--warning);
+}
+
+.summary-card.approved {
+    border-top-color: var(--success);
+}
+
+.summary-card.today {
+    border-top-color: var(--info);
+}
+
+.summary-card.completed {
+    border-top-color: var(--maroon);
+}
+
+.summary-card.cancelled {
+    border-top-color: var(--danger);
+}
+
+.summary-card.vehicles {
+    border-top-color: var(--gold);
+}
+
+.summary-label {
+    font-size: .75rem;
+    color: var(--text-muted);
+    margin-bottom: .3rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+
+.summary-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--maroon);
+    line-height: 1;
+}
+
+.summary-sub {
+    font-size: .72rem;
+    margin-top: .4rem;
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+}
+
+.summary-sub.warning {
+    color: var(--warning);
+}
+
+.summary-sub.success {
+    color: var(--success);
+}
+
+.summary-sub.info {
+    color: var(--info);
+}
+
+.summary-sub.danger {
+    color: var(--danger);
+}
+
+.summary-sub.muted {
+    color: var(--text-muted);
+}
+
+/* ── Body Layout ─────────────────────────────────────────────── */
+.travel-body {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 1rem;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .travel-body {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Table Panel ─────────────────────────────────────────────── */
+.table-panel {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.table-toolbar {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+.panel-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--maroon);
+    margin: 0;
+}
+
+.toolbar-right {
+    display: flex;
+    gap: .6rem;
+    align-items: center;
+}
+
+.toolbar-right select,
+.toolbar-right input {
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    padding: .4rem .75rem;
+    font-size: .82rem;
+    color: var(--text);
+    outline: none;
+    background: var(--surface-alt);
+}
+
+.toolbar-right select:focus,
+.toolbar-right input:focus {
+    border-color: var(--maroon);
+}
+
+.table-scroll {
+    overflow-x: auto;
+}
+
+.travel-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .835rem;
+}
+
+.travel-table thead tr {
+    background: var(--maroon);
+    color: #fff;
+}
+
+.travel-table thead th {
+    padding: .75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.travel-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+}
+
+.travel-table tbody tr:hover {
+    background: var(--surface-alt);
+}
+
+.travel-table tbody td {
+    padding: .7rem 1rem;
+    vertical-align: middle;
+}
+
+.trip-id {
+    font-family: monospace;
+    font-size: .78rem;
+    color: var(--maroon);
+    font-weight: 700;
+}
+
+.requester-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.req-name {
+    font-weight: 600;
+}
+
+.req-dept {
+    font-size: .72rem;
+    color: var(--text-muted);
+}
+
+.purpose-cell {
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.datetime-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.time-range {
+    font-size: .75rem;
+    color: var(--text-muted);
+}
+
+.staff-cell {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+
+.staff-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .72rem;
+    padding: .2rem .55rem;
+    border-radius: 12px;
+    width: fit-content;
+}
+
+.staff-badge.driver {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.staff-badge.vehicle {
+    background: #f3e8ff;
+    color: #6b21a8;
+}
+
+.staff-badge.unassigned {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.empty-row {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+}
+
+/* ── Status Badges ───────────────────────────────────────────── */
+.status-badge {
+    display: inline-block;
+    padding: .25rem .65rem;
+    border-radius: 12px;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.badge-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-approved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-completed {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.badge-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* ── Action Buttons ──────────────────────────────────────────── */
+.action-btns {
+    display: flex;
+    gap: .35rem;
+    align-items: center;
+}
+
+.icon-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .85rem;
+    transition: all .2s;
+}
+
+.icon-btn.ticket {
+    background: #f0f4ff;
+    color: var(--info);
+}
+
+.icon-btn.approve {
+    background: #dcfce7;
+    color: var(--success);
+}
+
+.icon-btn.reject {
+    background: #fee2e2;
+    color: var(--danger);
+}
+
+.icon-btn.complete {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.icon-btn:hover {
+    filter: brightness(.9);
+    transform: scale(1.05);
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.travel-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sidebar-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .85rem .95rem;
+    box-shadow: var(--shadow);
+}
+
+.compact-card {
+    padding-bottom: .7rem;
+}
+
+.sidebar-card-title {
+    font-size: .8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--maroon);
+    margin-bottom: .8rem;
+}
+
+.summary-list {
+    display: grid;
+    gap: .45rem;
+}
+
+.summary-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .5rem .65rem;
+    border-radius: 8px;
+    background: var(--surface-alt);
+    font-size: .78rem;
+}
+
+.summary-list-item span {
+    color: var(--text-muted);
+}
+
+.summary-list-item strong {
+    color: var(--maroon);
+    font-weight: 700;
+}
+
+.quick-btns {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.quick-btn {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem .8rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface-alt);
+    color: var(--text);
+    font-size: .82rem;
+    cursor: pointer;
+    transition: all .2s;
+}
+
+.quick-btn:hover {
+    border-color: var(--maroon);
+    color: var(--maroon);
+}
+
+.quick-btn.primary {
+    background: var(--maroon);
+    color: #fff;
+    border-color: var(--maroon);
+}
+
+.quick-btn.primary:hover {
+    background: var(--maroon-dark);
+}
+
+.quick-btn.wide {
+    justify-content: center;
+}
+
+.stat-row {
+    margin-bottom: .75rem;
+    font-size: .8rem;
+    color: var(--text-muted);
+}
+
+.stat-row>span {
+    display: block;
+    margin-bottom: .3rem;
+}
+
+.stat-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.stat-bar-wrap>span {
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 36px;
+}
+
+.stat-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--maroon);
+    flex: 1;
+    transition: width .4s;
+}
+
+.stat-bar.success {
+    background: var(--success);
+}
+
+/* ── UBRA Card ───────────────────────────────────────────────── */
+.ubra-card {
+    background: var(--maroon);
+    color: #fff;
+}
+
+.ubra-card .sidebar-card-title {
+    color: #fff;
+    opacity: .7;
+}
+
+.ubra-header {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    margin-bottom: .8rem;
+}
+
+.ubra-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: .95rem;
+    color: #fff;
+}
+
+.ubra-name {
+    font-weight: 700;
+    font-size: .9rem;
+    color: #fff;
+}
+
+.ubra-sub {
+    font-size: .72rem;
+    color: rgba(255, 255, 255, .65);
+}
+
+.ubra-title {
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--gold);
+    margin-bottom: .5rem;
+}
+
+.ubra-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 .8rem;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+.ubra-list li {
+    font-size: .78rem;
+    color: rgba(255, 255, 255, .85);
+    display: flex;
+    align-items: flex-start;
+    gap: .3rem;
+}
+
+.ubra-list.small li {
+    font-size: .75rem;
+}
+
+.ubra-actions {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+}
+
+.ubra-btn {
+    padding: .4rem .8rem;
+    border-radius: 7px;
+    border: 1.5px solid rgba(255, 255, 255, .3);
+    background: rgba(255, 255, 255, .1);
+    color: #fff;
+    font-size: .78rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all .2s;
+}
+
+.ubra-btn:hover {
+    background: rgba(255, 255, 255, .2);
+}
+
+.ubra-btn.primary {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--maroon);
+    font-weight: 700;
+}
+
+/* ── Modals ──────────────────────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, .5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-box {
+    background: var(--surface);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 92vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+    animation: modalIn .2s ease;
+}
+
+.modal-box.modal-sm {
+    max-width: 440px;
+}
+
+.modal-box.modal-ticket {
+    max-width: 900px;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(-16px) scale(.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 2;
+}
+
+.modal-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--maroon);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.modal-sub {
+    font-size: .73rem;
+    color: var(--text-muted);
+    margin-top: .15rem;
+}
+
+.ticket-header-right {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: .25rem;
+    border-radius: 6px;
+    transition: color .2s;
+}
+
+.modal-close:hover {
+    color: var(--danger);
+}
+
+.modal-body {
+    padding: 1.4rem;
+}
+
+.modal-footer {
+    padding: 1rem 1.4rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: .6rem;
+}
+
+/* ── Form Styles ─────────────────────────────────────────────── */
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: .9rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+.form-group label {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: .5rem .75rem;
+    font-size: .85rem;
+    color: var(--text);
+    outline: none;
+    background: var(--surface);
+    transition: border-color .2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: var(--maroon);
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.form-group+.form-group {
+    margin-top: .9rem;
+}
+
+.req {
+    color: var(--danger);
+}
+
+.optional {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.btn-cancel {
+    background: var(--surface-alt);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: .5rem 1.1rem;
+    font-size: .85rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+}
+
+.btn-submit {
+    background: var(--maroon);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: .5rem 1.2rem;
+    font-size: .85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    transition: background .2s;
+}
+
+.btn-submit:hover {
+    background: var(--maroon-dark);
+}
+
+.btn-submit.approve-submit {
+    background: var(--success);
+}
+
+.approve-info {
+    font-size: .85rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+/* ── Trip Ticket Modal ───────────────────────────────────────── */
+.ticket-loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: .9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+}
+
+.ticket-loading.error {
+    color: var(--danger);
+}
+
+.ticket-layout {
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+    .ticket-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ticket-section-title {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--maroon);
+    margin-bottom: .7rem;
+}
+
+.ticket-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .6rem;
+}
+
+.tf {
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+}
+
+.tf.full {
+    grid-column: span 2;
+}
+
+.tf span {
+    font-size: .72rem;
+    color: var(--text-muted);
+}
+
+.tf strong {
+    font-size: .83rem;
+    color: var(--text);
+}
+
+/* Timeline */
+.timeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+    padding-bottom: .3rem;
+}
+
+.tl-step {
+    font-size: .7rem;
+    text-align: center;
+    padding: .4rem .6rem;
+    border-radius: 4px;
+    background: var(--border);
+    color: var(--text-muted);
+    position: relative;
+    white-space: nowrap;
+}
+
+.tl-step+.tl-step::before {
+    content: '→';
+    position: absolute;
+    left: -12px;
+    color: var(--text-muted);
+}
+
+.tl-step.done {
+    background: var(--success);
+    color: #fff;
+}
+
+.tl-step.active {
+    background: var(--maroon);
+    color: #fff;
+}
+
+/* Signatures */
+.sigs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .5rem;
+}
+
+.sig-box {
+    text-align: center;
+}
+
+.sig-line {
+    border-bottom: 1.5px solid var(--border);
+    height: 48px;
+    margin-bottom: .3rem;
+}
+
+.sig-label {
+    font-size: .68rem;
+    color: var(--text-muted);
+}
+
+/* Right ticket panel */
+.ticket-status-panel {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.ts-label {
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--maroon);
+    margin-bottom: .5rem;
+}
+
+.qr-placeholder {
+    margin: 1rem auto;
+}
+
+.ts-sub {
+    font-size: .72rem;
+    color: var(--text-muted);
+    margin-bottom: .5rem;
+}
+
+.ts-verify {
+    font-size: .78rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .3rem;
+}
+
+.ts-verify.success {
+    color: var(--success);
+}
+
+.ubra-mini {
+    background: var(--maroon);
+    border-radius: var(--radius);
+    padding: .9rem 1rem;
+    color: #fff;
+}
+
+.ubra-note {
+    font-size: .68rem;
+    color: rgba(255, 255, 255, .6);
+    margin: .5rem 0 .75rem;
+    font-style: italic;
+}
+
+.ticket-action-row {
+    display: flex;
+    gap: .5rem;
+}
+
+.ticket-action-row .btn-submit,
+.ticket-action-row .btn-cancel {
+    flex: 1;
+    justify-content: center;
+    font-size: .78rem;
+    padding: .4rem;
+}
+
+.ticket-action-row .btn-cancel {
+    background: rgba(255, 255, 255, .1);
+    border-color: rgba(255, 255, 255, .2);
+    color: #fff;
+}
+
+.text-success {
+    color: #4ade80;
+}
