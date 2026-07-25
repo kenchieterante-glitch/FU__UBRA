@@ -83,7 +83,7 @@
     </div>
   </aside>
 
-  <!-- ============================ MAIN CONTENT ========================= -->
+  <!--MAIN CONTENT  -->
   <div class="main-content">
     <header class="topbar">
       <div class="search"><i class="fa-solid fa-magnifying-glass"></i>

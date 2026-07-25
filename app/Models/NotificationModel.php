@@ -8,9 +8,13 @@ class NotificationModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [
-        'category', 'title', 'description', 'recipient_id',
-        'recipient_type', 'priority', 'status'
+        'category', 'description', 'recipient', 'priority', 'status', 'channel', 'is_read', 'read_at', 'created_at'
     ];
+
+    public function getAllSorted()
+    {
+        return $this->orderBy('created_at', 'DESC')->findAll();
+    }
 
     public function getUnreadCount()
     {
@@ -19,6 +23,6 @@ class NotificationModel extends Model
 
     public function markAllRead()
     {
-        $this->where('status', 'Unread')->set('status', 'Read')->update();
+        $this->where('status', 'Unread')->set(['status' => 'Read', 'is_read' => 1])->update();
     }
 }

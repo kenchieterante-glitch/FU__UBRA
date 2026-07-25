@@ -47,7 +47,7 @@
     <div class="card-head">
         <h3>Change Password</h3>
     </div>
-    <form method="post" action="<?= base_url('profile/change-password') ?>">
+    <form method="post" action="<?= base_url('profile/changePassword') ?>">
         <?= csrf_field() ?>
         <div class="form-grid">
             <div class="form-group">

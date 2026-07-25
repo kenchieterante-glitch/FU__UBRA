@@ -6,11 +6,11 @@ class BorrowModel extends Model
 {
     protected $table         = 'borrow_records';
     protected $primaryKey    = 'id';
-    protected $useTimestamps = true;
+    protected $useTimestamps = false;
     protected $allowedFields = [
-        'tool_id','borrower_id','borrowed_date','expected_return','actual_return',
+        'tool_id','borrower','department','borrowed_date','expected_return','actual_return',
         'status','condition_on_borrow','condition_on_return','remarks',
-        'is_archived','archived_at','last_activity_at'
+        'is_archived','archived_at','last_activity_at','created_at'
     ];
 
     public function getAllWithDetails()

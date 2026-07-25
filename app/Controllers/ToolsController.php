@@ -38,6 +38,7 @@ class ToolsController extends BaseController
             'total_tools'     => count($tools),
             'available_tools' => $this->toolsModel->where('availability', 'Available')->where('is_archived', 0)->countAllResults(),
             'borrowed_tools'  => $this->toolsModel->where('availability', 'Borrowed')->where('is_archived', 0)->countAllResults(),
+            'maintenance_tools' => $this->toolsModel->where('condition_status', 'Poor')->where('is_archived', 0)->countAllResults(),
             'personnel'       => $this->personnelModel->findAll(),
         ];
 
@@ -46,12 +47,14 @@ class ToolsController extends BaseController
 
     public function add()
     {
+        $custodianName = $this->request->getPost('custodian_id') ?? $this->request->getPost('custodian');
+
         $this->toolsModel->insert([
             'asset_name'       => $this->request->getPost('asset_name'),
             'asset_code'       => $this->request->getPost('asset_code'),
             'category'         => $this->request->getPost('category'),
             'location'         => $this->request->getPost('location'),
-            'custodian_id'     => $this->request->getPost('custodian_id'),
+            'custodian'        => $custodianName,
             'condition_status' => $this->request->getPost('condition_status') ?? 'Excellent',
             'availability'     => 'Available',
             'last_activity_at' => date('Y-m-d H:i:s'),
@@ -62,12 +65,14 @@ class ToolsController extends BaseController
 
     public function edit($id)
     {
+        $custodianName = $this->request->getPost('custodian_id') ?? $this->request->getPost('custodian');
+
         $this->toolsModel->update($id, [
             'asset_name'       => $this->request->getPost('asset_name'),
             'asset_code'       => $this->request->getPost('asset_code'),
             'category'         => $this->request->getPost('category'),
             'location'         => $this->request->getPost('location'),
-            'custodian_id'     => $this->request->getPost('custodian_id'),
+            'custodian'        => $custodianName,
             'condition_status' => $this->request->getPost('condition_status'),
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
@@ -87,14 +92,18 @@ class ToolsController extends BaseController
     // --- BORROW ---
     public function borrow($toolId)
     {
+        $borrowerName = $this->request->getPost('borrower_id') ?? $this->request->getPost('borrower');
+
         $this->borrowModel->insert([
             'tool_id'           => $toolId,
-            'borrower_id'       => $this->request->getPost('borrower_id'),
-            'borrowed_date'     => date('Y-m-d'),
+            'borrower'         => $borrowerName,
+            'department'       => $this->request->getPost('department'),
+            'borrowed_date'    => date('Y-m-d'),
             'expected_return'   => $this->request->getPost('expected_return'),
             'condition_on_borrow' => $this->request->getPost('condition_on_borrow') ?? 'Excellent',
-            'status'            => 'Borrowed',
-            'last_activity_at'  => date('Y-m-d H:i:s'),
+            'status'           => 'Borrowed',
+            'created_at'       => date('Y-m-d H:i:s'),
+            'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
 
         $this->toolsModel->update($toolId, [

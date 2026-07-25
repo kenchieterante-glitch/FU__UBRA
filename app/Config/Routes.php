@@ -26,7 +26,9 @@ $routes->get ('personnel/janitors',  'PersonnelController::janitors');
 $routes->get ('personnel/carpentries','PersonnelController::carpentries');
 $routes->get ('personnel/maintenance','PersonnelController::maintenance');
 $routes->post('personnel/add',       'PersonnelController::add');
+$routes->post('personnel/add/',      'PersonnelController::add');
 $routes->post('personnel/edit/(:num)','PersonnelController::edit/$1');
+$routes->post('personnel/edit/(:num)/','PersonnelController::edit/$1');
 $routes->get ('personnel/delete/(:num)','PersonnelController::delete/$1');
 
 // ============================================================
@@ -156,6 +158,7 @@ $routes->get ('profile', 'ProfileController::index');
 $routes->post('profile', 'ProfileController::index');
 $routes->post('profile/updateProfile',    'ProfileController::updateProfile');
 $routes->post('profile/changePassword',   'ProfileController::changePassword');
+$routes->post('profile/change-password',  'ProfileController::changePassword');
 $routes->post('profile/updateSettings',   'ProfileController::updateSettings');
 
 // ============================================================

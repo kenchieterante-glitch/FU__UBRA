@@ -46,7 +46,7 @@
         <div class="modal" id="editModal<?= $p['id'] ?>">
           <div class="modal-box">
             <h3>Edit Personnel</h3>
-            <form action="<?= base_url('personnel/edit/'.$p['id']) ?>" method="post">
+            <form action="<?= site_url('personnel/edit/'.$p['id']) ?>" method="post">
               <?= csrf_field() ?>
               <label>Employee ID</label>
               <input type="text" name="emp_id" value="<?= esc($p['emp_id']) ?>" required>
@@ -89,7 +89,7 @@
 <div class="modal" id="addModal">
   <div class="modal-box">
     <h3>Add Personnel</h3>
-    <form action="<?= base_url('personnel/add') ?>" method="post">
+    <form action="<?= site_url('personnel/add') ?>" method="post">
       <?= csrf_field() ?>
       <label>Employee ID</label>
       <input type="text" name="emp_id" required>

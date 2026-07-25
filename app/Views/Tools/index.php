@@ -17,19 +17,19 @@
 <div class="stat-cards">
   <div class="stat-card">
     <h3>Total Tools</h3>
-    <div class="value"><?= $total_tools ?></div>
+    <div class="value"><?= esc($total_tools ?? 0) ?></div>
   </div>
   <div class="stat-card">
     <h3>Available Tools</h3>
-    <div class="value"><?= $available_tools ?></div>
+    <div class="value"><?= esc($available_tools ?? 0) ?></div>
   </div>
   <div class="stat-card">
     <h3>Borrowed Tools</h3>
-    <div class="value"><?= $borrowed_tools ?></div>
+    <div class="value"><?= esc($borrowed_tools ?? 0) ?></div>
   </div>
   <div class="stat-card">
     <h3>Needs Maintenance</h3>
-    <div class="value"><?= $maintenance_tools ?></div>
+    <div class="value"><?= esc($maintenance_tools ?? 0) ?></div>
   </div>
 </div>
 
@@ -54,7 +54,7 @@
           <td><?= esc($t['asset_code']) ?></td>
           <td><?= esc($t['category']) ?></td>
           <td><?= esc($t['location']) ?></td>
-          <td><?= esc($t['custodian']) ?></td>
+          <td><?= esc($t['custodian_name'] ?? 'Unassigned') ?></td>
           <td><span class="status-badge status-<?= strtolower($t['condition_status']) ?>"><?= esc($t['condition_status']) ?></span></td>
           <td><span class="status-badge status-<?= strtolower($t['availability']) ?>"><?= esc($t['availability']) ?></span></td>
           <td class="action-cell">
@@ -83,7 +83,12 @@
               <label>Location</label>
               <input type="text" name="location" value="<?= esc($t['location']) ?>">
               <label>Custodian</label>
-              <input type="text" name="custodian" value="<?= esc($t['custodian']) ?>">
+              <select name="custodian">
+                <option value="">— Unassigned —</option>
+                <?php foreach ($personnel as $person): ?>
+                  <option value="<?= esc($person['full_name']) ?>" <?= ($t['custodian_name'] ?? '') === $person['full_name'] ? 'selected' : '' ?>><?= esc($person['full_name']) ?></option>
+                <?php endforeach; ?>
+              </select>
               <label>Condition</label>
               <select name="condition_status">
                 <option <?= $t['condition_status']=='Excellent'?'selected':'' ?>>Excellent</option>
@@ -105,12 +110,24 @@
             <h3>Borrow Tool</h3>
             <form action="<?= base_url('tools/borrow/'.$t['id']) ?>" method="post">
               <?= csrf_field() ?>
-              <label>Borrower Name</label>
-              <input type="text" name="borrower" required>
+              <label>Borrower</label>
+              <select name="borrower" required>
+                <option value="">— Select Borrower —</option>
+                <?php foreach ($personnel as $person): ?>
+                  <option value="<?= esc($person['full_name']) ?>"><?= esc($person['full_name']) ?></option>
+                <?php endforeach; ?>
+              </select>
               <label>Department</label>
               <input type="text" name="department">
               <label>Expected Return Date</label>
               <input type="date" name="expected_return">
+              <label>Condition on Borrow</label>
+              <select name="condition_on_borrow">
+                <option>Excellent</option>
+                <option>Good</option>
+                <option>Fair</option>
+                <option>Poor</option>
+              </select>
               <div class="modal-actions">
                 <button type="button" onclick="document.getElementById('borrowModal<?= $t['id'] ?>').style.display='none'">Cancel</button>
                 <button type="submit" class="btn-maroon">Confirm Borrow</button>
@@ -123,12 +140,12 @@
         <div class="modal" id="returnModal<?= $t['id'] ?>">
           <div class="modal-box">
             <h3>Return Tool</h3>
-            <form action="<?= base_url('tools/return/'.$t['id']) ?>" method="post">
+            <form action="<?= base_url('tools/returnTool/'.$t['id']) ?>" method="post">
               <?= csrf_field() ?>
               <label>Returned By</label>
               <input type="text" name="returned_by" required>
               <label>Condition Upon Return</label>
-              <select name="condition_status">
+              <select name="condition_on_return">
                 <option>Excellent</option>
                 <option>Good</option>
                 <option>Fair</option>
@@ -166,7 +183,12 @@
       <label>Location</label>
       <input type="text" name="location">
       <label>Custodian</label>
-      <input type="text" name="custodian">
+      <select name="custodian">
+        <option value="">— Unassigned —</option>
+        <?php foreach ($personnel as $person): ?>
+          <option value="<?= esc($person['full_name']) ?>"><?= esc($person['full_name']) ?></option>
+        <?php endforeach; ?>
+      </select>
       <label>Condition</label>
       <select name="condition_status">
         <option>Excellent</option>

@@ -180,12 +180,11 @@ class SettingsController extends BaseController
             $exists = $this->db->table('system_settings')->where('setting_key', $key)->countAllResults();
             if ($exists) {
                 $this->db->table('system_settings')->where('setting_key', $key)
-                    ->update(['setting_value' => $value, 'updated_at' => date('Y-m-d H:i:s')]);
+                    ->update(['setting_value' => $value]);
             } else {
                 $this->db->table('system_settings')->insert([
                     'setting_key'   => $key,
                     'setting_value' => $value,
-                    'updated_at'    => date('Y-m-d H:i:s'),
                 ]);
             }
         } catch (\Exception $e) {}

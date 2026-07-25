@@ -99,30 +99,50 @@ class PersonnelController extends BaseController
 
     public function add()
     {
-        $this->personnelModel->insert([
-            'emp_id'        => $this->request->getPost('emp_id'),
-            'full_name'     => $this->request->getPost('full_name'),
-            'email'         => $this->request->getPost('email'),
-            'department_id' => $this->request->getPost('department_id'),
-            'position'      => $this->request->getPost('position'),
-            'assigned_task' => $this->request->getPost('assigned_task'),
-            'status'        => $this->request->getPost('status') ?? 'Active',
-        ]);
+        $empId = trim((string) $this->request->getPost('emp_id'));
+
+        if ($empId !== '' && $this->personnelModel->isEmpIdTaken($empId)) {
+            return redirect()->back()->withInput()->with('error', 'Employee ID already exists.');
+        }
+
+        try {
+            $this->personnelModel->insert([
+                'emp_id'        => $empId,
+                'full_name'     => $this->request->getPost('full_name'),
+                'email'         => $this->request->getPost('email'),
+                'department_id' => $this->request->getPost('department_id'),
+                'position'      => $this->request->getPost('position'),
+                'assigned_task' => $this->request->getPost('assigned_task'),
+                'status'        => $this->request->getPost('status') ?? 'Active',
+            ]);
+        } catch (\CodeIgniter\Database\Exceptions\DatabaseException $e) {
+            return redirect()->back()->withInput()->with('error', 'Could not save personnel because the employee ID is already in use.');
+        }
 
         return redirect()->to('/personnel')->with('success', 'Personnel added successfully.');
     }
 
     public function edit($id)
     {
-        $this->personnelModel->update($id, [
-            'emp_id'        => $this->request->getPost('emp_id'),
-            'full_name'     => $this->request->getPost('full_name'),
-            'email'         => $this->request->getPost('email'),
-            'department_id' => $this->request->getPost('department_id'),
-            'position'      => $this->request->getPost('position'),
-            'assigned_task' => $this->request->getPost('assigned_task'),
-            'status'        => $this->request->getPost('status'),
-        ]);
+        $empId = trim((string) $this->request->getPost('emp_id'));
+
+        if ($empId !== '' && $this->personnelModel->isEmpIdTaken($empId, $id)) {
+            return redirect()->back()->withInput()->with('error', 'Employee ID already exists.');
+        }
+
+        try {
+            $this->personnelModel->update($id, [
+                'emp_id'        => $empId,
+                'full_name'     => $this->request->getPost('full_name'),
+                'email'         => $this->request->getPost('email'),
+                'department_id' => $this->request->getPost('department_id'),
+                'position'      => $this->request->getPost('position'),
+                'assigned_task' => $this->request->getPost('assigned_task'),
+                'status'        => $this->request->getPost('status'),
+            ]);
+        } catch (\CodeIgniter\Database\Exceptions\DatabaseException $e) {
+            return redirect()->back()->withInput()->with('error', 'Could not save personnel because the employee ID is already in use.');
+        }
 
         return redirect()->to('/personnel')->with('success', 'Personnel updated successfully.');
     }

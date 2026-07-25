@@ -6,10 +6,10 @@ class PersonnelModel extends Model
 {
     protected $table         = 'personnel';
     protected $primaryKey    = 'id';
-    protected $useTimestamps = true;
+    protected $useTimestamps = false;
     protected $allowedFields = [
         'emp_id','user_id','full_name','email','department_id','position',
-        'assigned_task','status'
+        'assigned_task','status','created_at'
     ];
 
     public function getByPositionKeyword($keyword)
@@ -28,5 +28,16 @@ class PersonnelModel extends Model
     public function getDrivers()
     {
         return $this->like('position', 'Driver')->findAll();
+    }
+
+    public function isEmpIdTaken($empId, $excludeId = null)
+    {
+        $builder = $this->where('emp_id', $empId);
+
+        if ($excludeId !== null) {
+            $builder->where('id !=', $excludeId);
+        }
+
+        return $builder->countAllResults() > 0;
     }
 }

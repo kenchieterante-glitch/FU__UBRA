@@ -6,9 +6,9 @@ class ToolsModel extends Model
 {
     protected $table         = 'tools';
     protected $primaryKey    = 'id';
-    protected $useTimestamps = true;
+    protected $useTimestamps = false;
     protected $allowedFields = [
-        'asset_name','asset_code','category','location','custodian_id',
+        'asset_name','asset_code','category','location','custodian',
         'condition_status','availability','is_archived','archived_at','last_activity_at'
     ];
 
@@ -19,8 +19,7 @@ class ToolsModel extends Model
 
     public function getAllWithDetails()
     {
-        $builder = $this->select('tools.*, p.full_name as custodian_name')
-                        ->join('personnel p', 'p.id = tools.custodian_id', 'left')
+        $builder = $this->select('tools.*, tools.custodian as custodian_name')
                         ->where('tools.is_archived', 0)
                         ->orderBy('tools.id', 'DESC');
         return $builder->findAll();
