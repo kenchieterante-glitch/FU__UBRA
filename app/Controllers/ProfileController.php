@@ -40,9 +40,10 @@ class ProfileController extends BaseController
 
         $user_id = $this->session->get('user_id');
         $this->db->table('users')->where('id', $user_id)->update([
-            'name'     => $this->request->getPost('name'),
-            'email'    => $this->request->getPost('email'),
-            'username' => $this->request->getPost('username'),
+            'name'    => $this->request->getPost('name'),
+            'email'   => $this->request->getPost('email'),
+            'emp_id'  => $this->request->getPost('emp_id'),
+            'username'=> $this->request->getPost('emp_id'),
         ]);
 
         $this->session->setFlashdata('success', 'Profile updated successfully.');

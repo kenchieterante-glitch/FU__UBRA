@@ -1,8 +1,8 @@
-<?= $this->extend('layouts/main') ?>
+<?= $this->extend('layouts/auth') ?>
 
 <?= $this->section('content') ?>
 
-<div style="max-width:400px; margin:40px auto; padding:20px;">
+<div style="max-width:400px; margin:0 auto; padding:0;">
     <div style="text-align:center; margin-bottom:30px;">
         <h1>FU-UBRA</h1>
         <p>Sign in to your account</p>
@@ -14,12 +14,12 @@
         </div>
     <?php endif; ?>
 
-    <form action="<?= base_url('auth/login') ?>" method="post" style="background:#fff; padding:25px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+    <form action="<?= base_url('login') ?>" method="post" style="background:#fff; padding:25px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
         <?= csrf_field() ?>
 
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px;">Username</label>
-            <input type="text" name="username" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
+            <label style="display:block; margin-bottom:5px;">Employee ID</label>
+            <input type="text" name="employee_id" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" placeholder="Enter your employee ID">
         </div>
 
         <div style="margin-bottom:20px;">

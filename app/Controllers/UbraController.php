@@ -18,7 +18,7 @@ class UbraController extends BaseController
 
     public function index()
     {
-        if (!$this->session->get('isLoggedIn')) return redirect()->to('/auth/login');
+        if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
 
         $data = [
             'title'        => 'Mr. UBRA Assistant',

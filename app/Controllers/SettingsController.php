@@ -19,6 +19,15 @@ class SettingsController extends BaseController
 
         $settings = $this->getSettings();
         $users    = $this->db->table('users')->get()->getResultArray();
+        foreach ($users as &$user) {
+            if (empty($user['id']) && !empty($user['user_id'])) {
+                $user['id'] = $user['user_id'];
+            }
+            if (empty($user['id'])) {
+                $user['id'] = null;
+            }
+        }
+        unset($user);
 
         $logs = [];
         try {
@@ -26,6 +35,12 @@ class SettingsController extends BaseController
                              ->orderBy('id', 'DESC')
                              ->limit(50)
                              ->get()->getResultArray();
+
+            foreach ($logs as &$log) {
+                $log['description'] = $log['description'] ?? ($log['action'] ?? 'Activity recorded');
+                $log['created_at']  = $log['created_at'] ?? null;
+            }
+            unset($log);
         } catch (\Exception $e) {}
 
         $data = [
@@ -98,25 +113,26 @@ class SettingsController extends BaseController
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
 
-        $username = $this->request->getPost('username');
-        $email    = $this->request->getPost('email');
-        $role     = $this->request->getPost('role') ?? 'Staff';
-        $password = $this->request->getPost('password');
+        $employeeId = $this->request->getPost('emp_id');
+        $email      = $this->request->getPost('email');
+        $role       = $this->request->getPost('role') ?? 'Staff';
+        $password   = $this->request->getPost('password');
 
-        if (empty($username) || empty($email) || empty($password)) {
-            $this->session->setFlashdata('error', 'Username, email, and password are required.');
+        if (empty($employeeId) || empty($email) || empty($password)) {
+            $this->session->setFlashdata('error', 'Employee ID, email, and password are required.');
             return redirect()->to('/settings');
         }
 
         $this->db->table('users')->insert([
-            'username'   => $username,
+            'emp_id'     => $employeeId,
+            'username'   => $employeeId,
             'email'      => $email,
             'role'       => $role,
             'password'   => password_hash($password, PASSWORD_BCRYPT),
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
-        $this->session->setFlashdata('success', "User {$username} created.");
+        $this->session->setFlashdata('success', "User {$employeeId} created.");
         return redirect()->to('/settings');
     }
 

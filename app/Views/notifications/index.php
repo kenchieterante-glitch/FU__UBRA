@@ -21,7 +21,17 @@
         </div>
     </div>
 
-    <?php if (!empty($flash_success)): ?>
+    <?php
+$notifications = $notifications ?? [];
+$unread_count = $unread_count ?? 0;
+$today_count = $today_count ?? 0;
+$upcoming_count = $upcoming_count ?? 0;
+$critical_count = $critical_count ?? 0;
+$email_count = $email_count ?? 0;
+$flash_success = $flash_success ?? '';
+?>
+
+<?php if (!empty($flash_success)): ?>
         <div class="flash flash-success"><i class="bi bi-check-circle-fill"></i> <?= esc($flash_success) ?></div>
     <?php endif; ?>
 
@@ -77,22 +87,41 @@
             <div class="table-toolbar">
                 <h2 class="panel-title">Operational Alerts Log</h2>
                 <div class="toolbar-right">
-                    <select id="catFilter" onchange="filterTable()">
-                        <option value="">All Categories</option>
-                        <option value="Vehicle Inspection">Vehicle Inspection</option>
-                        <option value="Travel Reminder">Travel Reminder</option>
-                        <option value="Air-Con Cleaning">Air-Con Cleaning</option>
-                        <option value="Janitorial Assignment">Janitorial Assignment</option>
-                        <option value="Inventory Low Stock">Inventory Low Stock</option>
-                        <option value="Vehicle Expiry">Vehicle Expiry</option>
-                    </select>
-                    <select id="priFilter" onchange="filterTable()">
-                        <option value="">All Priorities</option>
-                        <option value="CRITICAL">Critical</option>
-                        <option value="MODERATE">Moderate</option>
-                        <option value="ROUTINE">Routine</option>
-                    </select>
-                    <input type="text" id="searchInput" placeholder="Search notifications..." onkeyup="filterTable()">
+                    <div class="toolbar-search">
+                        <button type="button" class="search-icon-btn" onclick="toggleNotificationsSearch()" aria-label="Search alerts">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        <input type="text" id="searchInput" class="toolbar-search-input hidden" placeholder="Search alerts, recipients, or categories" oninput="filterTable()" style="display:none;">
+                    </div>
+                    <div class="filter-menu-wrapper">
+                        <button type="button" class="filter-btn" onclick="toggleNotificationsFilterMenu()" aria-label="Open filters">
+                            <i class="bi bi-funnel"></i>
+                        </button>
+                        <div class="filter-popup" id="notificationsFilterPopup">
+                            <div class="filter-popup-title">Filter</div>
+                            <div class="filter-row">
+                                <label for="catFilter"><i class="bi bi-tags"></i> Category</label>
+                                <select id="catFilter" onchange="filterTable()">
+                                    <option value=""> All Categories</option>
+                                    <option value="Vehicle Inspection"> Vehicle Inspection</option>
+                                    <option value="Travel Reminder"> Travel Reminder</option>
+                                    <option value="Air-Con Cleaning"> Air-Con Cleaning</option>
+                                    <option value="Janitorial Assignment"> Janitorial Assignment</option>
+                                    <option value="Inventory Low Stock"> Inventory Low Stock</option>
+                                    <option value="Vehicle Expiry">🗓 Vehicle Expiry</option>
+                                </select>
+                            </div>
+                            <div class="filter-row">
+                                <label for="priFilter"><i class="bi bi-flag"></i> Priority</label>
+                                <select id="priFilter" onchange="filterTable()">
+                                    <option value=""> All Priorities</option>
+                                    <option value="CRITICAL"> Critical</option>
+                                    <option value="MODERATE"> Moderate</option>
+                                    <option value="ROUTINE"> Routine</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -237,6 +266,33 @@ function filterTable() {
         row.style.display = (matchCat && matchPri && matchTerm) ? '' : 'none';
     });
 }
+
+function toggleNotificationsSearch() {
+    const input = document.getElementById('searchInput');
+    const isHidden = input.classList.contains('hidden');
+
+    if (isHidden) {
+        input.classList.remove('hidden');
+        input.style.display = '';
+        input.focus();
+    } else {
+        input.classList.add('hidden');
+        input.value = '';
+        input.style.display = 'none';
+        filterTable();
+    }
+}
+
+function toggleNotificationsFilterMenu() {
+    const popup = document.getElementById('notificationsFilterPopup');
+    popup.classList.toggle('visible');
+}
+
+window.addEventListener('click', function (e) {
+    const wrapper = e.target.closest('.filter-menu-wrapper');
+    const popup = document.getElementById('notificationsFilterPopup');
+    if (!wrapper) popup.classList.remove('visible');
+});
 
 // ── Action button (Verify / Notify / Assign / Order …) ────────
 function doAction(id, action, btn) {

@@ -29,8 +29,8 @@
                 <input type="text" name="name" value="<?= esc($user['name'] ?? '') ?>" required>
             </div>
             <div class="form-group">
-                <label>Username</label>
-                <input type="text" name="username" value="<?= esc($user['username'] ?? '') ?>" required>
+                <label>Employee ID</label>
+                <input type="text" name="emp_id" value="<?= esc($user['emp_id'] ?? '') ?>" required>
             </div>
             <div class="form-group">
                 <label>Email</label>

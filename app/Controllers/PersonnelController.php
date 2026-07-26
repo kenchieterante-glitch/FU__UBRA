@@ -23,7 +23,7 @@ class PersonnelController extends BaseController
     public function index()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/auth/login');
+            return redirect()->to('/login');
         }
 
         $data = [
@@ -38,7 +38,7 @@ class PersonnelController extends BaseController
     public function drivers()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/auth/login');
+            return redirect()->to('/login');
         }
 
         $data = [
@@ -53,7 +53,7 @@ class PersonnelController extends BaseController
     public function janitors()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/auth/login');
+            return redirect()->to('/login');
         }
 
         $data = [
@@ -68,7 +68,7 @@ class PersonnelController extends BaseController
     public function carpentries()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/auth/login');
+            return redirect()->to('/login');
         }
 
         $data = [
@@ -83,7 +83,7 @@ class PersonnelController extends BaseController
     public function maintenance()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/auth/login');
+            return redirect()->to('/login');
         }
 
         $data = [

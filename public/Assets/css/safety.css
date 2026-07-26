@@ -218,10 +218,17 @@
     grid-template-columns: 1fr;
     gap: 1rem;
     transition: grid-template-columns .35s ease;
+    min-width: 0;
 }
 
 .map-layout.drilled {
-    grid-template-columns: 1fr 400px;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    align-items: start;
+}
+
+.map-container,
+.drill-panel {
+    min-width: 0;
 }
 
 @media(max-width:1100px) {
@@ -366,6 +373,8 @@
     max-height: 600px;
     box-shadow: var(--shad-lg);
     animation: slideIn .25s ease;
+    min-width: 0;
+    word-wrap: break-word;
 }
 
 @keyframes slideIn {
@@ -422,9 +431,11 @@
 /* FE card grid */
 .dp-fe-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: 1fr;
     gap: .6rem;
     margin-bottom: 1rem;
+    min-width: 0;
+    width: 100%;
 }
 
 .fe-card {
@@ -432,6 +443,30 @@
     border-radius: 10px;
     padding: .7rem;
     background: var(--bg);
+    min-width: 0;
+    width: 100%;
+    overflow-wrap: break-word;
+}
+
+.fec-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: .35rem;
+    font-size: .7rem;
+    padding: .15rem 0;
+    border-bottom: 1px dashed var(--bdr);
+    min-width: 0;
+}
+
+.fec-row span,
+.fec-row strong {
+    min-width: 0;
+    white-space: normal;
+}
+
+.fec-row span {
+    color: var(--muted);
 }
 
 .fe-card.fe-urgent {
@@ -465,10 +500,17 @@
 
 .fec-row {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
+    gap: .35rem;
     font-size: .7rem;
     padding: .15rem 0;
     border-bottom: 1px dashed var(--bdr);
+}
+
+.fec-row span,
+.fec-row strong {
+    min-width: 0;
 }
 
 .fec-row span {

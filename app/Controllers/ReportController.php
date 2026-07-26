@@ -192,8 +192,20 @@ class ReportController extends BaseController
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
 
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="' . $type . '_' . date('Ymd') . '.csv"');
+        $format = strtolower($this->request->getGet('format') ?? 'csv');
+        $filename = $type . '_' . date('Ymd');
+
+        if ($format === 'pdf') {
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: attachment; filename="' . $filename . '.pdf"');
+            echo $this->buildSimplePdf($type);
+            exit;
+        }
+
+        $contentType = $format === 'excel' ? 'application/vnd.ms-excel' : 'text/csv';
+        $extension = $format === 'excel' ? 'xls' : 'csv';
+        header('Content-Type: ' . $contentType);
+        header('Content-Disposition: attachment; filename="' . $filename . '.' . $extension . '"');
         $out = fopen('php://output', 'w');
 
         try {
@@ -224,6 +236,35 @@ class ReportController extends BaseController
 
         fclose($out);
         exit;
+    }
+
+    private function buildSimplePdf(string $type): string
+    {
+        $title = ucfirst($type) . ' Report';
+        $body = 'This export was generated from the reports module.';
+        $escapedTitle = str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $title);
+        $escapedBody = str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $body);
+        $stream = "BT /F1 16 Tf 50 770 Td ($escapedTitle) Tj 0 -20 Td ($escapedBody) Tj ET";
+        $length = strlen($stream);
+
+        $pdf = "%PDF-1.4\n";
+        $pdf .= "1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n";
+        $pdf .= "2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n";
+        $pdf .= "3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>endobj\n";
+        $pdf .= "4 0 obj<< /Length {$length} >>stream\n{$stream}\nendstream\nendobj\n";
+        $pdf .= "5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n";
+        $pdf .= "xref\n";
+        $pdf .= "0 6\n";
+        $pdf .= "0000000000 65535 f \n";
+        $pdf .= "0000000010 00000 n \n";
+        $pdf .= "0000000062 00000 n \n";
+        $pdf .= "0000000119 00000 n \n";
+        $pdf .= "0000000207 00000 n \n";
+        $pdf .= "0000000304 00000 n \n";
+        $pdf .= "trailer<< /Size 6 /Root 1 0 R >>\n";
+        $pdf .= "startxref\n0\n%%EOF\n";
+
+        return $pdf;
     }
 
     public function chartData()

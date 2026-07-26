@@ -4,6 +4,25 @@
   $fullName = session()->get('full_name') ?? 'System Admin';
   $role     = session()->get('role') ?? 'Operations';
   $initials = strtoupper(substr($fullName,0,1) . (strpos($fullName,' ') !== false ? substr($fullName, strpos($fullName,' ')+1,1) : ''));
+  $logoAsset = null;
+  $logoCandidates = [
+      FCPATH . 'uploads/logo.png',
+      FCPATH . 'uploads/logo.jpg',
+      FCPATH . 'uploads/logo.jpeg',
+      FCPATH . 'uploads/logo.webp',
+      FCPATH . 'uploads/logo.svg',
+      FCPATH . 'Assets/images/logo.png',
+      FCPATH . 'Assets/images/logo.jpg',
+      FCPATH . 'Assets/images/logo.jpeg',
+      FCPATH . 'Assets/images/logo.webp',
+      FCPATH . 'Assets/images/logo.svg',
+  ];
+  foreach ($logoCandidates as $candidate) {
+      if (file_exists($candidate)) {
+          $logoAsset = str_replace('\\', '/', str_replace(FCPATH, base_url(), $candidate));
+          break;
+      }
+  }
 ?>
 
 <!DOCTYPE html>
@@ -19,6 +38,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="<?= base_url('Assets/css/base.css') ?>">
   <?php if (!empty($pageCss)): ?><link rel="stylesheet" href="<?= base_url('Assets/css/'.$pageCss) ?>"><?php endif; ?>
+  <?php if (!empty($logoAsset)): ?><link rel="icon" href="<?= esc($logoAsset) ?>">
+  <?php endif; ?>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -27,7 +48,11 @@
   <!-- ============================= SIDEBAR ============================= -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <div class="mark"><i class="fa-solid fa-shield-halved"></i></div>
+      <?php if (!empty($logoAsset)): ?>
+        <img class="sidebar-logo-image" src="<?= esc($logoAsset) ?>" alt="System logo">
+      <?php else: ?>
+        <div class="mark"><i class="fa-solid fa-shield-halved"></i></div>
+      <?php endif; ?>
       <div class="txt"><b>FU_UBRA</b><small>FOUNDATION UNIVERSITY</small></div>
     </div>
 
@@ -36,7 +61,7 @@
 
       <?php $isPersonnelSection = (strpos(uri_string(), 'personnel') === 0); ?>
       <div class="nav-parent-group <?= $isPersonnelSection ? 'open' : '' ?>">
-        <a href="<?= base_url('personnel') ?>" class="nav-parent-link <?= $isPersonnelSection ? 'active' : '' ?>" data-personnel-toggle>
+        <a href="<?= base_url('personnel') ?>" class="nav-parent-link <?= $isPersonnelSection ? 'active open' : '' ?>" data-personnel-toggle>
           <i class="fa-solid fa-users"></i>
           <span>Personnel Management</span>
           <i class="fa-solid fa-chevron-down nav-parent-caret"></i>
@@ -49,23 +74,35 @@
         </div>
       </div>
 
-      <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="fa-solid fa-boxes-stacked"></i> Tools Management</a>
-      <a href="<?= base_url('vehicles') ?>" class="<?= navActive('vehicles') ?>"><i class="fa-solid fa-truck"></i> Vehicle Management</a>
-
-      <?php $isTravelSection = (strpos(uri_string(), 'travel') === 0 || strpos(uri_string(), 'gps') === 0); ?>
-      <div class="nav-parent-group <?= $isTravelSection ? 'open' : '' ?>">
-        <a href="<?= base_url('travel') ?>" class="nav-parent-link <?= $isTravelSection ? 'active' : '' ?>" data-travel-toggle>
-          <i class="fa-solid fa-route"></i>
-          <span>Travel Management</span>
+      <?php $isVehicleSection = (strpos(uri_string(), 'vehicles') === 0 || strpos(uri_string(), 'travel') === 0 || strpos(uri_string(), 'gps') === 0); ?>
+      <div class="nav-parent-group <?= $isVehicleSection ? 'open' : '' ?>">
+        <a href="<?= base_url('vehicles') ?>" class="nav-parent-link <?= $isVehicleSection ? 'active open' : '' ?>" data-vehicle-toggle>
+          <i class="fa-solid fa-truck"></i>
+          <span>Vehicle Management</span>
           <i class="fa-solid fa-chevron-down nav-parent-caret"></i>
         </a>
-        <div class="nav-submenu" id="travel-submenu">
-          <a href="<?= base_url('travel') ?>" class="<?= navActive('travel') ?>"><i class="fa-solid fa-plane-departure"></i> Driver's Trip Ticket</a>
+        <div class="nav-submenu" id="vehicle-submenu">
+          <a href="<?= base_url('vehicles') ?>" class="<?= navActive('vehicles') ?>"><i class="fa-solid fa-truck"></i> Vehicle Management</a>
+          <a href="<?= base_url('travel') ?>" class="<?= navActive('travel') ?>"><i class="fa-solid fa-plane-departure"></i> Travel Management</a>
           <a href="<?= base_url('gps') ?>" class="<?= navActive('gps') ?>"><i class="fa-solid fa-location-dot"></i> GPS Tracker</a>
         </div>
       </div>
 
-      <a href="<?= base_url('safety') ?>" class="<?= navActive('safety') ?>"><i class="fa-solid fa-hard-hat"></i> Safety Maintenance</a>
+      <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="fa-solid fa-boxes-stacked"></i> Tools Management</a>
+
+      <?php $isSafetySection = (strpos(uri_string(), 'safety') === 0 || strpos(uri_string(), 'safety/guard-dashboard') === 0 || strpos(uri_string(), 'safety/keylogs') === 0); ?>
+      <div class="nav-parent-group <?= $isSafetySection ? 'open' : '' ?>">
+        <a href="<?= base_url('safety') ?>" class="nav-parent-link <?= $isSafetySection ? 'active open' : '' ?>" data-safety-toggle>
+          <i class="fa-solid fa-hard-hat"></i>
+          <span>Safety Maintenance</span>
+          <i class="fa-solid fa-chevron-down nav-parent-caret"></i>
+        </a>
+        <div class="nav-submenu" id="safety-submenu">
+          <a href="<?= base_url('safety') ?>" class="<?= navActive('safety') ?>"><i class="fa-solid fa-hard-hat"></i> Overview</a>
+          <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>"><i class="fa-solid fa-tv"></i> Guard Dashboard</a>
+          <a href="<?= base_url('safety/keylogs') ?>" class="<?= navActive('safety/keylogs') ?>"><i class="fa-solid fa-key"></i> Keylogs</a>
+        </div>
+      </div>
       <a href="<?= base_url('janitorial') ?>" class="<?= navActive('janitorial') ?>"><i class="fa-solid fa-broom"></i> Janitorial Monitoring</a>
       <a href="<?= base_url('calendar') ?>" class="<?= navActive('calendar') ?>"><i class="fa-solid fa-calendar-days"></i> Calendar</a>
       <a href="<?= base_url('notifications') ?>" class="<?= navActive('notifications') ?>"><i class="fa-solid fa-bell"></i> Notifications</a>
@@ -86,13 +123,21 @@
   <!--MAIN CONTENT  -->
   <div class="main-content">
     <header class="topbar">
-      <div class="search"><i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" class="search-box" placeholder="Search operational resources...">
+      <div class="topbar-left">
+        <button type="button" class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="search">
+          <button type="button" class="topbar-search-btn" aria-label="Search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+          <input type="text" class="search-box" placeholder="Search operational resources...">
+        </div>
       </div>
       <div class="topbar-right">
         <span class="date"><i class="fa-regular fa-calendar"></i> <?= date('l, F d, Y') ?></span>
         <a href="<?= base_url('notifications') ?>" class="icon-btn"><i class="fa-regular fa-bell"></i></a>
-        <a href="<?= base_url('auth/logout') ?>" class="icon-btn" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></a>
+        <a href="<?= site_url('logout') ?>" class="icon-btn" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></a>
         <div class="user-chip">
           <span class="av"><?= esc($initials) ?></span>
           <span><b><?= esc($fullName) ?></b><small><?= esc($role) ?></small></span>
@@ -114,13 +159,62 @@
 </div>
 
 <script>
+// Sidebar toggle function
+function toggleSidebar() {
+  document.body.classList.toggle('sidebar-collapsed');
+  const isCollapsed = document.body.classList.contains('sidebar-collapsed');
+  localStorage.setItem('sidebarCollapsed', isCollapsed);
+}
+
+// Search toggle for collapsed sidebar
+function toggleSearchBar() {
+  const searchEl = document.querySelector('.topbar .search');
+  const isSidebarCollapsed = document.body.classList.contains('sidebar-collapsed');
+  
+  if (isSidebarCollapsed && searchEl) {
+    searchEl.classList.toggle('expanded');
+    // Focus input when expanding
+    if (searchEl.classList.contains('expanded')) {
+      const input = searchEl.querySelector('.search-box');
+      if (input) input.focus();
+    }
+  }
+}
+
+// Load sidebar state from localStorage on page load
+window.addEventListener('DOMContentLoaded', () => {
+  const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+  if (sidebarCollapsed) {
+    document.body.classList.add('sidebar-collapsed');
+  }
+  
+  // Add search toggle handler
+  const searchBtn = document.querySelector('.topbar .search button.topbar-search-btn');
+  if (searchBtn) {
+    searchBtn.addEventListener('click', toggleSearchBar);
+  }
+  
+  // Close search when clicking outside (on collapsed view)
+  document.addEventListener('click', (e) => {
+    const searchEl = document.querySelector('.topbar .search');
+    const searchBtn = document.querySelector('.topbar .search button.topbar-search-btn');
+    const isSidebarCollapsed = document.body.classList.contains('sidebar-collapsed');
+    
+    if (isSidebarCollapsed && searchEl && searchEl.classList.contains('expanded')) {
+      if (!searchEl.contains(e.target)) {
+        searchEl.classList.remove('expanded');
+      }
+    }
+  });
+});
+
 // generic modal helpers used across pages
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); }));
 
 const personnelLink = document.querySelector('[data-personnel-toggle]');
-const personnelGroup = document.querySelectorAll('.nav-parent-group')[0];
+const personnelGroup = personnelLink?.closest('.nav-parent-group');
 if (personnelLink && personnelGroup) {
   personnelLink.addEventListener('click', (event) => {
     event.preventDefault();
@@ -129,18 +223,18 @@ if (personnelLink && personnelGroup) {
   });
 }
 
-const travelLink = document.querySelector('[data-travel-toggle]');
-const travelGroup = document.querySelectorAll('.nav-parent-group')[1];
-if (travelLink && travelGroup) {
-  travelLink.addEventListener('click', (event) => {
+const vehicleLink = document.querySelector('[data-vehicle-toggle]');
+const vehicleGroup = vehicleLink?.closest('.nav-parent-group');
+if (vehicleLink && vehicleGroup) {
+  vehicleLink.addEventListener('click', (event) => {
     event.preventDefault();
-    travelGroup.classList.toggle('open');
-    travelLink.classList.toggle('open');
+    vehicleGroup.classList.toggle('open');
+    vehicleLink.classList.toggle('open');
   });
 }
 
 const safetyLink = document.querySelector('[data-safety-toggle]');
-const safetyGroup = document.querySelectorAll('.nav-parent-group')[2];
+const safetyGroup = safetyLink?.closest('.nav-parent-group');
 if (safetyLink && safetyGroup) {
   safetyLink.addEventListener('click', (event) => {
     event.preventDefault();
@@ -149,6 +243,4 @@ if (safetyLink && safetyGroup) {
   });
 }
 </script>
-<?= $this->renderSection('scripts') ?>
-</body>
-</html>
+  <script src="<?= base_url('assets/js/dashboard.js') ?>"></script>

@@ -86,6 +86,9 @@ $routes->post('safety/work-orders/store',      'SafetyController::storeWorkOrder
 $routes->get ('safety/work-orders/edit/(:num)','SafetyController::editWorkOrder/$1');
 $routes->get ('safety/equipment/create',       'SafetyController::createEquipment');
 $routes->post('safety/equipment/store',        'SafetyController::storeEquipment');
+// new safety sub-pages
+$routes->get ('safety/guard-dashboard',        'SafetyController::guardDashboard');
+$routes->get ('safety/keylogs',                'SafetyController::keylogs');
 
 // ============================================================
 // JANITORIAL MONITORING (Separated from Safety)

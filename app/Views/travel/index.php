@@ -13,11 +13,7 @@
             <h1 class="page-title">Driver's Trip Ticket</h1>
             <p class="page-subtitle">Manage trip tickets, travel authorizations, and driver assignments.</p>
         </div>
-        <div class="header-actions">
-            <button class="btn-primary" onclick="openAddModal()">
-                <i class="bi bi-plus-lg"></i> New Trip Ticket
-            </button>
-        </div>
+        <div class="header-actions"></div>
     </div>
 
     <!-- ── FLASH MESSAGES ──────────────────────────────────────── -->
@@ -70,14 +66,30 @@
             <div class="table-toolbar">
                 <h2 class="panel-title">Driver's Trip Tickets</h2>
                 <div class="toolbar-right">
-                    <select id="statusFilter" onchange="filterTable()">
-                        <option value="">Filter: All Statuses</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                    <input type="text" id="searchInput" placeholder="Search requester..." onkeyup="filterTable()">
+                    <div class="filter-menu-wrapper">
+                      <button type="button" class="filter-btn" onclick="toggleTravelFilterMenu()" aria-label="Open filters">
+                        <i class="bi bi-funnel"></i>
+                      </button>
+                      <div class="filter-popup" id="travelFilterPopup">
+                        <div class="filter-popup-title">Filter</div>
+                        <div class="filter-row">
+                          <label for="statusFilter">Status</label>
+                          <select id="statusFilter" onchange="filterTable()">
+                            <option value="">All Statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="toolbar-search">
+                      <button type="button" class="search-icon-btn" onclick="toggleToolbarSearch('searchInput')" aria-label="Search">
+                        <i class="bi bi-search"></i>
+                      </button>
+                      <input type="text" id="searchInput" class="toolbar-search-input hidden" placeholder="Search requester..." onkeyup="filterTable()">
+                    </div>
                 </div>
             </div>
 
@@ -143,35 +155,16 @@
                                 </td>
                                 <td>
                                     <div class="action-btns">
-                                        <!-- Ticket icon -->
                                         <button class="icon-btn ticket" title="View Trip Ticket"
                                             onclick="viewTicket(<?= $trip['id'] ?>)">
                                             <i class="bi bi-ticket-perforated"></i>
                                         </button>
 
                                         <?php if ($trip['status'] === 'Pending'): ?>
-                                            <!-- Approve -->
                                             <button class="icon-btn approve" title="Approve Trip"
                                                 onclick="openApproveModal(<?= $trip['id'] ?>, '<?= esc($trip['trip_id']) ?>', '<?= esc($trip['destination']) ?>')">
                                                 <i class="bi bi-check-lg"></i>
                                             </button>
-                                            <!-- Reject -->
-                                            <form method="post" action="<?= base_url('travel/reject/' . $trip['id']) ?>"
-                                                onsubmit="return confirm('Cancel this trip request?')">
-                                                <?= csrf_field() ?>
-                                                <button type="submit" class="icon-btn reject" title="Reject / Cancel">
-                                                    <i class="bi bi-x-lg"></i>
-                                                </button>
-                                            </form>
-                                        <?php elseif ($trip['status'] === 'Approved'): ?>
-                                            <!-- Mark Complete -->
-                                            <form method="post" action="<?= base_url('travel/complete/' . $trip['id']) ?>"
-                                                onsubmit="return confirm('Mark this trip as completed?')">
-                                                <?= csrf_field() ?>
-                                                <button type="submit" class="icon-btn complete" title="Mark Completed">
-                                                    <i class="bi bi-flag-fill"></i>
-                                                </button>
-                                            </form>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -183,8 +176,7 @@
             </div>
         </div>
 
-        <!-- Sidebar -->
-        <div class="travel-sidebar">
+        <div class="travel-summary-list">
             <!-- Operational Summary -->
             <div class="sidebar-card compact-card">
                 <div class="sidebar-card-title">Operational Summary</div>
@@ -222,141 +214,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Mr. UBRA summary -->
-            <div class="sidebar-card ubra-card">
-                <div class="ubra-header">
-                    <span class="ubra-icon">U</span>
-                    <div>
-                        <div class="ubra-name">Mr. UBRA</div>
-                        <div class="ubra-sub">Operations Assistant</div>
-                    </div>
-                </div>
-                <div class="ubra-title">Today's Travel Summary</div>
-                <ul class="ubra-list">
-                    <li><i class="bi bi-dot"></i> <?= $today_count ?> trip(s) scheduled to depart today.</li>
-                    <?php if ($pending_count > 0): ?>
-                    <li><i class="bi bi-dot"></i> <?= $pending_count ?> driver assignment(s) still pending.</li>
-                    <?php endif; ?>
-                    <li><i class="bi bi-dot"></i> <?= $available_vehicles ?> vehicle(s) confirmed available for dispatch.</li>
-                    <?php if ($pending_count > 0): ?>
-                    <li><i class="bi bi-dot"></i> <?= $pending_count ?> trip request(s) require administrative approval.</li>
-                    <?php endif; ?>
-                </ul>
-                <div class="ubra-actions">
-                    <button class="ubra-btn" onclick="openAddModal()">Assign Driver</button>
-                    <button class="ubra-btn" onclick="openCalendar()">Open Calendar</button>
-                    <button class="ubra-btn primary" onclick="openAddModal()">Generate Trip Ticket</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     MODAL: NEW TRIP TICKET
-════════════════════════════════════════════════════════════════ -->
-<div id="addModal" class="modal-overlay" style="display:none;">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3><i class="bi bi-plus-circle"></i> New Trip Ticket</h3>
-            <button class="modal-close" onclick="closeAddModal()"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <form method="post" action="<?= base_url('travel/add') ?>">
-            <?= csrf_field() ?>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Scanned ID <span class="optional">(optional)</span></label>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <input type="text" id="scannedIdInput" name="scanned_id" placeholder="Scanned ID will appear here">
-                        <button type="button" class="btn-outline-sm" onclick="openScannerModal()"><i class="bi bi-upc-scan"></i> Scan ID</button>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Requester <span class="req">*</span></label>
-                        <select name="requester_id" required>
-                            <option value="">— Select Requester —</option>
-                            <?php foreach ($personnel as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= esc($p['full_name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Department <span class="req">*</span></label>
-                        <select name="department_id" required>
-                            <option value="">— Select Department —</option>
-                            <?php foreach ($departments as $d): ?>
-                                <option value="<?= $d['id'] ?>"><?= esc($d['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Destination <span class="req">*</span></label>
-                    <input type="text" name="destination" placeholder="e.g. Regional IT Hub, District 4 Campus" required>
-                </div>
-                <div class="form-group">
-                    <label>Purpose / Objective <span class="req">*</span></label>
-                    <textarea name="purpose" rows="2" placeholder="Brief description of the trip purpose..." required></textarea>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Travel Date <span class="req">*</span></label>
-                        <input type="date" name="travel_date" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Departure Time <span class="req">*</span></label>
-                        <input type="time" name="departure_time" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Expected Return <span class="req">*</span></label>
-                        <input type="time" name="return_time" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Assign Driver <span class="optional">(optional)</span></label>
-                        <select name="assigned_driver">
-                            <option value="">— Select Driver —</option>
-                            <?php foreach ($personnel as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= esc($p['full_name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Assign Vehicle <span class="optional">(optional)</span></label>
-                        <select name="assigned_vehicle">
-                            <option value="">— Select Vehicle —</option>
-                            <?php foreach ($vehicles as $v): ?>
-                                <option value="<?= $v['id'] ?>"><?= esc($v['model']) ?> — <?= esc($v['plate_no']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeAddModal()">Cancel</button>
-                <button type="submit" class="btn-submit"><i class="bi bi-send"></i> Submit</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     MODAL: ID SCANNER
-════════════════════════════════════════════════════════════════ -->
-<div id="scannerModal" class="modal-overlay" style="display:none;">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3><i class="bi bi-upc-scan"></i> Scan ID</h3>
-            <button class="modal-close" onclick="closeScannerModal()"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="modal-body">
-            <div id="scannerContainer" style="width: 100%;"></div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeScannerModal()">Close</button>
         </div>
     </div>
 </div>
@@ -429,44 +286,13 @@
 let html5QrCodeScanner = null;
 
 // ── Modal helpers ──────────────────────────────────────────────
-function openAddModal()    { document.getElementById('addModal').style.display = 'flex'; }
-function closeAddModal()   { document.getElementById('addModal').style.display = 'none'; }
 function closeApproveModal(){ document.getElementById('approveModal').style.display = 'none'; }
 function closeTicketModal(){ document.getElementById('ticketModal').style.display = 'none'; }
 
-function openScannerModal() {
-    document.getElementById('scannerModal').style.display = 'flex';
-    
-    // Initialize scanner
-    if (!html5QrCodeScanner) {
-        html5QrCodeScanner = new Html5QrcodeScanner(
-            "scannerContainer", 
-            { fps: 10, qrbox: { width: 250, height: 250 }, rememberLastUsedCamera: true },
-            /* verbose= */ false
-        );
-        
-        html5QrCodeScanner.render(
-            (decodedText, decodedResult) => {
-                // On successful scan
-                document.getElementById('scannedIdInput').value = decodedText;
-                closeScannerModal();
-            },
-            (errorMessage) => {
-                // Scan error, ignore
-            }
-        );
-    }
-}
-
-function closeScannerModal() {
-    if (html5QrCodeScanner) {
-        html5QrCodeScanner.clear().catch(error => {
-            console.error("Failed to clear html5QrCodeScanner. " + error);
-        });
-        html5QrCodeScanner = null;
-        document.getElementById('scannerContainer').innerHTML = '';
-    }
-    document.getElementById('scannerModal').style.display = 'none';
+function openApproveModal(id, tripId, destination) {
+    document.getElementById('approveLabel').textContent = tripId + ' → ' + destination;
+    document.getElementById('approveForm').action = '<?= base_url('travel/approve/') ?>' + id;
+    document.getElementById('approveModal').style.display = 'flex';
 }
 
 function openApproveModal(id, tripId, destination) {
@@ -577,6 +403,24 @@ function viewTicket(id) {
 function openTicketFromHeader() { alert('Please select a trip from the table to view its ticket.'); }
 function openCalendar() { window.location.href = '<?= base_url('calendar') ?>'; }
 
+function toggleToolbarSearch(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const isHidden = input.classList.contains('hidden');
+    if (isHidden) {
+        input.classList.remove('hidden');
+        input.style.width = '220px';
+        input.style.opacity = '1';
+        input.style.padding = '10px 14px';
+        input.focus();
+    } else {
+        input.classList.add('hidden');
+        input.style.width = '0';
+        input.style.opacity = '0';
+        input.style.padding = '0';
+    }
+}
+
 // ── Table filter ───────────────────────────────────────────────
 function filterTable() {
     const status    = document.getElementById('statusFilter').value.toLowerCase();
@@ -589,6 +433,19 @@ function filterTable() {
         row.style.display = matchStatus && matchRequester ? '' : 'none';
     });
 }
+
+function toggleTravelFilterMenu() {
+    const popup = document.getElementById('travelFilterPopup');
+    popup.classList.toggle('visible');
+}
+
+document.addEventListener('click', e => {
+    const wrapper = document.querySelector('.filter-menu-wrapper');
+    const popup = document.getElementById('travelFilterPopup');
+    if (wrapper && popup && !wrapper.contains(e.target)) {
+        popup.classList.remove('visible');
+    }
+});
 
 // ── Date / Time formatters ─────────────────────────────────────
 function formatDate(d) {

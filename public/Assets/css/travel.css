@@ -223,7 +223,7 @@
 /* ── Body Layout ─────────────────────────────────────────────── */
 .travel-body {
     display: grid;
-    grid-template-columns: 1fr 260px;
+    grid-template-columns: 1fr;
     gap: 1rem;
     align-items: start;
 }
@@ -232,6 +232,47 @@
     .travel-body {
         grid-template-columns: 1fr;
     }
+}
+
+.travel-summary-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.travel-summary-list .sidebar-card {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: .95rem;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.travel-summary-list .sidebar-card-title {
+    margin-bottom: .85rem;
+}
+
+.travel-summary-list .summary-list {
+    display: grid;
+    gap: .65rem;
+}
+
+.travel-summary-list .summary-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    border-radius: 10px;
+    background: var(--surface-alt);
+    font-size: .88rem;
+}
+
+.travel-summary-list .summary-list-item span {
+    color: var(--text-muted);
+}
+
+.travel-summary-list .summary-list-item strong {
+    color: var(--maroon);
 }
 
 /* ── Table Panel ─────────────────────────────────────────────── */

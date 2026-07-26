@@ -21,23 +21,49 @@
         <div class="alert-error" style="margin-bottom: 20px;"><?= session()->getFlashdata('error') ?></div>
     <?php endif; ?>
 
-    <!-- Tab Navigation -->
-    <nav class="stg-nav" style="margin-bottom: 20px; position: static;">
-        <button class="stg-nav-btn active" data-tab="borrow" onclick="switchRecordTab('borrow')">
-            <i class="bi bi-box"></i> Borrow Logs
-        </button>
-        <button class="stg-nav-btn" data-tab="travel" onclick="switchRecordTab('travel')">
-            <i class="bi bi-route"></i> Trip Tickets
-        </button>
-        <button class="stg-nav-btn" data-tab="reports" onclick="switchRecordTab('reports')">
-            <i class="bi bi-file-earmark-text"></i> Reports
-        </button>
-        <button class="stg-nav-btn" data-tab="disposal" onclick="switchRecordTab('disposal')">
-            <i class="bi bi-trash3"></i> Disposal Log
-        </button>
-    </nav>
+    <div class="records-shell">
+        <div class="records-tabbar">
+            <button class="records-tab active" data-tab="borrow" onclick="switchRecordTab('borrow')">
+                <i class="bi bi-box"></i> Records
+            </button>
+            <button class="records-tab" data-tab="travel" onclick="switchRecordTab('travel')">
+                <i class="bi bi-route"></i> Archive
+            </button>
+            <button class="records-tab" data-tab="reports" onclick="switchRecordTab('reports')">
+                <i class="bi bi-file-earmark-text"></i> Reports
+            </button>
+            <button class="records-tab" data-tab="disposal" onclick="switchRecordTab('disposal')">
+                <i class="bi bi-trash3"></i> Disposal
+            </button>
+        </div>
 
-    <div class="stg-content">
+        <div class="records-toolbar">
+            <div class="records-toolbar-meta">
+                <span class="records-pill active"><span class="dot green"></span>Active records</span>
+                <span class="records-pill"><span class="dot amber"></span>Pending review</span>
+                <span class="records-pill"><span class="dot gray"></span>Archived</span>
+            </div>
+            <a href="<?= base_url('records/export/csv') ?>" class="records-action-btn">
+                <i class="bi bi-file-earmark-arrow-down"></i> View report
+            </a>
+        </div>
+
+        <div class="records-summary-grid">
+            <div class="records-summary-card">
+                <div class="records-summary-label">Total records</div>
+                <div class="records-summary-value">4,812</div>
+            </div>
+            <div class="records-summary-card">
+                <div class="records-summary-label">Archived</div>
+                <div class="records-summary-value">1,209</div>
+            </div>
+            <div class="records-summary-card accent">
+                <div class="records-summary-label">Added this month</div>
+                <div class="records-summary-value">76</div>
+            </div>
+        </div>
+
+        <div class="stg-content">
         <!-- Borrow Logs Tab -->
         <div id="tab-borrow" class="tab-pane active">
             <div class="tab-title-row">
@@ -331,9 +357,10 @@ const ctx = canvas.getContext('2d');
 
 function switchRecordTab(tab) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.stg-nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.records-tab, .stg-nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.add('active');
-    document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
+    const targetBtn = document.querySelector('.records-tab[data-tab="' + tab + '"], .stg-nav-btn[data-tab="' + tab + '"]');
+    if (targetBtn) targetBtn.classList.add('active');
 }
 
 function openAuthorizeModal(type, id) {

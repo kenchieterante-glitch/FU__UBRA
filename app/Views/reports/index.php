@@ -11,236 +11,213 @@
             <h1 class="page-title"><i class="bi bi-folder-closed"></i> Records, Archiving &amp; Reports</h1>
             <p class="page-subtitle">Automatic archiving with disposal tracking. Each module feeds into a shared dashboard that gives the B&amp;G Head a real-time view of the entire department’s operation.</p>
         </div>
-        <div class="header-actions">
-            <button class="btn-primary" onclick="openGenerateModal()">
-                <i class="bi bi-file-earmark-bar-graph"></i> Generate Report
-            </button>
-            <a href="<?= base_url('reports/export/trips') ?>" class="btn-outline">
-                <i class="bi bi-filetype-pdf"></i> PDF
-            </a>
-            <a href="<?= base_url('reports/export/trips') ?>" class="btn-outline">
-                <i class="bi bi-file-earmark-excel"></i> Excel
-            </a>
-            <button class="btn-outline" onclick="window.print()">
-                <i class="bi bi-printer"></i> Print
-            </button>
-        </div>
     </div>
 
     <?php if (!empty($flash_success)): ?>
         <div class="flash flash-success"><i class="bi bi-check-circle-fill"></i> <?= esc($flash_success) ?></div>
     <?php endif; ?>
 
-    <!-- ── FILTERS ───────────────────────────────────────────────── -->
-    <div class="filter-bar">
-        <div class="filter-group">
-            <label>Date Range</label>
-            <select id="dateRange">
-                <option>Last 30 Days</option>
-                <option>Last 90 Days</option>
-                <option>Last 6 Months</option>
-                <option>This Year</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label>Department</label>
-            <select id="deptFilter">
-                <option>All Departments</option>
-                <option>Facilities</option>
-                <option>Logistics</option>
-                <option>Security</option>
-                <option>Housekeeping</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label>Vehicle</label>
-            <select id="vehicleFilter">
-                <option>All Vehicles</option>
-                <?php foreach ($vehicle_util as $v): ?>
-                    <option><?= esc($v['model']) ?> — <?= esc($v['plate']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label>Asset Category</label>
-            <select id="assetFilter">
-                <option>All Asset Categories</option>
-                <?php foreach ($asset_dist as $a): ?>
-                    <option><?= esc($a['category']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label>Personnel</label>
-            <select id="personnelFilter"><option>All Personnel</option></select>
-        </div>
-        <button class="filter-reset" onclick="resetFilters()">Reset Filters</button>
-    </div>
-
-    <!-- ── REPORT TABS ───────────────────────────────────────────── -->
-    <div class="report-tab-strip" aria-label="Report sections">
-        <button class="report-tab active" type="button" data-target="overview-section"><i class="bi bi-grid-1x2-fill"></i> Overview</button>
-        <button class="report-tab" type="button" data-target="trip-metrics-section"><i class="bi bi-clipboard-data-fill"></i> Trip Metrics</button>
-        <button class="report-tab" type="button" data-target="fleet-analytics-section"><i class="bi bi-truck-front-fill"></i> Fleet Analytics</button>
-        <button class="report-tab" type="button" data-target="maintenance-section"><i class="bi bi-tools"></i> Maintenance</button>
-    </div>
-
-    <!-- ── Tab Descriptions ─────────────────────────────────────── -->
-    <div style="margin-bottom: 20px; padding: 10px; background: #f0f2f5; border-radius: 8px;">
-        <p style="margin: 0; color: #444;"><strong>Section Guide:</strong></p>
-        <ul style="margin: 8px 0 0 20px; color: #555;">
-            <li><strong>Overview:</strong> High-level summary of key operational metrics (assets, vehicles, trips, staff)</li>
-            <li><strong>Trip Metrics:</strong> Detailed travel request data, trip statuses, and trends</li>
-            <li><strong>Fleet Analytics:</strong> Vehicle performance, utilization, and GPS status</li>
-            <li><strong>Maintenance:</strong> Equipment health, pending maintenance, and work order statuses</li>
-        </ul>
-    </div>
-
-    <!-- ── KPI SUMMARY CARDS ─────────────────────────────────────── -->
-    <div class="stat-cards" id="overview-section">
-        <div class="stat-card">
-            <div class="label"><i class="fa-solid fa-boxes-stacked"></i> Total Assets</div>
-            <div class="value"><?= number_format($total_assets) ?></div>
-            <div class="trend neutral">Asset inventory</div>
-        </div>
-        <div class="stat-card">
-            <div class="label"><i class="fa-solid fa-truck"></i> Vehicle Fleet</div>
-            <div class="value"><?= $total_vehicles ?></div>
-            <div class="trend neutral">Registered vehicles</div>
-        </div>
-        <div class="stat-card">
-            <div class="label"><i class="fa-solid fa-route"></i> Scheduled Trips</div>
-            <div class="value"><?= number_format($completed_trips) ?></div>
-            <div class="trend neutral">Active requests</div>
-        </div>
-        <div class="stat-card">
-            <div class="label"><i class="fa-solid fa-users"></i> Active Personnel</div>
-            <div class="value"><?= $on_duty ?></div>
-            <div class="trend neutral">On duty today</div>
-        </div>
-        <div class="stat-card accent-red">
-            <div class="label"><i class="fa-solid fa-fire"></i> Pending Maint.</div>
-            <div class="value"><?= $pending_maint ?></div>
-            <div class="trend down">3 need attention</div>
-        </div>
-        <div class="stat-card accent-amber">
-            <div class="label"><i class="fa-solid fa-broom"></i> Alerts Active</div>
-            <div class="value"><?= $active_alerts ?></div>
-            <div class="trend neutral">View Registry →</div>
-        </div>
-    </div>
-
-    <!-- ── SECTION: TRIP METRICS ─────────────────────────────────────── -->
-    <div class="rpt-body" id="trip-metrics-section">
-        <div class="table-panel">
-            <div class="table-toolbar">
-                <h2 class="panel-title">Trip Metrics</h2>
-                <a href="<?= base_url('reports/export/trips') ?>" class="btn-outline-sm">
-                    <i class="bi bi-download"></i> Export Trips CSV
-                </a>
+    <div class="reports-shell">
+        <div class="reports-tabbar">
+            <div class="reports-tab-group">
+                <button class="reports-tab active" type="button" data-target="records-panel"><i class="bi bi-file-earmark-text"></i> Records</button>
+                <button class="reports-tab" type="button" data-target="archive-panel"><i class="bi bi-archive"></i> Archive</button>
+                <button class="reports-tab" type="button" data-target="reports-panel"><i class="bi bi-bar-chart-line"></i> Reports</button>
             </div>
-            <p style="padding: 10px 20px; color: #555;">Track all travel requests, approvals, completions, and trip trends over time.</p>
+            <button class="reports-action-btn" onclick="openGenerateModal()">
+                <i class="bi bi-file-earmark-arrow-down"></i> View report
+            </button>
         </div>
-    </div>
 
-    <!-- ── SECTION: FLEET ANALYTICS ─────────────────────────────────── -->
-    <div class="rpt-body" id="fleet-analytics-section">
-        <div class="table-panel">
-            <div class="table-toolbar">
-                <h2 class="panel-title">Fleet Analytics</h2>
-                <a href="<?= base_url('reports/export/vehicles') ?>" class="btn-outline-sm">
-                    <i class="bi bi-truck"></i> Vehicles CSV
-                </a>
-            </div>
-            <p style="padding: 10px 20px; color: #555;">Monitor vehicle utilization, GPS status, maintenance schedules, and fleet performance.</p>
+        <div class="reports-toolbar-meta">
+            <span class="reports-pill"><span class="dot green"></span>Active records</span>
+            <span class="reports-pill"><span class="dot amber"></span>Pending review</span>
+            <span class="reports-pill"><span class="dot gray"></span>Archived</span>
         </div>
-    </div>
 
-    <!-- ── SECTION: MAINTENANCE ──────────────────────────────────────── -->
-    <div class="rpt-body" id="maintenance-section">
-        <div class="table-panel">
-            <div class="table-toolbar">
-                <h2 class="panel-title">Maintenance</h2>
-                <a href="<?= base_url('reports/export/assets') ?>" class="btn-outline-sm">
-                    <i class="bi bi-box-seam"></i> Assets CSV
-                </a>
+        <div id="records-panel" class="reports-panel active">
+            <div class="reports-summary-grid">
+                <div class="reports-summary-card">
+                    <div class="reports-summary-label">Total records</div>
+                    <div class="reports-summary-value">4,812</div>
+                </div>
+                <div class="reports-summary-card">
+                    <div class="reports-summary-label">Archived</div>
+                    <div class="reports-summary-value">1,209</div>
+                </div>
+                <div class="reports-summary-card accent">
+                    <div class="reports-summary-label">Added this month</div>
+                    <div class="reports-summary-value">76</div>
+                </div>
             </div>
-            <p style="padding: 10px 20px; color: #555;">Manage equipment maintenance, work orders, and asset health tracking.</p>
-        </div>
-    </div>
 
-    <!-- ── BODY: RECENT REPORTS TABLE ─────────────────────────────────── -->
-    <div class="rpt-body">
-        <!-- Recent Reports Table -->
-        <div class="table-panel">
-            <div class="table-toolbar">
-                <h2 class="panel-title">Generated Reports</h2>
-                <button class="btn-primary" onclick="openGenerateModal()">
-                    <i class="bi bi-plus-circle"></i> Generate New Report
-                </button>
-            </div>
-            <table class="rpt-table">
-                <thead>
-                    <tr>
-                        <th>Report Name</th>
-                        <th>Generated By</th>
-                        <th>Generated Date</th>
-                        <th>Type / Module</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($recent_reports)): ?>
-                        <tr><td colspan="6" class="empty-row">
-                            No reports generated yet. Click <strong>Generate New Report</strong> to create one.
-                        </td></tr>
-                    <?php else: ?>
-                        <?php foreach ($recent_reports as $r): ?>
+            <div class="reports-list-panel">
+                <table class="reports-list-table">
+                    <thead>
                         <tr>
-                            <td class="rpt-name"><?= esc($r['report_name']) ?></td>
-                            <td><?= esc($r['generated_by']) ?></td>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Owner</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Q2 invoice batch</td>
+                            <td>Jul 12</td>
+                            <td>R. Cruz</td>
+                            <td><span class="reports-status active">Active</span></td>
+                        </tr>
+                        <tr>
+                            <td>Vendor contract 2025</td>
+                            <td>May 03</td>
+                            <td>L. Tan</td>
+                            <td><span class="reports-status archived">Archived</span></td>
+                        </tr>
+                        <tr>
+                            <td>Onboarding packet</td>
+                            <td>Jul 20</td>
+                            <td>M. Reyes</td>
+                            <td><span class="reports-status pending">Pending</span></td>
+                        </tr>
+                        <tr>
+                            <td>Audit report FY24</td>
+                            <td>Jan 09</td>
+                            <td>R. Cruz</td>
+                            <td><span class="reports-status archived">Archived</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="archive-panel" class="reports-panel" style="display:none;">
+            <div class="reports-summary-grid">
+                <div class="reports-summary-card">
+                    <div class="reports-summary-label">Archived files</div>
+                    <div class="reports-summary-value">1,209</div>
+                </div>
+                <div class="reports-summary-card">
+                    <div class="reports-summary-label">Pending archive</div>
+                    <div class="reports-summary-value">42</div>
+                </div>
+                <div class="reports-summary-card accent">
+                    <div class="reports-summary-label">Last archived</div>
+                    <div class="reports-summary-value">Today</div>
+                </div>
+            </div>
+            <div class="reports-list-panel">
+                <table class="reports-list-table">
+                    <thead>
+                        <tr><th>Archive name</th><th>Stored</th><th>Owner</th><th>State</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Vendor contract 2025</td><td>May 03</td><td>L. Tan</td><td><span class="reports-status archived">Stored</span></td></tr>
+                        <tr><td>Audit report FY24</td><td>Jan 09</td><td>R. Cruz</td><td><span class="reports-status archived">Stored</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="reports-panel" class="reports-panel" style="display:none;">
+            <div class="reports-summary-grid">
+                <div class="reports-summary-card">
+                    <div class="reports-summary-label">Generated reports</div>
+                    <div class="reports-summary-value">18</div>
+                </div>
+                <div class="reports-summary-card">
+                    <div class="reports-summary-label">Ready to export</div>
+                    <div class="reports-summary-value">6</div>
+                </div>
+                <div class="reports-summary-card accent">
+                    <div class="reports-summary-label">Last generated</div>
+                    <div class="reports-summary-value">2h ago</div>
+                </div>
+            </div>
+            <div class="reports-list-panel">
+                <div class="reports-list-header">
+                    <span class="reports-list-title">Submitted reports</span>
+                    <div class="reports-export-actions">
+                        <button type="button" class="reports-export-btn" onclick="openExportModal('pdf')">
+                            <i class="bi bi-filetype-pdf"></i> PDF
+                        </button>
+                        <button type="button" class="reports-export-btn" onclick="openExportModal('excel')">
+                            <i class="bi bi-file-earmark-excel"></i> Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="reports-filter-row">
+                    <div class="filter-menu-wrapper">
+                        <button type="button" class="filter-btn" onclick="toggleReportsMonthFilter()" aria-label="Open month filter">
+                            <i class="bi bi-funnel"></i>
+                        </button>
+                        <div class="filter-popup" id="reportsMonthFilterPopup">
+                            <div class="filter-popup-title">Filter</div>
+                            <div class="filter-row">
+                                <label for="monthFilter">Month</label>
+                                <select id="monthFilter" class="reports-filter-select">
+                                    <option value="all">All months</option>
+                                    <option value="jan">January</option>
+                                    <option value="feb">February</option>
+                                    <option value="mar">March</option>
+                                    <option value="apr">April</option>
+                                    <option value="may">May</option>
+                                    <option value="jun">June</option>
+                                    <option value="jul">July</option>
+                                    <option value="aug">August</option>
+                                    <option value="sep">September</option>
+                                    <option value="oct">October</option>
+                                    <option value="nov">November</option>
+                                    <option value="dec">December</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <table class="reports-list-table">
+                    <thead>
+                        <tr><th>Report</th><th>Type</th><th>Owner</th><th>Status</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr data-month="jul" data-report-name="Travel summary">
+                            <td>Travel summary</td>
+                            <td>Operations</td>
+                            <td>Admin</td>
+                            <td><span class="reports-status active">Ready</span></td>
                             <td>
-                                <div><?= date('M j, Y', strtotime($r['created_at'])) ?></div>
-                                <div class="time-muted"><?= date('h:i A', strtotime($r['created_at'])) ?></div>
-                            </td>
-                            <td>
-                                <?php
-                                $typeClass = match($r['type_module'] ?? 'General') {
-                                    'Travel Operations'   => 'type-travel',
-                                    'Facilities Management' => 'type-facilities',
-                                    default => 'type-general',
-                                };
-                                ?>
-                                <span class="type-badge <?= $typeClass ?>"><?= esc($r['type_module'] ?? 'General') ?></span>
-                            </td>
-                            <td><span class="status-badge st-completed">Completed</span></td>
-                            <td>
-                                <div class="report-action-stack" style="gap: 8px;">
-                                    <button type="button" class="action-btn action-btn-secondary open-report-view"
-                                        data-id="<?= esc($r['id']) ?>"
-                                        data-report_name="<?= esc($r['report_name']) ?>"
-                                        data-generated_by="<?= esc($r['generated_by']) ?>"
-                                        data-type_module="<?= esc($r['type_module'] ?? 'General') ?>"
-                                        data-date_range="<?= esc($r['date_range'] ?? 'Last 30 Days') ?>">
-                                        <i class="bi bi-eye"></i> View Details
-                                    </button>
-                                    <a href="<?= base_url('reports/download/' . (int)$r['id']) ?>" class="action-btn action-btn-download" style="background: #28a745; color: white;">
-                                        <i class="bi bi-download"></i> Download CSV
-                                    </a>
-                                    <a href="<?= base_url('reports/delete/' . (int)$r['id']) ?>" class="action-btn" style="background: #dc3545; color: white;" onclick="return confirm('Delete this report?')">
-                                        <i class="bi bi-trash"></i> Delete
-                                    </a>
+                                <div class="reports-row-actions">
+                                    <button type="button" class="reports-inline-btn review" onclick="openReviewModal('Travel summary', 'Travel summary', 'Travel summary report submitted by the user. The figures below can be edited before approval.', 'pending', this.closest('tr'))">Review</button>
                                 </div>
                             </td>
                         </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                        <tr data-month="may" data-report-name="Vehicle utilization">
+                            <td>Vehicle utilization</td>
+                            <td>Fleet</td>
+                            <td>Admin</td>
+                            <td><span class="reports-status pending">Review</span></td>
+                            <td>
+                                <div class="reports-row-actions">
+                                    <button type="button" class="reports-inline-btn review" onclick="openReviewModal('Vehicle utilization', 'Vehicle utilization', 'Fleet utilization report submitted by the user. Review the summary values and confirm the latest month data.', 'pending', this.closest('tr'))">Review</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-month="jan" data-report-name="Maintenance overview">
+                            <td>Maintenance overview</td>
+                            <td>Maintenance</td>
+                            <td>Admin</td>
+                            <td><span class="reports-status archived">Archived</span></td>
+                            <td>
+                                <div class="reports-row-actions">
+                                    <button type="button" class="reports-inline-btn review" onclick="openReviewModal('Maintenance overview', 'Maintenance overview', 'Archived maintenance report submitted by the user. Review the details and decide whether it should be approved or kept pending.', 'archived', this.closest('tr'))">Review</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
 
+    </div>
 
 </div>
 
@@ -291,6 +268,76 @@
 <!-- ═══════════════════════════════════════════════════════════════
      REPORT EDITOR MODAL
 ════════════════════════════════════════════════════════════════ -->
+<div id="exportModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-sm">
+        <div class="modal-header">
+            <h3><i class="bi bi-download"></i> Export report</h3>
+            <button class="modal-close" type="button" onclick="closeExportModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Choose report</label>
+                <select id="exportReportType">
+                    <option value="trips">Travel Operations</option>
+                    <option value="vehicles">Vehicle Fleet</option>
+                    <option value="assets">Asset Inventory</option>
+                    <option value="personnel">Personnel</option>
+                </select>
+            </div>
+            <input type="hidden" id="exportFormat" value="pdf">
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeExportModal()">Cancel</button>
+            <button type="button" class="btn-submit" onclick="submitExportSelection()"><i class="bi bi-download"></i> Export</button>
+        </div>
+    </div>
+</div>
+
+<div id="reviewModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-lg">
+        <div class="modal-header">
+            <h3 id="reviewModalTitle"><i class="bi bi-eye"></i> Report review</h3>
+            <button class="modal-close" type="button" onclick="closeReviewModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="review-sheet">
+                <div class="review-sheet-header">
+                    <div>
+                        <div class="review-sheet-label">Submitted report</div>
+                        <div id="reviewModalSubtitle" class="review-sheet-title"></div>
+                    </div>
+                    <div id="reviewStatusBadge" class="review-status-badge pending">Pending review</div>
+                </div>
+                <div class="form-group">
+                    <label>Report summary</label>
+                    <textarea id="reviewSummaryInput" rows="4"></textarea>
+                </div>
+                <div class="review-grid">
+                    <div class="form-group">
+                        <label>Total submitted</label>
+                        <input type="text" id="reviewTotalInput" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Approved by</label>
+                        <input type="text" id="reviewApproverInput" value="Admin">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Admin note</label>
+                    <textarea id="reviewNotesInput" rows="3">The submitted report is awaiting review and approval.</textarea>
+                </div>
+                <div class="review-alert" id="reviewAlertBox">
+                    This report has not yet been reviewed and approved by the admin.
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeReviewModal()">Close</button>
+            <button type="button" class="btn-submit" onclick="approveReportFromModal()"><i class="bi bi-check2-circle"></i> Approve</button>
+        </div>
+    </div>
+</div>
+
 <div id="reportEditorModal" class="modal-overlay" style="display:none;">
     <div class="modal-box modal-md">
         <div class="modal-header">
@@ -344,6 +391,81 @@
 // ── Modal helpers ──────────────────────────────────────────────
 function openGenerateModal()  { document.getElementById('generateModal').style.display = 'flex'; }
 function closeGenerateModal() { document.getElementById('generateModal').style.display = 'none'; }
+function openExportModal(format) {
+    document.getElementById('exportFormat').value = format || 'pdf';
+    document.getElementById('exportModal').style.display = 'flex';
+}
+function closeExportModal() { document.getElementById('exportModal').style.display = 'none'; }
+function submitExportSelection() {
+    const type = document.getElementById('exportReportType').value;
+    const format = document.getElementById('exportFormat').value;
+    window.location.href = '<?= base_url('reports/export') ?>/' + type + '?format=' + format;
+    closeExportModal();
+}
+let currentReviewRow = null;
+
+function openReviewModal(title, subtitle, body, status, row) {
+    currentReviewRow = row || null;
+    document.getElementById('reviewModalTitle').innerHTML = '<i class="bi bi-eye"></i> ' + title;
+    document.getElementById('reviewModalSubtitle').textContent = subtitle;
+    document.getElementById('reviewSummaryInput').value = body;
+    document.getElementById('reviewNotesInput').value = status === 'archived'
+        ? 'This archived report has been reviewed and kept for reference.'
+        : 'The submitted report is awaiting review and approval.';
+    const badge = document.getElementById('reviewStatusBadge');
+    const rowStatus = currentReviewRow ? currentReviewRow.querySelector('.reports-status') : null;
+    const isApproved = rowStatus && rowStatus.textContent.trim() === 'Approved';
+    badge.textContent = isApproved ? 'Approved' : (status === 'archived' ? 'Archived' : 'Pending review');
+    badge.className = 'review-status-badge ' + (isApproved ? 'approved' : (status === 'archived' ? 'archived' : 'pending'));
+    document.getElementById('reviewAlertBox').textContent = isApproved
+        ? 'Approved by admin. The report is now ready for sharing.'
+        : (status === 'archived'
+            ? 'This report is archived and does not require admin approval.'
+            : 'This report has not yet been reviewed and approved by the admin.');
+    document.getElementById('reviewModal').style.display = 'flex';
+}
+function closeReviewModal() { document.getElementById('reviewModal').style.display = 'none'; }
+function toggleReportsMonthFilter() {
+    const popup = document.getElementById('reportsMonthFilterPopup');
+    if (popup) {
+        popup.classList.toggle('visible');
+    }
+}
+
+function filterReportsByMonth() {
+    const selectedMonth = document.getElementById('monthFilter').value;
+    const rows = document.querySelectorAll('#reports-panel tbody tr[data-month]');
+
+    rows.forEach(row => {
+        const rowMonth = row.getAttribute('data-month') || '';
+        row.style.display = (selectedMonth === 'all' || rowMonth === selectedMonth) ? '' : 'none';
+    });
+}
+
+document.addEventListener('click', function (event) {
+    const wrapper = document.querySelector('#reports-panel .filter-menu-wrapper');
+    const popup = document.getElementById('reportsMonthFilterPopup');
+    if (wrapper && popup && !wrapper.contains(event.target)) {
+        popup.classList.remove('visible');
+    }
+});
+
+document.getElementById('monthFilter').addEventListener('change', filterReportsByMonth);
+
+function approveReportFromModal() {
+    const badge = document.getElementById('reviewStatusBadge');
+    badge.textContent = 'Approved';
+    badge.className = 'review-status-badge approved';
+    document.getElementById('reviewAlertBox').textContent = 'Approved by admin. The report is now ready for sharing.';
+
+    if (currentReviewRow) {
+        const statusEl = currentReviewRow.querySelector('.reports-status');
+        if (statusEl) {
+            statusEl.textContent = 'Approved';
+            statusEl.className = 'reports-status approved';
+        }
+    }
+}
 function openReportEditor(button) {
     const editor = document.getElementById('reportEditorModal');
     const title = document.getElementById('reportEditorTitle');
@@ -387,48 +509,40 @@ function resetFilters() {
     document.querySelectorAll('.filter-bar select').forEach(s => s.selectedIndex = 0);
 }
 
-document.querySelectorAll('.report-tab').forEach(tab => {
+document.querySelectorAll('.reports-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-        // Remove active from all tabs
-        document.querySelectorAll('.report-tab').forEach(btn => btn.classList.remove('active'));
-        // Add active to clicked tab
+        document.querySelectorAll('.reports-tab').forEach(btn => btn.classList.remove('active'));
         tab.classList.add('active');
 
-        // Hide all report sections except Generated Reports
-        const sections = [
-            'overview-section',
-            'trip-metrics-section',
-            'fleet-analytics-section',
-            'maintenance-section'
-        ];
-        sections.forEach(sectionId => {
-            const el = document.getElementById(sectionId);
-            if (el) el.style.display = 'none';
+        document.querySelectorAll('.reports-panel').forEach(panel => {
+            panel.style.display = 'none';
+            panel.classList.remove('active');
         });
 
-        // Show the target section
         const target = document.getElementById(tab.dataset.target);
         if (target) {
             target.style.display = 'block';
+            target.classList.add('active');
             target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     });
 });
 
+document.getElementById('monthFilter')?.addEventListener('change', function () {
+    const month = this.value;
+    document.querySelectorAll('#reports-panel tbody tr').forEach(row => {
+        const rowMonth = row.getAttribute('data-month') || 'all';
+        row.style.display = (month === 'all' || rowMonth === month) ? '' : 'none';
+    });
+});
+
 // Initialize visibility on page load
 document.addEventListener('DOMContentLoaded', () => {
-    // Show only overview section by default
-    const sections = [
-        'trip-metrics-section',
-        'fleet-analytics-section',
-        'maintenance-section'
-    ];
-    sections.forEach(sectionId => {
-            const el = document.getElementById(sectionId);
-            if (el) el.style.display = 'none';
-        });
-    const overviewSection = document.getElementById('overview-section');
-    if (overviewSection) overviewSection.style.display = 'block';
+    const firstPanel = document.getElementById('records-panel');
+    if (firstPanel) {
+        firstPanel.style.display = 'block';
+        firstPanel.classList.add('active');
+    }
 });
 
 document.querySelectorAll('.open-report-editor').forEach(btn => {

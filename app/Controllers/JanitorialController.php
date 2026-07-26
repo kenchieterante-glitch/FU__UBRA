@@ -14,7 +14,7 @@ class JanitorialController extends BaseController
     public function index()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/auth/login');
+            return redirect()->to('/login');
         }
 
         return view('janitorial/index', [
@@ -25,7 +25,7 @@ class JanitorialController extends BaseController
     public function checklists()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/auth/login');
+            return redirect()->to('/login');
         }
 
         return view('janitorial/index', [

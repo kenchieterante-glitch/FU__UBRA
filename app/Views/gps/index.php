@@ -97,19 +97,38 @@
             <div class="table-toolbar">
                 <h2 class="panel-title">Fleet GPS Status</h2>
                 <div class="toolbar-right">
-                    <select id="statusFilter" onchange="filterTable()">
-                        <option value="">All GPS Status</option>
-                        <option value="Online">Online</option>
-                        <option value="Offline">Offline</option>
-                    </select>
-                    <select id="availFilter" onchange="filterTable()">
-                        <option value="">All Availability</option>
-                        <option value="Available">Available</option>
-                        <option value="In Use">In Use</option>
-                        <option value="Reserved">Reserved</option>
-                        <option value="Under Maintenance">Maintenance</option>
-                    </select>
-                    <input type="text" id="searchInput" placeholder="Search plate / driver..." onkeyup="filterTable()">
+                    <div class="filter-menu-wrapper">
+                      <button type="button" class="filter-btn" onclick="toggleGpsFilterMenu()" aria-label="Open filters">
+                        <i class="bi bi-funnel"></i>
+                      </button>
+                      <div class="filter-popup" id="gpsFilterPopup">
+                        <div class="filter-popup-title">Filter</div>
+                        <div class="filter-row">
+                          <label for="statusFilter">GPS Status</label>
+                          <select id="statusFilter" onchange="filterTable()">
+                            <option value="">All GPS Status</option>
+                            <option value="Online">Online</option>
+                            <option value="Offline">Offline</option>
+                          </select>
+                        </div>
+                        <div class="filter-row">
+                          <label for="availFilter">Availability</label>
+                          <select id="availFilter" onchange="filterTable()">
+                            <option value="">All Availability</option>
+                            <option value="Available">Available</option>
+                            <option value="In Use">In Use</option>
+                            <option value="Reserved">Reserved</option>
+                            <option value="Under Maintenance">Maintenance</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="toolbar-search">
+                      <button type="button" class="search-icon-btn" onclick="toggleToolbarSearch('searchInput')" aria-label="Search">
+                        <i class="bi bi-search"></i>
+                      </button>
+                      <input type="text" id="searchInput" class="toolbar-search-input hidden" placeholder="Search plate / driver..." onkeyup="filterTable()">
+                    </div>
                 </div>
             </div>
 
@@ -381,6 +400,19 @@ function filterTable() {
         row.style.display = show ? '' : 'none';
     });
 }
+
+function toggleGpsFilterMenu() {
+    const popup = document.getElementById('gpsFilterPopup');
+    popup.classList.toggle('visible');
+}
+
+document.addEventListener('click', e => {
+    const wrapper = document.querySelector('.filter-menu-wrapper');
+    const popup = document.getElementById('gpsFilterPopup');
+    if (wrapper && popup && !wrapper.contains(e.target)) {
+        popup.classList.remove('visible');
+    }
+});
 
 // ── Helpers ────────────────────────────────────────────────────
 function availClass(a) {

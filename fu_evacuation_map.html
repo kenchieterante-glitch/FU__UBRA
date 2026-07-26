@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Foundation University — Evacuation Map</title>
+<style>
+  :root{
+    --ink:#1a1a1a;
+    --line:#2a2a2a;
+    --line-soft:#888;
+    --paper:#fdfdfb;
+    --hover:#eeeeee;
+    --selected:#dcdcdc;
+    --panel-bg:#ffffff;
+    --panel-border:#d8d8d3;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:24px 16px 40px;
+  }
+  h1{
+    font-size:19px;
+    font-weight:600;
+    letter-spacing:.02em;
+    margin:0 0 2px;
+    text-align:center;
+  }
+  .sub{
+    font-size:12.5px;
+    color:#666;
+    margin:0 0 18px;
+    text-align:center;
+  }
+  .layout{
+    display:flex;
+    gap:20px;
+    max-width:1180px;
+    width:100%;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .map-wrap{
+    flex:1 1 620px;
+    max-width:640px;
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    background:var(--paper);
+    padding:10px;
+  }
+  svg{width:100%;height:auto;display:block;}
+  .bldg{
+    fill:#ffffff;
+    stroke:var(--line);
+    stroke-width:1.4;
+    cursor:pointer;
+    transition:fill .12s ease;
+  }
+  .bldg:hover{fill:var(--hover);}
+  .bldg.selected{fill:var(--selected); stroke-width:2;}
+  .zone{
+    fill:none;
+    stroke:var(--line);
+    stroke-width:1.6;
+    stroke-dasharray:3 2;
+    cursor:pointer;
+  }
+  .zone.selected{fill:var(--selected);}
+  .num{
+    font-size:10px;
+    fill:var(--ink);
+    text-anchor:middle;
+    pointer-events:none;
+    font-weight:600;
+  }
+  .flow{
+    stroke:#aaa;
+    stroke-width:1;
+    stroke-dasharray:3 3;
+    fill:none;
+  }
+  .ext{
+    fill:none;
+    stroke:#999;
+    stroke-width:1;
+  }
+  .road{
+    fill:none;
+    stroke:#ccc;
+    stroke-width:1;
+    stroke-dasharray:1 3;
+  }
+  .panel{
+    flex:1 1 320px;
+    max-width:360px;
+    background:var(--panel-bg);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:18px 20px;
+    min-height:220px;
+  }
+  .panel-eyebrow{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#888;
+    margin:0 0 6px;
+  }
+  .panel-title{
+    font-size:18px;
+    font-weight:600;
+    margin:0 0 10px;
+    line-height:1.3;
+  }
+  .panel-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    padding:7px 0;
+    border-top:1px solid #eee;
+    color:#444;
+  }
+  .panel-row span:first-child{color:#888;}
+  .placeholder{
+    font-size:13.5px;
+    color:#888;
+    line-height:1.6;
+  }
+  .legend-toggle{
+    margin-top:16px;
+    font-size:12px;
+    color:#555;
+    background:none;
+    border:1px solid var(--panel-border);
+    border-radius:6px;
+    padding:6px 10px;
+    cursor:pointer;
+  }
+  .legend-toggle:hover{background:var(--hover);}
+  .legend-list{
+    margin-top:12px;
+    max-height:260px;
+    overflow-y:auto;
+    display:none;
+  }
+  .legend-list.open{display:block;}
+  .legend-item{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    padding:5px 0;
+    border-bottom:1px solid #f0f0ee;
+    cursor:pointer;
+  }
+  .legend-item:hover{color:#000;}
+  .legend-item span:first-child{color:#999; width:22px; flex-shrink:0;}
+  .legend-item span:last-child{color:#777; font-size:11px;}
+  .key{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    font-size:11px;
+    color:#777;
+    margin-top:8px;
+  }
+  .key span{display:flex;align-items:center;gap:5px;}
+  .key i{width:14px;height:0;border-top:1px dashed #aaa;display:inline-block;}
+  .key b{width:9px;height:9px;border:1px solid #999;display:inline-block;}
+</style>
+</head>
+<body>
+
+<h1>Foundation University — Dumaguete City</h1>
+<p class="sub">Main campus emergency evacuation plan — schematic, line-art only. Click any building.</p>
+
+<div class="layout">
+  <div class="map-wrap">
+    <svg id="map" viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg">
+
+      <path class="road" d="M55,40 C15,300 15,600 60,760"/>
+
+      <rect id="z-main" class="zone" x="278" y="134" width="205" height="431" rx="4" data-name="Main evacuation open space" data-cat="Assembly zone — no building number" onclick="select(this,'z-main')"/>
+      <text x="380" y="345" class="num" style="font-size:12px;">MAIN EVACUATION</text>
+      <text x="380" y="360" class="num" style="font-size:12px;">OPEN SPACE</text>
+
+      <g id="flows"></g>
+      <g id="buildings"></g>
+      <g id="extinguishers"></g>
+
+    </svg>
+    <div class="key">
+      <span><i></i> emergency flow</span>
+      <span><b></b> fire extinguisher</span>
+    </div>
+  </div>
+
+  <div class="panel" id="panel">
+    <p class="panel-eyebrow">Building info</p>
+    <p class="placeholder" id="placeholder">Click a building on the map to see its name and colour-designation zone from the original legend.</p>
+    <div id="details" style="display:none;">
+      <p class="panel-title" id="d-name"></p>
+      <div class="panel-row"><span>No.</span><span id="d-num"></span></div>
+      <div class="panel-row"><span>Zone colour (legend)</span><span id="d-cat"></span></div>
+    </div>
+
+    <button class="legend-toggle" onclick="toggleLegend()">Show full building list</button>
+    <div class="legend-list" id="legend-list"></div>
+  </div>
+</div>
+
+<script>
+const buildings = [
+  {n:1,  name:"Main entrance gate", cat:"NA", x:745, y:802, w:144, h:31, hasExt:false},
+  {n:2,  name:"University cafeteria / bookstore / sewing", cat:"Blue", x:321, y:720, w:142, h:82, hasExt:true},
+  {n:3,  name:"College of Law building", cat:"Blue", x:314, y:591, w:149, h:72, hasExt:true},
+  {n:4,  name:"College of Agriculture and SIE", cat:"Blue", x:262, y:591, w:57, h:211, hasExt:true},
+  {n:5,  name:"Museo de Vicente", cat:"Green", x:129, y:529, w:82, h:78, hasExt:true},
+  {n:6,  name:"Bunk house", cat:"Green", x:57,  y:529, w:61, h:103, hasExt:false},
+  {n:7,  name:"Service / exit gate", cat:"NA", x:67, y:488, w:51, h:41, hasExt:true},
+  {n:8,  name:"University library", cat:"Green", x:90, y:406, w:131, h:72, hasExt:true},
+  {n:9,  name:"Electric pump house", cat:"Green", x:206, y:380, w:41, h:31, hasExt:false},
+  {n:10, name:"Executive house", cat:"Violet", x:129, y:272, w:108, h:62, hasExt:true},
+  {n:11, name:"Water pump", cat:"NA", x:167, y:216, w:20, h:20, hasExt:false, circle:true},
+  {n:12, name:"Guest house", cat:"Violet", x:170, y:62, w:67, h:87, hasExt:true},
+  {n:13, name:"HRM kitchen", cat:"Violet", x:221, y:15, w:67, h:62, hasExt:true},
+  {n:14, name:"College of Education building", cat:"Violet", x:278, y:62, w:185, h:72, hasExt:true},
+  {n:16, name:"Animation Lab / ROTC office", cat:"Pink", x:514, y:98, w:180, h:123, hasExt:false},
+  {n:17, name:"LG Sinco Computer Center building", cat:"Pink", x:553, y:221, w:141, h:98, hasExt:true},
+  {n:18, name:"Sofia Soller Sinco Hall", cat:"Pink", x:512, y:288, w:192, h:123, hasExt:true},
+  {n:19, name:"College of Art & Sciences building", cat:"Yellow", x:519, y:406, w:67, h:185, hasExt:true},
+  {n:20, name:"Art & Science laboratories / audio visual rooms", cat:"Yellow", x:586, y:411, w:226, h:149, hasExt:true},
+  {n:21, name:"College of Business Economics and Accountancy", cat:"Pink", x:704, y:237, w:185, h:92, hasExt:true},
+  {n:22, name:"College of Nursing", cat:"Yellow", x:812, y:360, w:77, h:236, hasExt:true},
+  {n:23, name:"Administration building", cat:"Yellow", x:745, y:555, w:144, h:103, hasExt:true},
+  {n:24, name:"Rizal monument / social garden", cat:"NA", x:596, y:591, w:149, h:93, hasExt:false},
+  {n:25, name:"Registrar's office", cat:"Orange", x:694, y:720, w:195, h:36, hasExt:true},
+  {n:26, name:"Business and Finance office", cat:"Orange", x:694, y:756, w:195, h:46, hasExt:false},
+  {n:27, name:"Old College of Industrial Engineering and Technology", cat:"Orange", x:496, y:746, w:234, h:56, hasExt:true},
+  {n:28, name:"Overhead water supply tank", cat:"NA", x:894, y:722, w:16, h:16, hasExt:false, circle:true},
+  {n:29, name:"Flag pole", cat:"NA", x:508, y:611, w:12, h:12, hasExt:false, circle:true}
+];
+
+const g = document.getElementById("buildings");
+const gExt = document.getElementById("extinguishers");
+
+buildings.forEach(b=>{
+  let shape;
+  if(b.circle){
+    shape = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    shape.setAttribute("cx", b.x + b.w/2);
+    shape.setAttribute("cy", b.y + b.h/2);
+    shape.setAttribute("r", b.w/2);
+  } else {
+    shape = document.createElementNS("http://www.w3.org/2000/svg","rect");
+    shape.setAttribute("x",b.x); shape.setAttribute("y",b.y);
+    shape.setAttribute("width",b.w); shape.setAttribute("height",b.h);
+    shape.setAttribute("rx",3);
+  }
+  shape.setAttribute("class","bldg");
+  shape.setAttribute("id","b-"+b.n);
+  shape.setAttribute("data-name",b.name);
+  shape.setAttribute("data-num",b.n);
+  shape.setAttribute("data-cat",b.cat);
+  shape.setAttribute("onclick","select(this,'b-"+b.n+"')");
+  g.appendChild(shape);
+
+  const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+  t.setAttribute("class","num");
+  t.setAttribute("x", b.x + b.w/2);
+  t.setAttribute("y", b.y + b.h/2 + 3);
+  t.textContent = b.n;
+  t.setAttribute("pointer-events","none");
+  g.appendChild(t);
+
+  if(b.hasExt){
+    const sq = document.createElementNS("http://www.w3.org/2000/svg","rect");
+    sq.setAttribute("class","ext");
+    sq.setAttribute("x", b.x + 4);
+    sq.setAttribute("y", b.y + 4);
+    sq.setAttribute("width", 8);
+    sq.setAttribute("height", 8);
+    gExt.appendChild(sq);
+  }
+});
+
+const flowPaths = [
+  "M255,77 C240,110 230,140 225,170",
+  "M370,90 C350,120 330,150 300,180",
+  "M460,110 C500,140 520,170 540,210",
+  "M694,170 C670,190 640,210 610,225",
+  "M553,270 C540,290 520,300 500,300",
+  "M694,280 C720,300 730,320 730,340",
+  "M596,320 C570,340 540,350 510,355",
+  "M596,400 C570,410 540,420 510,420",
+  "M745,410 C720,430 700,450 690,470",
+  "M519,500 C500,510 480,515 483,520",
+  "M745,600 C720,610 690,615 660,615",
+  "M280,300 C260,330 240,360 237,380",
+  "M129,300 C160,330 190,350 220,400",
+  "M221,442 C250,470 270,500 280,520",
+  "M90,442 C130,460 160,480 200,510",
+  "M67,508 C110,530 150,550 200,570",
+  "M129,568 C160,590 200,610 250,640",
+  "M262,700 C280,730 290,760 300,780",
+  "M463,650 C480,670 490,690 490,710",
+  "M745,660 C700,680 640,700 590,720",
+  "M596,650 C580,680 560,710 520,740"
+];
+const gFlow = document.getElementById("flows");
+flowPaths.forEach(d=>{
+  const p = document.createElementNS("http://www.w3.org/2000/svg","path");
+  p.setAttribute("class","flow");
+  p.setAttribute("d", d);
+  gFlow.appendChild(p);
+});
+
+let currentSelected = null;
+function select(el, id){
+  if(currentSelected) currentSelected.classList.remove("selected");
+  el.classList.add("selected");
+  currentSelected = el;
+  const name = el.getAttribute("data-name");
+  const num = el.getAttribute("data-num") || "—";
+  const cat = el.getAttribute("data-cat");
+  document.getElementById("placeholder").style.display = "none";
+  document.getElementById("details").style.display = "block";
+  document.getElementById("d-name").textContent = name;
+  document.getElementById("d-num").textContent = num;
+  document.getElementById("d-cat").textContent = cat;
+}
+
+function toggleLegend(){
+  const list = document.getElementById("legend-list");
+  list.classList.toggle("open");
+  if(list.children.length===0){
+    const all = [{n:"main",name:"Main evacuation open space",cat:"Assembly zone"}, ...buildings.map(b=>({n:b.n,name:b.name,cat:b.cat}))];
+    all.sort((a,b)=> (a.n==="main"?-1: (b.n==="main"?1: a.n-b.n)));
+    all.forEach(item=>{
+      const div = document.createElement("div");
+      div.className = "legend-item";
+      const label = item.n==="main" ? "—" : item.n;
+      div.innerHTML = "<span>"+label+"</span><span style='flex:1;color:#333;padding:0 8px;'>"+item.name+"</span><span>"+item.cat+"</span>";
+      div.onclick = ()=>{
+        const target = item.n==="main" ? document.getElementById("z-main") : document.getElementById("b-"+item.n);
+        if(target){ select(target, target.id); target.scrollIntoView({behavior:"smooth", block:"center"}); }
+      };
+      list.appendChild(div);
+    });
+  }
+}
+</script>
+
+</body>
+</html>

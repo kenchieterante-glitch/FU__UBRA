@@ -12,14 +12,8 @@ class DashboardController extends BaseController
     public function index()
     {
         if (!session()->get('isLoggedIn')) {
-            // Set test session for development
-            session()->set([
-                'user_id'     => 1,
-                'full_name'   => 'Test User',
-                'role'        => 'Admin',
-                'department'  => 'Facilities',
-                'isLoggedIn'  => true,
-            ]);
+            return redirect()->to('/login')
+                ->with('error', 'You must be logged in to access the dashboard.');
         }
 
         $toolsModel = new ToolsModel();

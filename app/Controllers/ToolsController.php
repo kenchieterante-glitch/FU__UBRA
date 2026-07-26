@@ -26,7 +26,7 @@ class ToolsController extends BaseController
     public function index()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/auth/login');
+            return redirect()->to('/login');
         }
 
         $tools = $this->toolsModel->getAllWithDetails();

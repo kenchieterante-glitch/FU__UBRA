@@ -14,12 +14,6 @@
     <button class="sub-tab" onclick="switchSubTab('workorders')">
       <i class="bi bi-wrench-adjustable"></i> Work Orders
     </button>
-    <button class="sub-tab" onclick="switchSubTab('keylogs')">
-      <i class="bi bi-key-fill"></i> Key & ID Logs
-    </button>
-    <button class="sub-tab guard-dash-btn" onclick="switchSubTab('guard')">
-      <i class="bi bi-person-badge-fill"></i> Guard Dashboard
-    </button>
     <div class="sub-tab-spacer"></div>
     <button class="btn-report" onclick="openReportModal()">
       <i class="bi bi-file-earmark-bar-graph-fill"></i> View Report
@@ -31,140 +25,25 @@
     <div class="map-layout" id="mapLayout">
       <div class="map-container" id="mapContainer">
         <div class="map-legend">
-          <span class="leg-item"><span class="leg-dot new"></span> New (OK)</span>
-          <span class="leg-item"><span class="leg-dot refill"></span> Refillable</span>
-          <span class="leg-dot defect"></span> Defective</span>
-          <span class="leg-item"><i class="bi bi-exclamation-triangle-fill" style="color:#dc2626;font-size:.7rem"></i> Missing</span>
+          <span class="leg-item"><span class="leg-dot new"></span> Emergency flow</span>
+          <span class="leg-item"><span class="leg-dot refill"></span> Fire extinguisher</span>
         </div>
 
-        <svg id="campusSVG" viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg">
-          <rect width="900" height="560" fill="#f0eded" rx="12"/>
-          <rect x="0" y="255" width="900" height="50" fill="#e0d8d8" opacity=".6"/>
-          <rect x="420" y="0" width="60" height="560" fill="#e0d8d8" opacity=".6"/>
-          <text x="100" y="285" font-size="9" fill="#a08080" text-anchor="middle" font-family="Poppins,sans-serif">MAIN AVENUE</text>
-          <text x="450" y="120" font-size="9" fill="#a08080" text-anchor="middle" font-family="Poppins,sans-serif" transform="rotate(-90,450,120)">CENTRAL ROAD</text>
-
-          <!-- Admin Building -->
-          <g class="campus-area" id="area-admin" onclick="drillDown('admin')" tabindex="0">
-            <rect x="30" y="30" width="170" height="110" rx="10" fill="#fff" stroke="#7a1f2b" stroke-width="2"/>
-            <text x="115" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#7a1f2b" font-family="Poppins,sans-serif">ADMIN BUILDING</text>
-            <text x="115" y="72" text-anchor="middle" font-size="9" fill="#888" font-family="Poppins,sans-serif">Click to inspect</text>
-            <circle cx="60" cy="100" r="10" fill="#16a34a" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="60" cy="100" dy="4" text-anchor="middle" font-size="8" fill="#fff" font-family="Poppins">FE</text>
-            <circle cx="90" cy="100" r="10" fill="#c8963e" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="90" cy="100" dy="4" text-anchor="middle" font-size="8" fill="#fff" font-family="Poppins">FE</text>
-            <circle cx="120" cy="100" r="10" fill="#6b7280" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="120" cy="100" dy="4" text-anchor="middle" font-size="8" fill="#fff" font-family="Poppins">FE</text>
-            <text x="155" cy="100" dy="4" text-anchor="middle" font-size="9" fill="#dc2626" font-family="Poppins">⚠ Miss.</text>
-            <text x="60" y="120" text-anchor="middle" font-size="7" fill="#555" font-family="Poppins">New</text>
-            <text x="90" y="120" text-anchor="middle" font-size="7" fill="#555" font-family="Poppins">Refill</text>
-            <text x="120" y="120" text-anchor="middle" font-size="7" fill="#555" font-family="Poppins">Defect</text>
-          </g>
-
-          <!-- Library -->
-          <g class="campus-area" id="area-library" onclick="drillDown('library')" tabindex="0">
-            <rect x="220" y="30" width="170" height="110" rx="10" fill="#fff" stroke="#7a1f2b" stroke-width="2"/>
-            <text x="305" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#7a1f2b" font-family="Poppins,sans-serif">LIBRARY</text>
-            <text x="305" y="72" text-anchor="middle" font-size="9" fill="#888" font-family="Poppins,sans-serif">Click to inspect</text>
-            <circle cx="255" cy="100" r="10" fill="#16a34a" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="255" cy="100" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-            <circle cx="285" cy="100" r="10" fill="#16a34a" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="285" cy="100" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-            <circle cx="315" cy="100" r="10" fill="#c8963e" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="315" cy="100" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-          </g>
-
-          <!-- Science Building -->
-          <g class="campus-area" id="area-science" onclick="drillDown('science')" tabindex="0">
-            <rect x="500" y="30" width="170" height="110" rx="10" fill="#fff" stroke="#7a1f2b" stroke-width="2"/>
-            <text x="585" y="55" text-anchor="middle" font-size="10" font-weight="700" fill="#7a1f2b" font-family="Poppins,sans-serif">SCIENCE BLDG</text>
-            <text x="585" y="70" text-anchor="middle" font-size="9" fill="#888" font-family="Poppins,sans-serif">Click to inspect</text>
-            <circle cx="535" cy="100" r="10" fill="#16a34a" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="535" cy="100" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-            <circle cx="565" cy="100" r="10" fill="#6b7280" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="565" cy="100" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-            <circle cx="595" cy="100" r="10" fill="#c8963e" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="595" cy="100" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-          </g>
-
-          <!-- Gymnasium -->
-          <g class="campus-area" id="area-gym" onclick="drillDown('gym')" tabindex="0">
-            <rect x="690" y="30" width="180" height="110" rx="10" fill="#fff" stroke="#7a1f2b" stroke-width="2"/>
-            <text x="780" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#7a1f2b" font-family="Poppins,sans-serif">GYMNASIUM</text>
-            <text x="780" y="72" text-anchor="middle" font-size="9" fill="#888" font-family="Poppins,sans-serif">Click to inspect</text>
-            <circle cx="730" cy="100" r="10" fill="#16a34a" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="730" cy="100" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-            <circle cx="760" cy="100" r="10" fill="#16a34a" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="760" cy="100" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-            <text x="790" cy="100" dy="4" text-anchor="middle" font-size="9" fill="#dc2626">⚠ Miss.</text>
-          </g>
-
-          <!-- Canteen -->
-          <g class="campus-area" id="area-canteen" onclick="drillDown('canteen')" tabindex="0">
-            <rect x="30" y="320" width="170" height="110" rx="10" fill="#fff" stroke="#7a1f2b" stroke-width="2"/>
-            <text x="115" y="348" text-anchor="middle" font-size="11" font-weight="700" fill="#7a1f2b" font-family="Poppins,sans-serif">CANTEEN</text>
-            <text x="115" y="362" text-anchor="middle" font-size="9" fill="#888" font-family="Poppins,sans-serif">Click to inspect</text>
-            <circle cx="70" cy="390" r="10" fill="#c8963e" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="70" cy="390" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-            <circle cx="100" cy="390" r="10" fill="#c8963e" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="100" cy="390" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-          </g>
-
-          <!-- Engineering Building -->
-          <g class="campus-area" id="area-engr" onclick="drillDown('engr')" tabindex="0">
-            <rect x="220" y="320" width="170" height="110" rx="10" fill="#fff" stroke="#7a1f2b" stroke-width="2"/>
-            <text x="305" y="345" text-anchor="middle" font-size="10" font-weight="700" fill="#7a1f2b" font-family="Poppins,sans-serif">ENGINEERING</text>
-            <text x="305" y="362" text-anchor="middle" font-size="9" fill="#888" font-family="Poppins,sans-serif">Click to inspect</text>
-            <circle cx="255" cy="390" r="10" fill="#16a34a" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="255" cy="390" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-            <circle cx="285" cy="390" r="10" fill="#6b7280" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="285" cy="390" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-            <circle cx="315" cy="390" r="10" fill="#c8963e" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="315" cy="390" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-          </g>
-
-          <!-- CCS Building -->
-          <g class="campus-area" id="area-ccs" onclick="drillDown('ccs')" tabindex="0">
-            <rect x="500" y="320" width="170" height="110" rx="10" fill="#fff" stroke="#7a1f2b" stroke-width="2"/>
-            <text x="585" y="348" text-anchor="middle" font-size="11" font-weight="700" fill="#7a1f2b" font-family="Poppins,sans-serif">CCS BUILDING</text>
-            <text x="585" y="362" text-anchor="middle" font-size="9" fill="#888" font-family="Poppins,sans-serif">Click to inspect</text>
-            <circle cx="535" cy="390" r="10" fill="#16a34a" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="535" cy="390" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-            <circle cx="565" cy="390" r="10" fill="#16a34a" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="565" cy="390" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-          </g>
-
-          <!-- Clinic -->
-          <g class="campus-area" id="area-clinic" onclick="drillDown('clinic')" tabindex="0">
-            <rect x="690" y="320" width="180" height="110" rx="10" fill="#fff" stroke="#7a1f2b" stroke-width="2"/>
-            <text x="780" y="348" text-anchor="middle" font-size="11" font-weight="700" fill="#7a1f2b" font-family="Poppins,sans-serif">CLINIC</text>
-            <text x="780" y="362" text-anchor="middle" font-size="9" fill="#888" font-family="Poppins,sans-serif">Click to inspect</text>
-            <circle cx="730" cy="390" r="10" fill="#16a34a" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="730" cy="390" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-            <circle cx="760" cy="390" r="10" fill="#c8963e" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="760" cy="390" dy="4" text-anchor="middle" font-size="8" fill="#fff">FE</text>
-          </g>
-
-          <!-- Guard House -->
-          <g class="campus-area" id="area-guard-post" onclick="drillDown('guard-post')" tabindex="0">
-            <rect x="380" y="460" width="140" height="80" rx="10" fill="#1f1f1f" stroke="#c8963e" stroke-width="2"/>
-            <text x="450" y="492" text-anchor="middle" font-size="10" font-weight="700" fill="#c8963e" font-family="Poppins,sans-serif">GUARD HOUSE</text>
-            <text x="450" y="508" text-anchor="middle" font-size="8" fill="#888" font-family="Poppins,sans-serif">Security Post</text>
-            <circle cx="430" cy="525" r="8" fill="#16a34a" stroke="#fff" stroke-width="1.5" class="fe-pin"/>
-            <text x="430" cy="525" dy="3" text-anchor="middle" font-size="7" fill="#fff">FE</text>
-          </g>
-
-          <!-- Logo Center -->
-          <circle cx="450" cy="280" r="40" fill="#7a1f2b" opacity=".12"/>
-          <text x="450" y="276" text-anchor="middle" font-size="13" font-weight="700" fill="#7a1f2b" font-family="Poppins,sans-serif">FU CAMPUS</text>
-          <text x="450" y="292" text-anchor="middle" font-size="9" fill="#a08080" font-family="Poppins,sans-serif">Foundation University</text>
+        <svg id="campusSVG" viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg">
+          <path d="M55,40 C15,300 15,600 60,760" fill="none" stroke="#aaa" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect id="z-main" class="campus-area" x="278" y="134" width="205" height="431" rx="4" fill="transparent" stroke="#2a2a2a" stroke-width="1.4" data-name="Main evacuation open space" data-cat="Assembly zone — no building number" onclick="selectMapBuilding(this)"/>
+          <text x="380" y="345" class="num" style="font-size:12px;">MAIN EVACUATION</text>
+          <text x="380" y="360" class="num" style="font-size:12px;">OPEN SPACE</text>
+          <g id="flows"></g>
+          <g id="buildings"></g>
+          <g id="extinguishers"></g>
         </svg>
+      </div>
 
-        <div class="missing-alert" id="missingAlert" style="display:none">
-          <i class="bi bi-exclamation-octagon-fill"></i>
-          <span id="missingAlertMsg"></span>
-          <button onclick="document.getElementById('missingAlert').style.display='none'"><i class="bi bi-x"></i></button>
-        </div>
+      <div class="missing-alert" id="missingAlert" style="display:none">
+        <i class="bi bi-exclamation-octagon-fill"></i>
+        <span id="missingAlertMsg"></span>
+        <button onclick="document.getElementById('missingAlert').style.display='none'"><i class="bi bi-x"></i></button>
       </div>
 
       <div class="drill-panel" id="drillPanel" style="display:none">
@@ -234,59 +113,7 @@
     </div>
   </div>
 
-  <!-- ── SUB-TAB: KEY & ID LOGS ─────────────────────────────────────── -->
-  <div id="subtab-keylogs" class="sub-pane">
-    <div class="pane-header">
-      <h2 class="pane-title"><i class="bi bi-key-fill"></i> Key Borrowing Log (ID Scan)</h2>
-      <div class="pane-actions">
-        <button class="btn-scan" onclick="openScanModal('in')">
-          <i class="bi bi-upc-scan"></i> Scan Borrow
-        </button>
-        <button class="btn-scan btn-scan-out" onclick="openScanModal('out')">
-          <i class="bi bi-box-arrow-right"></i> Scan Return
-        </button>
-      </div>
-    </div>
-    <div class="table-wrap">
-      <table class="sj-table">
-        <thead>
-          <tr><th>Log #</th><th>Name</th><th>Department</th><th>Key Borrowed</th><th>Scan In</th><th>Scan Out</th><th>Status</th><th>Guard</th></tr>
-        </thead>
-        <tbody id="keylogBody"></tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- ── SUB-TAB: GUARD DASHBOARD ───────────────────────────────────── -->
-  <div id="subtab-guard" class="sub-pane">
-    <div class="pane-header">
-      <h2 class="pane-title"><i class="bi bi-person-badge-fill"></i> Security Guard Dashboard</h2>
-      <div class="pane-actions">
-        <span class="guard-shift">On Duty: <strong>Guard Santos, J.</strong></span>
-        <span class="guard-time" id="guardClock"></span>
-      </div>
-    </div>
-    <div class="guard-grid">
-      <div class="guard-card">
-        <div class="gc-title"><i class="bi bi-ticket-perforated-fill"></i> Trip Tickets Released Today</div>
-        <div class="table-wrap">
-          <table class="sj-table">
-            <thead>
-              <tr><th>Ticket #</th><th>Requester</th><th>Vehicle</th><th>Destination</th><th>Departure</th><th>Approved By</th><th>Status</th></tr>
-            </thead>
-            <tbody id="tripTicketBody"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="guard-card">
-        <div class="gc-title"><i class="bi bi-key-fill"></i> Currently Borrowed Keys</div>
-        <div id="activeBorrows" class="borrow-cards"></div>
-      </div>
-      <div class="guard-card guard-card-narrow">
-        <div class="gc-title"><i class="bi bi-activity"></i> Guard Activity Log</div>
-        <ul class="act-log" id="guardActLog"></ul>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -388,30 +215,7 @@
   </div>
 </div>
 
-<div id="scanModal" class="sj-modal-overlay" style="display:none">
-  <div class="sj-modal sj-modal-sm">
-    <div class="sj-modal-header">
-      <h3 id="scanModalTitle"><i class="bi bi-upc-scan"></i> Scan ID — Borrow Key</h3>
-      <button onclick="closeModal('scanModal')"><i class="bi bi-x-lg"></i></button>
-    </div>
-    <div class="sj-modal-body" style="text-align:center">
-      <div class="scan-zone" id="scanZone">
-        <i class="bi bi-upc-scan scan-icon"></i>
-        <p>Place ID card near scanner or enter ID manually</p>
-        <input type="text" id="scanIdInput" placeholder="Employee / Student ID" class="scan-input" autofocus>
-        <div class="fg" style="margin-top:.8rem"><label>Key / Item Borrowed</label>
-          <input type="text" id="scanKeyItem" placeholder="e.g. Room 301 Key, Master Key...">
-        </div>
-        <div class="fg"><label>Department</label>
-          <input type="text" id="scanDept" placeholder="e.g. CCS, Library...">
-        </div>
-        <button class="btn-maroon-sm" style="margin-top:1rem;width:100%" onclick="processScan()">
-          <i class="bi bi-check-circle-fill"></i> Confirm Scan
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Keyscan modal removed; Keylogs moved to Safety -> Keylogs page -->
 
 <script>
 const AREAS = {
@@ -423,6 +227,7 @@ const AREAS = {
   engr:         { name: 'Engineering', units: ['FE-ENG-01','FE-ENG-02','FE-ENG-03'], missing: false },
   ccs:          { name: 'CCS Building', units: ['FE-CCS-01','FE-CCS-02'], missing: false },
   clinic:       { name: 'Clinic', units: ['FE-CLI-01','FE-CLI-02'], missing: false },
+  hrmKitchen:   { name: 'HRM kitchen', units: ['FE-HRM-01','FE-HRM-02'], missing: false },
   'guard-post': { name:'Guard House', units: ['FE-GRD-01'], missing: false },
 };
 
@@ -440,6 +245,8 @@ let feRegistry = [
   { id:'FE-GYM-02', type:'CO2', loc:'Gymnasium', kg:10, lastInsp:'2025-02-10', nextDue:'2025-08-10', status:'New', year:2024, inspector:'Santos, R.', assigned:'Guard Dela Cruz' },
   { id:'FE-CAN-01', type:'Wet Chemical', loc:'Canteen', kg:6, lastInsp:'2025-01-25', nextDue:'2025-04-25', status:'Refillable', year:2021, inspector:'Gomez, T.', assigned:'Guard Santos' },
   { id:'FE-CAN-02', type:'Wet Chemical', loc:'Canteen', kg:6, lastInsp:'2025-01-25', nextDue:'2025-04-25', status:'Refillable', year:2021, inspector:'Gomez, T.', assigned:'Guard Santos' },
+  { id:'FE-HRM-01', type:'CO2', loc:'HRM kitchen', kg:10, lastInsp:'2025-03-05', nextDue:'2025-09-05', status:'New', year:2024, inspector:'Torres, A.', assigned:'Guard Dela Cruz' },
+  { id:'FE-HRM-02', type:'Dry Chemical', loc:'HRM kitchen', kg:6, lastInsp:'2025-02-10', nextDue:'2025-08-10', status:'Refillable', year:2022, inspector:'Torres, A.', assigned:'Guard Dela Cruz' },
   { id:'FE-ENG-01', type:'CO2', loc:'Engineering', kg:10, lastInsp:'2025-03-01', nextDue:'2025-09-01', status:'New', year:2023, inspector:'Flores, C.', assigned:'Guard Santos' },
   { id:'FE-ENG-02', type:'Dry Chemical', loc:'Engineering', kg:6, lastInsp:'2024-09-01', nextDue:'2024-12-01', status:'Defective', year:2016, inspector:'Flores, C.', assigned:'Guard Santos' },
   { id:'FE-ENG-03', type:'CO2', loc:'Engineering', kg:9, lastInsp:'2025-02-15', nextDue:'2025-05-15', status:'Refillable', year:2022, inspector:'Flores, C.', assigned:'Guard Santos' },
@@ -457,38 +264,13 @@ let workOrders = [
   { id:'WO-004', issue:'FE-SCI-02 not returning pressure', loc:'Science Bldg', by:'Lim, B.', date:'2025-07-15', assigned:'Tech Valdez', stage:'Completed/Verified' },
 ];
 
-let keyLogs = [
-  { id:'KL-001', name:'Dela Cruz, J.', dept:'Library', key:'Library Storeroom Key', inTime:'07:30 AM', outTime:'12:00 PM', status:'Returned', guard:'Santos, J.' },
-  { id:'KL-002', name:'Magsaysay, R.', dept:'CCS', key:'Server Room Key', inTime:'08:15 AM', outTime:'—', status:'Active', guard:'Santos, J.' },
-  { id:'KL-003', name:'Torres, F.', dept:'Science', key:'Lab Cabinet Keys', inTime:'09:00 AM', outTime:'10:30 AM', status:'Returned', guard:'Dela Cruz, P.' },
-  { id:'KL-004', name:'Reyes, A.', dept:'Admin', key:'Admin Filing Room Key', inTime:'10:45 AM', outTime:'—', status:'Active', guard:'Santos, J.' },
-];
-
-let currentScanMode = 'in';
-
-const tripTickets = [
-  { no:'TT-2026-090', requester:'Dr. Jose Rizal', vehicle:'Van FUA-8802', dest:'Dumaguete IT Hub', dep:'08:30 AM', approvedBy:'Dir. Santos', status:'Approved' },
-  { no:'TT-2026-091', requester:'Prof. Terante, K.', vehicle:'Bus FUA-8801', dest:'Silliman University', dep:'10:00 AM', approvedBy:'VP Gomez', status:'Released' },
-  { no:'TT-2026-092', requester:'Dean Samson', vehicle:'Hilux FUA-4311', dest:'Valencia Campus', dep:'01:00 PM', approvedBy:'Dir. Santos', status:'Pending' },
-];
-
-const guardActLog = [
-  { time:'10:45 AM', action:'Key KL-004 issued to Reyes, A. (Admin)' },
-  { time:'09:00 AM', action:'Key KL-003 issued to Torres, F. (Science)' },
-  { time:'10:30 AM', action:'Key KL-003 returned by Torres, F.' },
-  { time:'08:15 AM', action:'Key KL-002 issued to Magsaysay, R. (CCS)' },
-  { time:'07:30 AM', action:'Key KL-001 issued to Dela Cruz, J. (Library)' },
-  { time:'12:00 PM', action:'Key KL-001 returned by Dela Cruz, J.' },
-  { time:'07:00 AM', action:'Guard Santos, J. clocked in — Day Shift' },
-];
+// Keylogs and Guard data moved to separate Safety pages (sidebar)
 
 function switchSubTab(id) {
   document.querySelectorAll('#module-safety .sub-tab, .sub-tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick')?.includes("'"+id+"'")));
   document.querySelectorAll('.sub-pane').forEach(p => p.classList.toggle('active', p.id === 'subtab-'+id));
   if (id==='registry') renderRegistry();
   if (id==='workorders') renderWorkOrders();
-  if (id==='keylogs') renderKeyLogs();
-  if (id==='guard') renderGuardDash();
 }
 
 function drillDown(areaKey) {
@@ -518,8 +300,10 @@ function drillDown(areaKey) {
         ${u.status === 'New' ? '🟢' : u.status === 'Refillable' ? '🟠' : '⚫'} ${u.status}
       </div>
       <div class="fec-row"><span>Type</span><strong>${u.type}</strong></div>
+      <div class="fec-row"><span>Installed</span><strong>${u.year}</strong></div>
       <div class="fec-row"><span>Weight</span><strong>${u.kg} kg</strong></div>
-      <div class="fec-row"><span>Age</span><strong>${age} yr${age!==1?'s':''}</strong></div>
+      <div class="fec-row"><span>Installed by</span><strong>${u.inspector}</strong></div>
+      <div class="fec-row"><span>Assigned Guard</span><strong>${u.assigned}</strong></div>
       <div class="fec-row"><span>Last Insp.</span><strong>${u.lastInsp}</strong></div>
       <div class="fec-row"><span>Next Due</span><strong class="${daysLeft<0?'text-danger':daysLeft<30?'text-warn':''}">${u.nextDue} (${daysLeft<0?'OVERDUE':daysLeft+'d'})</strong></div>
     </div>`;
@@ -565,6 +349,211 @@ function drillDown(areaKey) {
 
   document.getElementById('drillPanel').style.display = 'block';
 }
+
+function selectMapBuilding(el) {
+  document.querySelectorAll('#campusSVG .campus-area').forEach(g => g.classList.remove('area-selected'));
+  el.classList.add('area-selected');
+
+  const name = el.getAttribute('data-name') || el.id || 'Campus area';
+  const category = el.getAttribute('data-cat') || 'Campus zone';
+  const areaKey = el.id ? el.id.replace('area-','') : null;
+  let area = areaKey ? AREAS[areaKey] : null;
+
+  if (!area) {
+    const matched = feRegistry.filter(u => u.loc.toLowerCase() === name.toLowerCase());
+    if (matched.length) {
+      area = { name, units: matched.map(u => u.id), missing: false };
+    } else {
+      area = { name, missing:false, units: [] };
+    }
+  }
+
+  document.getElementById('mapLayout').classList.add('drilled');
+  document.getElementById('dpTitle').textContent = area.name;
+  document.getElementById('dpSub').textContent = area.missing ? '⚠ Missing Fire Extinguisher Detected' : 'Fire Extinguisher Status';
+
+  const units = feRegistry.filter(u => area.units.includes(u.id));
+  const today = new Date();
+  if (units.length === 0) {
+    document.getElementById('dpFeGrid').innerHTML = `<div class="no-data" style="padding:1rem;">No fire extinguisher records available for ${name}.</div>`;
+    document.getElementById('dpAlerts').innerHTML = `<div class="no-alert">Tap a unit row to see more details.</div>`;
+    document.getElementById('dpChecklist').innerHTML = '';
+    document.getElementById('dpInspector').innerHTML = `<div class="inspector-card"><div class="insp-av">${name.charAt(0)}</div><div><div class="insp-name">${name}</div><div class="insp-role">${category}</div><div class="insp-meta"><i class="bi bi-calendar3"></i> ${new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})} &nbsp;|&nbsp; <i class="bi bi-clock"></i> ${new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}</div></div></div>`;
+  } else {
+    let feHtml = '';
+    let alertHtml = '';
+    units.forEach(u => {
+      const daysLeft = Math.ceil((new Date(u.nextDue) - today) / 86400000);
+      const urgency  = daysLeft < 0 ? 'fe-urgent' : daysLeft < 30 ? 'fe-warn' : 'fe-ok';
+      const age      = today.getFullYear() - u.year;
+      feHtml += `
+      <div class="fe-card ${urgency}">
+        <div class="fec-id">${u.id}</div>
+        <div class="fec-status status-${u.status.toLowerCase().replace(' ','')}">
+          ${u.status === 'New' ? '🟢' : u.status === 'Refillable' ? '🟠' : '⚫'} ${u.status}
+        </div>
+        <div class="fec-row"><span>Type</span><strong>${u.type}</strong></div>
+        <div class="fec-row"><span>Installed</span><strong>${u.year}</strong></div>
+        <div class="fec-row"><span>Weight</span><strong>${u.kg} kg</strong></div>
+        <div class="fec-row"><span>Installed by</span><strong>${u.inspector}</strong></div>
+        <div class="fec-row"><span>Assigned Guard</span><strong>${u.assigned}</strong></div>
+        <div class="fec-row"><span>Last Insp.</span><strong>${u.lastInsp}</strong></div>
+        <div class="fec-row"><span>Next Due</span><strong class="${daysLeft<0?'text-danger':daysLeft<30?'text-warn':''}">${u.nextDue} (${daysLeft<0?'OVERDUE':daysLeft+'d'})</strong></div>
+      </div>`;
+      if (daysLeft < 30) {
+        alertHtml += `<div class="dp-alert-item ${daysLeft<0?'urgent':'warn'}"><i class="bi bi-exclamation-triangle-fill"></i> <strong>${u.id}</strong> — Next inspection due in ${daysLeft<0?Math.abs(daysLeft)+' days overdue':daysLeft+' days'}.</div>`;
+      }
+    });
+    document.getElementById('dpFeGrid').innerHTML = feHtml;
+    document.getElementById('dpAlerts').innerHTML = alertHtml || '<div class="no-alert">No active alerts for this area.</div>';
+
+    const checklists = {
+      all: ['Inspect pressure gauge','Check for physical damage','Verify pin and seal intact','Check weight (kg)','Record inspection date','Update digital registry','Confirm location accessibility']
+    };
+    let clHtml = '';
+    checklists.all.forEach((item,i) => {
+      const done = i < 5;
+      clHtml += `<label class="cl-item ${done?'done':''}"><input type="checkbox" ${done?'checked':''} onchange="logCheck(this,'${areaKey}','${item}')"> ${item}</label>`;
+    });
+    document.getElementById('dpChecklist').innerHTML = clHtml;
+
+    const inspector = units[0]?.inspector || '—';
+    const assigned  = units[0]?.assigned || '—';
+    document.getElementById('dpInspector').innerHTML = `
+      <div class="inspector-card">
+        <div class="insp-av">${inspector.charAt(0)}</div>
+        <div>
+          <div class="insp-name">${inspector}</div>
+          <div class="insp-role">Safety Inspector</div>
+          <div class="insp-meta"><i class="bi bi-person-badge"></i> ${assigned} &nbsp;|&nbsp; <i class="bi bi-calendar3"></i> ${new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})} &nbsp;|&nbsp; <i class="bi bi-clock"></i> ${new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+      </div>`;
+  }
+
+  if (area.missing) {
+    const alertBanner = document.getElementById('missingAlert');
+    document.getElementById('missingAlertMsg').textContent = `⚠ Missing fire extinguisher detected in ${area.name}. Admin notified.`;
+    alertBanner.style.display = 'flex';
+  }
+
+  document.getElementById('drillPanel').style.display = 'block';
+}
+
+const mapBuildings = [
+  {n:1, name:'Main entrance gate', cat:'NA', x:745, y:802, w:144, h:31, hasExt:false, circle:false},
+  {n:2, name:'University cafeteria / bookstore / sewing', cat:'Blue', x:321, y:720, w:142, h:82, hasExt:true, circle:false},
+  {n:3, name:'College of Law building', cat:'Blue', x:314, y:591, w:149, h:72, hasExt:true, circle:false},
+  {n:4, name:'College of Agriculture and SIE', cat:'Blue', x:262, y:591, w:57, h:211, hasExt:true, circle:false},
+  {n:5, name:'Museo de Vicente', cat:'Green', x:129, y:529, w:82, h:78, hasExt:true, circle:false},
+  {n:6, name:'Bunk house', cat:'Green', x:57, y:529, w:61, h:103, hasExt:false, circle:false},
+  {n:7, name:'Service / exit gate', cat:'NA', x:67, y:488, w:51, h:41, hasExt:true, circle:false},
+  {n:8, name:'University library', cat:'Green', x:90, y:406, w:131, h:72, hasExt:true, circle:false},
+  {n:9, name:'Electric pump house', cat:'Green', x:206, y:380, w:41, h:31, hasExt:false, circle:false},
+  {n:10, name:'Executive house', cat:'Violet', x:129, y:272, w:108, h:62, hasExt:true, circle:false},
+  {n:11, name:'Water pump', cat:'NA', x:167, y:216, w:20, h:20, hasExt:false, circle:true},
+  {n:12, name:'Guest house', cat:'Violet', x:170, y:62, w:67, h:87, hasExt:true, circle:false},
+  {n:13, id:'area-hrmKitchen', name:'HRM kitchen', cat:'Violet', x:221, y:15, w:67, h:62, hasExt:true, circle:false},
+  {n:14, name:'College of Education building', cat:'Violet', x:278, y:62, w:185, h:72, hasExt:true, circle:false},
+  {n:16, name:'Animation Lab / ROTC office', cat:'Pink', x:514, y:98, w:180, h:123, hasExt:false, circle:false},
+  {n:17, name:'LG Sinco Computer Center building', cat:'Pink', x:553, y:221, w:141, h:98, hasExt:true, circle:false},
+  {n:18, name:'Sofia Soller Sinco Hall', cat:'Pink', x:512, y:288, w:192, h:123, hasExt:true, circle:false},
+  {n:19, name:'College of Art & Sciences building', cat:'Yellow', x:519, y:406, w:67, h:185, hasExt:true, circle:false},
+  {n:20, name:'Art & Science laboratories / audio visual rooms', cat:'Yellow', x:586, y:411, w:226, h:149, hasExt:true, circle:false},
+  {n:21, name:'College of Business Economics and Accountancy', cat:'Pink', x:704, y:237, w:185, h:92, hasExt:true, circle:false},
+  {n:22, name:'College of Nursing', cat:'Yellow', x:812, y:360, w:77, h:236, hasExt:true, circle:false},
+  {n:23, name:'Administration building', cat:'Yellow', x:745, y:555, w:144, h:103, hasExt:true, circle:false},
+  {n:24, name:'Rizal monument / social garden', cat:'NA', x:596, y:591, w:149, h:93, hasExt:false, circle:false},
+  {n:25, name:'Registrar\'s office', cat:'Orange', x:694, y:720, w:195, h:36, hasExt:true, circle:false},
+  {n:26, name:'Business and Finance office', cat:'Orange', x:694, y:756, w:195, h:46, hasExt:false, circle:false},
+  {n:27, name:'Old College of Industrial Engineering and Technology', cat:'Orange', x:496, y:746, w:234, h:56, hasExt:true, circle:false},
+  {n:28, name:'Overhead water supply tank', cat:'NA', x:894, y:722, w:16, h:16, hasExt:false, circle:true},
+  {n:29, name:'Flag pole', cat:'NA', x:508, y:611, w:12, h:12, hasExt:false, circle:true}
+];
+
+const flowPaths = [
+  "M255,77 C240,110 230,140 225,170",
+  "M370,90 C350,120 330,150 300,180",
+  "M460,110 C500,140 520,170 540,210",
+  "M694,170 C670,190 640,210 610,225",
+  "M553,270 C540,290 520,300 500,300",
+  "M694,280 C720,300 730,320 730,340",
+  "M596,320 C570,340 540,350 510,355",
+  "M596,400 C570,410 540,420 510,420",
+  "M745,410 C720,430 700,450 690,470",
+  "M519,500 C500,510 480,515 483,520",
+  "M745,600 C720,610 690,615 660,615",
+  "M280,300 C260,330 240,360 237,380",
+  "M129,300 C160,330 190,350 220,400",
+  "M221,442 C250,470 270,500 280,520",
+  "M90,442 C130,460 160,480 200,510",
+  "M67,508 C110,530 150,550 200,570",
+  "M129,568 C160,590 200,610 250,640",
+  "M262,700 C280,730 290,760 300,780",
+  "M463,650 C480,670 490,690 490,710",
+  "M745,660 C700,680 640,700 590,720",
+  "M596,650 C580,680 560,710 520,740"
+];
+
+const campusBuildingsGroup = document.getElementById('buildings');
+const campusExtGroup = document.getElementById('extinguishers');
+mapBuildings.forEach(b => {
+  const ns = 'http://www.w3.org/2000/svg';
+  let shape;
+  if (b.circle) {
+    shape = document.createElementNS(ns, 'circle');
+    shape.setAttribute('cx', b.x + b.w / 2);
+    shape.setAttribute('cy', b.y + b.h / 2);
+    shape.setAttribute('r', b.w / 2);
+  } else {
+    shape = document.createElementNS(ns, 'rect');
+    shape.setAttribute('x', b.x);
+    shape.setAttribute('y', b.y);
+    shape.setAttribute('width', b.w);
+    shape.setAttribute('height', b.h);
+    shape.setAttribute('rx', 3);
+  }
+  shape.setAttribute('class', 'bldg campus-area');
+  if (b.id) shape.setAttribute('id', b.id);
+  shape.setAttribute('data-name', b.name);
+  shape.setAttribute('data-cat', b.cat);
+  shape.setAttribute('onclick', 'selectMapBuilding(this)');
+  shape.setAttribute('fill', '#ffffff');
+  shape.setAttribute('stroke', '#2a2a2a');
+  shape.setAttribute('stroke-width', '1.4');
+  shape.setAttribute('cursor', 'pointer');
+  campusBuildingsGroup.appendChild(shape);
+
+  const label = document.createElementNS(ns, 'text');
+  label.setAttribute('class', 'num');
+  label.setAttribute('x', b.x + b.w / 2);
+  label.setAttribute('y', b.y + b.h / 2 + 3);
+  label.textContent = b.n;
+  label.setAttribute('pointer-events', 'none');
+  campusBuildingsGroup.appendChild(label);
+
+  if (b.hasExt) {
+    const ext = document.createElementNS(ns, 'rect');
+    ext.setAttribute('class', 'ext');
+    ext.setAttribute('x', b.x + 4);
+    ext.setAttribute('y', b.y + 4);
+    ext.setAttribute('width', 8);
+    ext.setAttribute('height', 8);
+    campusExtGroup.appendChild(ext);
+  }
+});
+
+const campusFlowsGroup = document.getElementById('flows');
+flowPaths.forEach(d => {
+  const ns = 'http://www.w3.org/2000/svg';
+  const p = document.createElementNS(ns, 'path');
+  p.setAttribute('class', 'flow');
+  p.setAttribute('d', d);
+  p.setAttribute('fill', 'none');
+  p.setAttribute('stroke', '#aaa');
+  p.setAttribute('stroke-width', '1');
+  p.setAttribute('stroke-dasharray', '3 3');
+  campusFlowsGroup.appendChild(p);
+});
 
 function closeDrill() {
   document.getElementById('mapLayout').classList.remove('drilled');
@@ -669,95 +658,7 @@ function saveNewWO() {
   showToast('Work order created.');
 }
 
-function renderKeyLogs() {
-  document.getElementById('keylogBody').innerHTML = keyLogs.map(k => `
-    <tr>
-      <td><strong>${k.id}</strong></td>
-      <td>${k.name}</td>
-      <td>${k.dept}</td>
-      <td>${k.key}</td>
-      <td>${k.inTime}</td>
-      <td>${k.outTime}</td>
-      <td><span class="kl-badge ${k.status==='Active'?'kl-active':'kl-done'}">${k.status}</span></td>
-      <td>${k.guard}</td>
-    </tr>`).join('');
-}
-
-function openScanModal(mode) {
-  currentScanMode = mode;
-  document.getElementById('scanModalTitle').innerHTML = mode==='in'
-    ? '<i class="bi bi-upc-scan"></i> Scan ID — Borrow Key'
-    : '<i class="bi bi-box-arrow-right"></i> Scan ID — Return Key';
-  document.getElementById('scanModal').style.display = 'flex';
-  setTimeout(()=>document.getElementById('scanIdInput').focus(), 100);
-}
-
-function processScan() {
-  const id   = document.getElementById('scanIdInput').value.trim();
-  const key  = document.getElementById('scanKeyItem').value.trim();
-  const dept = document.getElementById('scanDept').value.trim();
-  if (!id) { showToast('Please enter or scan an ID.', true); return; }
-
-  const now = new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
-  if (currentScanMode === 'in') {
-    const newLog = {
-      id: 'KL-00'+(keyLogs.length+1),
-      name: id, dept, key: key||'(not specified)',
-      inTime: now, outTime:'—', status:'Active', guard:'Santos, J.'
-    };
-    keyLogs.unshift(newLog);
-    showToast(`Key issued to ${id} at ${now}`);
-    guardActLog.unshift({ time:now, action:`Key issued to ${id} (${dept}) — ${key}` });
-  } else {
-    const log = keyLogs.find(l => l.name.toLowerCase().includes(id.toLowerCase()) && l.status==='Active');
-    if (log) { log.outTime = now; log.status = 'Returned'; showToast(`Key returned by ${log.name} at ${now}`); }
-    else { showToast('No active borrow found for this ID.', true); }
-  }
-
-  document.getElementById('scanIdInput').value  = '';
-  document.getElementById('scanKeyItem').value  = '';
-  document.getElementById('scanDept').value     = '';
-  closeModal('scanModal');
-  renderKeyLogs();
-}
-
-function renderGuardDash() {
-  document.getElementById('tripTicketBody').innerHTML = tripTickets.map(t => `
-    <tr>
-      <td><strong>${t.no}</strong></td>
-      <td>${t.requester}</td>
-      <td>${t.vehicle}</td>
-      <td>${t.dest}</td>
-      <td>${t.dep}</td>
-      <td>${t.approvedBy}</td>
-      <td><span class="tt-badge tt-${t.status.toLowerCase()}">${t.status}</span></td>
-    </tr>`).join('');
-
-  const active = keyLogs.filter(k => k.status === 'Active');
-  document.getElementById('activeBorrows').innerHTML = active.length
-    ? active.map(k=>`
-    <div class="borrow-card">
-      <div class="bc-av">${k.name.charAt(0)}</div>
-      <div class="bc-info">
-        <div class="bc-name">${k.name}</div>
-        <div class="bc-dept">${k.dept}</div>
-        <div class="bc-key"><i class="bi bi-key-fill"></i> ${k.key}</div>
-        <div class="bc-time"><i class="bi bi-clock"></i> Since ${k.inTime}</div>
-      </div>
-    </div>`).join('')
-    : '<div class="no-data">No active key borrows.</div>';
-
-  document.getElementById('guardActLog').innerHTML = guardActLog.slice(0,8).map(l=>`
-    <li><span class="al-time">${l.time}</span> ${l.action}</li>`).join('');
-
-  updateGuardClock();
-}
-
-function updateGuardClock() {
-  const el = document.getElementById('guardClock');
-  if (el) el.textContent = new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
-setInterval(updateGuardClock, 1000);
+// Keylogs and Guard dashboard scripts removed; functionality moved to dedicated pages
 
 function openReportModal() { document.getElementById('reportModal').style.display = 'flex'; }
 
@@ -812,8 +713,8 @@ function showToast(msg, isError=false) {
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),400); }, 3500);
 }
 
+
 renderRegistry();
 renderWorkOrders();
-renderKeyLogs();
 </script>
 <?= $this->endSection() ?>

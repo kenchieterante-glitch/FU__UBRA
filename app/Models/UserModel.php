@@ -30,4 +30,32 @@ class UserModel extends Model
     {
         return $this->where('username', $username)->first();
     }
+
+    public function getByEmployeeId($empId)
+    {
+        $empId = trim((string) $empId);
+
+        if ($empId === '') {
+            return null;
+        }
+
+        $columns = ['emp_id', 'employee_id', 'username'];
+        $fieldData = $this->db->getFieldData($this->table) ?: [];
+        $availableColumns = [];
+
+        foreach ($fieldData as $field) {
+            $availableColumns[] = is_object($field) ? $field->name : $field['name'];
+        }
+
+        foreach ($columns as $column) {
+            if (in_array($column, $availableColumns, true)) {
+                $user = $this->where($column, $empId)->first();
+                if ($user) {
+                    return $user;
+                }
+            }
+        }
+
+        return null;
+    }
 }

@@ -2,6 +2,8 @@
 
 <?= $this->section('content') ?>
 
+<?php $toolList = $tools ?? []; $personnelList = $personnel ?? []; ?>
+
 <div class="page-header">
   <div>
     <h1>Tools Equipment Management</h1>
@@ -17,38 +19,79 @@
 <div class="stat-cards">
   <div class="stat-card">
     <h3>Total Tools</h3>
-    <div class="value"><?= esc($total_tools ?? 0) ?></div>
+    <div class="value"><?= esc((string) ((int) ($total_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card">
     <h3>Available Tools</h3>
-    <div class="value"><?= esc($available_tools ?? 0) ?></div>
+    <div class="value"><?= esc((string) ((int) ($available_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card">
     <h3>Borrowed Tools</h3>
-    <div class="value"><?= esc($borrowed_tools ?? 0) ?></div>
+    <div class="value"><?= esc((string) ((int) ($borrowed_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card">
     <h3>Needs Maintenance</h3>
-    <div class="value"><?= esc($maintenance_tools ?? 0) ?></div>
+    <div class="value"><?= esc((string) ((int) ($maintenance_tools ?? 0))) ?></div>
   </div>
 </div>
 
-<table class="data-table">
+<div class="table-card">
+  <div class="table-toolbar">
+    <div class="toolbar-left">
+      <div class="toolbar-search">
+        <button type="button" class="search-icon-btn" onclick="toggleToolsSearch()" aria-label="Search">
+          <i class="bi bi-search"></i>
+        </button>
+        <input type="text" id="toolsSearch" style="display:none;" class="toolbar-search-input hidden" placeholder="Search tool, code, category, location" oninput="filterToolsTable()">
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <div class="filter-menu-wrapper">
+        <button type="button" class="filter-btn" onclick="toggleToolsFilterMenu()" aria-label="Open filters">
+          <i class="bi bi-funnel"></i>
+        </button>
+        <div class="filter-popup" id="toolsFilterPopup">
+          <div class="filter-popup-title">Filter</div>
+          <div class="filter-row">
+            <label for="toolsCategory">Category</label>
+            <select id="toolsCategory" onchange="filterToolsTable()">
+              <option value="">All Categories</option>
+              <?php foreach (array_unique(array_column($toolList, 'category')) as $category): ?>
+                <?php if (!empty($category)): ?>
+                  <option value="<?= esc($category) ?>"><?= esc($category) ?></option>
+                <?php endif; ?>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="filter-row">
+            <label for="toolsAvailability">Availability</label>
+            <select id="toolsAvailability" onchange="filterToolsTable()">
+              <option value="">All Availability</option>
+              <option value="Available">Available</option>
+              <option value="Borrowed">Borrowed</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table id="toolsTable" class="data-table">
   <thead>
     <tr>
       <th>Tools</th>
-      <th>ID / Code</th>
+      <th>Code</th>
       <th>Category</th>
       <th>Location</th>
       <th>Custodian</th>
       <th>Condition</th>
       <th>Availability</th>
-      <th>Actions</th>
     </tr>
   </thead>
   <tbody>
-    <?php if (!empty($tools)): ?>
-      <?php foreach ($tools as $t): ?>
+    <?php if (!empty($toolList)): ?>
+      <?php foreach ($toolList as $t): ?>
         <tr>
           <td class="tool-name-cell"><?= esc($t['asset_name']) ?></td>
           <td><?= esc($t['asset_code']) ?></td>
@@ -57,116 +100,66 @@
           <td><?= esc($t['custodian_name'] ?? 'Unassigned') ?></td>
           <td><span class="status-badge status-<?= strtolower($t['condition_status']) ?>"><?= esc($t['condition_status']) ?></span></td>
           <td><span class="status-badge status-<?= strtolower($t['availability']) ?>"><?= esc($t['availability']) ?></span></td>
-          <td class="action-cell">
-            <button onclick="document.getElementById('editModal<?= $t['id'] ?>').style.display='flex'">Edit</button>
-            <a href="<?= base_url('tools/delete/'.$t['id']) ?>" onclick="return confirm('Delete this tool?')">Delete</a>
-            <?php if ($t['availability'] == 'Available'): ?>
-              <button onclick="document.getElementById('borrowModal<?= $t['id'] ?>').style.display='flex'">Borrow</button>
-            <?php else: ?>
-              <button onclick="document.getElementById('returnModal<?= $t['id'] ?>').style.display='flex'">Return</button>
-            <?php endif; ?>
-          </td>
         </tr>
-
-        <!-- EDIT MODAL -->
-        <div class="modal" id="editModal<?= $t['id'] ?>">
-          <div class="modal-box">
-            <h3>Edit Tool</h3>
-            <form action="<?= base_url('tools/edit/'.$t['id']) ?>" method="post">
-              <?= csrf_field() ?>
-              <label>Tool Name</label>
-              <input type="text" name="asset_name" value="<?= esc($t['asset_name']) ?>" required>
-              <label>Tool Code</label>
-              <input type="text" name="asset_code" value="<?= esc($t['asset_code']) ?>">
-              <label>Category</label>
-              <input type="text" name="category" value="<?= esc($t['category']) ?>">
-              <label>Location</label>
-              <input type="text" name="location" value="<?= esc($t['location']) ?>">
-              <label>Custodian</label>
-              <select name="custodian">
-                <option value="">— Unassigned —</option>
-                <?php foreach ($personnel as $person): ?>
-                  <option value="<?= esc($person['full_name']) ?>" <?= ($t['custodian_name'] ?? '') === $person['full_name'] ? 'selected' : '' ?>><?= esc($person['full_name']) ?></option>
-                <?php endforeach; ?>
-              </select>
-              <label>Condition</label>
-              <select name="condition_status">
-                <option <?= $t['condition_status']=='Excellent'?'selected':'' ?>>Excellent</option>
-                <option <?= $t['condition_status']=='Good'?'selected':'' ?>>Good</option>
-                <option <?= $t['condition_status']=='Fair'?'selected':'' ?>>Fair</option>
-                <option <?= $t['condition_status']=='Poor'?'selected':'' ?>>Poor</option>
-              </select>
-              <div class="modal-actions">
-                <button type="button" onclick="document.getElementById('editModal<?= $t['id'] ?>').style.display='none'">Cancel</button>
-                <button type="submit" class="btn-maroon">Save Changes</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- BORROW MODAL -->
-        <div class="modal" id="borrowModal<?= $t['id'] ?>">
-          <div class="modal-box">
-            <h3>Borrow Tool</h3>
-            <form action="<?= base_url('tools/borrow/'.$t['id']) ?>" method="post">
-              <?= csrf_field() ?>
-              <label>Borrower</label>
-              <select name="borrower" required>
-                <option value="">— Select Borrower —</option>
-                <?php foreach ($personnel as $person): ?>
-                  <option value="<?= esc($person['full_name']) ?>"><?= esc($person['full_name']) ?></option>
-                <?php endforeach; ?>
-              </select>
-              <label>Department</label>
-              <input type="text" name="department">
-              <label>Expected Return Date</label>
-              <input type="date" name="expected_return">
-              <label>Condition on Borrow</label>
-              <select name="condition_on_borrow">
-                <option>Excellent</option>
-                <option>Good</option>
-                <option>Fair</option>
-                <option>Poor</option>
-              </select>
-              <div class="modal-actions">
-                <button type="button" onclick="document.getElementById('borrowModal<?= $t['id'] ?>').style.display='none'">Cancel</button>
-                <button type="submit" class="btn-maroon">Confirm Borrow</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- RETURN MODAL -->
-        <div class="modal" id="returnModal<?= $t['id'] ?>">
-          <div class="modal-box">
-            <h3>Return Tool</h3>
-            <form action="<?= base_url('tools/returnTool/'.$t['id']) ?>" method="post">
-              <?= csrf_field() ?>
-              <label>Returned By</label>
-              <input type="text" name="returned_by" required>
-              <label>Condition Upon Return</label>
-              <select name="condition_on_return">
-                <option>Excellent</option>
-                <option>Good</option>
-                <option>Fair</option>
-                <option>Poor</option>
-              </select>
-              <label>Remarks</label>
-              <input type="text" name="remarks">
-              <div class="modal-actions">
-                <button type="button" onclick="document.getElementById('returnModal<?= $t['id'] ?>').style.display='none'">Cancel</button>
-                <button type="submit" class="btn-maroon">Confirm Return</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
       <?php endforeach; ?>
     <?php else: ?>
-      <tr><td colspan="8">No assets recorded yet.</td></tr>
+      <tr><td colspan="7">No assets recorded yet.</td></tr>
     <?php endif; ?>
   </tbody>
 </table>
+</div>
+
+<script>
+function filterToolsTable() {
+  const search = document.getElementById('toolsSearch').value.toLowerCase();
+  const category = document.getElementById('toolsCategory').value.toLowerCase();
+  const availability = document.getElementById('toolsAvailability').value.toLowerCase();
+  document.querySelectorAll('#toolsTable tbody tr').forEach(row => {
+    const text = row.innerText.toLowerCase();
+    const categoryText = row.children[2]?.innerText.toLowerCase() ?? '';
+    const availabilityText = row.children[6]?.innerText.toLowerCase() ?? '';
+    const matches = text.includes(search)
+      && (!category || categoryText === category)
+      && (!availability || availabilityText === availability);
+    row.style.display = matches ? '' : 'none';
+  });
+}
+
+function toggleToolsSearch() {
+  const input = document.getElementById('toolsSearch');
+  if (!input) return;
+  const isHidden = input.classList.contains('hidden') || input.style.display === 'none';
+  if (isHidden) {
+    input.style.display = 'inline-flex';
+    input.classList.remove('hidden');
+    input.focus();
+  } else {
+    input.style.display = 'none';
+    input.classList.add('hidden');
+  }
+}
+
+function toggleToolsFilterMenu() {
+  const popup = document.getElementById('toolsFilterPopup');
+  if (!popup) return;
+  popup.classList.toggle('visible');
+}
+
+document.addEventListener('click', e => {
+  const wrapper = e.target.closest('.filter-menu-wrapper');
+  const searchWrapper = e.target.closest('.toolbar-search');
+  if (!wrapper) {
+    document.getElementById('toolsFilterPopup')?.classList.remove('visible');
+  }
+  if (!searchWrapper) {
+    const input = document.getElementById('toolsSearch');
+    if (input) {
+      input.style.display = 'none';
+      input.classList.add('hidden');
+    }
+  }
+});
+</script>
 
 <!-- ADD MODAL -->
 <div class="modal" id="addModal">
@@ -185,7 +178,7 @@
       <label>Custodian</label>
       <select name="custodian">
         <option value="">— Unassigned —</option>
-        <?php foreach ($personnel as $person): ?>
+        <?php foreach ($personnelList as $person): ?>
           <option value="<?= esc($person['full_name']) ?>"><?= esc($person['full_name']) ?></option>
         <?php endforeach; ?>
       </select>

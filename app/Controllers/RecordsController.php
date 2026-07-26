@@ -27,7 +27,7 @@ class RecordsController extends BaseController
     public function index()
     {
         if (!$this->session->get('isLoggedIn')) {
-            return redirect()->to('/auth/login');
+            return redirect()->to('/login');
         }
 
         // Auto-flag records for archiving
@@ -117,7 +117,7 @@ class RecordsController extends BaseController
     public function exportReport($format = 'csv')
     {
         if (!$this->session->get('isLoggedIn')) {
-            return redirect()->to('/auth/login');
+            return redirect()->to('/login');
         }
 
         $data = [

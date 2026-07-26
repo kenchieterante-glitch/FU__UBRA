@@ -60,29 +60,29 @@
                         <div class="form-group">
                             <label>System Name</label>
                             <input type="text" name="system_name"
-                                value="<?= esc($settings['system_name']) ?>"
+                                value="<?= esc($settings['system_name'] ?? '') ?>"
                                 placeholder="FU-UBRA Operational Portal">
                         </div>
                         <div class="form-group">
                             <label>University Name</label>
                             <input type="text" name="university"
-                                value="<?= esc($settings['university']) ?>"
+                                value="<?= esc($settings['university'] ?? '') ?>"
                                 placeholder="Foundation University">
                         </div>
                     </div>
                     <div class="form-group">
                         <label>API Integration Keys</label>
                         <input type="text" name="api_key"
-                            value="<?= esc($settings['api_key']) ?>"
+                            value="<?= esc($settings['api_key'] ?? '') ?>"
                             placeholder="Google Calendar API / GPS API / OpenAI Key">
                         <div class="field-hint">Used by Google Calendar, GPS integration, and Mr. UBRA AI.</div>
                     </div>
                     <div class="form-group">
                         <label>Theme</label>
                         <select name="theme">
-                            <option <?= $settings['theme'] === 'Maroon Theme' ? 'selected' : '' ?>>Maroon Theme</option>
-                            <option <?= $settings['theme'] === 'Dark Theme'   ? 'selected' : '' ?>>Dark Theme</option>
-                            <option <?= $settings['theme'] === 'Light Theme'  ? 'selected' : '' ?>>Light Theme</option>
+                            <option <?= ($settings['theme'] ?? '') === 'Maroon Theme' ? 'selected' : '' ?>>Maroon Theme</option>
+                            <option <?= ($settings['theme'] ?? '') === 'Dark Theme'   ? 'selected' : '' ?>>Dark Theme</option>
+                            <option <?= ($settings['theme'] ?? '') === 'Light Theme'  ? 'selected' : '' ?>>Light Theme</option>
                         </select>
                     </div>
                     <button type="submit" class="btn-save">
@@ -101,7 +101,7 @@
                 </div>
                 <table class="stg-table">
                     <thead>
-                        <tr><th>Username</th><th>Email</th><th>Role</th><th>Created</th><th>Action</th></tr>
+                        <tr><th>Employee ID</th><th>Email</th><th>Role</th><th>Created</th><th>Action</th></tr>
                     </thead>
                     <tbody>
                         <?php if (empty($users)): ?>
@@ -111,23 +111,28 @@
                             <tr>
                                 <td>
                                     <div class="user-cell">
-                                        <span class="user-avatar"><?= strtoupper(substr($u['username'],0,1)) ?></span>
-                                        <strong><?= esc($u['username']) ?></strong>
+                                        <span class="user-avatar"><?= strtoupper(substr($u['emp_id'],0,1)) ?></span>
+                                        <strong><?= esc($u['emp_id']) ?></strong>
                                     </div>
                                 </td>
                                 <td><?= esc($u['email'] ?? '—') ?></td>
                                 <td><span class="role-badge"><?= esc($u['role'] ?? 'Staff') ?></span></td>
                                 <td><?= isset($u['created_at']) ? date('M j, Y', strtotime($u['created_at'])) : '—' ?></td>
                                 <td>
-                                    <form method="post"
-                                        action="<?= base_url('settings/deleteUser/' . $u['id']) ?>"
-                                        onsubmit="return confirm('Delete user <?= esc($u['username']) ?>?')">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="btn-delete"
-                                            <?= $u['id'] == session()->get('user_id') ? 'disabled title="Cannot delete yourself"' : '' ?>>
-                                            <i class="bi bi-trash3"></i>
-                                        </button>
-                                    </form>
+                                    <?php $userId = $u['id'] ?? null; ?>
+                                    <?php if ($userId): ?>
+                                        <form method="post"
+                                            action="<?= base_url('settings/deleteUser/' . $userId) ?>"
+                                            onsubmit="return confirm('Delete user <?= esc($u['emp_id'] ?? $u['username']) ?>?')">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn-delete"
+                                                <?= $userId == session()->get('user_id') ? 'disabled title="Cannot delete yourself"' : '' ?>>
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <span class="time-muted">—</span>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -199,17 +204,17 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label>SMTP Host</label>
-                            <input type="text" name="smtp_host" value="<?= esc($settings['smtp_host']) ?>" placeholder="smtp.gmail.com">
+                            <input type="text" name="smtp_host" value="<?= esc($settings['smtp_host'] ?? '') ?>" placeholder="smtp.gmail.com">
                         </div>
                         <div class="form-group">
                             <label>SMTP Port</label>
-                            <input type="number" name="smtp_port" value="<?= esc($settings['smtp_port']) ?>" placeholder="587">
+                            <input type="number" name="smtp_port" value="<?= esc($settings['smtp_port'] ?? '') ?>" placeholder="587">
                         </div>
                     </div>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Gmail Address (SMTP Username)</label>
-                            <input type="email" name="smtp_user" value="<?= esc($settings['smtp_user']) ?>" placeholder="youremail@gmail.com">
+                            <input type="email" name="smtp_user" value="<?= esc($settings['smtp_user'] ?? '') ?>" placeholder="youremail@gmail.com">
                         </div>
                         <div class="form-group">
                             <label>App Password</label>
@@ -220,11 +225,11 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label>From Email</label>
-                            <input type="email" name="smtp_from" value="<?= esc($settings['smtp_from']) ?>" placeholder="noreply@foundation.edu.ph">
+                            <input type="email" name="smtp_from" value="<?= esc($settings['smtp_from'] ?? '') ?>" placeholder="noreply@foundation.edu.ph">
                         </div>
                         <div class="form-group">
                             <label>From Name</label>
-                            <input type="text" name="smtp_name" value="<?= esc($settings['smtp_name']) ?>" placeholder="FU-UBRA System">
+                            <input type="text" name="smtp_name" value="<?= esc($settings['smtp_name'] ?? '') ?>" placeholder="FU-UBRA System">
                         </div>
                     </div>
                     <button type="submit" class="btn-save">
@@ -264,7 +269,7 @@
                     </div>
                     <div class="form-group" style="margin-top:1.2rem;max-width:260px;">
                         <label>Reminder Lead Days</label>
-                        <input type="number" name="reminder_days" value="<?= esc($settings['reminder_days']) ?>" min="1" max="30" placeholder="5">
+                        <input type="number" name="reminder_days" value="<?= esc($settings['reminder_days'] ?? '') ?>" min="1" max="30" placeholder="5">
                         <div class="field-hint">How many days before due date to send reminders.</div>
                     </div>
                     <button type="submit" class="btn-save">
@@ -286,7 +291,7 @@
                 </div>
                 <div class="form-group" style="max-width:480px;margin-top:1.2rem;">
                     <label>Google Calendar API Key / OAuth Client ID</label>
-                    <input type="text" name="api_key" value="<?= esc($settings['api_key']) ?>" placeholder="Enter your Google Calendar API key">
+                    <input type="text" name="api_key" value="<?= esc($settings['api_key'] ?? '') ?>" placeholder="Enter your Google Calendar API key">
                     <div class="field-hint">Set up at <strong>console.cloud.google.com</strong> → APIs & Services → Credentials.</div>
                 </div>
                 <div class="int-note">
@@ -381,11 +386,15 @@
                                 <tr>
                                     <td><?= esc($log['user_id'] ?? '—') ?></td>
                                     <td><span class="log-action"><?= esc($log['action'] ?? '—') ?></span></td>
-                                    <td class="log-desc"><?= esc($log['description'] ?? '—') ?></td>
+                                    <td class="log-desc"><?= esc($log['description'] ?? $log['action'] ?? '—') ?></td>
                                     <td><code><?= esc($log['ip_address'] ?? '—') ?></code></td>
                                     <td>
-                                        <?= date('M j, Y', strtotime($log['created_at'])) ?>
-                                        <span class="time-muted"><?= date('h:i A', strtotime($log['created_at'])) ?></span>
+                                        <?php if (!empty($log['created_at'])): ?>
+                                            <?= date('M j, Y', strtotime($log['created_at'])) ?>
+                                            <span class="time-muted"><?= date('h:i A', strtotime($log['created_at'])) ?></span>
+                                        <?php else: ?>
+                                            <span class="time-muted">—</span>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -401,9 +410,9 @@
         <div class="stg-sysinfo">
             <div class="sysinfo-card">
                 <div class="si-title">System Info</div>
-                <div class="si-row"><span>Version</span><strong><?= $sys_info['version'] ?></strong></div>
-                <div class="si-row"><span>Server</span><strong class="text-success"><?= $sys_info['server'] ?></strong></div>
-                <div class="si-row"><span>Database</span><strong class="text-success"><?= $sys_info['database'] ?></strong></div>
+                <div class="si-row"><span>Version</span><strong><?= esc($sys_info['version'] ?? '—') ?></strong></div>
+                <div class="si-row"><span>Server</span><strong class="text-success"><?= esc($sys_info['server'] ?? '—') ?></strong></div>
+                <div class="si-row"><span>Database</span><strong class="text-success"><?= esc($sys_info['database'] ?? '—') ?></strong></div>
                 <div class="si-divider"></div>
                 <div class="si-label">Connections</div>
                 <div class="si-conn"><span class="conn-dot online"></span> GPS Connection</div>
@@ -439,8 +448,8 @@
             <?= csrf_field() ?>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>Username <span class="req">*</span></label>
-                    <input type="text" name="username" placeholder="e.g. jdoe" required>
+                    <label>Employee ID <span class="req">*</span></label>
+                    <input type="text" name="emp_id" placeholder="e.g. 12345" required>
                 </div>
                 <div class="form-group">
                     <label>Email <span class="req">*</span></label>

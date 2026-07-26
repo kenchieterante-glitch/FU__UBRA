@@ -33,7 +33,51 @@
   </div>
 </div>
 
-<table class="data-table">
+<div class="table-card">
+  <div class="table-toolbar">
+    <div class="toolbar-left">
+      <div class="toolbar-search">
+        <button type="button" class="search-icon-btn" onclick="toggleToolbarSearch('vehiclesSearch')" aria-label="Search">
+          <i class="bi bi-search"></i>
+        </button>
+        <input type="text" id="vehiclesSearch" class="toolbar-search-input hidden" placeholder="Search vehicle, plate, driver, department" oninput="filterVehiclesTable()">
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <div class="filter-menu-wrapper">
+        <button type="button" class="filter-btn" onclick="toggleVehicleFilterMenu()" aria-label="Open filters">
+          <i class="bi bi-funnel"></i>
+        </button>
+        <div class="filter-popup" id="vehicleFilterPopup">
+          <div class="filter-popup-title">Filter</div>
+          <div class="filter-row">
+            <label for="vehiclesType">Type</label>
+            <select id="vehiclesType" onchange="filterVehiclesTable()">
+              <option value="">All Types</option>
+              <?php foreach (array_unique(array_column($vehicles, 'type')) as $type): ?>
+                <?php if (!empty($type)): ?>
+                  <option value="<?= esc($type) ?>"><?= esc($type) ?></option>
+                <?php endif; ?>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="filter-row">
+            <label for="vehiclesAvailability">Availability</label>
+            <select id="vehiclesAvailability" onchange="filterVehiclesTable()">
+              <option value="">All Statuses</option>
+              <option value="Available">Available</option>
+              <option value="In Use">In Use</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Reserved">Reserved</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table id="vehiclesTable" class="data-table">
   <thead>
     <tr>
       <th>Vehicle Detail</th>
@@ -124,6 +168,45 @@
     <?php endif; ?>
   </tbody>
 </table>
+</div>
+
+<script>
+function filterVehiclesTable() {
+  const search = document.getElementById('vehiclesSearch').value.toLowerCase();
+  const type = document.getElementById('vehiclesType').value.toLowerCase();
+  const availability = document.getElementById('vehiclesAvailability').value.toLowerCase();
+  document.querySelectorAll('#vehiclesTable tbody tr').forEach(row => {
+    const text = row.innerText.toLowerCase();
+    const typeText = row.children[2].innerText.toLowerCase();
+    const availabilityText = row.children[7].innerText.toLowerCase();
+    const matches = text.includes(search)
+      && (!type || typeText === type)
+      && (!availability || availabilityText === availability);
+    row.style.display = matches ? '' : 'none';
+  });
+}
+
+function toggleVehicleFilterMenu() {
+  const popup = document.getElementById('vehicleFilterPopup');
+  popup.classList.toggle('visible');
+}
+
+function toggleToolbarSearch(inputId) {
+  const input = document.getElementById(inputId);
+  input.classList.toggle('hidden');
+  if (!input.classList.contains('hidden')) {
+    input.focus();
+  }
+}
+
+document.addEventListener('click', e => {
+  const wrapper = document.querySelector('.filter-menu-wrapper');
+  const popup = document.getElementById('vehicleFilterPopup');
+  if (!wrapper.contains(e.target)) {
+    popup.classList.remove('visible');
+  }
+});
+</script>
 
 <!-- ADD MODAL -->
 <div class="modal" id="addModal">

@@ -16,34 +16,60 @@ class AuthController extends BaseController
         $this->userModel = new UserModel();
     }
 
-    public function login()
+    public function attemptLogin()
     {
-        if ($this->request->getMethod() === 'post') {
-            $username = $this->request->getPost('username');
-            $password = $this->request->getPost('password');
+        $employeeId = trim((string) ($this->request->getPost('employee_id') ?? $this->request->getPost('emp_id') ?? $this->request->getPost('username') ?? ''));
+        $password = $this->request->getPost('password') ?? '';
 
-            $user = $this->userModel->getByUsername($username);
-
-            if ($user && password_verify($password, $user['password_hash'])) {
-                session()->set([
-                    'user_id'      => $user['id'],
-                    'full_name'    => $user['full_name'],
-                    'role'         => $user['role'],
-                    'department_id'=> $user['department_id'],
-                    'isLoggedIn'   => true,
-                ]);
-                return redirect()->to('/dashboard');
-            } else {
-                return redirect()->back()->with('error', 'Invalid username or password.');
-            }
+        if ($employeeId === '' || $password === '') {
+            return redirect()->back()->with('error', 'Employee ID and password are required.');
         }
 
+        $user = $this->userModel->getByEmployeeId($employeeId);
+
+        if (!$user) {
+            return redirect()->back()->with('error', 'Invalid employee ID or password.');
+        }
+
+        $storedHash = $user['password_hash'] ?? null;
+        $legacyPassword = $user['password'] ?? null;
+        $isValid = false;
+
+        if (!empty($storedHash)) {
+            $isValid = password_verify($password, $storedHash);
+        } elseif (!empty($legacyPassword)) {
+            $isValid = password_verify($password, $legacyPassword);
+        }
+
+        if ($isValid) {
+            $userId = $user['id'] ?? $user['user_id'] ?? $user['userid'] ?? null;
+            $fullName = $user['full_name'] ?? $user['name'] ?? $user['emp_id'] ?? 'System Admin';
+            $role = $user['role'] ?? 'Operations';
+            $departmentId = $user['department_id'] ?? null;
+
+            session()->set([
+                'user_id'       => $userId,
+                'emp_id'        => $employeeId,
+                'full_name'     => $fullName,
+                'role'          => $role,
+                'department_id' => $departmentId,
+                'isLoggedIn'    => true,
+            ]);
+
+            return redirect()->to('/dashboard');
+        }
+
+        return redirect()->back()->with('error', 'Invalid employee ID or password.');
+    }
+
+    public function login()
+    {
         return view('auth/login');
     }
 
     public function logout()
     {
         session()->destroy();
-        return redirect()->to('/auth/login');
+        return redirect()->to('/login');
     }
 }
