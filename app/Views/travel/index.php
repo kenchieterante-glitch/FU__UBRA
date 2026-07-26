@@ -117,7 +117,7 @@
                                 <td>
                                     <div class="requester-cell">
                                         <span class="req-name"><?= esc($trip['requester_name']) ?></span>
-                                        <span class="req-dept"><?= esc($trip['department']) ?></span>
+                                        <span class="req-dept"><?= esc($trip['department_name'] ?? '') ?></span>
                                     </div>
                                 </td>
                                 <td><?= esc($trip['destination']) ?></td>

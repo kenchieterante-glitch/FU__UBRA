@@ -51,7 +51,7 @@
                                     <td><?= esc($trip['requester_name']) ?></td>
                                     <td><?= esc($trip['destination']) ?></td>
                                     <td><?= esc($trip['driver_name']) ?></td>
-                                    <td><?= esc($trip['vehicle_plate']) ?></td>
+                                    <td><?= esc($trip['plate_no'] ?? '') ?></td>
                                     <td><?= esc($trip['departure_time']) ?></td>
                                     <td>
                                         <span class="status-badge 

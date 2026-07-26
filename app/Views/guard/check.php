@@ -24,7 +24,7 @@
                 <div class="detail-item"><span class="label">Purpose:</span> <span class="value"><?= esc($trip['purpose']) ?></span></div>
                 <div class="detail-item"><span class="label">Travel Date:</span> <span class="value"><?= date('M d, Y', strtotime($trip['travel_date'])) ?></span></div>
                 <div class="detail-item"><span class="label">Driver:</span> <span class="value"><?= esc($trip['driver_name']) ?></span></div>
-                <div class="detail-item"><span class="label">Vehicle:</span> <span class="value"><?= esc($trip['vehicle_plate']) ?></span></div>
+                <div class="detail-item"><span class="label">Vehicle:</span> <span class="value"><?= esc($trip['plate_no'] ?? '') ?></span></div>
                 <div class="detail-item"><span class="label">Status:</span> <span class="status-badge badge-approved"><?= esc($trip['status']) ?></span></div>
             </div>
 

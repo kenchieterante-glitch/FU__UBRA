@@ -148,9 +148,9 @@ $flash_success = $flash_success ?? '';
                         <?php else: ?>
                             <?php foreach ($notifications as $n): ?>
                             <?php
-                                $isRead   = (bool)$n['is_read'];
-                                $priority = strtoupper($n['priority'] ?? 'ROUTINE');
                                 $status   = $n['status'] ?? 'Unread';
+                                $isRead   = $status !== 'Unread';
+                                $priority = strtoupper($n['priority'] ?? 'ROUTINE');
                                 $priClass = match($priority) {
                                     'CRITICAL' => 'pri-critical',
                                     'MODERATE' => 'pri-moderate',

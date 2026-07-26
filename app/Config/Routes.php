@@ -168,9 +168,9 @@ $routes->post('profile/updateSettings',   'ProfileController::updateSettings');
 // AUTH
 // ============================================================
 $routes->get ('login',        'AuthController::login');
-$routes->post('login',        'AuthController::attemptLogin');
+$routes->post('login',        'AuthController::login');
 $routes->get ('auth/login',   'AuthController::login');
-$routes->post('auth/login',   'AuthController::attemptLogin');
+$routes->post('auth/login',   'AuthController::login');
 $routes->get ('logout',       'AuthController::logout');
 $routes->get ('auth/logout',  'AuthController::logout');
 

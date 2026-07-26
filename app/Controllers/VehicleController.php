@@ -38,8 +38,13 @@ class VehicleController extends BaseController
             'available_vehicles' => $this->vehicleModel->where('availability', 'Available')->countAllResults(),
             'inuse_vehicles'     => $this->vehicleModel->where('availability', 'In Use')->countAllResults(),
             'maintenance_due'    => $this->vehicleModel->where('inspection_status', 'Due Soon')->countAllResults(),
+<<<<<<< Updated upstream
             'personnel'          => $this->personnelModel->findAll(),
             'departments'        => $this->departmentModel->findAll(),
+=======
+            'personnel'   => $this->personnelModel->getDrivers(),
+            'departments' => $this->departmentModel->findAll(),
+>>>>>>> Stashed changes
         ];
 
         return view('vehicles/index', $data);
