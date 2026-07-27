@@ -11,27 +11,41 @@
 </div>
 
 <div class="guard-grid">
-  <div class="guard-card">
-    <div class="pane-header">
-      <div class="pane-title"><i class="bi bi-person-badge-fill"></i> Security Guard Dashboard</div>
-      <div class="pane-actions">
-        <span class="guard-shift">On Duty: <strong>Guard Santos, J.</strong></span>
-        <span class="guard-time" id="guardClock"></span>
+  <div class="guard-main-column">
+    <div class="guard-card">
+      <div class="pane-header">
+        <div class="pane-title"><i class="bi bi-person-badge-fill"></i> Security Guard Dashboard</div>
+        <div class="pane-actions">
+          <span class="guard-shift">On Duty: <strong>Guard Santos, J.</strong></span>
+          <span class="guard-time" id="guardClock"></span>
+        </div>
+      </div>
+
+      <div class="gc-title"><i class="bi bi-ticket-perforated-fill"></i> Trip Tickets Released Today</div>
+      <div class="table-wrap">
+        <table class="sj-table">
+          <thead>
+            <tr><th>Ticket #</th><th>Requester</th><th>Vehicle</th><th>Destination</th><th>Departure</th><th>Approved By</th><th>Status</th></tr>
+          </thead>
+          <tbody id="tripTicketBody"></tbody>
+        </table>
       </div>
     </div>
 
-    <div class="gc-title"><i class="bi bi-ticket-perforated-fill"></i> Trip Tickets Released Today</div>
-    <div class="table-wrap">
-      <table class="sj-table">
-        <thead>
-          <tr><th>Ticket #</th><th>Requester</th><th>Vehicle</th><th>Destination</th><th>Departure</th><th>Approved By</th><th>Status</th></tr>
-        </thead>
-        <tbody id="tripTicketBody"></tbody>
-      </table>
+    <div class="guard-card guard-card-full">
+      <div class="gc-title"><i class="bi bi-key-fill"></i> Keylogs</div>
+      <div class="table-wrap">
+        <table class="sj-table">
+          <thead>
+            <tr><th>Log #</th><th>Name</th><th>Key</th><th>Status</th></tr>
+          </thead>
+          <tbody id="guardKeylogBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <div>
+  <div class="guard-side-column">
     <div class="guard-card">
       <div class="gc-title"><i class="bi bi-key-fill"></i> Currently Borrowed Keys</div>
       <div id="activeBorrows" class="borrow-cards"></div>
@@ -95,6 +109,14 @@ function renderGuardDashboard() {
 
   document.getElementById('guardActLog').innerHTML = guardActLog.map(l => `
     <li><span class="al-time">${l.time}</span> ${l.action}</li>`).join('');
+
+  document.getElementById('guardKeylogBody').innerHTML = keyLogs.map(k => `
+    <tr>
+      <td><strong>${k.id}</strong></td>
+      <td>${k.name}</td>
+      <td>${k.key}</td>
+      <td><span class="kl-badge ${k.status === 'Active' ? 'kl-active' : 'kl-done'}">${k.status}</span></td>
+    </tr>`).join('');
 
   updateGuardClock();
 }

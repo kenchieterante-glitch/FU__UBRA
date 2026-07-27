@@ -1,6 +1,15 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
-<link rel="stylesheet" href="<?= base_url('Assets/css/safety.css') ?>">
+
+<div class="page-header">
+  <div>
+    <h1>Janitorial Monitoring</h1>
+    <p class="page-subtitle">Campus janitorial readiness, active shifts, and consumable stock overview.</p>
+  </div>
+  <button class="btn-report" type="button" onclick="switchJanTab('inventory')"><i class="bi bi-box-seam-fill"></i> Review Inventory</button>
+</div>
+
+<div class="kpi-row" id="janitorialSummary"></div>
 
 <div class="sj-wrapper">
   <!-- ── SUB-TABS FOR JANITORIAL ─────────────────────────────────────────── -->
@@ -21,8 +30,9 @@
     <div class="map-layout" id="janMapLayout">
       <div class="map-container">
         <div class="map-legend">
-          <span class="leg-item"><span class="leg-dot new"></span> Emergency flow</span>
-          <span class="leg-item"><span class="leg-dot refill"></span> Fire extinguisher</span>
+          <span class="leg-item"><span class="leg-dot clean"></span> Clean</span>
+          <span class="leg-item"><span class="leg-dot pending"></span> Pending</span>
+          <span class="leg-item"><span class="leg-dot needs"></span> Needs to Clean</span>
         </div>
 
         <svg id="janSVG" viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg">
@@ -40,7 +50,7 @@
       <div class="drill-panel jan-drill" id="janDrillPanel" style="display:none">
         <div class="dp-header">
           <div>
-            <div class="dp-title" id="janDpTitle">Area</div>
+            <div class="dp-title" id="janDpTitle">Select an area</div>
             <div class="dp-sub">Janitorial Checklist & Assignment</div>
           </div>
           <button class="dp-close" onclick="closeJanDrill()"><i class="bi bi-x-lg"></i> Back to Map</button>
@@ -114,6 +124,12 @@ const AREAS = {
   'guard-post': { name:'Guard House', units: ['FE-GRD-01'], missing: false },
 };
 
+const janAreaStatuses = {
+  admin: 'clean',
+  library: 'pending',
+  science: 'needs',
+};
+
 const janStaff = [
   { name:'Bautista, M.',  zone:'Admin Building Flr 1', tasks:8, done:6, photo:'B', shift:'7AM-3PM', area:'admin' },
   { name:'Dizon, L.',     zone:'Library',              tasks:6, done:3, photo:'D', shift:'7AM-3PM', area:'library' },
@@ -147,6 +163,32 @@ let inventoryItems = [
   { name:'Brooms',                cat:'Tools',          unit:'Pieces',  stock:12, reorder:4,  lastRefill:'2025-06-15' },
 ];
 
+function getJanStatusValue(areaKey) {
+  const explicit = janAreaStatuses[areaKey];
+  if (explicit === 'clean' || explicit === 'pending' || explicit === 'needs') {
+    return explicit;
+  }
+
+  if (areaKey && janAreaChecklists[areaKey]) {
+    const data = janAreaChecklists[areaKey];
+    const done = data.tasks.filter(t => t.done).length;
+    const total = data.tasks.length;
+    const pct = Math.round((done / total) * 100);
+    if (pct === 100) return 'clean';
+    if (pct >= 50) return 'pending';
+    return 'needs';
+  }
+
+  return 'pending';
+}
+
+function getJanStatusDisplay(areaKey) {
+  const value = getJanStatusValue(areaKey);
+  if (value === 'clean') return { label: 'Clean', value: 'clean' };
+  if (value === 'pending') return { label: 'Pending', value: 'pending' };
+  return { label: 'Needs to Clean', value: 'needs' };
+}
+
 function switchJanTab(id) {
   document.querySelectorAll('.sub-tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick').includes("'"+id+"'")));
   document.querySelectorAll('.sub-pane').forEach(p => p.classList.toggle('active', p.id === 'janitorial-'+id));
@@ -165,6 +207,7 @@ function janDrillDown(area) {
   if (!data) return;
 
   const name = AREAS[area]?.name || area;
+  const status = getJanStatusDisplay(area);
   document.getElementById('janDpTitle').textContent = name;
 
   const done   = data.tasks.filter(t=>t.done).length;
@@ -177,13 +220,11 @@ function janDrillDown(area) {
     <div class="jac-av">${data.staff.charAt(0)}</div>
     <div>
       <div class="jac-name">${data.staff}</div>
+      <div class="jac-meta">Cleaner: <strong>${data.staff}</strong></div>
+      <div class="jac-meta">Status: <strong>${status.label}</strong></div>
       <div class="jac-meta">Shift: ${data.shift} &nbsp;|&nbsp; Zone: ${name}</div>
       <div class="jac-meta"><i class="bi bi-calendar3"></i> ${new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})} &nbsp;|&nbsp; <i class="bi bi-clock"></i> ${new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}</div>
     </div>
-  </div>
-  <div class="jan-progress-wrap">
-    <div class="jp-label"><span>Task Progress</span><strong>${done}/${total} (${pct}%)</strong></div>
-    <div class="jp-bar-bg"><div class="jp-bar-fill" style="width:${pct}%;background:${barCol}"></div></div>
   </div>
   <div class="jan-checklist">`;
 
@@ -213,21 +254,18 @@ function selectJanMapBuilding(el) {
   }
 
   const name = el.getAttribute('data-name') || el.id || 'Campus area';
-  const category = el.getAttribute('data-cat') || 'Campus zone';
   const shortName = name.charAt(0);
+  const status = getJanStatusDisplay(el.getAttribute('data-area-key'));
 
   const html = `
   <div class="jan-assigned-card">
     <div class="jac-av">${shortName}</div>
     <div>
       <div class="jac-name">${name}</div>
-      <div class="jac-meta">${category}</div>
+      <div class="jac-meta">Cleaner: <strong>No assigned cleaner</strong></div>
+      <div class="jac-meta">Status: <strong>${status.label}</strong></div>
       <div class="jac-meta"><i class="bi bi-calendar3"></i> ${new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})} &nbsp;|&nbsp; <i class="bi bi-clock"></i> ${new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}</div>
     </div>
-  </div>
-  <div class="jan-progress-wrap">
-    <div class="jp-label"><span>Selected area</span><strong>${category}</strong></div>
-    <div class="jp-bar-bg"><div class="jp-bar-fill" style="width:100%;background:#16a34a"></div></div>
   </div>
   <div class="jan-checklist">
     <p class="placeholder">This map highlights the selected campus building and shows its evacuation zone.</p>
@@ -310,24 +348,69 @@ janMapBuildings.forEach(b => {
     shape.setAttribute('height', b.h);
     shape.setAttribute('rx', 3);
   }
-  shape.setAttribute('class', 'bldg jan-area');
+  const status = getJanStatusValue(b.areaKey);
+  shape.setAttribute('class', `bldg jan-area ${status}`);
   shape.setAttribute('data-name', b.name);
   shape.setAttribute('data-cat', b.cat);
+  shape.setAttribute('data-status', status);
   if (b.areaKey) shape.setAttribute('data-area-key', b.areaKey);
+  shape.setAttribute('aria-label', b.name);
+  shape.setAttribute('tabindex', '0');
   shape.setAttribute('onclick', 'selectJanMapBuilding(this)');
+  const title = document.createElementNS(ns, 'title');
+  title.textContent = b.name;
+  shape.appendChild(title);
   shape.setAttribute('fill', '#ffffff');
   shape.setAttribute('stroke', '#2a2a2a');
   shape.setAttribute('stroke-width', '1.4');
   shape.setAttribute('cursor', 'pointer');
   janBuildingsGroup.appendChild(shape);
 
+  const labelGroup = document.createElementNS(ns, 'g');
+  const maxChars = b.w > 90 ? 24 : b.w > 70 ? 18 : b.w > 45 ? 12 : 8;
+  const words = b.name.split(' ');
+  const lines = [];
+  let currentLine = '';
+  words.forEach(word => {
+    const candidate = currentLine ? `${currentLine} ${word}` : word;
+    if (candidate.length <= maxChars) {
+      currentLine = candidate;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  });
+  if (currentLine) lines.push(currentLine);
+  const visibleLines = lines.slice(0, 2);
+  const boxWidth = Math.min(Math.max(b.w - 8, 24), 90);
+  const boxHeight = Math.max(visibleLines.length * 10 + 6, 16);
+  const boxX = b.x + (b.w - boxWidth) / 2;
+  const boxY = b.y + b.h / 2 - (visibleLines.length * 5) - 4;
+
+  const labelBg = document.createElementNS(ns, 'rect');
+  labelBg.setAttribute('x', boxX);
+  labelBg.setAttribute('y', boxY);
+  labelBg.setAttribute('width', boxWidth);
+  labelBg.setAttribute('height', boxHeight);
+  labelBg.setAttribute('rx', 4);
+  labelBg.setAttribute('fill', 'rgba(255,255,255,0.9)');
+  labelBg.setAttribute('stroke', 'rgba(0,0,0,0.08)');
+  labelGroup.appendChild(labelBg);
+
   const label = document.createElementNS(ns, 'text');
-  label.setAttribute('class', 'num');
+  label.setAttribute('class', 'jan-map-label');
   label.setAttribute('x', b.x + b.w / 2);
-  label.setAttribute('y', b.y + b.h / 2 + 3);
-  label.textContent = b.n;
+  label.setAttribute('y', b.y + b.h / 2 - (visibleLines.length > 1 ? 4 : 0));
   label.setAttribute('pointer-events', 'none');
-  janBuildingsGroup.appendChild(label);
+  visibleLines.forEach((line, idx) => {
+    const tspan = document.createElementNS(ns, 'tspan');
+    tspan.setAttribute('x', b.x + b.w / 2);
+    tspan.setAttribute('y', b.y + b.h / 2 + (idx * 10) - (visibleLines.length > 1 ? 4 : 0));
+    tspan.textContent = line;
+    label.appendChild(tspan);
+  });
+  labelGroup.appendChild(label);
+  janBuildingsGroup.appendChild(labelGroup);
 
   if (b.hasExt) {
     const ext = document.createElementNS(ns, 'rect');
@@ -389,9 +472,7 @@ function renderInventory() {
     const st   = item.stock === 0 ? '<span class="inv-badge inv-out">Out of Stock</span>'
              : low ? '<span class="inv-badge inv-low">Low Stock ⚠</span>'
              : '<span class="inv-badge inv-ok">OK</span>';
-    if (low) {
-      // Simulate notification
-    }
+
     return `<tr>
       <td><strong>${item.name}</strong></td>
       <td>${item.cat}</td>
@@ -407,12 +488,43 @@ function renderInventory() {
   }).join('');
 }
 
+function renderJanitorialSummary() {
+  const totalZones = Object.keys(AREAS).length;
+  const activeShifts = janStaff.length;
+  const lowStock = inventoryItems.filter(item => item.stock <= item.reorder).length;
+  const outOfStock = inventoryItems.filter(item => item.stock === 0).length;
+
+  document.getElementById('janitorialSummary').innerHTML = `
+    <div class="kpi-card">
+      <div class="card-title"><i class="bi bi-shield-check"></i> Janitorial Zones</div>
+      <div class="card-value">${totalZones}</div>
+      <div class="card-note">Monitored campus areas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="card-title"><i class="bi bi-people-fill"></i> Active Shifts</div>
+      <div class="card-value">${activeShifts}</div>
+      <div class="card-note">Staff currently on duty</div>
+    </div>
+    <div class="kpi-card">
+      <div class="card-title"><i class="bi bi-box-seam"></i> Low Stock Items</div>
+      <div class="card-value">${lowStock}</div>
+      <div class="card-note">Need restock soon</div>
+    </div>
+    <div class="kpi-card">
+      <div class="card-title"><i class="bi bi-exclamation-circle"></i> Out of Stock</div>
+      <div class="card-value">${outOfStock}</div>
+      <div class="card-note">Immediate replenishment</div>
+    </div>
+  `;
+}
+
 function refillItem(i) {
   const qty = prompt(`Refill "${inventoryItems[i].name}" — enter quantity to add:`);
   if (qty && !isNaN(qty)) {
     inventoryItems[i].stock += parseInt(qty);
     inventoryItems[i].lastRefill = new Date().toISOString().split('T')[0];
     renderInventory();
+    renderJanitorialSummary();
     showToast(`${inventoryItems[i].name} refilled by ${qty} ${inventoryItems[i].unit}.`);
   }
 }
@@ -449,6 +561,7 @@ function showToast(msg, isError=false) {
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),400); }, 3500);
 }
 
+renderJanitorialSummary();
 renderShiftCards();
 renderInventory();
 </script>

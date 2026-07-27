@@ -20,16 +20,50 @@
     flex-wrap: wrap;
 }
 
-.action-cell button,
-.action-cell a {
-    font-size: 12px;
-    padding: 5px 10px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    background: #fff;
+/* Action Buttons - Minimalist Icon Style */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-buttons .icon-btn {
+    background: none;
+    border: none;
+    color: #666;
     cursor: pointer;
+    font-size: 16px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     text-decoration: none;
+}
+
+.action-buttons .icon-btn:hover {
+    background: #f0f0f0;
     color: #333;
+}
+
+.action-buttons .icon-btn.delete:hover {
+    background: #fee;
+    color: #d32f2f;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .status-online,
@@ -41,17 +75,25 @@
 
 .status-offline,
 .status-expired,
-.status-undermaintenance {
+.status-maintenance {
     background: #fdecea;
     color: #b3261e;
 }
 
-.status-duesoon,
+.status-due-soon,
 .status-pending,
-.status-inuse,
-.status-reserved {
+.status-in-use,
+.status-reserved,
+.status-unknown {
     background: #fff4e0;
     color: #b26a00;
+}
+
+.status-available,
+.status-online,
+.status-completed {
+    background: #e6f4ea;
+    color: #2e7d32;
 }
 
 .modal {

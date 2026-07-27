@@ -53,6 +53,38 @@
     border-radius: 6px;
 }
 
+/* Action Buttons - Minimalist Icon Style */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-buttons .icon-btn {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-buttons .icon-btn:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.action-buttons .icon-btn.delete:hover {
+    background: #fee;
+    color: #d32f2f;
+}
+
 .modal-actions {
     margin-top: 20px;
     display: flex;

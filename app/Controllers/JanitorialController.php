@@ -18,7 +18,8 @@ class JanitorialController extends BaseController
         }
 
         return view('janitorial/index', [
-            'title' => 'Janitorial Monitoring',
+            'title'   => 'Janitorial Monitoring',
+            'pageCss' => 'safety.css',
         ]);
     }
 
@@ -29,7 +30,8 @@ class JanitorialController extends BaseController
         }
 
         return view('janitorial/index', [
-            'title' => 'Janitorial Monitoring',
+            'title'   => 'Janitorial Monitoring',
+            'pageCss' => 'safety.css',
         ]);
     }
 }

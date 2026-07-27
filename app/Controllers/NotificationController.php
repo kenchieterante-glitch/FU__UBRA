@@ -29,7 +29,6 @@ class NotificationController extends BaseController
             'upcoming_count' => count(array_filter($all, fn($n) => strtolower($n['priority'] ?? '') === 'routine')),
             'critical_count' => count(array_filter($all, fn($n) => strtolower($n['priority'] ?? '') === 'critical')),
             'email_count'    => 0,
-            'flash_success'  => $this->session->getFlashdata('success'),
         ];
 
         return view('notifications/index', $data);

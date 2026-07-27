@@ -28,12 +28,7 @@ $today_count = $today_count ?? 0;
 $upcoming_count = $upcoming_count ?? 0;
 $critical_count = $critical_count ?? 0;
 $email_count = $email_count ?? 0;
-$flash_success = $flash_success ?? '';
 ?>
-
-<?php if (!empty($flash_success)): ?>
-        <div class="flash flash-success"><i class="bi bi-check-circle-fill"></i> <?= esc($flash_success) ?></div>
-    <?php endif; ?>
 
     <!-- ── SUMMARY CARDS ────────────────────────────────────────── -->
     <div class="summary-grid">

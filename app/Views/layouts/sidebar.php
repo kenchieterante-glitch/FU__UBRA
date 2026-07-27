@@ -59,7 +59,7 @@
         <li>
             <a href="<?= site_url('gps') ?>" style="color:white;text-decoration:none;">
                 <i class="fa-solid fa-location-dot"></i>
-                GPS Tracing
+                GPS Tracker
             </a>
         </li>
 

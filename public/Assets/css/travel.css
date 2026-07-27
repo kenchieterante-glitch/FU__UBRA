@@ -444,6 +444,10 @@
     text-transform: uppercase;
 }
 
+.warning-text {
+    color: var(--warning);
+}
+
 .badge-pending {
     background: #fef3c7;
     color: #92400e;

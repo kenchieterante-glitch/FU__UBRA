@@ -420,6 +420,13 @@
                 <div class="si-conn"><span class="conn-dot online"></span> AI Connection</div>
             </div>
 
+            <div class="sysinfo-card">
+                <div class="si-title">Session</div>
+                <a href="<?= site_url('logout') ?>" class="btn-save" style="display:inline-flex;align-items:center;justify-content:center;gap:.5rem;text-decoration:none;margin-top:.25rem;">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+
             <div class="ubra-mini">
                 <div class="ubra-header">
                     <span class="ubra-icon">U</span>

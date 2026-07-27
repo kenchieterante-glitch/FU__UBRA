@@ -33,6 +33,56 @@ class TravelController extends BaseController
         }
 
         $trips = $this->travelModel->getAllWithDetails();
+        if (empty($trips)) {
+            $today = date('Y-m-d');
+            $trips = [
+                [
+                    'id' => 1001,
+                    'trip_id' => 'TT-2026-001',
+                    'requester_name' => 'Maria Santos',
+                    'department_name' => 'Administration',
+                    'destination' => 'Cebu City Hall',
+                    'purpose' => 'Official meeting and document handover',
+                    'travel_date' => $today,
+                    'departure_time' => '08:00:00',
+                    'return_time' => '17:00:00',
+                    'driver_name' => 'Ramon Cruz',
+                    'vehicle_plate' => 'UBR-204',
+                    'vehicle_model' => 'Toyota Hiace',
+                    'status' => 'Approved',
+                ],
+                [
+                    'id' => 1002,
+                    'trip_id' => 'TT-2026-002',
+                    'requester_name' => 'Janelle Rivera',
+                    'department_name' => 'Library Services',
+                    'destination' => 'Mandaue Campus',
+                    'purpose' => 'Inventory transfer and outreach',
+                    'travel_date' => date('Y-m-d', strtotime('+1 day')),
+                    'departure_time' => '09:30:00',
+                    'return_time' => '15:30:00',
+                    'driver_name' => 'Leo Dela Cruz',
+                    'vehicle_plate' => 'UBR-118',
+                    'vehicle_model' => 'Toyota Innova',
+                    'status' => 'Pending',
+                ],
+                [
+                    'id' => 1003,
+                    'trip_id' => 'TT-2026-003',
+                    'requester_name' => 'Arnel Bautista',
+                    'department_name' => 'Facilities',
+                    'destination' => 'Cebu Provincial Office',
+                    'purpose' => 'Inspection of maintenance requests',
+                    'travel_date' => date('Y-m-d', strtotime('-1 day')),
+                    'departure_time' => '07:15:00',
+                    'return_time' => '13:00:00',
+                    'driver_name' => 'Cris Lim',
+                    'vehicle_plate' => 'UBR-310',
+                    'vehicle_model' => 'Isuzu ELF',
+                    'status' => 'Completed',
+                ],
+            ];
+        }
         $today = date('Y-m-d');
         $pendingCount = 0;
         $approvedCount = 0;
@@ -56,6 +106,7 @@ class TravelController extends BaseController
 
         $data = [
             'title'             => 'Driver\'s Trip Ticket',
+            'pageCss'           => 'travel.css',
             'trips'             => $trips,
             'personnel'         => $this->personnelModel->findAll(),
             'drivers'           => $this->personnelModel->getDrivers(),

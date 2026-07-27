@@ -1,6 +1,21 @@
 <?php
-  $uri = uri_string();
-  function navActive($seg){ return (strpos(uri_string(), $seg) === 0) ? 'active' : ''; }
+  $currentUri = trim(uri_string(), '/');
+  function navActive($seg){
+      $uri = trim(uri_string(), '/');
+      if ($seg === 'safety') {
+          return $uri === 'safety' ? 'active' : '';
+      }
+      if ($seg === 'safety/guard-dashboard') {
+          return $uri === 'safety/guard-dashboard' ? 'active' : '';
+      }
+      if ($seg === 'personnel') {
+          return $uri === 'personnel' || strpos($uri, 'personnel/') === 0 ? 'active' : '';
+      }
+      if ($seg === 'vehicles') {
+          return $uri === 'vehicles' || $uri === 'travel' || $uri === 'gps' ? 'active' : '';
+      }
+      return $uri === $seg || strpos($uri, $seg . '/') === 0 ? 'active' : '';
+  }
   $fullName = session()->get('full_name') ?? 'System Admin';
   $role     = session()->get('role') ?? 'Operations';
   $initials = strtoupper(substr($fullName,0,1) . (strpos($fullName,' ') !== false ? substr($fullName, strpos($fullName,' ')+1,1) : ''));
@@ -59,7 +74,7 @@
     <nav class="sidebar-nav">
       <a href="<?= base_url('dashboard') ?>" class="<?= navActive('dashboard') ?>"><i class="fa-solid fa-table-cells-large"></i> Dashboard</a>
 
-      <?php $isPersonnelSection = (strpos(uri_string(), 'personnel') === 0); ?>
+      <?php $isPersonnelSection = $currentUri === 'personnel' || strpos($currentUri, 'personnel/') === 0; ?>
       <div class="nav-parent-group <?= $isPersonnelSection ? 'open' : '' ?>">
         <a href="<?= base_url('personnel') ?>" class="nav-parent-link <?= $isPersonnelSection ? 'active open' : '' ?>" data-personnel-toggle>
           <i class="fa-solid fa-users"></i>
@@ -67,6 +82,7 @@
           <i class="fa-solid fa-chevron-down nav-parent-caret"></i>
         </a>
         <div class="nav-submenu" id="personnel-submenu">
+          <a href="<?= base_url('personnel') ?>" class="<?= navActive('personnel') ?>"><i class="fa-solid fa-users"></i> All Personnel</a>
           <a href="<?= base_url('personnel/drivers') ?>" class="<?= navActive('personnel/drivers') ?>"><i class="fa-solid fa-id-badge"></i> Drivers</a>
           <a href="<?= base_url('personnel/janitors') ?>" class="<?= navActive('personnel/janitors') ?>"><i class="fa-solid fa-broom"></i> Janitors</a>
           <a href="<?= base_url('personnel/carpentries') ?>" class="<?= navActive('personnel/carpentries') ?>"><i class="fa-solid fa-hammer"></i> Carpentries</a>
@@ -74,7 +90,7 @@
         </div>
       </div>
 
-      <?php $isVehicleSection = (strpos(uri_string(), 'vehicles') === 0 || strpos(uri_string(), 'travel') === 0 || strpos(uri_string(), 'gps') === 0); ?>
+      <?php $isVehicleSection = $currentUri === 'vehicles' || $currentUri === 'travel' || $currentUri === 'gps'; ?>
       <div class="nav-parent-group <?= $isVehicleSection ? 'open' : '' ?>">
         <a href="<?= base_url('vehicles') ?>" class="nav-parent-link <?= $isVehicleSection ? 'active open' : '' ?>" data-vehicle-toggle>
           <i class="fa-solid fa-truck"></i>
@@ -83,26 +99,15 @@
         </a>
         <div class="nav-submenu" id="vehicle-submenu">
           <a href="<?= base_url('vehicles') ?>" class="<?= navActive('vehicles') ?>"><i class="fa-solid fa-truck"></i> Vehicle Management</a>
-          <a href="<?= base_url('travel') ?>" class="<?= navActive('travel') ?>"><i class="fa-solid fa-plane-departure"></i> Travel Management</a>
+          <a href="<?= base_url('travel') ?>" class="<?= navActive('travel') ?>"><i class="fa-solid fa-road"></i> Travel Management</a>
           <a href="<?= base_url('gps') ?>" class="<?= navActive('gps') ?>"><i class="fa-solid fa-location-dot"></i> GPS Tracker</a>
         </div>
       </div>
 
       <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="fa-solid fa-boxes-stacked"></i> Tools Management</a>
 
-      <?php $isSafetySection = (strpos(uri_string(), 'safety') === 0 || strpos(uri_string(), 'safety/guard-dashboard') === 0 || strpos(uri_string(), 'safety/keylogs') === 0); ?>
-      <div class="nav-parent-group <?= $isSafetySection ? 'open' : '' ?>">
-        <a href="<?= base_url('safety') ?>" class="nav-parent-link <?= $isSafetySection ? 'active open' : '' ?>" data-safety-toggle>
-          <i class="fa-solid fa-hard-hat"></i>
-          <span>Safety Maintenance</span>
-          <i class="fa-solid fa-chevron-down nav-parent-caret"></i>
-        </a>
-        <div class="nav-submenu" id="safety-submenu">
-          <a href="<?= base_url('safety') ?>" class="<?= navActive('safety') ?>"><i class="fa-solid fa-hard-hat"></i> Overview</a>
-          <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>"><i class="fa-solid fa-tv"></i> Guard Dashboard</a>
-          <a href="<?= base_url('safety/keylogs') ?>" class="<?= navActive('safety/keylogs') ?>"><i class="fa-solid fa-key"></i> Keylogs</a>
-        </div>
-      </div>
+      <a href="<?= base_url('safety') ?>" class="<?= navActive('safety') ?>"><i class="fa-solid fa-hard-hat"></i> Safety Maintenance</a>
+      <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>"><i class="fa-solid fa-tv"></i> Guard Dashboard</a>
       <a href="<?= base_url('janitorial') ?>" class="<?= navActive('janitorial') ?>"><i class="fa-solid fa-broom"></i> Janitorial Monitoring</a>
       <a href="<?= base_url('calendar') ?>" class="<?= navActive('calendar') ?>"><i class="fa-solid fa-calendar-days"></i> Calendar</a>
       <a href="<?= base_url('notifications') ?>" class="<?= navActive('notifications') ?>"><i class="fa-solid fa-bell"></i> Notifications</a>
@@ -137,7 +142,6 @@
       <div class="topbar-right">
         <span class="date"><i class="fa-regular fa-calendar"></i> <?= date('l, F d, Y') ?></span>
         <a href="<?= base_url('notifications') ?>" class="icon-btn"><i class="fa-regular fa-bell"></i></a>
-        <a href="<?= site_url('logout') ?>" class="icon-btn" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></a>
         <div class="user-chip">
           <span class="av"><?= esc($initials) ?></span>
           <span><b><?= esc($fullName) ?></b><small><?= esc($role) ?></small></span>
@@ -217,9 +221,15 @@ const personnelLink = document.querySelector('[data-personnel-toggle]');
 const personnelGroup = personnelLink?.closest('.nav-parent-group');
 if (personnelLink && personnelGroup) {
   personnelLink.addEventListener('click', (event) => {
-    event.preventDefault();
-    personnelGroup.classList.toggle('open');
-    personnelLink.classList.toggle('open');
+    const currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
+    const isPersonnelRoute = currentPath === 'personnel' || currentPath.startsWith('personnel/');
+    const clickedCaret = event.target.closest('.nav-parent-caret');
+
+    if (clickedCaret || isPersonnelRoute) {
+      event.preventDefault();
+      personnelGroup.classList.toggle('open');
+      personnelLink.classList.toggle('open');
+    }
   });
 }
 
@@ -227,9 +237,15 @@ const vehicleLink = document.querySelector('[data-vehicle-toggle]');
 const vehicleGroup = vehicleLink?.closest('.nav-parent-group');
 if (vehicleLink && vehicleGroup) {
   vehicleLink.addEventListener('click', (event) => {
-    event.preventDefault();
-    vehicleGroup.classList.toggle('open');
-    vehicleLink.classList.toggle('open');
+    const currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
+    const isVehicleRoute = currentPath === 'vehicles' || currentPath === 'travel' || currentPath === 'gps';
+    const clickedCaret = event.target.closest('.nav-parent-caret');
+
+    if (clickedCaret || isVehicleRoute) {
+      event.preventDefault();
+      vehicleGroup.classList.toggle('open');
+      vehicleLink.classList.toggle('open');
+    }
   });
 }
 

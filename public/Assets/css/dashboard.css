@@ -217,6 +217,13 @@
     background: var(--maroon-dark);
 }
 
+.dash-cleaning-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
 /* ── Module Quick-Access Grid ────────────────────────────────── */
 .module-grid {
     display: grid;

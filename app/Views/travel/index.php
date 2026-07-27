@@ -1,7 +1,6 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
 
-<link rel="stylesheet" href="<?= base_url('Assets/css/travel.css') ?>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-Cng84V8fL4Xq3Q5Z5s0w6h2lY0+u2C0Q1Z7V6l5QxJw3qQ5Z5s0w6h2lY0+u2C0Q1Z7V6l5QxJw3qQ5Z5s0w6h2lY0+u2C0Q1Z7V6l5QxJw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
@@ -28,32 +27,32 @@
     <div class="summary-grid">
         <div class="summary-card pending">
             <div class="summary-label">Pending Requests</div>
-            <div class="summary-value"><?= $pending_count ?></div>
+            <div class="summary-value"><?= $pending_count ?? 0 ?></div>
             <div class="summary-sub warning"><i class="bi bi-exclamation-circle"></i> Requires Approval</div>
         </div>
         <div class="summary-card approved">
             <div class="summary-label">Approved Trips</div>
-            <div class="summary-value"><?= $approved_count ?></div>
+            <div class="summary-value"><?= $approved_count ?? 0 ?></div>
             <div class="summary-sub success"><i class="bi bi-check-circle"></i> Scheduled Next</div>
         </div>
         <div class="summary-card today">
             <div class="summary-label">Today's Trips</div>
-            <div class="summary-value"><?= $today_count ?></div>
+            <div class="summary-value"><?= $today_count ?? 0 ?></div>
             <div class="summary-sub info"><i class="bi bi-truck"></i> Active Dispatch</div>
         </div>
         <div class="summary-card completed">
             <div class="summary-label">Completed Trips</div>
-            <div class="summary-value"><?= $completed_count ?></div>
+            <div class="summary-value"><?= $completed_count ?? 0 ?></div>
             <div class="summary-sub muted">This academic term</div>
         </div>
         <div class="summary-card cancelled">
             <div class="summary-label">Cancelled Trips</div>
-            <div class="summary-value"><?= $cancelled_count ?></div>
+            <div class="summary-value"><?= $cancelled_count ?? 0 ?></div>
             <div class="summary-sub danger">Cancelled / Archived</div>
         </div>
         <div class="summary-card vehicles">
             <div class="summary-label">Available Vehicles</div>
-            <div class="summary-value"><?= $available_vehicles ?>/<?= count($vehicles) + (int)$approved_count ?></div>
+            <div class="summary-value"><?= $available_vehicles ?? 0 ?>/<?= count($vehicles ?? []) + (int)($approved_count ?? 0) ?></div>
             <div class="summary-sub success">Ready to assign</div>
         </div>
     </div>
@@ -157,13 +156,13 @@
                                     <div class="action-btns">
                                         <button class="icon-btn ticket" title="View Trip Ticket"
                                             onclick="viewTicket(<?= $trip['id'] ?>)">
-                                            <i class="bi bi-ticket-perforated"></i>
+                                            <i class="bi bi-eye-fill"></i>
                                         </button>
 
                                         <?php if ($trip['status'] === 'Pending'): ?>
                                             <button class="icon-btn approve" title="Approve Trip"
                                                 onclick="openApproveModal(<?= $trip['id'] ?>, '<?= esc($trip['trip_id']) ?>', '<?= esc($trip['destination']) ?>')">
-                                                <i class="bi bi-check-lg"></i>
+                                                <i class="bi bi-check-circle-fill"></i>
                                             </button>
                                         <?php endif; ?>
                                     </div>
@@ -183,21 +182,21 @@
                 <div class="summary-list">
                     <div class="summary-list-item">
                         <span>Pending approvals</span>
-                        <strong><?= $pending_count ?></strong>
+                        <strong><?= $pending_count ?? 0 ?></strong>
                     </div>
                     <div class="summary-list-item">
                         <span>Approved trips</span>
-                        <strong><?= $approved_count ?></strong>
+                        <strong><?= $approved_count ?? 0 ?></strong>
                     </div>
                     <div class="summary-list-item">
                         <span>Vehicles ready</span>
-                        <strong><?= $available_vehicles ?></strong>
+                        <strong><?= $available_vehicles ?? 0 ?></strong>
                     </div>
                 </div>
             </div>
 
             <!-- Logistics Stats -->
-            <div class="sidebar-card">
+            <div class="sidebar-card" style="display:none;">
                 <div class="sidebar-card-title">Operational Logistics Stats</div>
                 <div class="stat-row">
                     <span>Vehicle Utilization Index</span>
@@ -235,7 +234,7 @@
                         <label>Assign Driver</label>
                         <select name="assigned_driver_id">
                             <option value="">— Select Driver —</option>
-                            <?php foreach ($drivers as $p): ?>
+                            <?php foreach (($drivers ?? []) as $p): ?>
                                 <option value="<?= $p['id'] ?>"><?= esc($p['full_name']) ?></option>
                             <?php endforeach; ?>
                         </select>
@@ -244,7 +243,7 @@
                         <label>Assign Vehicle</label>
                         <select name="assigned_vehicle_id">
                             <option value="">— Select Vehicle —</option>
-                            <?php foreach ($vehicles as $v): ?>
+                            <?php foreach (($vehicles ?? []) as $v): ?>
                                 <option value="<?= $v['id'] ?>"><?= esc($v['vehicle_name']) ?> — <?= esc($v['plate_no']) ?></option>
                             <?php endforeach; ?>
                         </select>
@@ -288,12 +287,6 @@ let html5QrCodeScanner = null;
 // ── Modal helpers ──────────────────────────────────────────────
 function closeApproveModal(){ document.getElementById('approveModal').style.display = 'none'; }
 function closeTicketModal(){ document.getElementById('ticketModal').style.display = 'none'; }
-
-function openApproveModal(id, tripId, destination) {
-    document.getElementById('approveLabel').textContent = tripId + ' → ' + destination;
-    document.getElementById('approveForm').action = '<?= base_url('travel/approve/') ?>' + id;
-    document.getElementById('approveModal').style.display = 'flex';
-}
 
 function openApproveModal(id, tripId, destination) {
     document.getElementById('approveLabel').textContent = tripId + ' → ' + destination;
@@ -403,33 +396,19 @@ function viewTicket(id) {
 function openTicketFromHeader() { alert('Please select a trip from the table to view its ticket.'); }
 function openCalendar() { window.location.href = '<?= base_url('calendar') ?>'; }
 
-function toggleToolbarSearch(inputId) {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    const isHidden = input.classList.contains('hidden');
-    if (isHidden) {
-        input.classList.remove('hidden');
-        input.style.width = '220px';
-        input.style.opacity = '1';
-        input.style.padding = '10px 14px';
-        input.focus();
-    } else {
-        input.classList.add('hidden');
-        input.style.width = '0';
-        input.style.opacity = '0';
-        input.style.padding = '0';
-    }
-}
-
 // ── Table filter ───────────────────────────────────────────────
 function filterTable() {
-    const status    = document.getElementById('statusFilter').value.toLowerCase();
-    const search    = document.getElementById('searchInput').value.toLowerCase();
-    const rows      = document.querySelectorAll('#travelTable tbody tr[data-status]');
+    const status = document.getElementById('statusFilter').value.toLowerCase();
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#travelTable tbody tr[data-status]');
 
     rows.forEach(row => {
-        const matchStatus    = !status || row.dataset.status.toLowerCase() === status;
-        const matchRequester = !search || row.dataset.requester.includes(search);
+        const rowStatus = (row.dataset.status || '').toLowerCase();
+        const rowRequester = (row.dataset.requester || '').toLowerCase();
+        const rowText = (row.textContent || '').toLowerCase();
+
+        const matchStatus = !status || rowStatus === status;
+        const matchRequester = !search || rowRequester.includes(search) || rowText.includes(search);
         row.style.display = matchStatus && matchRequester ? '' : 'none';
     });
 }
@@ -438,14 +417,6 @@ function toggleTravelFilterMenu() {
     const popup = document.getElementById('travelFilterPopup');
     popup.classList.toggle('visible');
 }
-
-document.addEventListener('click', e => {
-    const wrapper = document.querySelector('.filter-menu-wrapper');
-    const popup = document.getElementById('travelFilterPopup');
-    if (wrapper && popup && !wrapper.contains(e.target)) {
-        popup.classList.remove('visible');
-    }
-});
 
 // ── Date / Time formatters ─────────────────────────────────────
 function formatDate(d) {

@@ -3,21 +3,34 @@
 <link rel="stylesheet" href="<?= base_url('Assets/css/safety.css') ?>">
 
 <div class="sj-wrapper">
-  <!-- ── SUB-TABS FOR SAFETY ─────────────────────────────────────────── -->
   <div class="sub-tabs">
-    <button class="sub-tab active" onclick="switchSubTab('map')">
-      <i class="bi bi-map-fill"></i> Campus Map
-    </button>
-    <button class="sub-tab" onclick="switchSubTab('registry')">
-      <i class="bi bi-fire"></i> Equipment Registry
-    </button>
-    <button class="sub-tab" onclick="switchSubTab('workorders')">
-      <i class="bi bi-wrench-adjustable"></i> Work Orders
-    </button>
     <div class="sub-tab-spacer"></div>
     <button class="btn-report" onclick="openReportModal()">
       <i class="bi bi-file-earmark-bar-graph-fill"></i> View Report
     </button>
+  </div>
+
+  <div class="overview-grid">
+    <div class="overview-card">
+      <div class="card-title"><i class="bi bi-fire"></i> Fire Safety Coverage</div>
+      <div class="card-value">21 units</div>
+      <div class="card-sub">3 require attention • 2 due for refill</div>
+    </div>
+    <div class="overview-card">
+      <div class="card-title"><i class="bi bi-clipboard2-check"></i> Inspection Readiness</div>
+      <div class="card-value">92%</div>
+      <div class="card-sub">Most inspections are current and logged</div>
+    </div>
+    <div class="overview-card">
+      <div class="card-title"><i class="bi bi-broom"></i> Janitorial Completion</div>
+      <div class="card-value">8/10 cleaned</div>
+      <div class="card-sub">2 pending follow-up in the east wing</div>
+    </div>
+    <div class="overview-card">
+      <div class="card-title"><i class="bi bi-exclamation-octagon"></i> Critical Alerts</div>
+      <div class="card-value">2 active</div>
+      <div class="card-sub">Missing unit detected in Admin Building</div>
+    </div>
   </div>
 
   <!-- ── SUB-TAB: CAMPUS MAP ─────────────────────────────────────────── -->
@@ -25,8 +38,9 @@
     <div class="map-layout" id="mapLayout">
       <div class="map-container" id="mapContainer">
         <div class="map-legend">
-          <span class="leg-item"><span class="leg-dot new"></span> Emergency flow</span>
-          <span class="leg-item"><span class="leg-dot refill"></span> Fire extinguisher</span>
+          <span class="leg-item"><span class="leg-dot warning"></span> Warning</span>
+          <span class="leg-item"><span class="leg-dot new"></span> New Installed</span>
+          <span class="leg-item"><span class="leg-dot refill"></span> Expires Soon</span>
         </div>
 
         <svg id="campusSVG" viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg">
@@ -54,6 +68,7 @@
           </div>
           <button class="dp-close" onclick="closeDrill()"><i class="bi bi-x-lg"></i> Back to Map</button>
         </div>
+        <div class="dp-status-box" id="dpStatusBox">Status summary will appear here.</div>
         <div class="dp-fe-grid" id="dpFeGrid"></div>
         <div class="dp-section-title"><i class="bi bi-clock-history"></i> Expiry Alerts</div>
         <div id="dpAlerts" class="dp-alerts"></div>
@@ -64,55 +79,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ── SUB-TAB: EQUIPMENT REGISTRY ─────────────────────────────────── -->
-  <div id="subtab-registry" class="sub-pane">
-    <div class="pane-header">
-      <h2 class="pane-title"><i class="bi bi-fire"></i> Fire Safety Equipment Registry</h2>
-      <div class="pane-actions">
-        <input type="text" class="pane-search" placeholder="Search unit ID, location..." id="registrySearch" oninput="filterRegistry()">
-        <select class="pane-filter" id="registryStatus" onchange="filterRegistry()">
-          <option value="">All Status</option>
-          <option value="New">New (Green)</option>
-          <option value="Refillable">Refillable (Orange)</option>
-          <option value="Defective">Defective (Gray)</option>
-          <option value="Missing">Missing</option>
-        </select>
-        <button class="btn-add-record" onclick="openAddFEModal()">
-          <i class="bi bi-plus-lg"></i> Add Unit
-        </button>
-      </div>
-    </div>
-    <div class="table-wrap">
-      <table class="sj-table" id="registryTable">
-        <thead>
-          <tr>
-            <th>Unit ID</th><th>Type</th><th>Location / Building</th>
-            <th>Weight (kg)</th><th>Last Inspection</th><th>Next Due</th>
-            <th>Status</th><th>Age</th><th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="registryBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ── SUB-TAB: WORK ORDERS ───────────────────────────────────────── -->
-  <div id="subtab-workorders" class="sub-pane">
-    <div class="pane-header">
-      <h2 class="pane-title"><i class="bi bi-wrench-adjustable"></i> Maintenance Work Orders</h2>
-      <button class="btn-add-record" onclick="openAddWOModal()"><i class="bi bi-plus-lg"></i> New Work Order</button>
-    </div>
-    <div class="table-wrap">
-      <table class="sj-table">
-        <thead>
-          <tr><th>WO #</th><th>Issue</th><th>Location</th><th>Reported By</th><th>Date Logged</th><th>Assigned To</th><th>Stage</th><th>Action</th></tr>
-        </thead>
-        <tbody id="woBody"></tbody>
-      </table>
-    </div>
-  </div>
-
 
   </div>
 </div>
@@ -371,6 +337,9 @@ function selectMapBuilding(el) {
   document.getElementById('mapLayout').classList.add('drilled');
   document.getElementById('dpTitle').textContent = area.name;
   document.getElementById('dpSub').textContent = area.missing ? '⚠ Missing Fire Extinguisher Detected' : 'Fire Extinguisher Status';
+  const statusBox = document.getElementById('dpStatusBox');
+  const activeStatus = document.querySelector('.campus-area.area-selected')?.classList.contains('area-warning') ? 'Warning' : document.querySelector('.campus-area.area-selected')?.classList.contains('area-new') ? 'New Installed' : document.querySelector('.campus-area.area-selected')?.classList.contains('area-expires') ? 'Expires Soon' : 'Normal';
+  statusBox.innerHTML = `<strong>${activeStatus}</strong><div>${activeStatus === 'Warning' ? 'Immediate attention needed for this area.' : activeStatus === 'New Installed' ? 'This area has recently installed equipment.' : activeStatus === 'Expires Soon' ? 'This area has equipment nearing expiry.' : 'No special alert status for this area.'}</div>`;
 
   const units = feRegistry.filter(u => area.units.includes(u.id));
   const today = new Date();
@@ -447,7 +416,7 @@ const mapBuildings = [
   {n:5, name:'Museo de Vicente', cat:'Green', x:129, y:529, w:82, h:78, hasExt:true, circle:false},
   {n:6, name:'Bunk house', cat:'Green', x:57, y:529, w:61, h:103, hasExt:false, circle:false},
   {n:7, name:'Service / exit gate', cat:'NA', x:67, y:488, w:51, h:41, hasExt:true, circle:false},
-  {n:8, name:'University library', cat:'Green', x:90, y:406, w:131, h:72, hasExt:true, circle:false},
+  {n:8, name:'University library', cat:'Green', x:90, y:406, w:131, h:72, hasExt:true, circle:false, status:'new'},
   {n:9, name:'Electric pump house', cat:'Green', x:206, y:380, w:41, h:31, hasExt:false, circle:false},
   {n:10, name:'Executive house', cat:'Violet', x:129, y:272, w:108, h:62, hasExt:true, circle:false},
   {n:11, name:'Water pump', cat:'NA', x:167, y:216, w:20, h:20, hasExt:false, circle:true},
@@ -460,8 +429,8 @@ const mapBuildings = [
   {n:19, name:'College of Art & Sciences building', cat:'Yellow', x:519, y:406, w:67, h:185, hasExt:true, circle:false},
   {n:20, name:'Art & Science laboratories / audio visual rooms', cat:'Yellow', x:586, y:411, w:226, h:149, hasExt:true, circle:false},
   {n:21, name:'College of Business Economics and Accountancy', cat:'Pink', x:704, y:237, w:185, h:92, hasExt:true, circle:false},
-  {n:22, name:'College of Nursing', cat:'Yellow', x:812, y:360, w:77, h:236, hasExt:true, circle:false},
-  {n:23, name:'Administration building', cat:'Yellow', x:745, y:555, w:144, h:103, hasExt:true, circle:false},
+  {n:22, name:'College of Nursing', cat:'Yellow', x:812, y:360, w:77, h:236, hasExt:true, circle:false, status:'expires'},
+  {n:23, name:'Administration building', cat:'Yellow', x:745, y:555, w:144, h:103, hasExt:true, circle:false, status:'warning'},
   {n:24, name:'Rizal monument / social garden', cat:'NA', x:596, y:591, w:149, h:93, hasExt:false, circle:false},
   {n:25, name:'Registrar\'s office', cat:'Orange', x:694, y:720, w:195, h:36, hasExt:true, circle:false},
   {n:26, name:'Business and Finance office', cat:'Orange', x:694, y:756, w:195, h:46, hasExt:false, circle:false},
@@ -494,6 +463,23 @@ const flowPaths = [
   "M596,650 C580,680 560,710 520,740"
 ];
 
+function getAreaStatus(building) {
+  if (building?.status) return building.status;
+
+  const normalizedName = (building?.name || '').toLowerCase();
+  const areaKey = Object.keys(AREAS).find(key => AREAS[key].name.toLowerCase() === normalizedName);
+  if (!areaKey) return null;
+
+  const area = AREAS[areaKey];
+  const units = feRegistry.filter(u => area.units.includes(u.id));
+  const today = new Date();
+
+  return area.missing || units.some(u => {
+    const daysLeft = Math.ceil((new Date(u.nextDue) - today) / 86400000);
+    return u.status === 'Refillable' || u.status === 'Defective' || daysLeft < 30;
+  }) ? 'warning' : null;
+}
+
 const campusBuildingsGroup = document.getElementById('buildings');
 const campusExtGroup = document.getElementById('extinguishers');
 mapBuildings.forEach(b => {
@@ -513,23 +499,68 @@ mapBuildings.forEach(b => {
     shape.setAttribute('rx', 3);
   }
   shape.setAttribute('class', 'bldg campus-area');
+  const areaStatus = getAreaStatus(b);
+  if (areaStatus) shape.classList.add(`area-${areaStatus}`);
   if (b.id) shape.setAttribute('id', b.id);
   shape.setAttribute('data-name', b.name);
   shape.setAttribute('data-cat', b.cat);
+  shape.setAttribute('aria-label', b.name);
+  shape.setAttribute('tabindex', '0');
   shape.setAttribute('onclick', 'selectMapBuilding(this)');
   shape.setAttribute('fill', '#ffffff');
+  const title = document.createElementNS(ns, 'title');
+  title.textContent = b.name;
+  shape.appendChild(title);
   shape.setAttribute('stroke', '#2a2a2a');
   shape.setAttribute('stroke-width', '1.4');
   shape.setAttribute('cursor', 'pointer');
   campusBuildingsGroup.appendChild(shape);
 
+  const labelGroup = document.createElementNS(ns, 'g');
+  const maxChars = b.w > 90 ? 24 : b.w > 70 ? 18 : b.w > 45 ? 12 : 8;
+  const words = b.name.split(' ');
+  const lines = [];
+  let currentLine = '';
+  words.forEach(word => {
+    const candidate = currentLine ? `${currentLine} ${word}` : word;
+    if (candidate.length <= maxChars) {
+      currentLine = candidate;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  });
+  if (currentLine) lines.push(currentLine);
+  const visibleLines = lines.slice(0, 2);
+  const boxWidth = Math.min(Math.max(b.w - 8, 24), 90);
+  const boxHeight = Math.max(visibleLines.length * 10 + 6, 16);
+  const boxX = b.x + (b.w - boxWidth) / 2;
+  const boxY = b.y + b.h / 2 - (visibleLines.length * 5) - 4;
+
+  const labelBg = document.createElementNS(ns, 'rect');
+  labelBg.setAttribute('x', boxX);
+  labelBg.setAttribute('y', boxY);
+  labelBg.setAttribute('width', boxWidth);
+  labelBg.setAttribute('height', boxHeight);
+  labelBg.setAttribute('rx', 4);
+  labelBg.setAttribute('fill', 'rgba(255,255,255,0.9)');
+  labelBg.setAttribute('stroke', 'rgba(0,0,0,0.08)');
+  labelGroup.appendChild(labelBg);
+
   const label = document.createElementNS(ns, 'text');
-  label.setAttribute('class', 'num');
+  label.setAttribute('class', 'jan-map-label');
   label.setAttribute('x', b.x + b.w / 2);
-  label.setAttribute('y', b.y + b.h / 2 + 3);
-  label.textContent = b.n;
+  label.setAttribute('y', b.y + b.h / 2 - (visibleLines.length > 1 ? 4 : 0));
   label.setAttribute('pointer-events', 'none');
-  campusBuildingsGroup.appendChild(label);
+  visibleLines.forEach((line, idx) => {
+    const tspan = document.createElementNS(ns, 'tspan');
+    tspan.setAttribute('x', b.x + b.w / 2);
+    tspan.setAttribute('y', b.y + b.h / 2 + (idx * 10) - (visibleLines.length > 1 ? 4 : 0));
+    tspan.textContent = line;
+    label.appendChild(tspan);
+  });
+  labelGroup.appendChild(label);
+  campusBuildingsGroup.appendChild(labelGroup);
 
   if (b.hasExt) {
     const ext = document.createElementNS(ns, 'rect');

@@ -1,6 +1,20 @@
+<?php
+/**
+ * @var string $title
+ * @var array<int, array<string, mixed>> $vehicles
+ * @var int $total_vehicles
+ * @var int $available_vehicles
+ * @var int $inuse_vehicles
+ * @var int $maintenance_due
+ * @var array<int, array<string, mixed>> $personnel
+ * @var array<int, array<string, mixed>> $departments
+ */
+?>
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
+
+<?php $normalize_status = fn($value) => strtolower(preg_replace('/[^a-z0-9]+/', '-', trim((string)$value))); ?>
 
 <div class="page-header">
   <div>
@@ -9,10 +23,6 @@
   </div>
   <button class="btn-add" onclick="document.getElementById('addModal').style.display='flex'">+ Add Vehicle</button>
 </div>
-
-<?php if (session()->getFlashdata('success')): ?>
-  <div class="alert-success"><i class="fa-solid fa-circle-check"></i> <?= session()->getFlashdata('success') ?></div>
-<?php endif; ?>
 
 <div class="stat-cards">
   <div class="stat-card">
@@ -100,68 +110,19 @@
           <td><?= esc($v['type']) ?></td>
           <td><?= esc($v['driver_name'] ?? 'Unassigned') ?></td>
           <td><?= esc($v['department_name'] ?? 'Unassigned') ?></td>
-          <td><span class="status-badge status-<?= strtolower($v['gps_status']) ?>"><?= esc($v['gps_status']) ?></span></td>
-          <td><span class="status-badge status-<?= strtolower($v['inspection_status']) ?>"><?= esc($v['inspection_status']) ?></span></td>
-          <td><span class="status-badge status-<?= strtolower($v['availability']) ?>"><?= esc($v['availability']) ?></span></td>
+          <?php $gpsClass = $normalize_status($v['gps_status'] ?? 'unknown'); ?>
+          <?php $inspectionClass = $normalize_status($v['inspection_status'] ?? 'unknown'); ?>
+          <?php $availabilityClass = $normalize_status($v['availability'] ?? 'unknown'); ?>
+          <td><span class="status-badge status-<?= esc($gpsClass) ?>"><?= esc($v['gps_status']) ?></span></td>
+          <td><span class="status-badge status-<?= esc($inspectionClass) ?>"><?= esc($v['inspection_status']) ?></span></td>
+          <td><span class="status-badge status-<?= esc($availabilityClass) ?>"><?= esc($v['availability']) ?></span></td>
           <td class="action-cell">
-            <button onclick="document.getElementById('editModal<?= $v['id'] ?>').style.display='flex'">Edit</button>
-            <a href="<?= base_url('vehicles/delete/'.$v['id']) ?>" onclick="return confirm('Archive this vehicle?')">Archive</a>
+            <div class="action-buttons">
+              <button type="button" class="icon-btn" onclick="document.getElementById('editModal<?= $v['id'] ?>').style.display='flex'" title="Edit"><i class="fa-solid fa-pen"></i></button>
+              <a class="icon-btn delete" href="<?= base_url('vehicles/delete/'.$v['id']) ?>" onclick="return confirm('Archive this vehicle?')" title="Archive"><i class="fa-solid fa-archive"></i></a>
+            </div>
           </td>
         </tr>
-
-        <!-- EDIT MODAL -->
-        <div class="modal" id="editModal<?= $v['id'] ?>">
-          <div class="modal-box">
-            <h3>Edit Vehicle</h3>
-            <form action="<?= base_url('vehicles/edit/'.$v['id']) ?>" method="post">
-              <?= csrf_field() ?>
-              <label>Vehicle Name / Model</label>
-              <input type="text" name="vehicle_name" value="<?= esc($v['vehicle_name']) ?>" required>
-              <label>Plate Number</label>
-              <input type="text" name="plate_no" value="<?= esc($v['plate_no']) ?>" required>
-              <label>Type</label>
-              <input type="text" name="type" value="<?= esc($v['type']) ?>">
-              <label>Driver</label>
-              <select name="driver_id">
-                <option value="">— Unassigned —</option>
-                <?php foreach ($personnel as $p): ?>
-                  <option value="<?= $p['id'] ?>" <?= $p['id']==$v['driver_id']?'selected':'' ?>><?= esc($p['full_name']) ?></option>
-                <?php endforeach; ?>
-              </select>
-              <label>Department</label>
-              <select name="department_id">
-                <option value="">— Unassigned —</option>
-                <?php foreach ($departments as $d): ?>
-                  <option value="<?= $d['id'] ?>" <?= $d['id']==$v['department_id']?'selected':'' ?>><?= esc($d['name']) ?></option>
-                <?php endforeach; ?>
-              </select>
-              <label>GPS Status</label>
-              <select name="gps_status">
-                <option <?= $v['gps_status']=='Online'?'selected':'' ?>>Online</option>
-                <option <?= $v['gps_status']=='Offline'?'selected':'' ?>>Offline</option>
-              </select>
-              <label>Inspection Status</label>
-              <select name="inspection_status">
-                <option <?= $v['inspection_status']=='Completed'?'selected':'' ?>>Completed</option>
-                <option <?= $v['inspection_status']=='Due Soon'?'selected':'' ?>>Due Soon</option>
-                <option <?= $v['inspection_status']=='Expired'?'selected':'' ?>>Expired</option>
-              </select>
-              <label>Availability</label>
-              <select name="availability">
-                <option <?= $v['availability']=='Available'?'selected':'' ?>>Available</option>
-                <option <?= $v['availability']=='In Use'?'selected':'' ?>>In Use</option>
-                <option <?= $v['availability']=='Maintenance'?'selected':'' ?>>Maintenance</option>
-                <option <?= $v['availability']=='Reserved'?'selected':'' ?>>Reserved</option>
-                <option <?= $v['availability']=='Inactive'?'selected':'' ?>>Inactive</option>
-              </select>
-              <div class="modal-actions">
-                <button type="button" onclick="document.getElementById('editModal<?= $v['id'] ?>').style.display='none'">Cancel</button>
-                <button type="submit" class="btn-maroon">Save Changes</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
       <?php endforeach; ?>
     <?php else: ?>
       <tr><td colspan="9">No vehicles recorded yet.</td></tr>
@@ -169,6 +130,62 @@
   </tbody>
 </table>
 </div>
+
+<?php if (!empty($vehicles)): ?>
+  <?php foreach ($vehicles as $v): ?>
+    <div class="modal" id="editModal<?= $v['id'] ?>">
+      <div class="modal-box">
+        <h3>Edit Vehicle</h3>
+        <form action="<?= base_url('vehicles/edit/'.$v['id']) ?>" method="post">
+          <?= csrf_field() ?>
+          <label>Vehicle Name / Model</label>
+          <input type="text" name="vehicle_name" value="<?= esc($v['vehicle_name']) ?>" required>
+          <label>Plate Number</label>
+          <input type="text" name="plate_no" value="<?= esc($v['plate_no']) ?>" required>
+          <label>Type</label>
+          <input type="text" name="type" value="<?= esc($v['type']) ?>">
+          <label>Driver</label>
+          <select name="driver_id">
+            <option value="">— Unassigned —</option>
+            <?php foreach ($personnel as $p): ?>
+              <option value="<?= $p['id'] ?>" <?= $p['id']==$v['driver_id']?'selected':'' ?>><?= esc($p['full_name']) ?></option>
+            <?php endforeach; ?>
+          </select>
+          <label>Department</label>
+          <select name="department_id">
+            <option value="">— Unassigned —</option>
+            <?php foreach ($departments as $d): ?>
+              <option value="<?= $d['id'] ?>" <?= $d['id']==$v['department_id']?'selected':'' ?>><?= esc($d['name']) ?></option>
+            <?php endforeach; ?>
+          </select>
+          <label>GPS Status</label>
+          <select name="gps_status">
+            <option <?= $v['gps_status']=='Online'?'selected':'' ?>>Online</option>
+            <option <?= $v['gps_status']=='Offline'?'selected':'' ?>>Offline</option>
+          </select>
+          <label>Inspection Status</label>
+          <select name="inspection_status">
+            <option <?= $v['inspection_status']=='Completed'?'selected':'' ?>>Completed</option>
+            <option <?= $v['inspection_status']=='Due Soon'?'selected':'' ?>>Due Soon</option>
+            <option <?= $v['inspection_status']=='Expired'?'selected':'' ?>>Expired</option>
+          </select>
+          <label>Availability</label>
+          <select name="availability">
+            <option <?= $v['availability']=='Available'?'selected':'' ?>>Available</option>
+            <option <?= $v['availability']=='In Use'?'selected':'' ?>>In Use</option>
+            <option <?= $v['availability']=='Maintenance'?'selected':'' ?>>Maintenance</option>
+            <option <?= $v['availability']=='Reserved'?'selected':'' ?>>Reserved</option>
+            <option <?= $v['availability']=='Inactive'?'selected':'' ?>>Inactive</option>
+          </select>
+          <div class="modal-actions">
+            <button type="button" onclick="document.getElementById('editModal<?= $v['id'] ?>').style.display='none'">Cancel</button>
+            <button type="submit" class="btn-maroon">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  <?php endforeach; ?>
+<?php endif; ?>
 
 <script>
 function filterVehiclesTable() {

@@ -43,10 +43,34 @@
   <div class="stat-card accent-amber">
     <div class="label"><i class="fa-solid fa-broom"></i> Areas Being Cleaned</div>
     <div class="value">8</div>
-    <div class="trend neutral">3 zones complete</div>
+    <div class="trend neutral attention-text">8 areas already cleaned</div>
+    <div class="dash-cleaning-list">
+      <span class="status-chip success">8 Cleaned</span>
+      <span class="status-chip danger">2 Pending</span>
+    </div>
     <a href="<?= base_url('safety') ?>" class="sc-link">View Map →</a>
   </div>
 
+  <div class="stat-card">
+    <div class="label"><i class="fa-solid fa-door-open"></i> Janitorial Zones</div>
+    <div class="value">8</div>
+    <div class="trend neutral">8 cleaned • 2 pending</div>
+    <a href="<?= base_url('janitorial') ?>" class="sc-link">View Zones →</a>
+  </div>
+
+  <div class="stat-card">
+    <div class="label"><i class="fa-solid fa-key"></i> Active Key Borrowers</div>
+    <div class="value">2</div>
+    <div class="trend neutral">Guard log updated</div>
+    <a href="<?= base_url('safety/guard-dashboard') ?>" class="sc-link">View Logs →</a>
+  </div>
+
+  <div class="stat-card">
+    <div class="label"><i class="fa-solid fa-wrench"></i> Open Work Orders</div>
+    <div class="value">3</div>
+    <div class="trend warning">1 critical</div>
+    <a href="<?= base_url('safety') ?>" class="sc-link">View Orders →</a>
+  </div>
 </div>
 
 <!-- ── ROW 2: MAIN CONTENT GRID ────────────────────────────── -->
@@ -82,51 +106,6 @@
         <?php endif; ?>
       </tbody>
     </table>
-  </div>
-
-  <!-- Safety & Janitorial Overview -->
-  <div class="card dash-safety-panel">
-    <div class="card-head">
-      <span class="card-title"><i class="fa-solid fa-shield-halved" style="color:var(--maroon)"></i> Safety &amp; Janitorial Overview</span>
-      <a href="<?= base_url('safety') ?>" class="card-link">Open Module</a>
-    </div>
-    <div class="dsafe-grid">
-      <a href="<?= base_url('safety') ?>" class="dsafe-item dsafe-fire">
-        <i class="fa-solid fa-fire"></i>
-        <div>
-          <div class="dsafe-val">21</div>
-          <div class="dsafe-lbl">Fire Extinguishers</div>
-          <div class="dsafe-sub">3 need attention</div>
-        </div>
-      </a>
-      <a href="<?= base_url('safety') ?>" class="dsafe-item dsafe-clean">
-        <i class="fa-solid fa-broom"></i>
-        <div>
-          <div class="dsafe-val">8</div>
-          <div class="dsafe-lbl">Janitorial Zones</div>
-          <div class="dsafe-sub">3 fully complete</div>
-        </div>
-      </a>
-      <a href="<?= base_url('safety') ?>" class="dsafe-item dsafe-key">
-        <i class="fa-solid fa-key"></i>
-        <div>
-          <div class="dsafe-val">2</div>
-          <div class="dsafe-lbl">Active Key Borrows</div>
-          <div class="dsafe-sub">Guard log updated</div>
-        </div>
-      </a>
-      <a href="<?= base_url('safety') ?>" class="dsafe-item dsafe-wo">
-        <i class="fa-solid fa-wrench"></i>
-        <div>
-          <div class="dsafe-val">3</div>
-          <div class="dsafe-lbl">Open Work Orders</div>
-          <div class="dsafe-sub">1 critical</div>
-        </div>
-      </a>
-    </div>
-    <a href="<?= base_url('safety') ?>" class="dsafe-btn">
-      <i class="fa-solid fa-arrow-right"></i> Open Safety &amp; Janitorial Module
-    </a>
   </div>
 
 </div>

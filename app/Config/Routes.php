@@ -1,15 +1,40 @@
 <?php
+
+namespace Config;
+
+use CodeIgniter\Router\RouteCollection;
+
 /**
- * FU-UBRA Routes
- * File: app/Config/Routes.php
- *
- * PASTE these route definitions inside your existing Routes.php
- * inside the section where you define application routes.
- * (Below the default CodeIgniter route boilerplate.)
- *
- * Example structure in your Routes.php:
- *   $routes->get('/', 'Home::index');
- *   // ---- PASTE BELOW ----
+ * @var RouteCollection $routes
+ */
+$routes = service('routes');
+
+// Load the system's routing file first, so that the app and ENVIRONMENT
+// can override as needed.
+if (file_exists(SYSTEMPATH . 'Config/Routes.php')) {
+    require SYSTEMPATH . 'Config/Routes.php';
+}
+
+/*
+ * --------------------------------------------------------------------
+ * Router Setup
+ * --------------------------------------------------------------------
+ */
+$routes->setDefaultNamespace('App\Controllers');
+$routes->setDefaultController('Home');
+$routes->setDefaultMethod('index');
+$routes->setTranslateURIDashes(false);
+$routes->set404Override();
+
+// The Auto Routing (Legacy) is very dangerous. It is easy to accidentally
+// create routes that match the directories and controller names, so the
+// legacy *auto* Routing is globally disabled by default.
+// $routes->setAutoRoute(true);
+
+/*
+ * --------------------------------------------------------------------
+ * Route Definitions
+ * --------------------------------------------------------------------
  */
 
 // ============================================================
@@ -49,10 +74,11 @@ $routes->post('vehicles/add',          'VehicleController::add');
 $routes->post('vehicles/edit/(:num)',  'VehicleController::edit/$1');
 $routes->get ('vehicles/delete/(:num)','VehicleController::delete/$1');
 
-// ============================================================
+
 // TRAVEL MANAGEMENT + GPS (COMBINED)
 // GPS Tracker remains available from the Travel section.
-// ============================================================
+
+
 $routes->get ('travel',                  'TravelController::index');
 $routes->post('travel/add',              'TravelController::add');
 $routes->post('travel/approve/(:num)',   'TravelController::approve/$1');
@@ -168,9 +194,8 @@ $routes->post('profile/updateSettings',   'ProfileController::updateSettings');
 // AUTH
 // ============================================================
 $routes->get ('login',        'AuthController::login');
-$routes->post('login',        'AuthController::login');
-$routes->get ('auth/login',   'AuthController::login');
-$routes->post('auth/login',   'AuthController::login');
+$routes->post('login',        'AuthController::attemptLogin');
+$routes->post('auth/login',   'AuthController::attemptLogin');
 $routes->get ('logout',       'AuthController::logout');
 $routes->get ('auth/logout',  'AuthController::logout');
 
@@ -178,3 +203,17 @@ $routes->get ('auth/logout',  'AuthController::logout');
 $routes->get('/', function() {
     return redirect()->to(base_url('dashboard'));
 });
+
+/*
+ * --------------------------------------------------------------------
+ * Additional Routing
+ * --------------------------------------------------------------------
+ *
+ * There will often be times that you need additional routing and you
+ * need it to be able to override any defaults in this file. Nothing
+ * prevents you from adding additional route files or just adding
+ * tables here, logically, the Routes class does not care.
+ */
+if (file_exists(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
+    require APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php';
+}

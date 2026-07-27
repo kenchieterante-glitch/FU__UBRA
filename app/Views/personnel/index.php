@@ -25,10 +25,6 @@ $positionOptions = array_values(array_unique(array_filter($positionOptions)));
   <button class="btn-add" onclick="document.getElementById('addModal').style.display='flex'">+ Add Personnel</button>
 </div>
 
-<?php if (session()->getFlashdata('success')): ?>
-  <div class="alert-success"><i class="fa-solid fa-circle-check"></i> <?= session()->getFlashdata('success') ?></div>
-<?php endif; ?>
-
 <div class="table-card">
   <div class="table-toolbar">
   <div class="toolbar-left">
@@ -79,23 +75,38 @@ $positionOptions = array_values(array_unique(array_filter($positionOptions)));
       <th>Position</th>
       <th>Department</th>
       <th>Assigned Task</th>
+      <th>Status</th>
       <th>Actions</th>
     </tr>
   </thead>
   <tbody>
     <?php if (!empty($personnel)): ?>
       <?php foreach ($personnel as $p): ?>
-        <tr>
+        <?php
+          $departmentName = '';
+          foreach ($departments as $d) {
+            if ((int) $d['id'] === (int) ($p['department_id'] ?? 0)) {
+              $departmentName = (string) $d['name'];
+              break;
+            }
+          }
+          $statusValue = $p['status'] ?? 'Active';
+          $statusClass = (strtolower((string) $statusValue) === 'active') ? 'active' : 'pending';
+        ?>
+        <tr data-search="<?= esc(strtolower((string) ($p['full_name'] ?? '') . ' ' . ($p['emp_id'] ?? '') . ' ' . ($p['email'] ?? '') . ' ' . ($p['assigned_task'] ?? ''))) ?>"
+            data-department="<?= esc(strtolower($departmentName)) ?>"
+            data-position="<?= esc(strtolower((string) ($p['position'] ?? ''))) ?>">
           <td><?= esc($p['full_name']) ?><br><small><?= esc($p['email']) ?></small></td>
           <td><?= esc($p['emp_id']) ?></td>
           <td><?= esc($p['position']) ?></td>
-          <td>
-            <?php foreach ($departments as $d): if ($d['id'] == $p['department_id']) echo esc($d['name']); endforeach; ?>
-          </td>
+          <td><?= esc($departmentName) ?></td>
           <td><?= esc($p['assigned_task']) ?></td>
+          <td><span class="status-badge status-<?= esc($statusClass) ?>"><?= esc($statusValue) ?></span></td>
           <td>
-            <button onclick="document.getElementById('editModal<?= $p['id'] ?>').style.display='flex'">Edit</button>
-            <a href="<?= base_url('personnel/delete/'.$p['id']) ?>" onclick="return confirm('Delete this personnel record?')">Delete</a>
+            <div class="action-buttons">
+              <button class="icon-btn" onclick="document.getElementById('editModal<?= $p['id'] ?>')  .style.display='flex'" title="Edit"><i class="fa-solid fa-pen"></i></button>
+              <a class="icon-btn delete" href="<?= base_url('personnel/delete/'.$p['id']) ?>" onclick="return confirm('Delete this personnel record?')" title="Delete"><i class="fa-solid fa-trash"></i></a>
+            </div>
           </td>
         </tr>
 
@@ -142,7 +153,7 @@ $positionOptions = array_values(array_unique(array_filter($positionOptions)));
 
       <?php endforeach; ?>
     <?php else: ?>
-      <tr><td colspan="6">No personnel records yet.</td></tr>
+      <tr><td colspan="7">No personnel records yet.</td></tr>
     <?php endif; ?>
   </tbody>
 </table>
@@ -163,12 +174,12 @@ function filterPersonnelTable() {
   const searchValue = document.getElementById('personnelSearch').value.toLowerCase();
   const departmentValue = document.getElementById('personnelDepartment').value.toLowerCase();
   const positionValue = document.getElementById('personnelPosition').value.toLowerCase();
-  const rows = document.querySelectorAll('#personnelTable tbody tr');
+  const rows = document.querySelectorAll('#personnelTable tbody tr[data-search]');
 
   rows.forEach(row => {
-    const rowText = row.textContent.toLowerCase();
-    const departmentCell = row.children[3].textContent.toLowerCase();
-    const positionCell = row.children[2].textContent.toLowerCase();
+    const rowText = row.dataset.search || '';
+    const departmentCell = row.dataset.department || '';
+    const positionCell = row.dataset.position || '';
 
     const matchesSearch = !searchValue || rowText.includes(searchValue);
     const matchesDepartment = !departmentValue || departmentCell.includes(departmentValue);

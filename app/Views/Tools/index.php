@@ -86,6 +86,7 @@
       <th>Location</th>
       <th>Custodian</th>
       <th>Condition</th>
+      <th>Status</th>
       <th>Availability</th>
     </tr>
   </thead>
@@ -100,10 +101,19 @@
           <td><?= esc($t['custodian_name'] ?? 'Unassigned') ?></td>
           <td><span class="status-badge status-<?= strtolower($t['condition_status']) ?>"><?= esc($t['condition_status']) ?></span></td>
           <td><span class="status-badge status-<?= strtolower($t['availability']) ?>"><?= esc($t['availability']) ?></span></td>
+          <td>
+            <?php if (($t['availability'] ?? '') === 'Borrowed'): ?>
+              <span class="status-badge status-borrowed">In Use</span>
+            <?php elseif (($t['availability'] ?? '') === 'Maintenance'): ?>
+              <span class="status-badge status-maintenance">Under Repair</span>
+            <?php else: ?>
+              <span class="status-badge status-available">Ready</span>
+            <?php endif; ?>
+          </td>
         </tr>
       <?php endforeach; ?>
     <?php else: ?>
-      <tr><td colspan="7">No assets recorded yet.</td></tr>
+      <tr><td colspan="8">No assets recorded yet.</td></tr>
     <?php endif; ?>
   </tbody>
 </table>

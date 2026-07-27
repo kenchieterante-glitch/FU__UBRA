@@ -28,6 +28,7 @@ class PersonnelController extends BaseController
 
         $data = [
             'title'       => 'Personnel Management',
+            'pageCss'     => 'personnel.css',
             'personnel'   => $this->personnelModel->getAllWithDetails(),
             'departments' => $this->departmentModel->findAll(),
         ];
@@ -43,6 +44,7 @@ class PersonnelController extends BaseController
 
         $data = [
             'title'       => 'Drivers',
+            'pageCss'     => 'personnel.css',
             'personnel'   => $this->personnelModel->getDrivers(),
             'departments' => $this->departmentModel->findAll(),
         ];
@@ -58,6 +60,7 @@ class PersonnelController extends BaseController
 
         $data = [
             'title'       => 'Janitors',
+            'pageCss'     => 'personnel.css',
             'personnel'   => $this->personnelModel->getByPositionKeyword('Cleaning') ?: [],
             'departments' => $this->departmentModel->findAll(),
         ];
@@ -73,6 +76,7 @@ class PersonnelController extends BaseController
 
         $data = [
             'title'       => 'Carpentries',
+            'pageCss'     => 'personnel.css',
             'personnel'   => $this->personnelModel->getByPositionKeyword('Carpenter') ?: [],
             'departments' => $this->departmentModel->findAll(),
         ];
@@ -88,6 +92,7 @@ class PersonnelController extends BaseController
 
         $data = [
             'title'       => 'Maintenance',
+            'pageCss'     => 'personnel.css',
             'personnel'   => $this->personnelModel->like('position', 'Maintenance')
                                                   ->orLike('position', 'Physical Plant')
                                                   ->findAll() ?: [],
