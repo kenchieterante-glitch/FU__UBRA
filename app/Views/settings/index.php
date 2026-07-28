@@ -111,7 +111,7 @@
                             <tr>
                                 <td>
                                     <div class="user-cell">
-                                        <span class="user-avatar"><?= strtoupper(substr($u['emp_id'],0,1)) ?></span>
+                                        <span class="user-avatar"><?= strtoupper(substr((string)($u['emp_id'] ?? ''), 0, 1)) ?></span>
                                         <strong><?= esc($u['emp_id']) ?></strong>
                                     </div>
                                 </td>
