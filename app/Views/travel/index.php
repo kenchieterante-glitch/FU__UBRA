@@ -15,14 +15,6 @@
         <div class="header-actions"></div>
     </div>
 
-    <!-- ── FLASH MESSAGES ──────────────────────────────────────── -->
-    <?php if (!empty($flash_success)): ?>
-        <div class="flash flash-success"><i class="bi bi-check-circle-fill"></i> <?= esc($flash_success) ?></div>
-    <?php endif; ?>
-    <?php if (!empty($flash_error)): ?>
-        <div class="flash flash-error"><i class="bi bi-exclamation-triangle-fill"></i> <?= $flash_error ?></div>
-    <?php endif; ?>
-
     <!-- ── SUMMARY CARDS ───────────────────────────────────────── -->
     <div class="summary-grid">
         <div class="summary-card pending">
@@ -52,7 +44,7 @@
         </div>
         <div class="summary-card vehicles">
             <div class="summary-label">Available Vehicles</div>
-            <div class="summary-value"><?= $available_vehicles ?? 0 ?>/<?= count($vehicles ?? []) + (int)($approved_count ?? 0) ?></div>
+            <div class="summary-value"><?= $available_vehicles ?? 0 ?>/<?= $total_vehicles ?? count($vehicles ?? []) ?></div>
             <div class="summary-sub success">Ready to assign</div>
         </div>
     </div>
@@ -84,10 +76,8 @@
                       </div>
                     </div>
                     <div class="toolbar-search">
-                      <button type="button" class="search-icon-btn" onclick="toggleToolbarSearch('searchInput')" aria-label="Search">
-                        <i class="bi bi-search"></i>
-                      </button>
-                      <input type="text" id="searchInput" class="toolbar-search-input hidden" placeholder="Search requester..." onkeyup="filterTable()">
+                      <input type="text" id="searchInput" class="search-box" placeholder="Search requester..." oninput="filterTable()">
+                      <i class="bi bi-search search-icon"></i>
                     </div>
                 </div>
             </div>
@@ -175,45 +165,6 @@
             </div>
         </div>
 
-        <div class="travel-summary-list">
-            <!-- Operational Summary -->
-            <div class="sidebar-card compact-card">
-                <div class="sidebar-card-title">Operational Summary</div>
-                <div class="summary-list">
-                    <div class="summary-list-item">
-                        <span>Pending approvals</span>
-                        <strong><?= $pending_count ?? 0 ?></strong>
-                    </div>
-                    <div class="summary-list-item">
-                        <span>Approved trips</span>
-                        <strong><?= $approved_count ?? 0 ?></strong>
-                    </div>
-                    <div class="summary-list-item">
-                        <span>Vehicles ready</span>
-                        <strong><?= $available_vehicles ?? 0 ?></strong>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Logistics Stats -->
-            <div class="sidebar-card" style="display:none;">
-                <div class="sidebar-card-title">Operational Logistics Stats</div>
-                <div class="stat-row">
-                    <span>Vehicle Utilization Index</span>
-                    <div class="stat-bar-wrap">
-                        <div class="stat-bar" style="width: 72%"></div>
-                        <span>72%</span>
-                    </div>
-                </div>
-                <div class="stat-row">
-                    <span>Driver Dispatch Rate</span>
-                    <div class="stat-bar-wrap">
-                        <div class="stat-bar success" style="width: 88%"></div>
-                        <span>88%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 

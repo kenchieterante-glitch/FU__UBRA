@@ -19,15 +19,6 @@ class SettingsController extends BaseController
 
         $settings = $this->getSettings();
         $users    = $this->db->table('users')->get()->getResultArray();
-        foreach ($users as &$user) {
-            if (empty($user['id']) && !empty($user['user_id'])) {
-                $user['id'] = $user['user_id'];
-            }
-            if (empty($user['id'])) {
-                $user['id'] = null;
-            }
-        }
-        unset($user);
 
         $logs = [];
         try {
@@ -41,7 +32,9 @@ class SettingsController extends BaseController
                 $log['created_at']  = $log['created_at'] ?? null;
             }
             unset($log);
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            log_message('error', 'SettingsController::index activity_logs fetch failed: ' . $e->getMessage());
+        }
 
         $data = [
             'title'         => 'System Settings',
@@ -67,11 +60,12 @@ class SettingsController extends BaseController
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
 
-        foreach (['system_name','university','api_key','theme'] as $key) {
-            $this->upsertSetting($key, $this->request->getPost($key) ?? '');
+        $ok = true;
+        foreach (['system_name','university','api_key'] as $key) {
+            $ok = $this->upsertSetting($key, $this->request->getPost($key) ?? '') && $ok;
         }
 
-        $this->session->setFlashdata('success', 'General settings saved.');
+        $this->session->setFlashdata($ok ? 'success' : 'error', $ok ? 'General settings saved.' : 'Some general settings could not be saved.');
         return redirect()->to('/settings');
     }
 
@@ -79,13 +73,14 @@ class SettingsController extends BaseController
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
 
+        $ok = true;
         foreach (['smtp_host','smtp_port','smtp_user','smtp_from','smtp_name'] as $key) {
-            $this->upsertSetting($key, $this->request->getPost($key) ?? '');
+            $ok = $this->upsertSetting($key, $this->request->getPost($key) ?? '') && $ok;
         }
         $pass = $this->request->getPost('smtp_pass');
-        if (!empty($pass)) $this->upsertSetting('smtp_pass', $pass);
+        if (!empty($pass)) $ok = $this->upsertSetting('smtp_pass', $pass) && $ok;
 
-        $this->session->setFlashdata('success', 'Email settings saved.');
+        $this->session->setFlashdata($ok ? 'success' : 'error', $ok ? 'Email settings saved.' : 'Some email settings could not be saved.');
         return redirect()->to('/settings');
     }
 
@@ -93,12 +88,13 @@ class SettingsController extends BaseController
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
 
+        $ok = true;
         foreach (['notif_maintenance','notif_vehicle','notif_janitorial','notif_asset','notif_travel'] as $key) {
-            $this->upsertSetting($key, $this->request->getPost($key) ? '1' : '0');
+            $ok = $this->upsertSetting($key, $this->request->getPost($key) ? '1' : '0') && $ok;
         }
-        $this->upsertSetting('reminder_days', $this->request->getPost('reminder_days') ?? '5');
+        $ok = $this->upsertSetting('reminder_days', $this->request->getPost('reminder_days') ?? '5') && $ok;
 
-        $this->session->setFlashdata('success', 'Notification settings saved.');
+        $this->session->setFlashdata($ok ? 'success' : 'error', $ok ? 'Notification settings saved.' : 'Some notification settings could not be saved.');
         return redirect()->to('/settings');
     }
 
@@ -112,18 +108,27 @@ class SettingsController extends BaseController
     public function addUser()
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
+        if ($resp = $this->requireAdmin()) return $resp;
 
+        $fullName   = $this->request->getPost('full_name');
         $employeeId = $this->request->getPost('emp_id');
         $email      = $this->request->getPost('email');
         $role       = $this->request->getPost('role') ?? 'Staff';
         $password   = $this->request->getPost('password');
 
-        if (empty($employeeId) || empty($email) || empty($password)) {
-            $this->session->setFlashdata('error', 'Employee ID, email, and password are required.');
+        if (empty($fullName) || empty($employeeId) || empty($email) || empty($password)) {
+            $this->session->setFlashdata('error', 'Full name, employee ID, email, and password are required.');
             return redirect()->to('/settings');
         }
 
+        // department_id is this table's primary key and isn't auto-increment,
+        // so it has to be assigned explicitly — it's not linked to the real
+        // departments table (no FK), just an internal per-account counter here.
+        $nextId = (int) ($this->db->table('users')->selectMax('department_id')->get()->getRow()->department_id ?? 0) + 1;
+
         $this->db->table('users')->insert([
+            'department_id' => $nextId,
+            'full_name'  => $fullName,
             'emp_id'     => $employeeId,
             'username'   => $employeeId,
             'email'      => $email,
@@ -139,13 +144,15 @@ class SettingsController extends BaseController
     public function deleteUser($id)
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
+        if ($resp = $this->requireAdmin()) return $resp;
 
         if ($id == $this->session->get('user_id')) {
             $this->session->setFlashdata('error', 'You cannot delete your own account.');
             return redirect()->to('/settings');
         }
 
-        $this->db->table('users')->where('id', $id)->delete();
+        // users' real primary key is department_id — there is no 'id' column.
+        $this->db->table('users')->where('department_id', $id)->delete();
         $this->session->setFlashdata('success', 'User deleted.');
         return redirect()->to('/settings');
     }
@@ -165,7 +172,6 @@ class SettingsController extends BaseController
             'system_name'       => 'FU-UBRA Operational Portal',
             'university'        => 'Foundation University',
             'api_key'           => '',
-            'theme'             => 'Maroon Theme',
             'smtp_host'         => 'smtp.gmail.com',
             'smtp_port'         => '587',
             'smtp_user'         => '',
@@ -185,12 +191,14 @@ class SettingsController extends BaseController
             foreach ($rows as $row) {
                 $defaults[$row['setting_key']] = $row['setting_value'];
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            log_message('error', 'SettingsController::getSettings fetch failed: ' . $e->getMessage());
+        }
 
         return $defaults;
     }
 
-    private function upsertSetting(string $key, string $value): void
+    private function upsertSetting(string $key, string $value): bool
     {
         try {
             $exists = $this->db->table('system_settings')->where('setting_key', $key)->countAllResults();
@@ -203,7 +211,11 @@ class SettingsController extends BaseController
                     'setting_value' => $value,
                 ]);
             }
-        } catch (\Exception $e) {}
+            return true;
+        } catch (\Exception $e) {
+            log_message('error', "SettingsController::upsertSetting failed for '{$key}': " . $e->getMessage());
+            return false;
+        }
     }
 }
 ?>

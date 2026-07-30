@@ -18,6 +18,12 @@ class AuthController extends BaseController
 
     public function attemptLogin()
     {
+        if ($this->isAuthenticated()) {
+            $this->setNoStoreHeaders();
+
+            return redirect()->to('/dashboard');
+        }
+
         $employeeId = trim((string) ($this->request->getPost('employee_id') ?? $this->request->getPost('emp_id') ?? $this->request->getPost('username') ?? ''));
         $password = $this->request->getPost('password') ?? '';
 
@@ -42,12 +48,16 @@ class AuthController extends BaseController
         }
 
         if ($isValid) {
-            $userId = $user['id'] ?? $user['user_id'] ?? $user['userid'] ?? null;
+            // The users table's real primary key is department_id (no 'id' column exists),
+            // so that's the identifier that actually resolves for session['user_id'].
+            $userId = $user['id'] ?? $user['user_id'] ?? $user['userid'] ?? $user['department_id'] ?? null;
             $fullName = $user['full_name'] ?? $user['name'] ?? $user['emp_id'] ?? 'System Admin';
             $role = $user['role'] ?? 'Operations';
             $departmentId = $user['department_id'] ?? null;
 
-            session()->set([
+            $session = service('session');
+            $session->regenerate(true);
+            $session->set([
                 'user_id'       => $userId,
                 'emp_id'        => $employeeId,
                 'full_name'     => $fullName,
@@ -55,6 +65,8 @@ class AuthController extends BaseController
                 'department_id' => $departmentId,
                 'isLoggedIn'    => true,
             ]);
+
+            $this->setNoStoreHeaders();
 
             return redirect()->to('/dashboard');
         }
@@ -64,12 +76,23 @@ class AuthController extends BaseController
 
     public function login()
     {
+        if ($this->isAuthenticated()) {
+            $this->setNoStoreHeaders();
+
+            return redirect()->to('/dashboard');
+        }
+
+        $this->setNoStoreHeaders();
+
         return view('auth/login');
     }
 
     public function logout()
     {
-        session()->destroy();
+        $session = service('session');
+        $session->destroy();
+        $this->setNoStoreHeaders();
+
         return redirect()->to('/login');
     }
 }

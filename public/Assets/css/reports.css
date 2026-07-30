@@ -6,7 +6,7 @@
 :root {
     --maroon: #800000;
     --maroon-dark: #5a0909;
-    --gold: #C9A84C;
+    --gold: #d6d6d6;
     --surface: #ffffff;
     --surface-alt: #f8f4f4;
     --border: #e0d5d5;
@@ -422,9 +422,25 @@
     color: #8a5a1b;
 }
 
+.reports-inline-btn.review:hover {
+    background: #f0e4d0;
+    color: #8a5a1b;
+    border-color: var(--border);
+    box-shadow: none;
+    transform: none;
+}
+
 .reports-inline-btn.approve {
     background: #e9f7ee;
     color: #166534;
+}
+
+.reports-inline-btn.approve:hover {
+    background: #dcf0e3;
+    color: #166534;
+    border-color: var(--border);
+    box-shadow: none;
+    transform: none;
 }
 
 .review-sheet {

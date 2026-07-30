@@ -102,7 +102,7 @@ class TravelController extends BaseController
             }
         }
 
-        $availableVehicles = count($this->vehicleModel->getAvailableVehicles());
+        $fleetStats = $this->vehicleModel->getFleetStats();
 
         $data = [
             'title'             => 'Driver\'s Trip Ticket',
@@ -110,14 +110,15 @@ class TravelController extends BaseController
             'trips'             => $trips,
             'personnel'         => $this->personnelModel->findAll(),
             'drivers'           => $this->personnelModel->getDrivers(),
-            'vehicles'          => $this->vehicleModel->findAll(),
+            'vehicles'          => $this->vehicleModel->where('is_archived', 0)->findAll(),
             'departments'       => $this->departmentModel->findAll(),
             'pending_count'     => $pendingCount,
             'approved_count'    => $approvedCount,
             'today_count'       => $todayCount,
             'completed_count'   => $completedCount,
             'cancelled_count'   => $cancelledCount,
-            'available_vehicles' => $availableVehicles,
+            'available_vehicles' => $fleetStats['available'],
+            'total_vehicles'    => $fleetStats['total'],
             'flash_success'     => session()->getFlashdata('success'),
             'flash_error'       => session()->getFlashdata('error')
         ];
@@ -184,6 +185,8 @@ class TravelController extends BaseController
 
     public function delete($id)
     {
+        if ($resp = $this->requireAdmin()) return $resp;
+
         $this->travelModel->update($id, [
             'is_archived' => 1,
             'archived_at' => date('Y-m-d H:i:s'),
@@ -201,16 +204,30 @@ class TravelController extends BaseController
         if ($driverId = $this->request->getPost('assigned_driver_id')) {
             $data['assigned_driver_id'] = $driverId;
         }
-        if ($vehicleId = $this->request->getPost('assigned_vehicle_id')) {
+
+        $vehicleId = $this->request->getPost('assigned_vehicle_id');
+        if ($vehicleId) {
+            // Prevent double-booking: refuse to assign a vehicle that's already
+            // out on another active trip.
+            $vehicle = $this->vehicleModel->find($vehicleId);
+            if ($vehicle && $vehicle['availability'] === 'In Use') {
+                return redirect()->to('/travel')->with('error', 'That vehicle is already in use on another trip.');
+            }
             $data['assigned_vehicle_id'] = $vehicleId;
         }
 
         $this->travelModel->update($id, $data);
+
+        if ($vehicleId) {
+            $this->vehicleModel->update($vehicleId, ['availability' => 'In Use']);
+        }
+
         return redirect()->to('/travel')->with('success', 'Trip approved.');
     }
 
     public function reject($id)
     {
+        $this->freeAssignedVehicle($id);
         $this->travelModel->update($id, [
             'status' => 'Rejected',
             'last_activity_at' => date('Y-m-d H:i:s'),
@@ -220,10 +237,21 @@ class TravelController extends BaseController
 
     public function complete($id)
     {
+        $this->freeAssignedVehicle($id);
         $this->travelModel->update($id, [
             'status' => 'Completed',
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
         return redirect()->to('/travel')->with('success', 'Trip completed.');
+    }
+
+    // Returning/cancelling a trip frees its vehicle back to Available —
+    // mirrors ToolsController::returnTool()'s auto-availability update.
+    private function freeAssignedVehicle($tripId)
+    {
+        $trip = $this->travelModel->find($tripId);
+        if ($trip && !empty($trip['assigned_vehicle_id'])) {
+            $this->vehicleModel->update($trip['assigned_vehicle_id'], ['availability' => 'Available']);
+        }
     }
 }

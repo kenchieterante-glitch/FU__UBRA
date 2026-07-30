@@ -7,7 +7,7 @@
     --maroon: #800000;
     --maroon-dark: #5a0909;
     --maroon-light: #9B1B1B;
-    --gold: #C9A84C;
+    --gold: #6b6b6b;
     --surface: #ffffff;
     --surface-alt: #f8f4f4;
     --border: #e0d5d5;
@@ -954,3 +954,4 @@
 .gps-toast.toast-error {
     background: var(--danger);
 }
+

@@ -29,14 +29,15 @@ class VehicleController extends BaseController
         }
 
         $vehicles = $this->vehicleModel->getAllWithDetails();
+        $fleetStats = $this->vehicleModel->getFleetStats();
 
         $data = [
             'title'    => 'Vehicle Management',
             'pageCss'  => 'vehicle.css',
             'vehicles' => $vehicles,
-            'total_vehicles'     => count($vehicles),
-            'available_vehicles' => $this->vehicleModel->where('availability', 'Available')->countAllResults(),
-            'inuse_vehicles'     => $this->vehicleModel->where('availability', 'In Use')->countAllResults(),
+            'total_vehicles'     => $fleetStats['total'],
+            'available_vehicles' => $fleetStats['available'],
+            'inuse_vehicles'     => $fleetStats['in_use'],
             'maintenance_due'    => $this->vehicleModel->where('inspection_status', 'Due Soon')->countAllResults(),
             'personnel'   => $this->personnelModel->getDrivers(),
             'departments' => $this->departmentModel->findAll(),
@@ -78,7 +79,12 @@ class VehicleController extends BaseController
 
     public function delete($id)
     {
-        $this->vehicleModel->delete($id);
-        return redirect()->to('/vehicles')->with('success', 'Vehicle removed.');
+        if ($resp = $this->requireAdmin()) return $resp;
+
+        $this->vehicleModel->update($id, [
+            'is_archived' => 1,
+            'archived_at' => date('Y-m-d H:i:s'),
+        ]);
+        return redirect()->to('/vehicles')->with('success', 'Vehicle archived.');
     }
 }

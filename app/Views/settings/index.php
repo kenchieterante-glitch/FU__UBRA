@@ -13,13 +13,6 @@
         </div>
     </div>
 
-    <?php if (!empty($flash_success)): ?>
-        <div class="flash flash-success"><i class="bi bi-check-circle-fill"></i> <?= esc($flash_success) ?></div>
-    <?php endif; ?>
-    <?php if (!empty($flash_error)): ?>
-        <div class="flash flash-error"><i class="bi bi-exclamation-triangle-fill"></i> <?= esc($flash_error) ?></div>
-    <?php endif; ?>
-
     <!-- ── LAYOUT: NAV + CONTENT + SIDEBAR ──────────────────────── -->
     <div class="stg-body">
 
@@ -77,14 +70,6 @@
                             placeholder="Google Calendar API / GPS API / OpenAI Key">
                         <div class="field-hint">Used by Google Calendar, GPS integration, and Mr. UBRA AI.</div>
                     </div>
-                    <div class="form-group">
-                        <label>Theme</label>
-                        <select name="theme">
-                            <option <?= ($settings['theme'] ?? '') === 'Maroon Theme' ? 'selected' : '' ?>>Maroon Theme</option>
-                            <option <?= ($settings['theme'] ?? '') === 'Dark Theme'   ? 'selected' : '' ?>>Dark Theme</option>
-                            <option <?= ($settings['theme'] ?? '') === 'Light Theme'  ? 'selected' : '' ?>>Light Theme</option>
-                        </select>
-                    </div>
                     <button type="submit" class="btn-save">
                         <i class="bi bi-floppy-fill"></i> Save Changes
                     </button>
@@ -119,7 +104,7 @@
                                 <td><span class="role-badge"><?= esc($u['role'] ?? 'Staff') ?></span></td>
                                 <td><?= isset($u['created_at']) ? date('M j, Y', strtotime($u['created_at'])) : '—' ?></td>
                                 <td>
-                                    <?php $userId = $u['id'] ?? null; ?>
+                                    <?php $userId = $u['department_id'] ?? null; ?>
                                     <?php if ($userId): ?>
                                         <form method="post"
                                             action="<?= base_url('settings/deleteUser/' . $userId) ?>"
@@ -454,6 +439,10 @@
         <form method="post" action="<?= base_url('settings/addUser') ?>">
             <?= csrf_field() ?>
             <div class="modal-body">
+                <div class="form-group">
+                    <label>Full Name <span class="req">*</span></label>
+                    <input type="text" name="full_name" placeholder="e.g. Juan Dela Cruz" required>
+                </div>
                 <div class="form-group">
                     <label>Employee ID <span class="req">*</span></label>
                     <input type="text" name="emp_id" placeholder="e.g. 12345" required>

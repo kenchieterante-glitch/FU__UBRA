@@ -19,16 +19,18 @@ class NotificationController extends BaseController
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
 
-        $all = $this->notifModel->getAllSorted();
+        $all   = $this->notifModel->getAllSorted();
+        $today = date('Y-m-d');
+        $todaysAlerts = array_filter($all, fn($n) => substr($n['created_at'] ?? '', 0, 10) === $today);
 
         $data = [
             'title'          => 'Notification Center',
             'notifications'  => $all,
-            'unread_count'   => count(array_filter($all, fn($n) => ($n['status'] ?? '') === 'Unread')),
-            'today_count'    => count($all),
+            'unread_count'   => count(array_filter($all, fn($n) => (int) ($n['is_read'] ?? 0) === 0)),
+            'today_count'    => count($todaysAlerts),
+            'today_done_count' => count(array_filter($todaysAlerts, fn($n) => ($n['status'] ?? 'Pending') !== 'Pending')),
             'upcoming_count' => count(array_filter($all, fn($n) => strtolower($n['priority'] ?? '') === 'routine')),
-            'critical_count' => count(array_filter($all, fn($n) => strtolower($n['priority'] ?? '') === 'critical')),
-            'email_count'    => 0,
+            'draft_count'    => 0,
         ];
 
         return view('notifications/index', $data);
@@ -39,14 +41,14 @@ class NotificationController extends BaseController
         if (!$this->session->get('isLoggedIn')) {
             return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
         }
-        $this->notifModel->update($id, ['status' => 'Read']);
+        $this->notifModel->update($id, ['is_read' => 1, 'read_at' => date('Y-m-d H:i:s')]);
         return $this->response->setJSON(['success' => true]);
     }
 
     public function markAllRead()
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
-        $this->notifModel->where('status', 'Unread')->set(['status' => 'Read'])->update();
+        $this->notifModel->markAllRead();
         $this->session->setFlashdata('success', 'All notifications marked as read.');
         return redirect()->to('/notifications');
     }
@@ -56,7 +58,7 @@ class NotificationController extends BaseController
         if (!$this->session->get('isLoggedIn')) {
             return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
         }
-        $this->notifModel->update($id, ['status' => 'Dismissed']);
+        $this->notifModel->update($id, ['status' => 'Dismissed', 'is_read' => 1, 'read_at' => date('Y-m-d H:i:s')]);
         return $this->response->setJSON(['success' => true]);
     }
 
@@ -65,16 +67,15 @@ class NotificationController extends BaseController
         if (!$this->session->get('isLoggedIn')) {
             return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
         }
-        $act = ucfirst($this->request->getPost('action') ?? 'read');
-        $this->notifModel->update($id, ['status' => $act]);
+        $act = ucfirst($this->request->getPost('action') ?? 'reviewed');
+        $this->notifModel->update($id, ['status' => $act, 'is_read' => 1, 'read_at' => date('Y-m-d H:i:s')]);
         return $this->response->setJSON(['success' => true, 'new_status' => $act]);
     }
 
     public function unreadCount()
     {
         if (!$this->session->get('isLoggedIn')) return $this->response->setJSON(['count' => 0]);
-        $count = $this->notifModel->where('status', 'Unread')->countAllResults();
-        return $this->response->setJSON(['count' => $count]);
+        return $this->response->setJSON(['count' => $this->notifModel->getUnreadCount()]);
     }
 
     public function export()

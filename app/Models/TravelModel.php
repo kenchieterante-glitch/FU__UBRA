@@ -13,7 +13,8 @@ class TravelModel extends Model
         'trip_id', 'requester_id', 'destination', 'purpose', 'travel_date',
         'departure_time', 'return_time', 'department_id', 'assigned_driver_id',
         'assigned_vehicle_id', 'status', 'check_in_time', 'check_out_time',
-        'scanned_id', 'is_archived', 'archived_at', 'last_activity_at'
+        'scanned_id', 'is_archived', 'archived_at', 'last_activity_at',
+        'disposal_status', 'disposal_date', 'disposal_authorized_by', 'disposal_signature',
     ];
 
     // Auto-flag records for archiving after 1 year of inactivity
@@ -39,6 +40,26 @@ class TravelModel extends Model
                             ->join('vehicles v', 'v.id = travel_requests.assigned_vehicle_id', 'left')
                             ->join('departments d', 'd.id = travel_requests.department_id', 'left')
                             ->where('travel_requests.is_archived', 0)
+                            ->orderBy('travel_requests.id', 'DESC');
+            return $builder->findAll();
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    // Same shape as getAllWithDetails() but includes archived rows — used by the Records/Archiving page
+    public function getAllWithDetailsForRecords(): array
+    {
+        try {
+            $builder = $this->select('travel_requests.*,
+                                      requester.full_name as requester_name,
+                                      driver.full_name as driver_name,
+                                      v.vehicle_name, v.plate_no,
+                                      d.name as department_name')
+                            ->join('personnel requester', 'requester.id = travel_requests.requester_id', 'left')
+                            ->join('personnel driver', 'driver.id = travel_requests.assigned_driver_id', 'left')
+                            ->join('vehicles v', 'v.id = travel_requests.assigned_vehicle_id', 'left')
+                            ->join('departments d', 'd.id = travel_requests.department_id', 'left')
                             ->orderBy('travel_requests.id', 'DESC');
             return $builder->findAll();
         } catch (\Exception $e) {

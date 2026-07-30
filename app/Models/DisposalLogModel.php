@@ -11,4 +11,12 @@ class DisposalLogModel extends Model
         'record_type', 'record_id', 'authorized_by_id',
         'signature', 'disposal_date', 'remarks'
     ];
+
+    public function getAllWithDetails()
+    {
+        $builder = $this->select('disposal_logs.*, p.full_name as authorized_by_name')
+                        ->join('personnel p', 'p.id = disposal_logs.authorized_by_id', 'left')
+                        ->orderBy('disposal_logs.id', 'DESC');
+        return $builder->findAll();
+    }
 }

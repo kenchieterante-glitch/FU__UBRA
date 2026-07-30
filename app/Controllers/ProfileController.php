@@ -2,15 +2,26 @@
 
 namespace App\Controllers;
 
+use App\Models\UserModel;
+
 class ProfileController extends BaseController
 {
     protected $session;
     protected $db;
+    protected $userModel;
 
     public function __construct()
     {
-        $this->session = \Config\Services::session();
-        $this->db      = \Config\Database::connect();
+        $this->session   = \Config\Services::session();
+        $this->db        = \Config\Database::connect();
+        $this->userModel = new UserModel();
+    }
+
+    // The users table's real primary key is department_id — it has no 'id' column —
+    // so the logged-in user must be looked up by the credential they logged in with.
+    private function currentUser(): ?array
+    {
+        return $this->userModel->getByEmployeeId($this->session->get('emp_id'));
     }
 
     public function index()
@@ -19,12 +30,9 @@ class ProfileController extends BaseController
             return redirect()->to('/login');
         }
 
-        $user_id = $this->session->get('user_id');
-        $user    = $this->db->table('users')->where('id', $user_id)->get()->getRowArray();
-
         $data = [
             'title'         => 'My Profile',
-            'user'          => $user,
+            'user'          => $this->currentUser(),
             'flash_success' => $this->session->getFlashdata('success'),
             'flash_error'   => $this->session->getFlashdata('error'),
         ];
@@ -38,14 +46,18 @@ class ProfileController extends BaseController
             return redirect()->to('/login');
         }
 
-        $user_id = $this->session->get('user_id');
-        $this->db->table('users')->where('id', $user_id)->update([
-            'name'    => $this->request->getPost('name'),
-            'email'   => $this->request->getPost('email'),
-            'emp_id'  => $this->request->getPost('emp_id'),
-            'username'=> $this->request->getPost('emp_id'),
+        $user = $this->currentUser();
+        if (!$user) {
+            return redirect()->to('/profile')->with('error', 'Could not find your account.');
+        }
+
+        $this->db->table('users')->where('department_id', $user['department_id'])->update([
+            'full_name' => $this->request->getPost('name'),
+            'email'     => $this->request->getPost('email'),
+            'emp_id'    => $this->request->getPost('emp_id'),
         ]);
 
+        $this->session->set('full_name', $this->request->getPost('name'));
         $this->session->setFlashdata('success', 'Profile updated successfully.');
         return redirect()->to('/profile');
     }
@@ -56,13 +68,12 @@ class ProfileController extends BaseController
             return redirect()->to('/login');
         }
 
-        $user_id = $this->session->get('user_id');
-        $user    = $this->db->table('users')->where('id', $user_id)->get()->getRowArray();
+        $user    = $this->currentUser();
         $current = $this->request->getPost('current_password');
         $new     = $this->request->getPost('new_password');
 
-        if (password_verify($current, $user['password'])) {
-            $this->db->table('users')->where('id', $user_id)->update([
+        if ($user && password_verify($current, $user['password'])) {
+            $this->db->table('users')->where('department_id', $user['department_id'])->update([
                 'password' => password_hash($new, PASSWORD_BCRYPT),
             ]);
             $this->session->setFlashdata('success', 'Password changed successfully.');

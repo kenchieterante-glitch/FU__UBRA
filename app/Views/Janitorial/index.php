@@ -6,7 +6,6 @@
     <h1>Janitorial Monitoring</h1>
     <p class="page-subtitle">Campus janitorial readiness, active shifts, and consumable stock overview.</p>
   </div>
-  <button class="btn-report" type="button" onclick="switchJanTab('inventory')"><i class="bi bi-box-seam-fill"></i> Review Inventory</button>
 </div>
 
 <div class="kpi-row" id="janitorialSummary"></div>
@@ -30,9 +29,9 @@
     <div class="map-layout" id="janMapLayout">
       <div class="map-container">
         <div class="map-legend">
-          <span class="leg-item"><span class="leg-dot clean"></span> Clean</span>
-          <span class="leg-item"><span class="leg-dot pending"></span> Pending</span>
-          <span class="leg-item"><span class="leg-dot needs"></span> Needs to Clean</span>
+          <span class="leg-item"><span class="leg-dot clean"></span> ✅ Clean</span>
+          <span class="leg-item"><span class="leg-dot pending"></span> 🕒 Pending</span>
+          <span class="leg-item"><span class="leg-dot needs"></span> 🧹 Needs to Clean</span>
         </div>
 
         <svg id="janSVG" viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg">
@@ -112,56 +111,14 @@
 </div>
 
 <script>
-const AREAS = {
-  admin:        { name: 'Admin Building', units: ['FE-ADM-01','FE-ADM-02','FE-ADM-03'], missing: true },
-  library:      { name: 'Library', units: ['FE-LIB-01','FE-LIB-02','FE-LIB-03'], missing: false },
-  science:      { name: 'Science Building', units: ['FE-SCI-01','FE-SCI-02','FE-SCI-03'], missing: false },
-  gym:          { name: 'Gymnasium', units: ['FE-GYM-01','FE-GYM-02'], missing: true },
-  canteen:      { name: 'Canteen', units: ['FE-CAN-01','FE-CAN-02'], missing: false },
-  engr:         { name: 'Engineering', units: ['FE-ENG-01','FE-ENG-02','FE-ENG-03'], missing: false },
-  ccs:          { name: 'CCS Building', units: ['FE-CCS-01','FE-CCS-02'], missing: false },
-  clinic:       { name: 'Clinic', units: ['FE-CLI-01','FE-CLI-02'], missing: false },
-  'guard-post': { name:'Guard House', units: ['FE-GRD-01'], missing: false },
-};
-
-const janAreaStatuses = {
-  admin: 'clean',
-  library: 'pending',
-  science: 'needs',
-};
-
-const janStaff = [
-  { name:'Bautista, M.',  zone:'Admin Building Flr 1', tasks:8, done:6, photo:'B', shift:'7AM-3PM', area:'admin' },
-  { name:'Dizon, L.',     zone:'Library',              tasks:6, done:3, photo:'D', shift:'7AM-3PM', area:'library' },
-  { name:'Fernandez, G.', zone:'Science Building',     tasks:5, done:1, photo:'F', shift:'6AM-2PM', area:'science' },
-  { name:'Hernandez, K.', zone:'Gymnasium',            tasks:4, done:4, photo:'H', shift:'5AM-1PM', area:'gym' },
-  { name:'Ignacio, P.',   zone:'Canteen',              tasks:7, done:4, photo:'I', shift:'7AM-3PM', area:'canteen' },
-  { name:'Javier, C.',    zone:'Engineering',          tasks:6, done:1, photo:'J', shift:'8AM-4PM', area:'engr' },
-  { name:'Lacson, A.',    zone:'CCS Building',         tasks:5, done:5, photo:'L', shift:'7AM-3PM', area:'ccs' },
-  { name:'Mendez, R.',    zone:'Clinic',               tasks:4, done:4, photo:'M', shift:'7AM-3PM', area:'clinic' },
-];
-
-const janAreaChecklists = {
-  admin:   { staff:'Bautista, M.', shift:'7AM-3PM', tasks:[{t:'Sweep & mop corridors',done:true,time:'07:30'},{t:'Clean restrooms — Flr 1',done:true,time:'08:00'},{t:'Empty trash bins',done:true,time:'08:30'},{t:'Wipe window sills',done:true,time:'09:00'},{t:'Mop main lobby',done:true,time:'09:30'},{t:'Replenish soap & tissue',done:true,time:'10:00'},{t:'Clean comfort rooms — Flr 2',done:false,time:null},{t:'General sanitizing',done:false,time:null}] },
-  library: { staff:'Dizon, L.',    shift:'7AM-3PM', tasks:[{t:'Dust bookshelves',done:true,time:'07:15'},{t:'Vacuum reading area',done:true,time:'07:45'},{t:'Mop entrance',done:true,time:'08:15'},{t:'Clean restrooms',done:false,time:null},{t:'Empty trash bins',done:false,time:null},{t:'Wipe computer tables',done:false,time:null}] },
-  science: { staff:'Fernandez, G.',shift:'6AM-2PM', tasks:[{t:'Sweep lab corridors',done:true,time:'06:30'},{t:'Mop stairs',done:false,time:null},{t:'Empty lab trash',done:false,time:null},{t:'Sanitize lab benches',done:false,time:null},{t:'Clean restrooms',done:false,time:null}] },
-  gym:     { staff:'Hernandez, K.',shift:'5AM-1PM', tasks:[{t:'Sweep gym floor',done:true,time:'05:30'},{t:'Mop court',done:true,time:'06:00'},{t:'Clean locker rooms',done:true,time:'06:45'},{t:'Empty trash bins',done:true,time:'07:15'}] },
-  canteen: { staff:'Ignacio, P.',  shift:'7AM-3PM', tasks:[{t:'Wipe dining tables',done:true,time:'07:00'},{t:'Sweep floor',done:true,time:'07:20'},{t:'Mop canteen floor',done:true,time:'07:45'},{t:'Clean restrooms',done:true,time:'08:15'},{t:'Empty grease traps',done:false,time:null},{t:'Sanitize counter tops',done:false,time:null},{t:'Replace trash liners',done:false,time:null}] },
-  engr:    { staff:'Javier, C.',   shift:'8AM-4PM', tasks:[{t:'Sweep corridors',done:true,time:'08:10'},{t:'Mop workshop floor',done:false,time:null},{t:'Clean restrooms',done:false,time:null},{t:'Empty trash bins',done:false,time:null},{t:'Wipe notice boards',done:false,time:null},{t:'Sanitize door handles',done:false,time:null}] },
-  ccs:     { staff:'Lacson, A.',   shift:'7AM-3PM', tasks:[{t:'Sweep corridors',done:true,time:'07:10'},{t:'Mop server room hallway',done:true,time:'07:35'},{t:'Clean restrooms',done:true,time:'08:00'},{t:'Wipe workstations',done:true,time:'08:30'},{t:'Empty trash',done:true,time:'09:00'}] },
-  clinic:  { staff:'Mendez, R.',   shift:'7AM-3PM', tasks:[{t:'Sanitize consultation room',done:true,time:'07:05'},{t:'Mop clinic floor',done:true,time:'07:30'},{t:'Clean restroom',done:true,time:'07:55'},{t:'Replace biohazard bags',done:true,time:'08:20'}] },
-};
-
-let inventoryItems = [
-  { name:'Floor Cleaner (Pine)',  cat:'Cleaning Agent', unit:'Liters',  stock:18, reorder:5,  lastRefill:'2025-07-10' },
-  { name:'Toilet Bowl Cleaner',   cat:'Cleaning Agent', unit:'Bottles', stock:7,  reorder:3,  lastRefill:'2025-07-08' },
-  { name:'Trash Liners (Large)',  cat:'Disposable',     unit:'Rolls',   stock:4,  reorder:5,  lastRefill:'2025-07-05' },
-  { name:'Mop Heads',             cat:'Tools',          unit:'Pieces',  stock:6,  reorder:3,  lastRefill:'2025-07-01' },
-  { name:'Disinfectant Spray',    cat:'Cleaning Agent', unit:'Bottles', stock:2,  reorder:4,  lastRefill:'2025-06-28' },
-  { name:'Tissue Paper (Rolls)',  cat:'Disposable',     unit:'Rolls',   stock:30, reorder:10, lastRefill:'2025-07-12' },
-  { name:'Liquid Hand Soap',      cat:'Cleaning Agent', unit:'Liters',  stock:3,  reorder:4,  lastRefill:'2025-07-09' },
-  { name:'Brooms',                cat:'Tools',          unit:'Pieces',  stock:12, reorder:4,  lastRefill:'2025-06-15' },
-];
+// All zone, staff, checklist, and inventory data below comes straight from the
+// database (janitorial_assignments, janitorial_tasks, consumable_inventory) —
+// see JanitorialController::index(). No hardcoded demo values.
+const AREAS = <?= $areas_json ?>;
+const janAreaStatuses = {};
+const janStaff = <?= $staff_json ?>;
+const janAreaChecklists = <?= $checklists_json ?>;
+let inventoryItems = <?= $inventory_json ?>;
 
 function getJanStatusValue(areaKey) {
   const explicit = janAreaStatuses[areaKey];
@@ -217,7 +174,7 @@ function janDrillDown(area) {
 
   let html = `
   <div class="jan-assigned-card">
-    <div class="jac-av">${data.staff.charAt(0)}</div>
+    <div class="jac-av st-${status.value}">${data.staff.charAt(0)}</div>
     <div>
       <div class="jac-name">${data.staff}</div>
       <div class="jac-meta">Cleaner: <strong>${data.staff}</strong></div>
@@ -239,7 +196,10 @@ function janDrillDown(area) {
 
   html += `</div>`;
   document.getElementById('janDpContent').innerHTML = html;
-  document.getElementById('janDrillPanel').style.display = 'block';
+  const drillPanel = document.getElementById('janDrillPanel');
+  drillPanel.classList.remove('st-clean', 'st-pending', 'st-needs');
+  drillPanel.classList.add(`st-${status.value}`);
+  drillPanel.style.display = 'block';
 }
 
 function selectJanMapBuilding(el) {
@@ -257,11 +217,12 @@ function selectJanMapBuilding(el) {
   const shortName = name.charAt(0);
   const status = getJanStatusDisplay(el.getAttribute('data-area-key'));
 
+  document.getElementById('janDpTitle').textContent = name;
+
   const html = `
   <div class="jan-assigned-card">
-    <div class="jac-av">${shortName}</div>
+    <div class="jac-av st-${status.value}">${shortName}</div>
     <div>
-      <div class="jac-name">${name}</div>
       <div class="jac-meta">Cleaner: <strong>No assigned cleaner</strong></div>
       <div class="jac-meta">Status: <strong>${status.label}</strong></div>
       <div class="jac-meta"><i class="bi bi-calendar3"></i> ${new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})} &nbsp;|&nbsp; <i class="bi bi-clock"></i> ${new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}</div>
@@ -272,7 +233,10 @@ function selectJanMapBuilding(el) {
   </div>`;
 
   document.getElementById('janDpContent').innerHTML = html;
-  document.getElementById('janDrillPanel').style.display = 'block';
+  const drillPanel = document.getElementById('janDrillPanel');
+  drillPanel.classList.remove('st-clean', 'st-pending', 'st-needs');
+  drillPanel.classList.add(`st-${status.value}`);
+  drillPanel.style.display = 'block';
 }
 
 const janMapBuildings = [
@@ -412,6 +376,18 @@ janMapBuildings.forEach(b => {
   labelGroup.appendChild(label);
   janBuildingsGroup.appendChild(labelGroup);
 
+  const janStatusIcons = { clean: '✅', pending: '🕒', needs: '🧹' };
+  if (janStatusIcons[status]) {
+    const janBadge = document.createElementNS(ns, 'text');
+    janBadge.setAttribute('class', `status-icon-badge status-icon-${status}`);
+    janBadge.setAttribute('x', b.x + b.w - 3);
+    janBadge.setAttribute('y', b.y + 13);
+    janBadge.setAttribute('text-anchor', 'end');
+    janBadge.setAttribute('pointer-events', 'none');
+    janBadge.textContent = janStatusIcons[status];
+    janBuildingsGroup.appendChild(janBadge);
+  }
+
   if (b.hasExt) {
     const ext = document.createElementNS(ns, 'rect');
     ext.setAttribute('class', 'ext');
@@ -493,6 +469,8 @@ function renderJanitorialSummary() {
   const activeShifts = janStaff.length;
   const lowStock = inventoryItems.filter(item => item.stock <= item.reorder).length;
   const outOfStock = inventoryItems.filter(item => item.stock === 0).length;
+  const cleanedZones = janStaff.filter(s => s.done === s.tasks).length;
+  const pendingZones = janStaff.length - cleanedZones;
 
   document.getElementById('janitorialSummary').innerHTML = `
     <div class="kpi-card">
@@ -504,6 +482,11 @@ function renderJanitorialSummary() {
       <div class="card-title"><i class="bi bi-people-fill"></i> Active Shifts</div>
       <div class="card-value">${activeShifts}</div>
       <div class="card-note">Staff currently on duty</div>
+    </div>
+    <div class="kpi-card">
+      <div class="card-title"><i class="bi bi-broom"></i> Janitorial Completion</div>
+      <div class="card-value">${cleanedZones}/${janStaff.length} cleaned</div>
+      <div class="card-note">${pendingZones} pending follow-up</div>
     </div>
     <div class="kpi-card">
       <div class="card-title"><i class="bi bi-box-seam"></i> Low Stock Items</div>
@@ -519,29 +502,29 @@ function renderJanitorialSummary() {
 }
 
 function refillItem(i) {
-  const qty = prompt(`Refill "${inventoryItems[i].name}" — enter quantity to add:`);
-  if (qty && !isNaN(qty)) {
-    inventoryItems[i].stock += parseInt(qty);
-    inventoryItems[i].lastRefill = new Date().toISOString().split('T')[0];
-    renderInventory();
-    renderJanitorialSummary();
-    showToast(`${inventoryItems[i].name} refilled by ${qty} ${inventoryItems[i].unit}.`);
-  }
+  const item = inventoryItems[i];
+  const qty = prompt(`Refill "${item.name}" — enter quantity to add:`);
+  if (!qty || isNaN(qty) || Number(qty) <= 0) return;
+
+  const fd = new FormData();
+  fd.append('quantity', qty);
+  fetch(`<?= base_url('janitorial/refillInventory/') ?>${item.id}`, { method: 'POST', headers: csrfHeaders(), body: fd })
+    .then(() => window.location.reload());
 }
 
 function saveInventoryItem() {
   const name = document.getElementById('invName').value.trim();
   if (!name) { showToast('Item name required.', true); return; }
-  inventoryItems.push({
-    name, cat: document.getElementById('invCat').value,
-    unit:     document.getElementById('invUnit').value,
-    stock:    parseInt(document.getElementById('invStock').value)||0,
-    reorder:  parseInt(document.getElementById('invReorder').value)||0,
-    lastRefill: new Date().toISOString().split('T')[0],
-  });
-  closeModal('addInventoryModal');
-  renderInventory();
-  showToast('Item added to inventory.');
+
+  const fd = new FormData();
+  fd.append('item_name', name);
+  fd.append('category', document.getElementById('invCat').value);
+  fd.append('unit', document.getElementById('invUnit').value);
+  fd.append('current_stock', document.getElementById('invStock').value || 0);
+  fd.append('reorder_threshold', document.getElementById('invReorder').value || 0);
+
+  fetch('<?= base_url('janitorial/addInventoryItem') ?>', { method: 'POST', headers: csrfHeaders(), body: fd })
+    .then(() => window.location.reload());
 }
 
 function openAddShiftModal()     { showToast('Staff assignment form — connect to PersonnelController.'); }

@@ -27,15 +27,15 @@
 <div class="stat-cards">
   <div class="stat-card">
     <h3>Total Vehicles</h3>
-    <div class="value"><?= count($vehicles) ?></div>
+    <div class="value"><?= (int) $total_vehicles ?></div>
   </div>
   <div class="stat-card">
     <h3>Available</h3>
-    <div class="value"><?= count(array_filter($vehicles, fn($v) => $v['availability'] == 'Available')) ?></div>
+    <div class="value"><?= (int) $available_vehicles ?></div>
   </div>
   <div class="stat-card">
     <h3>In Use</h3>
-    <div class="value"><?= count(array_filter($vehicles, fn($v) => $v['availability'] == 'In Use')) ?></div>
+    <div class="value"><?= (int) $inuse_vehicles ?></div>
   </div>
   <div class="stat-card">
     <h3>Needs Maintenance</h3>
@@ -47,10 +47,8 @@
   <div class="table-toolbar">
     <div class="toolbar-left">
       <div class="toolbar-search">
-        <button type="button" class="search-icon-btn" onclick="toggleToolbarSearch('vehiclesSearch')" aria-label="Search">
-          <i class="bi bi-search"></i>
-        </button>
-        <input type="text" id="vehiclesSearch" class="toolbar-search-input hidden" placeholder="Search vehicle, plate, driver, department" oninput="filterVehiclesTable()">
+        <input type="text" id="vehiclesSearch" class="search-box" placeholder="Search vehicle, plate, driver, department" oninput="filterVehiclesTable()">
+        <i class="bi bi-search search-icon"></i>
       </div>
     </div>
     <div class="toolbar-right">
@@ -119,7 +117,10 @@
           <td class="action-cell">
             <div class="action-buttons">
               <button type="button" class="icon-btn" onclick="document.getElementById('editModal<?= $v['id'] ?>').style.display='flex'" title="Edit"><i class="fa-solid fa-pen"></i></button>
-              <a class="icon-btn delete" href="<?= base_url('vehicles/delete/'.$v['id']) ?>" onclick="return confirm('Archive this vehicle?')" title="Archive"><i class="fa-solid fa-archive"></i></a>
+              <form method="post" action="<?= base_url('vehicles/delete/'.$v['id']) ?>" onsubmit="return confirm('Archive this vehicle?')" style="display:contents;">
+                <?= csrf_field() ?>
+                <button type="submit" class="icon-btn delete" title="Archive"><i class="fa-solid fa-archive"></i></button>
+              </form>
             </div>
           </td>
         </tr>
@@ -206,14 +207,6 @@ function filterVehiclesTable() {
 function toggleVehicleFilterMenu() {
   const popup = document.getElementById('vehicleFilterPopup');
   popup.classList.toggle('visible');
-}
-
-function toggleToolbarSearch(inputId) {
-  const input = document.getElementById(inputId);
-  input.classList.toggle('hidden');
-  if (!input.classList.contains('hidden')) {
-    input.focus();
-  }
 }
 
 document.addEventListener('click', e => {

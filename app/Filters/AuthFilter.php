@@ -20,11 +20,17 @@ class AuthFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         $session = session();
-        $currentPath = trim(service('uri')->getPath(), '/');
+        $currentPath = trim($request->getUri()->getPath(), '/');
 
-        // Paths that don't require authentication
+        if ($currentPath === '' || $currentPath === 'login') {
+            if ($session->get('isLoggedIn')) {
+                return redirect()->to('/dashboard');
+            }
+
+            return;
+        }
+
         $publicPaths = [
-            'login',
             'logout',
             'auth/login',
             'auth/logout',
@@ -32,7 +38,6 @@ class AuthFilter implements FilterInterface
             'auth/forgot-password',
         ];
 
-        // Check if the current path is in public paths
         $isPublicPath = false;
         foreach ($publicPaths as $path) {
             if ($currentPath === trim($path, '/')) {
@@ -41,19 +46,15 @@ class AuthFilter implements FilterInterface
             }
         }
 
-        // If it's a public path, allow access
-        if ($isPublicPath) {
+        if ($isPublicPath || str_starts_with($currentPath, 'auth/') || str_starts_with($currentPath, 'api/')) {
             return;
         }
 
-        // Check if user is logged in
         if (!$session->get('isLoggedIn')) {
-            // Not logged in, redirect to login
             return redirect()->to('/login')
                 ->with('error', 'Please log in to access this page.');
         }
 
-        // User is logged in, continue
         return;
     }
 
@@ -71,6 +72,12 @@ class AuthFilter implements FilterInterface
      */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
-        // No after filter needed for authentication
+        // Prevent authenticated pages from being cached by the browser.
+        // This ensures that when a user clicks the browser's back button
+        // (e.g. after logging out), the browser re-requests the page from
+        // the server instead of showing a stale cached copy.
+        $response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $response->setHeader('Pragma', 'no-cache');
+        $response->setHeader('Expires', '0');
     }
 }

@@ -1,115 +1,82 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
 
-<div class="page-header">
-  <h1>Main Dashboard</h1>
-  <p class="page-subtitle">Real-time systemic oversight and asset analytics.</p>
-</div>
-
-<!-- ── ROW 1: KPI STAT CARDS ──────────────────────────────── -->
-<div class="stat-cards">
-
-  <div class="stat-card">
-    <div class="label"><i class="fa-solid fa-boxes-stacked"></i> Total Tools</div>
-    <div class="value"><?= $total_tools ?? 0 ?></div>
-    <div class="trend neutral">Tools Inventory</div>
+<div class="groundworks-shell">
+  <div class="groundworks-header">
+    <h1>Facilities Administration and General Services</h1>
+    <p class="subtle">Monitoring dashboard for the Head of the Department — status at a glance, no data entry.</p>
+    <p class="subtle" style="font-size:.75rem;opacity:.7;">Last updated: <?= esc($last_updated ?? date('M j, Y g:i A')) ?></p>
   </div>
 
-  <div class="stat-card">
-    <div class="label"><i class="fa-solid fa-truck"></i> Vehicle Fleet</div>
-    <div class="value"><?= $total_vehicles ?? 0 ?></div>
-    <div class="trend neutral">Registered vehicles</div>
-  </div>
+  <section class="kpi-grid" aria-label="Key performance indicators">
+    <?php foreach ($kpis as $kpi): ?>
+      <article class="kpi-card <?= esc($kpi['tone'] ?? 'tone-neutral') ?>">
+        <div class="kpi-top">
+          <span class="kpi-icon"><i class="fa-solid <?= esc($kpi['icon']) ?>"></i></span>
+          <span class="kpi-label"><?= esc($kpi['label']) ?></span>
+        </div>
+        <div class="kpi-value"><?= esc($kpi['value']) ?></div>
+        <div class="kpi-meta"><?= esc($kpi['meta']) ?></div>
+        <div class="kpi-sub"><?= esc($kpi['sub']) ?></div>
+      </article>
+    <?php endforeach; ?>
+  </section>
 
-  <div class="stat-card">
-    <div class="label"><i class="fa-solid fa-route"></i> Scheduled Trips</div>
-    <div class="value"><?= $scheduled_trips ?? 0 ?></div>
-    <div class="trend neutral">Active requests</div>
-  </div>
-
-  <div class="stat-card">
-    <div class="label"><i class="fa-solid fa-users"></i> Active Personnel</div>
-    <div class="value"><?= $total_personnel ?? 0 ?></div>
-    <div class="trend neutral">On duty today</div>
-  </div>
-
-  <div class="stat-card accent-red">
-    <div class="label"><i class="fa-solid fa-fire"></i> Fire Extinguishers</div>
-    <div class="value">21</div>
-    <div class="trend down">3 need attention</div>
-    <a href="<?= base_url('safety') ?>" class="sc-link">View Registry →</a>
-  </div>
-
-  <div class="stat-card accent-amber">
-    <div class="label"><i class="fa-solid fa-broom"></i> Areas Being Cleaned</div>
-    <div class="value">8</div>
-    <div class="trend neutral attention-text">8 areas already cleaned</div>
-    <div class="dash-cleaning-list">
-      <span class="status-chip success">8 Cleaned</span>
-      <span class="status-chip danger">2 Pending</span>
+  <section class="board-card" aria-label="Travel history">
+    <div class="board-head">
+      <h2>Travel History</h2>
+      <p>Recent trip tickets across the fleet.</p>
     </div>
-    <a href="<?= base_url('safety') ?>" class="sc-link">View Map →</a>
-  </div>
-
-  <div class="stat-card">
-    <div class="label"><i class="fa-solid fa-door-open"></i> Janitorial Zones</div>
-    <div class="value">8</div>
-    <div class="trend neutral">8 cleaned • 2 pending</div>
-    <a href="<?= base_url('janitorial') ?>" class="sc-link">View Zones →</a>
-  </div>
-
-  <div class="stat-card">
-    <div class="label"><i class="fa-solid fa-key"></i> Active Key Borrowers</div>
-    <div class="value">2</div>
-    <div class="trend neutral">Guard log updated</div>
-    <a href="<?= base_url('safety/guard-dashboard') ?>" class="sc-link">View Logs →</a>
-  </div>
-
-  <div class="stat-card">
-    <div class="label"><i class="fa-solid fa-wrench"></i> Open Work Orders</div>
-    <div class="value">3</div>
-    <div class="trend warning">1 critical</div>
-    <a href="<?= base_url('safety') ?>" class="sc-link">View Orders →</a>
-  </div>
-</div>
-
-<!-- ── ROW 2: MAIN CONTENT GRID ────────────────────────────── -->
-<div class="dash-grid">
-
-  <!-- Active Vehicle Status -->
-  <div class="card">
-    <div class="card-head">
-      <span class="card-title"><i class="fa-solid fa-location-dot" style="color:var(--maroon)"></i> Active Vehicle Status &amp; GPS Tracker</span>
-      <a href="<?= base_url('vehicles') ?>" class="card-link">View All</a>
+    <div class="board-list">
+      <?php foreach ($travelHistory as $index => $trip): ?>
+        <div class="board-row">
+          <div class="board-id">0<?= $index + 1 ?></div>
+          <div class="board-copy">
+            <div class="board-name"><?= esc($trip['destination']) ?></div>
+            <div class="board-reason"><?= esc($trip['reason']) ?></div>
+          </div>
+          <span class="status-pill <?= esc($trip['statusClass']) ?>"><?= esc($trip['status']) ?></span>
+        </div>
+      <?php endforeach; ?>
     </div>
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Vehicle Plate</th>
-          <th>Assigned Driver</th>
-          <th>Destination</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php if (!empty($active_vehicles)): ?>
-          <?php foreach ($active_vehicles as $v): ?>
-            <tr>
-              <td><strong><?= esc($v['plate_no']) ?></strong></td>
-              <td><?= esc($v['driver']) ?></td>
-              <td>—</td>
-              <td><span class="status-badge status-active"><?= esc($v['availability']) ?></span></td>
-            </tr>
-          <?php endforeach; ?>
-        <?php else: ?>
-          <tr><td colspan="4" class="empty-cell">No active vehicles at this time.</td></tr>
-        <?php endif; ?>
-      </tbody>
-    </table>
+  </section>
+
+  <div class="lower-grid">
+    <section class="panel-card alerts-panel" aria-label="Alerts">
+      <div class="panel-head">
+        <h2>Alerts</h2>
+        <p>Items needing attention.</p>
+      </div>
+      <div class="alert-list">
+        <?php foreach ($alerts as $alert): ?>
+          <div class="alert-item">
+            <span class="alert-icon <?= esc($alert['tone']) ?>"><i class="fa-solid <?= esc($alert['icon']) ?>"></i></span>
+            <div class="alert-copy">
+              <div class="alert-title"><?= esc($alert['title']) ?></div>
+              <div class="alert-subtitle"><?= esc($alert['subtitle']) ?></div>
+            </div>
+            <div class="alert-time"><?= esc($alert['time']) ?></div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </section>
+
+    <section class="panel-card activity-panel" aria-label="Recent activity">
+      <div class="panel-head">
+        <h2>Recent Activity</h2>
+        <p>Latest operational updates.</p>
+      </div>
+      <div class="activity-list">
+        <?php foreach ($activity as $item): ?>
+          <div class="activity-item">
+            <div class="activity-time"><?= esc($item['time']) ?></div>
+            <span class="activity-tag"><?= esc($item['tag']) ?></span>
+            <div class="activity-text"><?= esc($item['text']) ?></div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </section>
   </div>
-
 </div>
-
-
 
 <?= $this->endSection() ?>

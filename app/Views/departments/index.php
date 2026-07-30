@@ -10,10 +10,6 @@
   <button class="btn-add" onclick="document.getElementById('addModal').style.display='flex'">+ Add Department</button>
 </div>
 
-<?php if (session()->getFlashdata('success')): ?>
-  <div class="alert-success"><i class="fa-solid fa-circle-check"></i> <?= session()->getFlashdata('success') ?></div>
-<?php endif; ?>
-
 <table class="data-table">
   <thead>
     <tr>

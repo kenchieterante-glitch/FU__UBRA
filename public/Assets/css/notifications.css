@@ -6,7 +6,7 @@
 :root {
     --maroon: #800000;
     --maroon-dark: #5a0909;
-    --gold: #C9A84C;
+    --gold: #d6d6d6;
     --surface: #ffffff;
     --surface-alt: #f8f4f4;
     --border: #e0d5d5;
@@ -127,11 +127,7 @@
     border-left-color: var(--info);
 }
 
-.summary-card.critical {
-    border-left-color: var(--warning);
-}
-
-.summary-card.email {
+.summary-card.draft {
     border-left-color: var(--maroon);
 }
 
@@ -161,12 +157,7 @@
     color: var(--info);
 }
 
-.summary-card.critical .sc-icon {
-    background: #fef3c7;
-    color: var(--warning);
-}
-
-.summary-card.email .sc-icon {
+.summary-card.draft .sc-icon {
     background: #fdf2f2;
     color: var(--maroon);
 }
@@ -202,6 +193,10 @@
 
 .sc-sub.info {
     color: var(--info);
+}
+
+.sc-sub.muted {
+    color: var(--text-muted);
 }
 
 /* ── Body layout ─────────────────────────────────────────────── */
@@ -308,13 +303,22 @@
     background: #fffbf9;
 }
 
-.row-unread .cat-label {
+.row-unread .cat-label,
+.row-unread .desc-cell,
+.row-unread .recipient-cell {
     font-weight: 700;
+    color: var(--text);
 }
 
 .row-read {
     background: var(--surface);
-    opacity: .85;
+}
+
+.row-read .cat-label,
+.row-read .desc-cell,
+.row-read .recipient-cell {
+    font-weight: 400;
+    color: var(--text-muted);
 }
 
 /* Category dot icon */
@@ -366,10 +370,6 @@ td .pri-critical {
     color: var(--text);
 }
 
-.cat-label.bold {
-    font-weight: 700;
-}
-
 .cat-sub {
     font-size: .7rem;
     color: var(--text-muted);
@@ -413,30 +413,6 @@ td .pri-critical {
 .pri-badge.pri-routine {
     background: #dcfce7;
     color: var(--success);
-}
-
-/* Status badge */
-.status-badge {
-    display: inline-block;
-    font-size: .7rem;
-    font-weight: 700;
-    padding: .2rem .55rem;
-    border-radius: 12px;
-}
-
-.st-unread {
-    background: #fdf2f2;
-    color: var(--maroon);
-}
-
-.st-done {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.st-dismissed {
-    background: #f3f4f6;
-    color: #6b7280;
 }
 
 /* Action button */
@@ -708,3 +684,4 @@ td .pri-critical {
     opacity: 1;
     transform: translateY(0);
 }
+

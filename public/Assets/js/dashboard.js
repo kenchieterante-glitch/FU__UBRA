@@ -1,36 +1,3 @@
-function toggleToolbarSearch(inputId) {
-  document.querySelectorAll('.toolbar-search-input').forEach(input => {
-    if (input.id === inputId) {
-      const hidden = input.classList.toggle('hidden');
-      if (!hidden) {
-        input.focus();
-      }
-    } else {
-      input.classList.add('hidden');
-    }
-  });
-}
-
-function handleTopbarSearchIcon() {
-  const input = document.querySelector('.topbar .search-box');
-  if (!input) return;
-  const value = input.value.trim();
-  if (value) {
-    performTopbarSearch(value);
-  } else {
-    input.focus();
-  }
-}
-
-document.body.classList.remove('sidebar-collapsed');
-
-function focusTopbarSearch() {
-  const input = document.querySelector('.topbar .search-box');
-  if (input) {
-    input.focus();
-  }
-}
-
 function performTopbarSearch(term) {
   const query = term.trim().toLowerCase();
   if (!query) return;
@@ -76,9 +43,3 @@ if (topbarSearch) {
     }
   });
 }
-
-document.addEventListener('click', e => {
-  if (!e.target.closest('.toolbar-search')) {
-    document.querySelectorAll('.toolbar-search-input').forEach(input => input.classList.add('hidden'));
-  }
-});

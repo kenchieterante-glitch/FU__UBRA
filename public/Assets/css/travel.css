@@ -8,7 +8,7 @@
     --maroon: #800000;
     --maroon-dark: #5a0909;
     --maroon-light: #9B1B1B;
-    --gold: #C9A84C;
+    --gold: #6b6b6b;
     --surface: #ffffff;
     --surface-alt: #f8f4f4;
     --border: #e0d5d5;
@@ -688,7 +688,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .5px;
-    color: var(--gold);
+    color: #d6d6d6;
     margin-bottom: .5rem;
 }
 
@@ -736,8 +736,8 @@
 }
 
 .ubra-btn.primary {
-    background: var(--gold);
-    border-color: var(--gold);
+    background: #d6d6d6;
+    border-color: #d6d6d6;
     color: var(--maroon);
     font-weight: 700;
 }

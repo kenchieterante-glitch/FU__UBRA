@@ -17,9 +17,6 @@
             <button class="btn-primary" id="addEventBtn">
                 <i class="bi bi-plus-lg"></i> Add Event
             </button>
-            <button class="btn-outline" id="generateScheduleBtn">
-                <i class="bi bi-magic"></i> Generate Schedule
-            </button>
             <div class="view-switcher">
                 <button class="vsw-btn active" data-view="dayGridMonth">Monthly</button>
                 <button class="vsw-btn" data-view="timeGridWeek">Weekly</button>
@@ -27,10 +24,6 @@
             </div>
         </div>
     </div>
-
-    <?php if (!empty($flash_success)): ?>
-        <div class="flash flash-success"><i class="bi bi-check-circle-fill"></i> <?= esc($flash_success) ?></div>
-    <?php endif; ?>
 
     <!-- ── LEGEND ────────────────────────────────────────────────── -->
     <div class="cal-legend">
@@ -43,15 +36,8 @@
     <!-- ── MAIN LAYOUT ───────────────────────────────────────────── -->
     <div class="cal-layout">
 
-        <div class="cal-top">
-            <div class="cal-main">
-                <div id="calendar"></div>
-            </div>
-        </div>
-
-        <div class="cal-bottom-grid">
-            <!-- Left sidebar -->
-            <div class="cal-sidebar-left">
+        <!-- Priority reminders — shown above the calendar -->
+        <div class="cal-priority-row">
 
             <!-- Today's schedule -->
             <div class="sidebar-card">
@@ -127,6 +113,17 @@
                     </div>
                 <?php endif; ?>
             </div>
+        </div>
+
+        <div class="cal-top">
+            <div class="cal-main">
+                <div id="calendar"></div>
+            </div>
+        </div>
+
+        <div class="cal-bottom-grid">
+            <!-- Left sidebar -->
+            <div class="cal-sidebar-left">
 
             <!-- Holiday list -->
             <div class="sidebar-card">
@@ -285,9 +282,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('addEventModal').style.display = 'flex';
     });
 
-    document.getElementById('generateScheduleBtn').addEventListener('click', () => {
-        showToast('Schedule generation is handled by the Maintenance module.');
-    });
 });
 
 // ── Event detail panel ─────────────────────────────────────────

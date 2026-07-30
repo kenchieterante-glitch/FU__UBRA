@@ -12,9 +12,12 @@
             <p class="page-subtitle">View and manage all intelligent reminders, alerts, and operational notifications.</p>
         </div>
         <div class="header-actions">
-            <a href="<?= base_url('notifications/markAllRead') ?>" class="btn-outline">
-                <i class="bi bi-check2-all"></i> Mark All Read
-            </a>
+            <form method="post" action="<?= base_url('notifications/markAllRead') ?>" style="display:contents;">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn-outline">
+                    <i class="bi bi-check2-all"></i> Mark All Read
+                </button>
+            </form>
             <a href="<?= base_url('notifications/export') ?>" class="btn-outline">
                 <i class="bi bi-download"></i> Export Log
             </a>
@@ -26,8 +29,7 @@ $notifications = $notifications ?? [];
 $unread_count = $unread_count ?? 0;
 $today_count = $today_count ?? 0;
 $upcoming_count = $upcoming_count ?? 0;
-$critical_count = $critical_count ?? 0;
-$email_count = $email_count ?? 0;
+$draft_count = $draft_count ?? 0;
 ?>
 
     <!-- ── SUMMARY CARDS ────────────────────────────────────────── -->
@@ -45,7 +47,7 @@ $email_count = $email_count ?? 0;
             <div class="sc-body">
                 <div class="sc-value"><?= $today_count ?></div>
                 <div class="sc-label">Today's Alerts</div>
-                <div class="sc-sub success"><?= $today_count ?> Completed</div>
+                <div class="sc-sub success"><?= $today_done_count ?? 0 ?> Completed</div>
             </div>
         </div>
         <div class="summary-card upcoming">
@@ -56,20 +58,12 @@ $email_count = $email_count ?? 0;
                 <div class="sc-sub info">Operational milestones</div>
             </div>
         </div>
-        <div class="summary-card critical">
-            <div class="sc-icon"><i class="bi bi-exclamation-octagon-fill"></i></div>
+        <div class="summary-card draft">
+            <div class="sc-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
             <div class="sc-body">
-                <div class="sc-value"><?= $critical_count ?></div>
-                <div class="sc-label">Critical Alerts</div>
-                <div class="sc-sub danger">High Priority Actions</div>
-            </div>
-        </div>
-        <div class="summary-card email">
-            <div class="sc-icon"><i class="bi bi-send-fill"></i></div>
-            <div class="sc-body">
-                <div class="sc-value"><?= $email_count ?></div>
-                <div class="sc-label">Recent Emails Sent</div>
-                <div class="sc-sub success">API Delivery 100%</div>
+                <div class="sc-value"><?= $draft_count ?></div>
+                <div class="sc-label">Draft Messages</div>
+                <div class="sc-sub muted">Not yet sent</div>
             </div>
         </div>
     </div>
@@ -83,10 +77,8 @@ $email_count = $email_count ?? 0;
                 <h2 class="panel-title">Operational Alerts Log</h2>
                 <div class="toolbar-right">
                     <div class="toolbar-search">
-                        <button type="button" class="search-icon-btn" onclick="toggleNotificationsSearch()" aria-label="Search alerts">
-                            <i class="bi bi-search"></i>
-                        </button>
-                        <input type="text" id="searchInput" class="toolbar-search-input hidden" placeholder="Search alerts, recipients, or categories" oninput="filterTable()" style="display:none;">
+                      <input type="text" id="searchInput" class="search-box" placeholder="Search alerts, recipients, or categories" oninput="filterTable()">
+                      <i class="bi bi-search search-icon"></i>
                     </div>
                     <div class="filter-menu-wrapper">
                         <button type="button" class="filter-btn" onclick="toggleNotificationsFilterMenu()" aria-label="Open filters">
@@ -94,6 +86,14 @@ $email_count = $email_count ?? 0;
                         </button>
                         <div class="filter-popup" id="notificationsFilterPopup">
                             <div class="filter-popup-title">Filter</div>
+                            <div class="filter-row">
+                                <label for="readFilter"><i class="bi bi-envelope"></i> View</label>
+                                <select id="readFilter" onchange="filterTable()">
+                                    <option value="">All Notifications</option>
+                                    <option value="unread">Unread Only</option>
+                                    <option value="read">Read Only</option>
+                                </select>
+                            </div>
                             <div class="filter-row">
                                 <label for="catFilter"><i class="bi bi-tags"></i> Category</label>
                                 <select id="catFilter" onchange="filterTable()">
@@ -130,21 +130,20 @@ $email_count = $email_count ?? 0;
                             <th>Recipient</th>
                             <th>Date &amp; Time</th>
                             <th>Priority</th>
-                            <th>Status</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($notifications)): ?>
-                            <tr><td colspan="8" class="empty-row">
+                            <tr><td colspan="7" class="empty-row">
                                 <i class="bi bi-bell-slash" style="font-size:2rem;color:var(--border);display:block;margin-bottom:.5rem"></i>
                                 No notifications yet. They'll appear here as operations generate alerts.
                             </td></tr>
                         <?php else: ?>
                             <?php foreach ($notifications as $n): ?>
                             <?php
-                                $status   = $n['status'] ?? 'Unread';
-                                $isRead   = $status !== 'Unread';
+                                $status   = $n['status'] ?? 'Pending';
+                                $isRead   = (bool) ($n['is_read'] ?? false);
                                 $priority = strtoupper($n['priority'] ?? 'ROUTINE');
                                 $priClass = match($priority) {
                                     'CRITICAL' => 'pri-critical',
@@ -160,17 +159,13 @@ $email_count = $email_count ?? 0;
                                     'Vehicle Expiry'        => 'bi-card-checklist',
                                     default                 => 'bi-bell',
                                 };
-                                $statusClass = match($status) {
-                                    'Completed','Verified','Assigned','Resolved','Dismissed' => 'st-done',
-                                    'Dismissed' => 'st-dismissed',
-                                    default     => 'st-unread',
-                                };
                             ?>
                             <tr
                                 class="notif-row <?= $isRead ? 'row-read' : 'row-unread' ?>"
                                 data-id="<?= $n['id'] ?>"
                                 data-cat="<?= strtolower(esc($n['category'] ?? '')) ?>"
                                 data-pri="<?= esc($priority) ?>"
+                                data-read="<?= $isRead ? 'read' : 'unread' ?>"
                                 data-search="<?= strtolower(esc(($n['category'] ?? '') . ' ' . ($n['description'] ?? '') . ' ' . ($n['recipient'] ?? ''))) ?>"
                             >
                                 <td>
@@ -179,11 +174,11 @@ $email_count = $email_count ?? 0;
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="cat-label <?= $isRead ? '' : 'bold' ?>"><?= esc($n['category'] ?? '—') ?></div>
+                                    <div class="cat-label"><?= esc($n['category'] ?? '—') ?></div>
                                     <div class="cat-sub"><?= esc($n['recipient'] ?? '') ?></div>
                                 </td>
                                 <td class="desc-cell"><?= esc($n['description'] ?? '—') ?></td>
-                                <td><?= esc($n['recipient'] ?? '—') ?></td>
+                                <td class="recipient-cell"><?= esc($n['recipient'] ?? '—') ?></td>
                                 <td>
                                     <div class="datetime-cell">
                                         <span><?= date('M j, Y', strtotime($n['created_at'])) ?></span>
@@ -191,15 +186,6 @@ $email_count = $email_count ?? 0;
                                     </div>
                                 </td>
                                 <td><span class="pri-badge <?= $priClass ?>"><?= $priority ?></span></td>
-                                <td>
-                                    <?php if ($isRead && in_array($status, ['Completed','Verified','Assigned','Resolved'])): ?>
-                                        <span class="status-badge st-done"><?= esc($status) ?></span>
-                                    <?php elseif ($status === 'Dismissed'): ?>
-                                        <span class="status-badge st-dismissed">Dismissed</span>
-                                    <?php else: ?>
-                                        <span class="status-badge st-unread">• Unread</span>
-                                    <?php endif; ?>
-                                </td>
                                 <td>
                                     <?php
                                     $actionBtn = match($n['category'] ?? '') {
@@ -209,10 +195,10 @@ $email_count = $email_count ?? 0;
                                         'Janitorial Assignment' => ['label' => 'Reassign','value' => 'assigned'],
                                         'Inventory Low Stock'   => ['label' => 'Order',   'value' => 'ordered'],
                                         'Vehicle Expiry'        => ['label' => 'Review',  'value' => 'reviewed'],
-                                        default                 => ['label' => 'Read',    'value' => 'read'],
+                                        default                 => ['label' => 'Acknowledge', 'value' => 'acknowledged'],
                                     };
                                     ?>
-                                    <?php if (!in_array($status, ['Completed','Verified','Assigned','Resolved','Dismissed','Notified','Ordered','Reviewed','Read'])): ?>
+                                    <?php if ($status === 'Pending'): ?>
                                         <button class="action-btn"
                                             onclick="doAction(<?= $n['id'] ?>, '<?= $actionBtn['value'] ?>', this)">
                                             <?= $actionBtn['label'] ?>
@@ -252,30 +238,16 @@ const DISMISS_URL   = '<?= base_url('notifications/dismiss/') ?>';
 function filterTable() {
     const cat  = document.getElementById('catFilter').value.toLowerCase();
     const pri  = document.getElementById('priFilter').value;
+    const read = document.getElementById('readFilter').value;
     const term = document.getElementById('searchInput').value.toLowerCase();
 
     document.querySelectorAll('#notifTable tbody .notif-row').forEach(row => {
         const matchCat  = !cat  || row.dataset.cat.includes(cat);
         const matchPri  = !pri  || row.dataset.pri === pri;
+        const matchRead = !read || row.dataset.read === read;
         const matchTerm = !term || row.dataset.search.includes(term);
-        row.style.display = (matchCat && matchPri && matchTerm) ? '' : 'none';
+        row.style.display = (matchCat && matchPri && matchRead && matchTerm) ? '' : 'none';
     });
-}
-
-function toggleNotificationsSearch() {
-    const input = document.getElementById('searchInput');
-    const isHidden = input.classList.contains('hidden');
-
-    if (isHidden) {
-        input.classList.remove('hidden');
-        input.style.display = '';
-        input.focus();
-    } else {
-        input.classList.add('hidden');
-        input.value = '';
-        input.style.display = 'none';
-        filterTable();
-    }
 }
 
 function toggleNotificationsFilterMenu() {
@@ -297,7 +269,7 @@ function doAction(id, action, btn) {
     const fd = new FormData();
     fd.append('action', action);
 
-    fetch(ACTION_URL + id, { method: 'POST', body: fd })
+    fetch(ACTION_URL + id, { method: 'POST', headers: csrfHeaders(), body: fd })
         .then(r => r.json())
         .then(res => {
             if (res.success) {
@@ -305,14 +277,9 @@ function doAction(id, action, btn) {
                 // Mark row read visually
                 row.classList.remove('row-unread');
                 row.classList.add('row-read');
+                row.dataset.read = 'read';
                 // Replace button with Done chip
                 btn.outerHTML = '<span class="action-done"><i class="bi bi-check-circle-fill"></i> Done</span>';
-                // Update status badge
-                const badge = row.querySelector('.status-badge');
-                if (badge) {
-                    badge.textContent = res.new_status;
-                    badge.className   = 'status-badge st-done';
-                }
                 decrementUnread();
             }
         })
@@ -324,14 +291,13 @@ document.querySelectorAll('.notif-row.row-unread').forEach(row => {
     row.addEventListener('click', function (e) {
         if (e.target.closest('button, a')) return;
         const id = this.dataset.id;
-        fetch(MARK_READ_URL + id, { method: 'POST' })
+        fetch(MARK_READ_URL + id, { method: 'POST', headers: csrfHeaders() })
             .then(r => r.json())
             .then(res => {
                 if (res.success) {
                     this.classList.remove('row-unread');
                     this.classList.add('row-read');
-                    const badge = this.querySelector('.status-badge.st-unread');
-                    if (badge) badge.remove();
+                    this.dataset.read = 'read';
                     decrementUnread();
                 }
             });

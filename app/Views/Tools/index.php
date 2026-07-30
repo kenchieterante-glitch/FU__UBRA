@@ -12,10 +12,6 @@
   <button class="btn-add" onclick="document.getElementById('addModal').style.display='flex'">+ Add New Tool</button>
 </div>
 
-<?php if (session()->getFlashdata('success')): ?>
-  <div class="alert-success"><?= session()->getFlashdata('success') ?></div>
-<?php endif; ?>
-
 <div class="stat-cards">
   <div class="stat-card">
     <h3>Total Tools</h3>
@@ -39,10 +35,8 @@
   <div class="table-toolbar">
     <div class="toolbar-left">
       <div class="toolbar-search">
-        <button type="button" class="search-icon-btn" onclick="toggleToolsSearch()" aria-label="Search">
-          <i class="bi bi-search"></i>
-        </button>
-        <input type="text" id="toolsSearch" style="display:none;" class="toolbar-search-input hidden" placeholder="Search tool, code, category, location" oninput="filterToolsTable()">
+        <input type="text" id="toolsSearch" class="search-box" placeholder="Search tool, code, category, location" oninput="filterToolsTable()">
+        <i class="bi bi-search search-icon"></i>
       </div>
     </div>
     <div class="toolbar-right">
@@ -135,20 +129,6 @@ function filterToolsTable() {
   });
 }
 
-function toggleToolsSearch() {
-  const input = document.getElementById('toolsSearch');
-  if (!input) return;
-  const isHidden = input.classList.contains('hidden') || input.style.display === 'none';
-  if (isHidden) {
-    input.style.display = 'inline-flex';
-    input.classList.remove('hidden');
-    input.focus();
-  } else {
-    input.style.display = 'none';
-    input.classList.add('hidden');
-  }
-}
-
 function toggleToolsFilterMenu() {
   const popup = document.getElementById('toolsFilterPopup');
   if (!popup) return;
@@ -157,16 +137,8 @@ function toggleToolsFilterMenu() {
 
 document.addEventListener('click', e => {
   const wrapper = e.target.closest('.filter-menu-wrapper');
-  const searchWrapper = e.target.closest('.toolbar-search');
   if (!wrapper) {
     document.getElementById('toolsFilterPopup')?.classList.remove('visible');
-  }
-  if (!searchWrapper) {
-    const input = document.getElementById('toolsSearch');
-    if (input) {
-      input.style.display = 'none';
-      input.classList.add('hidden');
-    }
   }
 });
 </script>

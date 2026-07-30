@@ -6,12 +6,15 @@ use CodeIgniter\Model;
 
 class UserModel extends Model
 {
+    // The real users table's primary key is department_id — there is no 'id'
+    // column — and it has no updated_at column either (only created_at, set by
+    // the DB's own default). password (not password_hash) is the real column.
     protected $table         = 'users';
-    protected $primaryKey    = 'id';
-    protected $useTimestamps = true;
+    protected $primaryKey    = 'department_id';
+    protected $useTimestamps = false;
     protected $allowedFields = [
-        'emp_id', 'username', 'email', 'password_hash', 'full_name',
-        'role', 'department_id', 'status',
+        'emp_id', 'username', 'email', 'password', 'full_name',
+        'role', 'department_id', 'department', 'photo',
     ];
 
     protected $beforeInsert = ['hashPassword'];
@@ -20,8 +23,7 @@ class UserModel extends Model
     protected function hashPassword(array $data)
     {
         if (isset($data['data']['password'])) {
-            $data['data']['password_hash'] = password_hash($data['data']['password'], PASSWORD_DEFAULT);
-            unset($data['data']['password']);
+            $data['data']['password'] = password_hash($data['data']['password'], PASSWORD_DEFAULT);
         }
         return $data;
     }

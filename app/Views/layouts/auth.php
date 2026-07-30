@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Prevent the login page from being cached by the browser.
+         This ensures that when a logged-in user clicks the browser's
+         back button, the page is re-requested from the server (which
+         checks the session and redirects to the dashboard) instead of
+         showing a stale cached login page. -->
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>FU_UBRA | <?= esc($title ?? 'Login') ?></title>
     <style>
         body {

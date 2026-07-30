@@ -22,11 +22,6 @@
         </div>
     </div>
 
-    <!-- ── FLASH MESSAGES ───────────────────────────────────────── -->
-    <?php if (!empty($flash_success)): ?>
-        <div class="flash flash-success"><i class="bi bi-check-circle-fill"></i> <?= esc($flash_success) ?></div>
-    <?php endif; ?>
-
     <!-- ── SUMMARY CARDS ────────────────────────────────────────── -->
     <div class="summary-grid">
         <div class="summary-card total">
@@ -124,10 +119,8 @@
                       </div>
                     </div>
                     <div class="toolbar-search">
-                      <button type="button" class="search-icon-btn" onclick="toggleToolbarSearch('searchInput')" aria-label="Search">
-                        <i class="bi bi-search"></i>
-                      </button>
-                      <input type="text" id="searchInput" class="toolbar-search-input hidden" placeholder="Search plate / driver..." onkeyup="filterTable()">
+                      <input type="text" id="searchInput" class="search-box" placeholder="Search plate / driver..." oninput="filterTable()">
+                      <i class="bi bi-search search-icon"></i>
                     </div>
                 </div>
             </div>

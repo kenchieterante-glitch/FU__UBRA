@@ -71,7 +71,13 @@ class Security extends BaseConfig
      *
      * Regenerate CSRF Token on every submission.
      */
-    public bool $regenerate = true;
+    // False rather than the framework default: several pages render multiple
+    // independent forms (e.g. one delete form per table row) plus fetch()-based
+    // actions in the same page load. Regenerating the token after every single
+    // validated request would strand every other still-open form/action on that
+    // page with a stale token. The token is still real, still tied to the
+    // session/cookie, and still expires after $expires seconds either way.
+    public bool $regenerate = false;
 
     /**
      * --------------------------------------------------------------------------

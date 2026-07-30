@@ -61,7 +61,11 @@ class PersonnelController extends BaseController
         $data = [
             'title'       => 'Janitors',
             'pageCss'     => 'personnel.css',
-            'personnel'   => $this->personnelModel->getByPositionKeyword('Cleaning') ?: [],
+            'personnel'   => $this->personnelModel->groupStart()
+                                                  ->like('position', 'Janitor')
+                                                  ->orLike('position', 'Cleaning')
+                                                  ->groupEnd()
+                                                  ->findAll() ?: [],
             'departments' => $this->departmentModel->findAll(),
         ];
 
@@ -104,6 +108,8 @@ class PersonnelController extends BaseController
 
     public function add()
     {
+        if ($resp = $this->requireAdmin()) return $resp;
+
         $empId = trim((string) $this->request->getPost('emp_id'));
 
         if ($empId !== '' && $this->personnelModel->isEmpIdTaken($empId)) {
@@ -129,6 +135,8 @@ class PersonnelController extends BaseController
 
     public function edit($id)
     {
+        if ($resp = $this->requireAdmin()) return $resp;
+
         $empId = trim((string) $this->request->getPost('emp_id'));
 
         if ($empId !== '' && $this->personnelModel->isEmpIdTaken($empId, $id)) {
@@ -154,7 +162,14 @@ class PersonnelController extends BaseController
 
     public function delete($id)
     {
-        $this->personnelModel->delete($id);
+        if ($resp = $this->requireAdmin()) return $resp;
+
+        try {
+            $this->personnelModel->delete($id);
+        } catch (\CodeIgniter\Database\Exceptions\DatabaseException $e) {
+            return redirect()->to('/personnel')->with('error', 'This person is referenced by other records (e.g. trips or vehicle assignments) and cannot be deleted.');
+        }
+
         return redirect()->to('/personnel')->with('success', 'Personnel removed.');
     }
 }

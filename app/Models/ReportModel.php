@@ -21,6 +21,15 @@ class ReportModel extends Model
         return $builder->findAll();
     }
 
+    // Same as getAllWithDetails() but includes archived rows — used by the Records/Archiving page
+    public function getAllWithDetailsForRecords()
+    {
+        $builder = $this->select('reports.*, p.full_name as generated_by_name')
+                        ->join('personnel p', 'p.id = reports.generated_by_id', 'left')
+                        ->orderBy('reports.id', 'DESC');
+        return $builder->findAll();
+    }
+
     // Auto-flag records for archiving after 1 year of inactivity
     public function autoFlagForArchiving()
     {

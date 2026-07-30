@@ -48,4 +48,21 @@ class VehicleModel extends Model
     {
         return $this->where('availability', 'Available')->where('is_archived', 0)->findAll();
     }
+
+    // Single source of truth for fleet counts — reused by Dashboard, Vehicle Management,
+    // Travel Management, and GPS Tracker so the same numbers show everywhere.
+    public function getFleetStats(): array
+    {
+        $total = $this->where('is_archived', 0)->countAllResults();
+        $available = $this->where('is_archived', 0)->where('availability', 'Available')->countAllResults();
+        $inUse = $this->where('is_archived', 0)->where('availability', 'In Use')->countAllResults();
+        $maintenance = $this->where('is_archived', 0)->where('availability', 'Maintenance')->countAllResults();
+
+        return [
+            'total'       => $total,
+            'available'   => $available,
+            'in_use'      => $inUse,
+            'maintenance' => $maintenance,
+        ];
+    }
 }

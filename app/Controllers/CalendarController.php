@@ -10,6 +10,14 @@ class CalendarController extends BaseController
     protected $travelModel;
     protected $session;
 
+    // Must match the legend rendered in calendar/index.php exactly, 1:1 by category.
+    private const CATEGORY_COLORS = [
+        'Travel'      => '#d97706',
+        'Inspection'  => '#f59e0b',
+        'Maintenance' => '#7c3aed',
+        'Compliance'  => '#2563eb',
+    ];
+
     public function __construct()
     {
         $this->travelModel = new TravelModel();
@@ -24,12 +32,9 @@ class CalendarController extends BaseController
         $events = [];
 
         foreach ($trips as $t) {
-            $color = match($t['status']) {
-                'Approved'  => '#16a34a',
-                'Completed' => '#2563eb',
-                'Cancelled' => '#dc2626',
-                default     => '#d97706',
-            };
+            // Color comes from the event's category, matching the calendar legend
+            // 1:1 (Travel=orange) — not from status, so the map and legend never disagree.
+            $color = self::CATEGORY_COLORS['Travel'];
             $events[] = [
                 'id'              => 'trip-' . $t['id'],
                 'title'           => '✈ ' . $t['destination'],
@@ -56,7 +61,7 @@ class CalendarController extends BaseController
 
         $data = [
             'title'          => 'Operations Calendar',
-            'events_json'    => json_encode(array_values($events)),
+            'events_json'    => $this->jsonForScript(array_values($events)),
             'pending_trips'  => $pendingTrips,
             'approved_trips' => $approvedTrips,
             'today_trips'    => $todayTrips,
@@ -84,12 +89,9 @@ class CalendarController extends BaseController
         $events = [];
 
         foreach ($trips as $t) {
-            $color = match($t['status']) {
-                'Approved'  => '#16a34a',
-                'Completed' => '#2563eb',
-                'Cancelled' => '#dc2626',
-                default     => '#d97706',
-            };
+            // Color comes from the event's category, matching the calendar legend
+            // 1:1 (Travel=orange) — not from status, so the map and legend never disagree.
+            $color = self::CATEGORY_COLORS['Travel'];
             $events[] = [
                 'id'              => 'trip-' . $t['id'],
                 'title'           => '✈ ' . $t['destination'],

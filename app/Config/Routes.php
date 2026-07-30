@@ -40,7 +40,7 @@ $routes->set404Override();
 // ============================================================
 // DASHBOARD
 // ============================================================
-$routes->get('dashboard', 'DashboardController::index');
+$routes->get('dashboard', 'Dashboard::index');
 
 // ============================================================
 // PERSONNEL
@@ -54,7 +54,7 @@ $routes->post('personnel/add',       'PersonnelController::add');
 $routes->post('personnel/add/',      'PersonnelController::add');
 $routes->post('personnel/edit/(:num)','PersonnelController::edit/$1');
 $routes->post('personnel/edit/(:num)/','PersonnelController::edit/$1');
-$routes->get ('personnel/delete/(:num)','PersonnelController::delete/$1');
+$routes->post('personnel/delete/(:num)','PersonnelController::delete/$1');
 
 // ============================================================
 // TOOLS & EQUIPMENT
@@ -62,7 +62,7 @@ $routes->get ('personnel/delete/(:num)','PersonnelController::delete/$1');
 $routes->get ('tools',                  'ToolsController::index');
 $routes->post('tools/add',              'ToolsController::add');
 $routes->post('tools/edit/(:num)',      'ToolsController::edit/$1');
-$routes->get ('tools/delete/(:num)',    'ToolsController::delete/$1');
+$routes->post('tools/delete/(:num)',    'ToolsController::delete/$1');
 $routes->post('tools/borrow/(:num)',    'ToolsController::borrow/$1');
 $routes->post('tools/returnTool/(:num)','ToolsController::returnTool/$1');
 
@@ -72,7 +72,7 @@ $routes->post('tools/returnTool/(:num)','ToolsController::returnTool/$1');
 $routes->get ('vehicles',              'VehicleController::index');
 $routes->post('vehicles/add',          'VehicleController::add');
 $routes->post('vehicles/edit/(:num)',  'VehicleController::edit/$1');
-$routes->get ('vehicles/delete/(:num)','VehicleController::delete/$1');
+$routes->post('vehicles/delete/(:num)','VehicleController::delete/$1');
 
 
 // TRAVEL MANAGEMENT + GPS (COMBINED)
@@ -85,7 +85,7 @@ $routes->post('travel/approve/(:num)',   'TravelController::approve/$1');
 $routes->post('travel/reject/(:num)',    'TravelController::reject/$1');
 $routes->post('travel/complete/(:num)',  'TravelController::complete/$1');
 $routes->post('travel/edit/(:num)',      'TravelController::edit/$1');
-$routes->get ('travel/delete/(:num)',    'TravelController::delete/$1');
+$routes->post('travel/delete/(:num)',    'TravelController::delete/$1');
 $routes->get ('travel/getTrip/(:num)',   'TravelController::getTrip/$1');
 $routes->post('travel/checkIn/(:num)',   'TravelController::checkIn/$1');
 $routes->post('travel/checkOut/(:num)',  'TravelController::checkOut/$1');
@@ -105,14 +105,6 @@ $routes->get ('guard/check/(:num)', 'GuardController::check/$1');
 // SAFETY MONITORING (Separated from Janitorial)
 // ============================================================
 $routes->get ('safety',                        'SafetyController::index');
-$routes->get ('safety/scan-borrow',            'SafetyController::scanBorrow');
-$routes->get ('safety/scan-return',            'SafetyController::scanReturn');
-$routes->get ('safety/work-orders/create',     'SafetyController::createWorkOrder');
-$routes->post('safety/work-orders/store',      'SafetyController::storeWorkOrder');
-$routes->get ('safety/work-orders/edit/(:num)','SafetyController::editWorkOrder/$1');
-$routes->get ('safety/equipment/create',       'SafetyController::createEquipment');
-$routes->post('safety/equipment/store',        'SafetyController::storeEquipment');
-// new safety sub-pages
 $routes->get ('safety/guard-dashboard',        'SafetyController::guardDashboard');
 $routes->get ('safety/keylogs',                'SafetyController::keylogs');
 
@@ -121,6 +113,8 @@ $routes->get ('safety/keylogs',                'SafetyController::keylogs');
 // ============================================================
 $routes->get('janitorial',            'JanitorialController::index');
 $routes->get('janitorial/checklists', 'JanitorialController::checklists');
+$routes->post('janitorial/refillInventory/(:num)', 'JanitorialController::refillInventory/$1');
+$routes->post('janitorial/addInventoryItem',       'JanitorialController::addInventoryItem');
 
 // ============================================================
 // CALENDAR
@@ -131,7 +125,7 @@ $routes->get('calendar', 'CalendarController::index');
 // NOTIFICATIONS
 // ============================================================
 $routes->get ('notifications',                 'NotificationController::index');
-$routes->get ('notifications/mark-all-read',   'NotificationController::markAllRead');
+$routes->post('notifications/markAllRead',     'NotificationController::markAllRead');
 $routes->get ('notifications/export',          'NotificationController::export');
 $routes->post('notifications/markRead/(:num)', 'NotificationController::markRead/$1');
 $routes->post('notifications/dismiss/(:num)',  'NotificationController::dismiss/$1');
@@ -141,17 +135,10 @@ $routes->get ('notifications/unreadCount',     'NotificationController::unreadCo
 // ============================================================
 // RECORDS, ARCHIVING & REPORTS
 // ============================================================
-$routes->get ('reports',                    'ReportController::index');
-$routes->post('reports/generate',           'ReportController::generate');
+$routes->get ('reports',                    'RecordsController::index');
 $routes->post('reports/update',             'ReportController::update');
-$routes->post('reports/add',                'ReportController::add');
 $routes->post('reports/update/(:num)',      'ReportController::update/$1');
-$routes->get ('reports/view/(:num)',        'ReportController::view/$1');
-$routes->get ('reports/download/(:num)',    'ReportController::download/$1');
-$routes->get ('reports/delete/(:num)',      'ReportController::delete/$1');
-$routes->get ('reports/activate/(:num)',    'ReportController::activate/$1');
-$routes->get ('reports/deactivate/(:num)',  'ReportController::deactivate/$1');
-$routes->get ('reports/export/(:any)',      'ReportController::export/$1');
+$routes->get ('reports/chartData',          'ReportController::chartData');
 
 // ============================================================
 // MR. UBRA AI
@@ -169,7 +156,7 @@ $routes->post('settings/saveEmail',       'SettingsController::saveEmail');
 $routes->post('settings/saveNotifications','SettingsController::saveNotifications');
 $routes->post('settings/saveRoles',       'SettingsController::saveRoles');
 $routes->post('settings/addUser',         'SettingsController::addUser');
-$routes->get ('settings/deleteUser/(:num)','SettingsController::deleteUser/$1');
+$routes->post('settings/deleteUser/(:num)','SettingsController::deleteUser/$1');
 $routes->get ('settings/getSetting/(:any)','SettingsController::getSetting/$1');
 
 // ============================================================

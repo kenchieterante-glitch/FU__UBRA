@@ -1,224 +1,205 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
 
-<link rel="stylesheet" href="<?= base_url('Assets/css/settings.css') ?>">
+<?php
+$stats = $stats ?? ['total_records' => 0, 'archived_records' => 0, 'reports_generated' => 0, 'today_activities' => 0];
+$activities = $activities ?? [];
+$slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
+?>
 
-<div class="stg-wrapper">
-    <div class="page-header">
+<div class="rec-wrapper">
+
+    <!-- ── PAGE HEADER ──────────────────────────────────────────── -->
+    <div class="rec-header">
         <div>
-            <h1 class="page-title"><i class="bi bi-file-shield"></i> Records & Archiving</h1>
-            <p class="page-subtitle">Manage, archive, and dispose of operational records</p>
+            <h1 class="rec-title">Records, Archiving &amp; Reports</h1>
+            <p class="rec-subtitle">View, manage and generate reports for all modules in one place.</p>
         </div>
-        <a href="<?= base_url('records/export/csv') ?>" class="btn-add">
-            <i class="bi bi-download"></i> Export All
-        </a>
+        <div class="rec-breadcrumb">
+            <a href="<?= base_url('dashboard') ?>">Home</a> / <span>Records, Archiving &amp; Reports</span>
+        </div>
     </div>
 
-    <?php if (session()->getFlashdata('success')): ?>
-        <div class="alert-success" style="margin-bottom: 20px;"><?= session()->getFlashdata('success') ?></div>
-    <?php endif; ?>
-    <?php if (session()->getFlashdata('error')): ?>
-        <div class="alert-error" style="margin-bottom: 20px;"><?= session()->getFlashdata('error') ?></div>
-    <?php endif; ?>
-
-    <div class="records-shell">
-        <div class="records-tabbar">
-            <button class="records-tab active" data-tab="borrow" onclick="switchRecordTab('borrow')">
-                <i class="bi bi-box"></i> Records
-            </button>
-            <button class="records-tab" data-tab="travel" onclick="switchRecordTab('travel')">
-                <i class="bi bi-route"></i> Archive
-            </button>
-            <button class="records-tab" data-tab="reports" onclick="switchRecordTab('reports')">
-                <i class="bi bi-file-earmark-text"></i> Reports
-            </button>
-            <button class="records-tab" data-tab="disposal" onclick="switchRecordTab('disposal')">
-                <i class="bi bi-trash3"></i> Disposal
-            </button>
-        </div>
-
-        <div class="records-toolbar">
-            <div class="records-toolbar-meta">
-                <span class="records-pill active"><span class="dot green"></span>Active records</span>
-                <span class="records-pill"><span class="dot amber"></span>Pending review</span>
-                <span class="records-pill"><span class="dot gray"></span>Archived</span>
-            </div>
-            <a href="<?= base_url('records/export/csv') ?>" class="records-action-btn">
-                <i class="bi bi-file-earmark-arrow-down"></i> View report
-            </a>
-        </div>
-
-        <div class="records-summary-grid">
-            <div class="records-summary-card">
-                <div class="records-summary-label">Total records</div>
-                <div class="records-summary-value">4,812</div>
-            </div>
-            <div class="records-summary-card">
-                <div class="records-summary-label">Archived</div>
-                <div class="records-summary-value">1,209</div>
-            </div>
-            <div class="records-summary-card accent">
-                <div class="records-summary-label">Added this month</div>
-                <div class="records-summary-value">76</div>
+    <!-- ── STATS CARDS ──────────────────────────────────────────── -->
+    <div class="rec-stats-grid">
+        <div class="rec-stat-card accent-blue">
+            <div class="rec-stat-icon"><i class="bi bi-clipboard-data-fill"></i></div>
+            <div class="rec-stat-body">
+                <div class="rec-stat-value"><?= (int) $stats['total_records'] ?></div>
+                <div class="rec-stat-label">Total Records</div>
+                <div class="rec-stat-sub">All modules</div>
             </div>
         </div>
-
-        <div class="stg-content">
-        <!-- Borrow Logs Tab -->
-        <div id="tab-borrow" class="tab-pane active">
-            <div class="tab-title-row">
-                <div class="tab-title">Borrow Logs</div>
+        <div class="rec-stat-card accent-green">
+            <div class="rec-stat-icon"><i class="bi bi-archive-fill"></i></div>
+            <div class="rec-stat-body">
+                <div class="rec-stat-value"><?= (int) $stats['archived_records'] ?></div>
+                <div class="rec-stat-label">Archived Records</div>
+                <div class="rec-stat-sub">All modules</div>
             </div>
-            <table class="stg-table">
+        </div>
+        <div class="rec-stat-card accent-amber">
+            <div class="rec-stat-icon"><i class="bi bi-file-earmark-bar-graph-fill"></i></div>
+            <div class="rec-stat-body">
+                <div class="rec-stat-value"><?= (int) $stats['reports_generated'] ?></div>
+                <div class="rec-stat-label">Reports Generated</div>
+                <div class="rec-stat-sub">All modules</div>
+            </div>
+        </div>
+        <div class="rec-stat-card accent-purple">
+            <div class="rec-stat-icon"><i class="bi bi-clock-history"></i></div>
+            <div class="rec-stat-body">
+                <div class="rec-stat-value"><?= (int) $stats['today_activities'] ?></div>
+                <div class="rec-stat-label">Today's Activities</div>
+                <div class="rec-stat-sub">All modules</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── FILTER BAR ───────────────────────────────────────────── -->
+    <div class="rec-filter-bar">
+        <div class="rec-filter-fields">
+            <div class="rec-icon-filter" id="moduleFilterGroup" data-target="module">
+                <button type="button" class="rec-icon-btn active" data-value="" title="All Modules"><i class="bi bi-grid-fill"></i></button>
+                <button type="button" class="rec-icon-btn" data-value="tools" title="Tools"><i class="bi bi-wrench-adjustable"></i></button>
+                <button type="button" class="rec-icon-btn" data-value="vehicle" title="Vehicle"><i class="bi bi-truck"></i></button>
+                <button type="button" class="rec-icon-btn" data-value="safety" title="Safety"><i class="bi bi-shield-check"></i></button>
+                <button type="button" class="rec-icon-btn" data-value="janitorial" title="Janitorial"><i class="bi bi-brush"></i></button>
+            </div>
+            <div class="rec-icon-filter" id="kindFilterGroup" data-target="kind">
+                <button type="button" class="rec-icon-btn active" data-value="" title="All Types"><i class="bi bi-collection"></i></button>
+                <button type="button" class="rec-icon-btn" data-value="record" title="Records"><i class="bi bi-file-earmark-text"></i></button>
+                <button type="button" class="rec-icon-btn" data-value="archive" title="Archived"><i class="bi bi-archive"></i></button>
+                <button type="button" class="rec-icon-btn" data-value="report" title="Reports"><i class="bi bi-file-earmark-bar-graph"></i></button>
+            </div>
+            <select id="statusFilter" onchange="filterTable()">
+                <option value="">All Status</option>
+                <option value="borrowed">Borrowed</option>
+                <option value="returned">Returned</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="generated">Generated</option>
+                <option value="archived">Archived</option>
+                <option value="disposed">Disposed</option>
+            </select>
+            <div class="rec-date-range">
+                <input type="date" id="dateFilter" onchange="filterTable()" aria-label="Date">
+            </div>
+        </div>
+        <div class="rec-filter-actions">
+            <div class="rec-search-wrap">
+                <input type="text" id="searchInput" placeholder="Search records…" oninput="filterTable()">
+                <i class="bi bi-search search-icon"></i>
+            </div>
+            <button type="button" class="rec-btn-outline" onclick="resetFilters()"><i class="bi bi-arrow-clockwise"></i> Reset</button>
+        </div>
+    </div>
+
+    <!-- ── RECENT ACTIVITY HISTORY ──────────────────────────────── -->
+    <div class="rec-table-card">
+        <div class="rec-table-head">
+            <div class="rec-table-title"><i class="bi bi-list-ul"></i> Recent Activity History</div>
+            <div class="rec-table-actions">
+                <a href="<?= base_url('records/export/excel') ?>" class="rec-btn-outline"><i class="bi bi-file-earmark-excel"></i> Export Excel</a>
+                <a href="<?= base_url('records/export/pdf') ?>" class="rec-btn-outline"><i class="bi bi-file-earmark-pdf"></i> Export PDF</a>
+                <button type="button" class="rec-btn-dark" onclick="filterArchivedOnly()"><i class="bi bi-archive"></i> Archive</button>
+            </div>
+        </div>
+
+        <div class="table-scroll">
+            <table class="rec-table" id="activityTable">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Asset</th>
-                        <th>Borrower</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Archived</th>
-                        <th>Disposal</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($borrowRecords)): ?>
-                        <tr><td colspan="8" class="empty-row">No records found</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($borrowRecords as $r): ?>
-                        <tr>
-                            <td><?= $r['id'] ?></td>
-                            <td><?= $r['tool_id'] ?? '—' ?></td>
-                            <td><?= $r['borrower'] ?? '—' ?></td>
-                            <td><?= $r['borrowed_date'] ?? '—' ?></td>
-                            <td><span class="badge <?= $r['status'] == 'Borrowed' ? 'amber' : 'green' ?>"><?= $r['status'] ?? '—' ?></span></td>
-                            <td><?= $r['is_archived'] ? '<span class="badge green">Yes</span>' : '<span class="badge">No</span>' ?></td>
-                            <td>
-                                <span class="badge <?= $r['disposal_status'] == 'Disposed' ? 'red' : ($r['disposal_status'] == 'For Disposal' ? 'amber' : '') ?>">
-                                    <?= $r['disposal_status'] ?? 'None' ?>
-                                </span>
-                            </td>
-                            <td>
-                                <?php if (!$r['is_archived'] && $r['disposal_status'] == 'None'): ?>
-                                    <form method="post" action="<?= base_url('records/markForDisposal/borrow/' . $r['id']) ?>" style="display:inline;">
-                                        <button type="submit" class="btn-sm">Mark for Disposal</button>
-                                    </form>
-                                <?php elseif ($r['disposal_status'] == 'For Disposal'): ?>
-                                    <button class="btn-sm" onclick="openAuthorizeModal('borrow', <?= $r['id'] ?>)">Authorize</button>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Trip Tickets Tab -->
-        <div id="tab-travel" class="tab-pane">
-            <div class="tab-title-row">
-                <div class="tab-title">Trip Tickets</div>
-            </div>
-            <table class="stg-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Trip ID</th>
-                        <th>Requester</th>
-                        <th>Destination</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Archived</th>
-                        <th>Disposal</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($travelRecords)): ?>
-                        <tr><td colspan="9" class="empty-row">No records found</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($travelRecords as $r): ?>
-                        <tr>
-                            <td><?= $r['id'] ?></td>
-                            <td><?= $r['trip_id'] ?? '—' ?></td>
-                            <td><?= $r['requester'] ?? '—' ?></td>
-                            <td><?= $r['destination'] ?? '—' ?></td>
-                            <td><?= $r['travel_date'] ?? '—' ?></td>
-                            <td><span class="badge <?= $r['status'] == 'Completed' ? 'green' : ($r['status'] == 'Approved' ? 'blue' : 'amber') ?>"><?= $r['status'] ?? '—' ?></span></td>
-                            <td><?= $r['is_archived'] ? '<span class="badge green">Yes</span>' : '<span class="badge">No</span>' ?></td>
-                            <td>
-                                <span class="badge <?= $r['disposal_status'] == 'Disposed' ? 'red' : ($r['disposal_status'] == 'For Disposal' ? 'amber' : '') ?>">
-                                    <?= $r['disposal_status'] ?? 'None' ?>
-                                </span>
-                            </td>
-                            <td>
-                                <?php if (!$r['is_archived'] && $r['disposal_status'] == 'None'): ?>
-                                    <form method="post" action="<?= base_url('records/markForDisposal/travel/' . $r['id']) ?>" style="display:inline;">
-                                        <button type="submit" class="btn-sm">Mark for Disposal</button>
-                                    </form>
-                                <?php elseif ($r['disposal_status'] == 'For Disposal'): ?>
-                                    <button class="btn-sm" onclick="openAuthorizeModal('travel', <?= $r['id'] ?>)">Authorize</button>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Reports Tab -->
-        <div id="tab-reports" class="tab-pane">
-            <div class="tab-title-row">
-                <div class="tab-title">Reports</div>
-            </div>
-            <table class="stg-table">
-                <thead>
-                    <tr>
-                        <th>Report Name</th>
-                        <th>Generated By</th>
-                        <th>Date</th>
+                        <th>Date &amp; Time</th>
+                        <th>Module</th>
                         <th>Type</th>
-                        <th>Archived</th>
-                        <th>Disposal</th>
-                        <th>Actions</th>
+                        <th>Record</th>
+                        <th>Action</th>
+                        <th>Performed By</th>
+                        <th>Status</th>
+                        <th>View</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($reportRecords)): ?>
-                        <tr><td colspan="7" class="empty-row">No reports found</td></tr>
+                    <?php if (empty($activities)): ?>
+                        <tr><td colspan="8" class="empty-row">No activity recorded yet.</td></tr>
                     <?php else: ?>
-                        <?php foreach ($reportRecords as $r): ?>
-                        <tr>
-                            <td class="rpt-name"><?= esc($r['report_name']) ?></td>
-                            <td><?= esc($r['generated_by']) ?></td>
-                            <td><?= isset($r['created_at']) ? date('M j, Y', strtotime($r['created_at'])) : '—' ?></td>
-                            <td><span class="badge"><?= esc($r['type_module'] ?? 'General') ?></span></td>
-                            <td><?= $r['is_archived'] ? '<span class="badge green">Yes</span>' : '<span class="badge">No</span>' ?></td>
+                        <?php foreach ($activities as $act):
+                            $modSlug    = $slug($act['module']);
+                            $kindSlug   = $slug($act['kind']);
+                            $actionSlug = $slug($act['action']);
+                            $statusSlug = $slug($act['status']);
+                            $dateVal    = $act['date'] ?? null;
+                            $dateKey    = $dateVal ? date('Y-m-d', strtotime($dateVal)) : '';
+                            $searchBlob = strtolower($act['module'] . ' ' . $act['record'] . ' ' . $act['record_sub'] . ' ' . $act['performed_by'] . ' ' . $act['action'] . ' ' . $act['status']);
+                            $modIcon = match ($act['module']) {
+                                'Tools'      => 'bi-wrench-adjustable',
+                                'Vehicle'    => 'bi-truck',
+                                'Safety'     => 'bi-shield-check',
+                                'Janitorial' => 'bi-brush',
+                                default      => 'bi-folder-fill',
+                            };
+                            $kindIcon = match ($act['kind']) {
+                                'Archive' => 'bi-archive-fill',
+                                'Report'  => 'bi-file-earmark-bar-graph-fill',
+                                default   => 'bi-file-earmark-text-fill',
+                            };
+                        ?>
+                        <tr
+                            data-type="<?= esc($act['type']) ?>"
+                            data-module="<?= esc($modSlug) ?>"
+                            data-kind="<?= esc($kindSlug) ?>"
+                            data-status="<?= esc($statusSlug) ?>"
+                            data-date="<?= esc($dateKey) ?>"
+                            data-search="<?= esc($searchBlob) ?>"
+                        >
                             <td>
-                                <span class="badge <?= $r['disposal_status'] == 'Disposed' ? 'red' : ($r['disposal_status'] == 'For Disposal' ? 'amber' : '') ?>">
-                                    <?= $r['disposal_status'] ?? 'None' ?>
-                                </span>
+                                <div class="datetime-cell">
+                                    <span><?= $dateVal ? date('M j, Y', strtotime($dateVal)) : '—' ?></span>
+                                    <span class="time-muted"><?= $dateVal ? date('h:i A', strtotime($dateVal)) : '' ?></span>
+                                </div>
                             </td>
                             <td>
-                                <button class="action-btn action-btn-secondary open-report-view"
-                                    data-id="<?= esc($r['id']) ?>"
-                                    data-report_name="<?= esc($r['report_name']) ?>"
-                                    data-generated_by="<?= esc($r['generated_by']) ?>"
-                                    data-type_module="<?= esc($r['type_module'] ?? 'General') ?>"
-                                    data-date_range="<?= esc($r['date_range'] ?? 'Last 30 Days') ?>">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                <a href="<?= base_url('reports/download/' . (int)$r['id']) ?>" class="action-btn action-btn-download" style="background: #28a745; color: white;">
-                                    <i class="bi bi-download"></i> Download
-                                </a>
-                                <?php if (!$r['is_archived'] && $r['disposal_status'] == 'None'): ?>
-                                    <form method="post" action="<?= base_url('records/markForDisposal/report/' . $r['id']) ?>" style="display:inline;">
-                                        <button type="submit" class="btn-sm">Mark for Disposal</button>
-                                    </form>
-                                <?php elseif ($r['disposal_status'] == 'For Disposal'): ?>
-                                    <button class="btn-sm" onclick="openAuthorizeModal('report', <?= $r['id'] ?>)">Authorize</button>
+                                <span class="mod-pill mod-<?= esc($modSlug) ?>"><i class="bi <?= $modIcon ?>"></i> <?= esc($act['module']) ?></span>
+                            </td>
+                            <td>
+                                <span class="kind-pill kind-<?= esc($kindSlug) ?>"><i class="bi <?= $kindIcon ?>"></i> <?= esc($act['kind']) ?></span>
+                            </td>
+                            <td>
+                                <div class="rec-record-name"><?= esc($act['record']) ?></div>
+                                <div class="rec-record-sub"><?= esc($act['record_sub']) ?></div>
+                            </td>
+                            <td><span class="act-text act-<?= esc($actionSlug) ?>"><?= esc($act['action']) ?></span></td>
+                            <td><?= esc($act['performed_by']) ?></td>
+                            <td><span class="stat-pill stat-<?= esc($statusSlug) ?>"><?= esc($act['status']) ?></span></td>
+                            <td>
+                                <?php if ($act['type'] === 'report'): ?>
+                                    <button type="button" class="rec-view-btn open-report-view"
+                                        data-id="<?= esc($act['id']) ?>"
+                                        data-report_name="<?= esc($act['record']) ?>"
+                                        data-generated_by="<?= esc($act['performed_by']) ?>"
+                                        data-type_module="<?= esc($act['record_sub']) ?>"
+                                        data-date_range="Last 30 Days">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                <?php else: ?>
+                                    <button type="button" class="rec-view-btn open-record-detail"
+                                        data-type="<?= esc($act['type']) ?>"
+                                        data-id="<?= esc($act['id']) ?>"
+                                        data-date="<?= $dateVal ? esc(date('M j, Y', strtotime($dateVal))) : '—' ?>"
+                                        data-module="<?= esc($act['module']) ?>"
+                                        data-kind="<?= esc($act['kind']) ?>"
+                                        data-record="<?= esc($act['record']) ?>"
+                                        data-record_sub="<?= esc($act['record_sub']) ?>"
+                                        data-action="<?= esc($act['action']) ?>"
+                                        data-performed_by="<?= esc($act['performed_by']) ?>"
+                                        data-status="<?= esc($act['status']) ?>"
+                                        data-is_archived="<?= $act['is_archived'] ? '1' : '0' ?>"
+                                        data-disposal_status="<?= esc($act['disposal_status']) ?>">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -228,44 +209,32 @@
             </table>
         </div>
 
-        <!-- Disposal Log Tab -->
-        <div id="tab-disposal" class="tab-pane">
-            <div class="tab-title-row">
-                <div class="tab-title">Disposal Log</div>
-            </div>
-            <table class="stg-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Record Type</th>
-                        <th>Record ID</th>
-                        <th>Authorized By</th>
-                        <th>Date</th>
-                        <th>Notes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($disposalLogs)): ?>
-                        <tr><td colspan="6" class="empty-row">No disposal records</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($disposalLogs as $log): ?>
-                        <tr>
-                            <td><?= $log['id'] ?></td>
-                            <td><?= ucfirst($log['record_type']) ?></td>
-                            <td><?= $log['record_id'] ?></td>
-                            <td><?= $log['authorized_by'] ?></td>
-                            <td><?= $log['authorized_at'] ?></td>
-                            <td><?= $log['notes'] ?? '—' ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+        <div class="rec-table-footer">
+            <div id="entriesLabel">Showing 0 of 0 entries</div>
+            <div class="rec-pagination" id="paginationButtons"></div>
         </div>
     </div>
 </div>
 
-<!-- Authorize Disposal Modal -->
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL: RECORD DETAIL (Tools / Vehicle / Disposal rows)
+════════════════════════════════════════════════════════════════ -->
+<div id="recordDetailModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-sm">
+        <div class="modal-header">
+            <h3><i class="bi bi-info-circle"></i> Record Details</h3>
+            <button class="modal-close" onclick="closeRecordDetail()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="rec-detail-grid" id="recordDetailBody"></div>
+        </div>
+        <div class="modal-footer" id="recordDetailActions"></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL: AUTHORIZE DISPOSAL
+════════════════════════════════════════════════════════════════ -->
 <div id="authorizeModal" class="modal-overlay" style="display:none;">
     <div class="modal-box modal-sm">
         <div class="modal-header">
@@ -273,6 +242,7 @@
             <button class="modal-close" onclick="closeAuthorizeModal()"><i class="bi bi-x-lg"></i></button>
         </div>
         <form id="authorizeForm" method="post" action="<?= base_url('records/authorizeDisposal') ?>">
+            <?= csrf_field() ?>
             <div class="modal-body">
                 <input type="hidden" id="authType" name="type">
                 <input type="hidden" id="authId" name="id">
@@ -299,7 +269,9 @@
     </div>
 </div>
 
-<!-- Report View/Edit Modal -->
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL: REPORT VIEW/EDIT
+════════════════════════════════════════════════════════════════ -->
 <div id="reportEditorModal" class="modal-overlay" style="display:none;">
     <div class="modal-box modal-md">
         <div class="modal-header">
@@ -349,19 +321,189 @@
 </div>
 
 <script>
+const BASE_URL = '<?= base_url() ?>';
+
+// ── Filtering ────────────────────────────────────────────────────
+let currentPage = 1;
+const PAGE_SIZE = 10;
+
+function getIconFilterValue(groupId) {
+    const active = document.querySelector(`#${groupId} .rec-icon-btn.active`);
+    return active ? active.dataset.value : '';
+}
+
+function setIconFilterValue(groupId, value) {
+    document.querySelectorAll(`#${groupId} .rec-icon-btn`).forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === value);
+    });
+}
+
+document.querySelectorAll('.rec-icon-filter').forEach(group => {
+    group.addEventListener('click', e => {
+        const btn = e.target.closest('.rec-icon-btn');
+        if (!btn) return;
+        group.querySelectorAll('.rec-icon-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filterTable();
+    });
+});
+
+function filterTable() {
+    const mod    = getIconFilterValue('moduleFilterGroup');
+    const kind   = getIconFilterValue('kindFilterGroup');
+    const status = document.getElementById('statusFilter').value;
+    const date   = document.getElementById('dateFilter').value;
+    const term   = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    document.querySelectorAll('#activityTable tbody tr[data-type]').forEach(row => {
+        const matchMod    = !mod || row.dataset.module === mod;
+        const matchKind   = !kind || row.dataset.kind === kind;
+        const matchStatus = !status || row.dataset.status === status;
+        const matchDate   = !date || row.dataset.date === date;
+        const matchTerm   = !term || row.dataset.search.includes(term);
+        const matches = matchMod && matchKind && matchStatus && matchDate && matchTerm;
+        row.classList.toggle('filtered-out', !matches);
+    });
+
+    currentPage = 1;
+    applyPagination();
+}
+
+function resetFilters() {
+    setIconFilterValue('moduleFilterGroup', '');
+    setIconFilterValue('kindFilterGroup', '');
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('dateFilter').value = '';
+    document.getElementById('searchInput').value = '';
+    filterTable();
+}
+
+function filterArchivedOnly() {
+    setIconFilterValue('kindFilterGroup', 'archive');
+    filterTable();
+    document.querySelector('.rec-table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Pagination (client-side, over already-filtered rows) ─────────
+function applyPagination() {
+    const rows = Array.from(document.querySelectorAll('#activityTable tbody tr[data-type]'))
+        .filter(r => !r.classList.contains('filtered-out'));
+    const total = rows.length;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    rows.forEach((row, i) => {
+        const page = Math.floor(i / PAGE_SIZE) + 1;
+        row.style.display = (page === currentPage) ? '' : 'none';
+    });
+
+    document.querySelectorAll('#activityTable tbody tr[data-type].filtered-out').forEach(row => {
+        row.style.display = 'none';
+    });
+
+    const start = total === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+    const end   = Math.min(currentPage * PAGE_SIZE, total);
+    document.getElementById('entriesLabel').textContent =
+        total === 0 ? 'No entries found' : `Showing ${start} to ${end} of ${total} entries`;
+
+    renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+    const wrap = document.getElementById('paginationButtons');
+    wrap.innerHTML = '';
+
+    const addBtn = (label, page, opts = {}) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pg-btn' + (opts.active ? ' active' : '');
+        b.textContent = label;
+        b.disabled = !!opts.disabled;
+        b.onclick = () => { currentPage = page; applyPagination(); };
+        wrap.appendChild(b);
+    };
+    const addEllipsis = () => {
+        const s = document.createElement('span');
+        s.className = 'pg-ellipsis';
+        s.textContent = '…';
+        wrap.appendChild(s);
+    };
+
+    addBtn('«', Math.max(1, currentPage - 1), { disabled: currentPage === 1 });
+
+    const maxButtons = 5;
+    let start = Math.max(1, currentPage - 2);
+    let end = Math.min(totalPages, start + maxButtons - 1);
+    start = Math.max(1, end - maxButtons + 1);
+
+    if (start > 1) { addBtn('1', 1); if (start > 2) addEllipsis(); }
+    for (let p = start; p <= end; p++) addBtn(String(p), p, { active: p === currentPage });
+    if (end < totalPages) { if (end < totalPages - 1) addEllipsis(); addBtn(String(totalPages), totalPages); }
+
+    addBtn('»', Math.min(totalPages, currentPage + 1), { disabled: currentPage === totalPages });
+}
+
+// ── Record detail modal (Tools / Vehicle / Disposal) ──────────────
+function openRecordDetail(btn) {
+    const d = btn.dataset;
+    const rows = [
+        ['Date & Time', d.date],
+        ['Module', d.module],
+        ['Type', d.kind],
+        ['Record', d.record],
+        ['Reference', d.record_sub],
+        ['Action', d.action],
+        ['Performed By', d.performed_by],
+        ['Status', d.status],
+    ];
+    document.getElementById('recordDetailBody').innerHTML = rows.map(([label, val]) =>
+        `<div class="rec-detail-row"><span>${label}</span><strong>${val || '—'}</strong></div>`
+    ).join('');
+
+    const actions = document.getElementById('recordDetailActions');
+    actions.innerHTML = '';
+
+    if (d.type !== 'disposal') {
+        if (d.is_archived !== '1' && d.disposal_status === 'None') {
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = `${BASE_URL}records/markForDisposal/${d.type}/${d.id}`;
+            form.innerHTML = '<button type="submit" class="btn-cancel">Mark for Disposal</button>';
+            actions.appendChild(form);
+        } else if (d.disposal_status === 'For Disposal') {
+            const btn2 = document.createElement('button');
+            btn2.type = 'button';
+            btn2.className = 'btn-maroon';
+            btn2.innerHTML = '<i class="bi bi-shield-check"></i> Authorize Disposal';
+            btn2.onclick = () => { closeRecordDetail(); openAuthorizeModal(d.type, d.id); };
+            actions.appendChild(btn2);
+        }
+    }
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'btn-cancel';
+    closeBtn.textContent = 'Close';
+    closeBtn.onclick = closeRecordDetail;
+    actions.appendChild(closeBtn);
+
+    document.getElementById('recordDetailModal').style.display = 'flex';
+}
+
+function closeRecordDetail() {
+    document.getElementById('recordDetailModal').style.display = 'none';
+}
+
+document.querySelectorAll('.open-record-detail').forEach(btn => {
+    btn.addEventListener('click', () => openRecordDetail(btn));
+});
+
+// ── Authorize Disposal modal + signature pad ──────────────────────
 let isDrawing = false;
 let lastX = 0;
 let lastY = 0;
 const canvas = document.getElementById('signatureCanvas');
 const ctx = canvas.getContext('2d');
-
-function switchRecordTab(tab) {
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.records-tab, .stg-nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    const targetBtn = document.querySelector('.records-tab[data-tab="' + tab + '"], .stg-nav-btn[data-tab="' + tab + '"]');
-    if (targetBtn) targetBtn.classList.add('active');
-}
 
 function openAuthorizeModal(type, id) {
     document.getElementById('authType').value = type;
@@ -373,21 +515,6 @@ function openAuthorizeModal(type, id) {
 
 function closeAuthorizeModal() {
     document.getElementById('authorizeModal').style.display = 'none';
-}
-
-function openReportView(button) {
-    const editor = document.getElementById('reportEditorModal');
-    document.getElementById('editorReportId').value = button.dataset.id || '';
-    document.getElementById('editorReportName').value = button.dataset.report_name || '';
-    document.getElementById('editorGeneratedBy').value = button.dataset.generated_by || '';
-    document.getElementById('editorTypeModule').value = button.dataset.type_module || 'General';
-    document.getElementById('editorDateRange').value = button.dataset.date_range || 'Last 30 Days';
-    document.getElementById('reportEditorTitle').innerHTML = '<i class="bi bi-eye"></i> View / Edit Report';
-    editor.style.display = 'flex';
-}
-
-function closeReportEditor() {
-    document.getElementById('reportEditorModal').style.display = 'none';
 }
 
 function initCanvas() {
@@ -413,7 +540,7 @@ canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    draw({clientX: touch.clientX - rect.left, clientY: touch.clientY - rect.top});
+    draw({ clientX: touch.clientX - rect.left, clientY: touch.clientY - rect.top });
 });
 canvas.addEventListener('touchend', stopDraw);
 
@@ -429,15 +556,15 @@ function draw(e) {
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX || e.offsetX) - rect.left;
     const y = (e.clientY || e.offsetY) - rect.top;
-    
+
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(x, y);
     ctx.stroke();
-    
+
     lastX = x;
     lastY = y;
-    
+
     document.getElementById('signatureData').value = canvas.toDataURL('image/png');
 }
 
@@ -450,6 +577,22 @@ function clearSignature() {
     document.getElementById('signatureData').value = '';
 }
 
+// ── Report view/edit modal ────────────────────────────────────────
+function openReportView(button) {
+    const editor = document.getElementById('reportEditorModal');
+    document.getElementById('editorReportId').value = button.dataset.id || '';
+    document.getElementById('editorReportName').value = button.dataset.report_name || '';
+    document.getElementById('editorGeneratedBy').value = button.dataset.generated_by || '';
+    document.getElementById('editorTypeModule').value = button.dataset.type_module || 'General';
+    document.getElementById('editorDateRange').value = button.dataset.date_range || 'Last 30 Days';
+    document.getElementById('reportEditorTitle').innerHTML = '<i class="bi bi-eye"></i> View / Edit Report';
+    editor.style.display = 'flex';
+}
+
+function closeReportEditor() {
+    document.getElementById('reportEditorModal').style.display = 'none';
+}
+
 document.querySelectorAll('.open-report-view').forEach(btn => {
     btn.addEventListener('click', () => openReportView(btn));
 });
@@ -459,10 +602,16 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
 });
 
 window.addEventListener('load', () => {
-    if (document.readyState === 'complete') {
-        initCanvas();
-    }
+    if (document.readyState === 'complete') initCanvas();
 });
+
+// Flash auto-hide
+setTimeout(() => {
+    document.querySelectorAll('.flash').forEach(el => el.style.opacity = '0');
+}, 4000);
+
+// Initial pagination render
+applyPagination();
 </script>
 
 <?= $this->endSection() ?>

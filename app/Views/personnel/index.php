@@ -15,6 +15,8 @@ if (!empty($personnel)) {
   }
 }
 $positionOptions = array_values(array_unique(array_filter($positionOptions)));
+$showStatusTabs = in_array($title, ['Drivers', 'Janitors', 'Carpentries', 'Maintenance'], true);
+$taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
 ?>
 
 <div class="page-header">
@@ -29,10 +31,8 @@ $positionOptions = array_values(array_unique(array_filter($positionOptions)));
   <div class="table-toolbar">
   <div class="toolbar-left">
     <div class="toolbar-search">
-      <button type="button" class="search-icon-btn" onclick="togglePersonnelSearch()" aria-label="Search">
-        <i class="bi bi-search"></i>
-      </button>
-      <input type="text" id="personnelSearch" style="display:none;" class="toolbar-search-input hidden" placeholder="Search name, employee ID, position, or task" oninput="filterPersonnelTable()">
+      <input type="text" id="personnelSearch" class="search-box" placeholder="Search personnel..." oninput="filterPersonnelTable()">
+      <i class="bi bi-search search-icon"></i>
     </div>
   </div>
   <div class="toolbar-right">
@@ -51,17 +51,6 @@ $positionOptions = array_values(array_unique(array_filter($positionOptions)));
             <?php endforeach; ?>
           </select>
         </div>
-        <div class="filter-row">
-          <label for="personnelPosition">Position</label>
-          <select id="personnelPosition" onchange="filterPersonnelTable()">
-            <option value="">All Positions</option>
-            <?php foreach (array_unique(array_column($personnel, 'position')) as $position): ?>
-              <?php if (!empty($position)): ?>
-                <option value="<?= esc($position) ?>"><?= esc($position) ?></option>
-              <?php endif; ?>
-            <?php endforeach; ?>
-          </select>
-        </div>
       </div>
     </div>
   </div>
@@ -72,9 +61,8 @@ $positionOptions = array_values(array_unique(array_filter($positionOptions)));
     <tr>
       <th>Personnel Detail</th>
       <th>Employee ID</th>
-      <th>Position</th>
       <th>Department</th>
-      <th>Assigned Task</th>
+      <th><?= esc($taskLabel) ?></th>
       <th>Status</th>
       <th>Actions</th>
     </tr>
@@ -93,19 +81,21 @@ $positionOptions = array_values(array_unique(array_filter($positionOptions)));
           $statusValue = $p['status'] ?? 'Active';
           $statusClass = (strtolower((string) $statusValue) === 'active') ? 'active' : 'pending';
         ?>
-        <tr data-search="<?= esc(strtolower((string) ($p['full_name'] ?? '') . ' ' . ($p['emp_id'] ?? '') . ' ' . ($p['email'] ?? '') . ' ' . ($p['assigned_task'] ?? ''))) ?>"
+        <tr data-search="<?= esc(strtolower((string) ($p['full_name'] ?? '') . ' ' . ($p['emp_id'] ?? '') . ' ' . ($p['email'] ?? '') . ' ' . ($p['assigned_task'] ?? '') . ' ' . $departmentName)) ?>"
             data-department="<?= esc(strtolower($departmentName)) ?>"
-            data-position="<?= esc(strtolower((string) ($p['position'] ?? ''))) ?>">
+            data-status="<?= esc(strtolower((string) ($statusValue ?? '')) ) ?>">
           <td><?= esc($p['full_name']) ?><br><small><?= esc($p['email']) ?></small></td>
           <td><?= esc($p['emp_id']) ?></td>
-          <td><?= esc($p['position']) ?></td>
           <td><?= esc($departmentName) ?></td>
-          <td><?= esc($p['assigned_task']) ?></td>
+          <td><?= esc($p['assigned_task'] ?? 'No current assignment') ?></td>
           <td><span class="status-badge status-<?= esc($statusClass) ?>"><?= esc($statusValue) ?></span></td>
           <td>
             <div class="action-buttons">
               <button class="icon-btn" onclick="document.getElementById('editModal<?= $p['id'] ?>')  .style.display='flex'" title="Edit"><i class="fa-solid fa-pen"></i></button>
-              <a class="icon-btn delete" href="<?= base_url('personnel/delete/'.$p['id']) ?>" onclick="return confirm('Delete this personnel record?')" title="Delete"><i class="fa-solid fa-trash"></i></a>
+              <form method="post" action="<?= base_url('personnel/delete/'.$p['id']) ?>" onsubmit="return confirm('Delete this personnel record?')" style="display:contents;">
+                <?= csrf_field() ?>
+                <button type="submit" class="icon-btn delete" title="Delete"><i class="fa-solid fa-trash"></i></button>
+              </form>
             </div>
           </td>
         </tr>
@@ -135,7 +125,7 @@ $positionOptions = array_values(array_unique(array_filter($positionOptions)));
                   <option value="<?= esc($positionOption) ?>" <?= strtolower(trim((string) $p['position'])) === strtolower(trim((string) $positionOption)) ? 'selected' : '' ?>><?= esc($positionOption) ?></option>
                 <?php endforeach; ?>
               </select>
-              <label>Assigned Task</label>
+              <label><?= esc($taskLabel) ?></label>
               <input type="text" name="assigned_task" value="<?= esc($p['assigned_task']) ?>">
               <label>Status</label>
               <select name="status">
@@ -153,7 +143,7 @@ $positionOptions = array_values(array_unique(array_filter($positionOptions)));
 
       <?php endforeach; ?>
     <?php else: ?>
-      <tr><td colspan="7">No personnel records yet.</td></tr>
+      <tr><td colspan="6">No personnel records yet.</td></tr>
     <?php endif; ?>
   </tbody>
 </table>
@@ -171,36 +161,19 @@ const personnelLookup = <?= json_encode(array_values(array_filter(array_map(func
 })), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
 function filterPersonnelTable() {
-  const searchValue = document.getElementById('personnelSearch').value.toLowerCase();
-  const departmentValue = document.getElementById('personnelDepartment').value.toLowerCase();
-  const positionValue = document.getElementById('personnelPosition').value.toLowerCase();
+  const searchValue = document.getElementById('personnelSearch').value.toLowerCase().trim();
+  const departmentValue = document.getElementById('personnelDepartment').value.toLowerCase().trim();
   const rows = document.querySelectorAll('#personnelTable tbody tr[data-search]');
 
   rows.forEach(row => {
-    const rowText = row.dataset.search || '';
-    const departmentCell = row.dataset.department || '';
-    const positionCell = row.dataset.position || '';
+    const rowText = (row.dataset.search || '').toLowerCase().trim();
+    const departmentCell = (row.dataset.department || '').toLowerCase().trim();
 
     const matchesSearch = !searchValue || rowText.includes(searchValue);
-    const matchesDepartment = !departmentValue || departmentCell.includes(departmentValue);
-    const matchesPosition = !positionValue || positionCell.includes(positionValue);
+    const matchesDepartment = !departmentValue || departmentCell === departmentValue;
 
-    row.style.display = matchesSearch && matchesDepartment && matchesPosition ? '' : 'none';
+    row.style.display = (matchesSearch && matchesDepartment) ? '' : 'none';
   });
-}
-
-function togglePersonnelSearch() {
-  const input = document.getElementById('personnelSearch');
-  if (!input) return;
-  const isHidden = input.classList.contains('hidden') || input.style.display === 'none';
-  if (isHidden) {
-    input.style.display = 'inline-flex';
-    input.classList.remove('hidden');
-    input.focus();
-  } else {
-    input.style.display = 'none';
-    input.classList.add('hidden');
-  }
 }
 
 function togglePersonnelFilterMenu() {
@@ -267,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function () {
           <option value="<?= esc($positionOption) ?>"><?= esc($positionOption) ?></option>
         <?php endforeach; ?>
       </select>
-      <label>Assigned Task</label>
+      <label><?= esc($taskLabel) ?></label>
       <input type="text" name="assigned_task">
       <label>Status</label>
       <select name="status">

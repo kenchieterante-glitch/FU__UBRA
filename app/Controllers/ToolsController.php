@@ -82,6 +82,8 @@ class ToolsController extends BaseController
 
     public function delete($id)
     {
+        if ($resp = $this->requireAdmin()) return $resp;
+
         $this->toolsModel->update($id, [
             'is_archived' => 1,
             'archived_at' => date('Y-m-d H:i:s'),
@@ -92,6 +94,13 @@ class ToolsController extends BaseController
     // --- BORROW ---
     public function borrow($toolId)
     {
+        // Server-side double-booking guard — a tool that's already borrowed
+        // can't be borrowed again by someone else, regardless of what the UI shows.
+        $tool = $this->toolsModel->find($toolId);
+        if (!$tool || $tool['availability'] !== 'Available') {
+            return redirect()->to('/tools')->with('error', 'That tool is not available to borrow right now.');
+        }
+
         $borrowerName = $this->request->getPost('borrower_id') ?? $this->request->getPost('borrower');
 
         $this->borrowModel->insert([

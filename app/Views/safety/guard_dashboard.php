@@ -59,27 +59,11 @@
 </div>
 
 <script>
-const tripTickets = [
-  { no:'TT-2026-090', requester:'Dr. Jose Rizal', vehicle:'Van FUA-8802', dest:'Dumaguete IT Hub', dep:'08:30 AM', approvedBy:'Dir. Santos', status:'Approved' },
-  { no:'TT-2026-091', requester:'Prof. Terante, K.', vehicle:'Bus FUA-8801', dest:'Silliman University', dep:'10:00 AM', approvedBy:'VP Gomez', status:'Released' },
-  { no:'TT-2026-092', requester:'Dean Samson', vehicle:'Hilux FUA-4311', dest:'Valencia Campus', dep:'01:00 PM', approvedBy:'Dir. Santos', status:'Pending' },
-];
-
-const keyLogs = [
-  { id:'KL-001', name:'Dela Cruz, J.', dept:'Library', key:'Library Storeroom Key', inTime:'07:30 AM', status:'Returned' },
-  { id:'KL-002', name:'Magsaysay, R.', dept:'CCS', key:'Server Room Key', inTime:'08:15 AM', status:'Active' },
-  { id:'KL-004', name:'Reyes, A.', dept:'Admin', key:'Admin Filing Room Key', inTime:'10:45 AM', status:'Active' },
-];
-
-const guardActLog = [
-  { time:'10:45 AM', action:'Key KL-004 issued to Reyes, A. (Admin)' },
-  { time:'09:00 AM', action:'Key KL-003 issued to Torres, F. (Science)' },
-  { time:'10:30 AM', action:'Key KL-003 returned by Torres, F.' },
-  { time:'08:15 AM', action:'Key KL-002 issued to Magsaysay, R. (CCS)' },
-  { time:'07:30 AM', action:'Key KL-001 issued to Dela Cruz, J. (Library)' },
-  { time:'12:00 PM', action:'Key KL-001 returned by Dela Cruz, J.' },
-  { time:'07:00 AM', action:'Guard Santos, J. clocked in — Day Shift' },
-];
+// Trip tickets, key logs, and the activity feed all come from the database —
+// see SafetyController::guardDashboard(). No hardcoded demo values.
+const tripTickets = <?= $trip_tickets_json ?>;
+const keyLogs = <?= $key_logs_json ?>;
+const guardActLog = <?= $activity_json ?>;
 
 function renderGuardDashboard() {
   document.getElementById('tripTicketBody').innerHTML = tripTickets.map(t => `

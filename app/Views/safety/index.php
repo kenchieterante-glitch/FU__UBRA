@@ -3,6 +3,13 @@
 <link rel="stylesheet" href="<?= base_url('Assets/css/safety.css') ?>">
 
 <div class="sj-wrapper">
+  <div class="page-header">
+    <div>
+      <h1><?= esc($title) ?></h1>
+      <p class="page-subtitle">Campus fire safety coverage and inspection readiness at a glance.</p>
+    </div>
+  </div>
+
   <div class="sub-tabs">
     <div class="sub-tab-spacer"></div>
     <button class="btn-report" onclick="openReportModal()">
@@ -13,23 +20,18 @@
   <div class="overview-grid">
     <div class="overview-card">
       <div class="card-title"><i class="bi bi-fire"></i> Fire Safety Coverage</div>
-      <div class="card-value">21 units</div>
-      <div class="card-sub">3 require attention • 2 due for refill</div>
+      <div class="card-value"><?= (int) $coverage_total ?> units</div>
+      <div class="card-sub"><?= (int) $coverage_attention ?> require attention • <?= (int) $coverage_refill ?> due for refill</div>
     </div>
     <div class="overview-card">
       <div class="card-title"><i class="bi bi-clipboard2-check"></i> Inspection Readiness</div>
-      <div class="card-value">92%</div>
-      <div class="card-sub">Most inspections are current and logged</div>
-    </div>
-    <div class="overview-card">
-      <div class="card-title"><i class="bi bi-broom"></i> Janitorial Completion</div>
-      <div class="card-value">8/10 cleaned</div>
-      <div class="card-sub">2 pending follow-up in the east wing</div>
+      <div class="card-value"><?= (int) $inspection_readiness ?>%</div>
+      <div class="card-sub">Share of units not past their next inspection due date</div>
     </div>
     <div class="overview-card">
       <div class="card-title"><i class="bi bi-exclamation-octagon"></i> Critical Alerts</div>
-      <div class="card-value">2 active</div>
-      <div class="card-sub">Missing unit detected in Admin Building</div>
+      <div class="card-value" id="criticalAlertsValue">0 active</div>
+      <div class="card-sub" id="criticalAlertsSub">No critical areas detected</div>
     </div>
   </div>
 
@@ -38,9 +40,10 @@
     <div class="map-layout" id="mapLayout">
       <div class="map-container" id="mapContainer">
         <div class="map-legend">
-          <span class="leg-item"><span class="leg-dot warning"></span> Warning</span>
-          <span class="leg-item"><span class="leg-dot new"></span> New Installed</span>
-          <span class="leg-item"><span class="leg-dot refill"></span> Expires Soon</span>
+          <span class="leg-item"><span class="leg-dot normal"></span> ⚪ Normal</span>
+          <span class="leg-item"><span class="leg-dot warning"></span> ⚠️ Warning</span>
+          <span class="leg-item"><span class="leg-dot new"></span> 🆕 New Installed</span>
+          <span class="leg-item"><span class="leg-dot refill"></span> ⏳ Expires Soon</span>
         </div>
 
         <svg id="campusSVG" viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg">
@@ -116,128 +119,15 @@
   </div>
 </div>
 
-<div id="addFEModal" class="sj-modal-overlay" style="display:none">
-  <div class="sj-modal">
-    <div class="sj-modal-header">
-      <h3><i class="bi bi-fire"></i> Add Fire Extinguisher Unit</h3>
-      <button onclick="closeModal('addFEModal')"><i class="bi bi-x-lg"></i></button>
-    </div>
-    <div class="sj-modal-body">
-      <div class="form-grid2">
-        <div class="fg"><label>Unit ID</label><input type="text" id="feUnitId" placeholder="e.g. FE-ADM-04"></div>
-        <div class="fg"><label>Type</label>
-          <select id="feType"><option>CO2</option><option>Dry Chemical</option><option>Wet Chemical</option><option>Foam</option></select>
-        </div>
-        <div class="fg"><label>Building / Location</label>
-          <select id="feLocation">
-            <option>Admin Building</option><option>Library</option><option>Science Building</option>
-            <option>Gymnasium</option><option>Canteen</option><option>Engineering</option>
-            <option>CCS Building</option><option>Clinic</option><option>Guard House</option>
-          </select>
-        </div>
-        <div class="fg"><label>Weight (kg)</label><input type="number" id="feWeight" placeholder="e.g. 10" step="0.1"></div>
-        <div class="fg"><label>Last Inspection</label><input type="date" id="feLastInsp"></div>
-        <div class="fg"><label>Next Due</label><input type="date" id="feNextDue"></div>
-        <div class="fg"><label>Status</label>
-          <select id="feStatus">
-            <option value="New">New (Green)</option>
-            <option value="Refillable">Refillable (Orange)</option>
-            <option value="Defective">Defective (Gray)</option>
-          </select>
-        </div>
-        <div class="fg"><label>Year Acquired</label><input type="number" id="feYear" placeholder="e.g. 2022"></div>
-      </div>
-    </div>
-    <div class="sj-modal-footer">
-      <button class="btn-cancel" onclick="closeModal('addFEModal')">Cancel</button>
-      <button class="btn-maroon-sm" onclick="saveNewFE()"><i class="bi bi-floppy-fill"></i> Save Unit</button>
-    </div>
-  </div>
-</div>
-
-<div id="addWOModal" class="sj-modal-overlay" style="display:none">
-  <div class="sj-modal">
-    <div class="sj-modal-header">
-      <h3><i class="bi bi-wrench-adjustable"></i> New Work Order</h3>
-      <button onclick="closeModal('addWOModal')"><i class="bi bi-x-lg"></i></button>
-    </div>
-    <div class="sj-modal-body">
-      <div class="form-grid2">
-        <div class="fg fg-full"><label>Issue Description</label><textarea id="woIssue" rows="2" placeholder="Describe the issue..."></textarea></div>
-        <div class="fg"><label>Location</label>
-          <select id="woLocation"><option>Admin Building</option><option>Library</option><option>Science Building</option><option>Gymnasium</option><option>Canteen</option><option>Engineering</option><option>CCS Building</option><option>Clinic</option></select>
-        </div>
-        <div class="fg"><label>Reported By</label><input type="text" id="woReporter" placeholder="Full name"></div>
-        <div class="fg"><label>Assign To</label><input type="text" id="woAssigned" placeholder="Technician name"></div>
-        <div class="fg"><label>Priority</label>
-          <select id="woPriority"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select>
-        </div>
-      </div>
-    </div>
-    <div class="sj-modal-footer">
-      <button class="btn-cancel" onclick="closeModal('addWOModal')">Cancel</button>
-      <button class="btn-maroon-sm" onclick="saveNewWO()"><i class="bi bi-floppy-fill"></i> Submit Work Order</button>
-    </div>
-  </div>
-</div>
-
 <!-- Keyscan modal removed; Keylogs moved to Safety -> Keylogs page -->
 
 <script>
-const AREAS = {
-  admin:        { name: 'Admin Building', units: ['FE-ADM-01','FE-ADM-02','FE-ADM-03'], missing: true },
-  library:      { name: 'Library', units: ['FE-LIB-01','FE-LIB-02','FE-LIB-03'], missing: false },
-  science:      { name: 'Science Building', units: ['FE-SCI-01','FE-SCI-02','FE-SCI-03'], missing: false },
-  gym:          { name: 'Gymnasium', units: ['FE-GYM-01','FE-GYM-02'], missing: true },
-  canteen:      { name: 'Canteen', units: ['FE-CAN-01','FE-CAN-02'], missing: false },
-  engr:         { name: 'Engineering', units: ['FE-ENG-01','FE-ENG-02','FE-ENG-03'], missing: false },
-  ccs:          { name: 'CCS Building', units: ['FE-CCS-01','FE-CCS-02'], missing: false },
-  clinic:       { name: 'Clinic', units: ['FE-CLI-01','FE-CLI-02'], missing: false },
-  hrmKitchen:   { name: 'HRM kitchen', units: ['FE-HRM-01','FE-HRM-02'], missing: false },
-  'guard-post': { name:'Guard House', units: ['FE-GRD-01'], missing: false },
-};
-
-let feRegistry = [
-  { id:'FE-ADM-01', type:'CO2', loc:'Admin Building', kg:10, lastInsp:'2025-01-10', nextDue:'2025-07-10', status:'New', year:2024, inspector:'Cruz, M.', assigned:'Guard Santos' },
-  { id:'FE-ADM-02', type:'Dry Chemical', loc:'Admin Building', kg:6, lastInsp:'2025-01-10', nextDue:'2025-04-10', status:'Refillable', year:2021, inspector:'Cruz, M.', assigned:'Guard Santos' },
-  { id:'FE-ADM-03', type:'CO2', loc:'Admin Building', kg:10, lastInsp:'2024-11-05', nextDue:'2025-02-05', status:'Defective', year:2018, inspector:'Cruz, M.', assigned:'Guard Santos' },
-  { id:'FE-LIB-01', type:'Dry Chemical', loc:'Library', kg:10, lastInsp:'2025-02-01', nextDue:'2025-08-01', status:'New', year:2023, inspector:'Reyes, A.', assigned:'Guard Dela Cruz' },
-  { id:'FE-LIB-02', type:'CO2', loc:'Library', kg:6, lastInsp:'2025-02-01', nextDue:'2025-08-01', status:'New', year:2024, inspector:'Reyes, A.', assigned:'Guard Dela Cruz' },
-  { id:'FE-LIB-03', type:'Foam', loc:'Library', kg:9, lastInsp:'2025-01-15', nextDue:'2025-04-15', status:'Refillable', year:2020, inspector:'Reyes, A.', assigned:'Guard Dela Cruz' },
-  { id:'FE-SCI-01', type:'CO2', loc:'Science Building', kg:10, lastInsp:'2025-01-20', nextDue:'2025-07-20', status:'New', year:2023, inspector:'Lim, B.', assigned:'Guard Santos' },
-  { id:'FE-SCI-02', type:'Dry Chemical', loc:'Science Building', kg:6, lastInsp:'2024-10-01', nextDue:'2025-01-01', status:'Defective', year:2017, inspector:'Lim, B.', assigned:'Guard Santos' },
-  { id:'FE-SCI-03', type:'CO2', loc:'Science Building', kg:10, lastInsp:'2025-03-01', nextDue:'2025-09-01', status:'Refillable', year:2022, inspector:'Lim, B.', assigned:'Guard Santos' },
-  { id:'FE-GYM-01', type:'Dry Chemical', loc:'Gymnasium', kg:9, lastInsp:'2025-02-10', nextDue:'2025-08-10', status:'New', year:2024, inspector:'Santos, R.', assigned:'Guard Dela Cruz' },
-  { id:'FE-GYM-02', type:'CO2', loc:'Gymnasium', kg:10, lastInsp:'2025-02-10', nextDue:'2025-08-10', status:'New', year:2024, inspector:'Santos, R.', assigned:'Guard Dela Cruz' },
-  { id:'FE-CAN-01', type:'Wet Chemical', loc:'Canteen', kg:6, lastInsp:'2025-01-25', nextDue:'2025-04-25', status:'Refillable', year:2021, inspector:'Gomez, T.', assigned:'Guard Santos' },
-  { id:'FE-CAN-02', type:'Wet Chemical', loc:'Canteen', kg:6, lastInsp:'2025-01-25', nextDue:'2025-04-25', status:'Refillable', year:2021, inspector:'Gomez, T.', assigned:'Guard Santos' },
-  { id:'FE-HRM-01', type:'CO2', loc:'HRM kitchen', kg:10, lastInsp:'2025-03-05', nextDue:'2025-09-05', status:'New', year:2024, inspector:'Torres, A.', assigned:'Guard Dela Cruz' },
-  { id:'FE-HRM-02', type:'Dry Chemical', loc:'HRM kitchen', kg:6, lastInsp:'2025-02-10', nextDue:'2025-08-10', status:'Refillable', year:2022, inspector:'Torres, A.', assigned:'Guard Dela Cruz' },
-  { id:'FE-ENG-01', type:'CO2', loc:'Engineering', kg:10, lastInsp:'2025-03-01', nextDue:'2025-09-01', status:'New', year:2023, inspector:'Flores, C.', assigned:'Guard Santos' },
-  { id:'FE-ENG-02', type:'Dry Chemical', loc:'Engineering', kg:6, lastInsp:'2024-09-01', nextDue:'2024-12-01', status:'Defective', year:2016, inspector:'Flores, C.', assigned:'Guard Santos' },
-  { id:'FE-ENG-03', type:'CO2', loc:'Engineering', kg:9, lastInsp:'2025-02-15', nextDue:'2025-05-15', status:'Refillable', year:2022, inspector:'Flores, C.', assigned:'Guard Santos' },
-  { id:'FE-CCS-01', type:'CO2', loc:'CCS Building', kg:10, lastInsp:'2025-03-10', nextDue:'2025-09-10', status:'New', year:2024, inspector:'Aquino, D.', assigned:'Guard Dela Cruz' },
-  { id:'FE-CCS-02', type:'Dry Chemical', loc:'CCS Building', kg:10, lastInsp:'2025-03-10', nextDue:'2025-09-10', status:'New', year:2024, inspector:'Aquino, D.', assigned:'Guard Dela Cruz' },
-  { id:'FE-CLI-01', type:'CO2', loc:'Clinic', kg:6, lastInsp:'2025-01-05', nextDue:'2025-07-05', status:'New', year:2023, inspector:'Torres, L.', assigned:'Guard Santos' },
-  { id:'FE-CLI-02', type:'Wet Chemical', loc:'Clinic', kg:6, lastInsp:'2025-01-05', nextDue:'2025-04-05', status:'Refillable', year:2020, inspector:'Torres, L.', assigned:'Guard Santos' },
-  { id:'FE-GRD-01', type:'Dry Chemical', loc:'Guard House', kg:6, lastInsp:'2025-02-20', nextDue:'2025-08-20', status:'New', year:2023, inspector:'Mendoza, P.', assigned:'Guard Santos' },
-];
-
-let workOrders = [
-  { id:'WO-001', issue:'FE-ADM-03 defective — pressure gauge broken', loc:'Admin Building', by:'Cruz, M.', date:'2025-07-10', assigned:'Tech Valdez', stage:'In Progress' },
-  { id:'WO-002', issue:'FE-ENG-02 past expiry — needs replacement', loc:'Engineering', by:'Flores, C.', date:'2025-07-12', assigned:'Tech Ramos', stage:'Issue Logged' },
-  { id:'WO-003', issue:'Missing FE slot — Admin lobby', loc:'Admin Building', by:'Guard Santos', date:'2025-07-14', assigned:'Purchasing', stage:'Pending Parts' },
-  { id:'WO-004', issue:'FE-SCI-02 not returning pressure', loc:'Science Bldg', by:'Lim, B.', date:'2025-07-15', assigned:'Tech Valdez', stage:'Completed/Verified' },
-];
+// AREAS and feRegistry come straight from the database (fire_extinguishers) —
+// see SafetyController::index(). No hardcoded demo values.
+const AREAS = <?= $areas_json ?>;
+let feRegistry = <?= $fe_registry_json ?>;
 
 // Keylogs and Guard data moved to separate Safety pages (sidebar)
-
-function switchSubTab(id) {
-  document.querySelectorAll('#module-safety .sub-tab, .sub-tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick')?.includes("'"+id+"'")));
-  document.querySelectorAll('.sub-pane').forEach(p => p.classList.toggle('active', p.id === 'subtab-'+id));
-  if (id==='registry') renderRegistry();
-  if (id==='workorders') renderWorkOrders();
-}
 
 function drillDown(areaKey) {
   const area = AREAS[areaKey];
@@ -249,10 +139,17 @@ function drillDown(areaKey) {
 
   document.getElementById('mapLayout').classList.add('drilled');
 
-  document.getElementById('dpTitle').textContent = area.name;
-  document.getElementById('dpSub').textContent   = area.missing ? '⚠ Missing Fire Extinguisher Detected' : 'Fire Extinguisher Status';
+  const units = feRegistry.filter(u => u.loc === area.name);
+  const missing = units.some(u => u.status === 'Missing');
 
-  const units = feRegistry.filter(u => area.units.includes(u.id));
+  document.getElementById('dpTitle').textContent = area.name;
+  document.getElementById('dpSub').textContent   = missing ? '⚠ Missing Fire Extinguisher Detected' : 'Fire Extinguisher Status';
+
+  const areaStatus = getAreaStatus({ areaKey });
+  const drillPanelEl = document.getElementById('drillPanel');
+  drillPanelEl.classList.remove('st-warning', 'st-new', 'st-expires', 'st-normal');
+  drillPanelEl.classList.add(`st-${areaStatus}`);
+
   const today = new Date();
   let feHtml = '';
   units.forEach(u => {
@@ -282,7 +179,7 @@ function drillDown(areaKey) {
     if (d < 0)  alertHtml += `<div class="dp-alert-item urgent"><i class="bi bi-exclamation-octagon-fill"></i> <strong>${u.id}</strong> — OVERDUE by ${Math.abs(d)} days. Immediate action required.</div>`;
     else if (d < 30) alertHtml += `<div class="dp-alert-item warn"><i class="bi bi-exclamation-triangle-fill"></i> <strong>${u.id}</strong> — Inspection due in ${d} days (${u.nextDue}).</div>`;
   });
-  if (area.missing) alertHtml += `<div class="dp-alert-item urgent"><i class="bi bi-fire"></i> Missing fire extinguisher slot detected — Admin has been notified.</div>`;
+  if (missing) alertHtml += `<div class="dp-alert-item urgent"><i class="bi bi-fire"></i> Missing fire extinguisher slot detected — Admin has been notified.</div>`;
   document.getElementById('dpAlerts').innerHTML = alertHtml || '<div class="no-alert">No alerts for this area.</div>';
 
   const checklists = {
@@ -299,7 +196,7 @@ function drillDown(areaKey) {
   const assigned  = units[0]?.assigned || '—';
   document.getElementById('dpInspector').innerHTML = `
     <div class="inspector-card">
-      <div class="insp-av">${inspector.charAt(0)}</div>
+      <div class="insp-av st-${areaStatus}">${inspector.charAt(0)}</div>
       <div>
         <div class="insp-name">${inspector}</div>
         <div class="insp-role">Safety Inspector</div>
@@ -307,7 +204,7 @@ function drillDown(areaKey) {
       </div>
     </div>`;
 
-  if (area.missing) {
+  if (missing) {
     const alertBanner = document.getElementById('missingAlert');
     document.getElementById('missingAlertMsg').textContent = `⚠ Missing fire extinguisher detected in ${area.name}. Admin notified.`;
     alertBanner.style.display = 'flex';
@@ -322,32 +219,30 @@ function selectMapBuilding(el) {
 
   const name = el.getAttribute('data-name') || el.id || 'Campus area';
   const category = el.getAttribute('data-cat') || 'Campus zone';
-  const areaKey = el.id ? el.id.replace('area-','') : null;
-  let area = areaKey ? AREAS[areaKey] : null;
+  const areaKey = el.getAttribute('data-area-key');
+  const area = areaKey ? AREAS[areaKey] : { name };
 
-  if (!area) {
-    const matched = feRegistry.filter(u => u.loc.toLowerCase() === name.toLowerCase());
-    if (matched.length) {
-      area = { name, units: matched.map(u => u.id), missing: false };
-    } else {
-      area = { name, missing:false, units: [] };
-    }
-  }
+  const units = feRegistry.filter(u => u.loc === area.name);
+  const missing = units.some(u => u.status === 'Missing');
 
   document.getElementById('mapLayout').classList.add('drilled');
   document.getElementById('dpTitle').textContent = area.name;
-  document.getElementById('dpSub').textContent = area.missing ? '⚠ Missing Fire Extinguisher Detected' : 'Fire Extinguisher Status';
+  document.getElementById('dpSub').textContent = missing ? '⚠ Missing Fire Extinguisher Detected' : 'Fire Extinguisher Status';
   const statusBox = document.getElementById('dpStatusBox');
   const activeStatus = document.querySelector('.campus-area.area-selected')?.classList.contains('area-warning') ? 'Warning' : document.querySelector('.campus-area.area-selected')?.classList.contains('area-new') ? 'New Installed' : document.querySelector('.campus-area.area-selected')?.classList.contains('area-expires') ? 'Expires Soon' : 'Normal';
   statusBox.innerHTML = `<strong>${activeStatus}</strong><div>${activeStatus === 'Warning' ? 'Immediate attention needed for this area.' : activeStatus === 'New Installed' ? 'This area has recently installed equipment.' : activeStatus === 'Expires Soon' ? 'This area has equipment nearing expiry.' : 'No special alert status for this area.'}</div>`;
 
-  const units = feRegistry.filter(u => area.units.includes(u.id));
+  const statusSlug = activeStatus === 'Warning' ? 'warning' : activeStatus === 'New Installed' ? 'new' : activeStatus === 'Expires Soon' ? 'expires' : 'normal';
+  const drillPanelEl = document.getElementById('drillPanel');
+  drillPanelEl.classList.remove('st-warning', 'st-new', 'st-expires', 'st-normal');
+  drillPanelEl.classList.add(`st-${statusSlug}`);
+
   const today = new Date();
   if (units.length === 0) {
     document.getElementById('dpFeGrid').innerHTML = `<div class="no-data" style="padding:1rem;">No fire extinguisher records available for ${name}.</div>`;
     document.getElementById('dpAlerts').innerHTML = `<div class="no-alert">Tap a unit row to see more details.</div>`;
     document.getElementById('dpChecklist').innerHTML = '';
-    document.getElementById('dpInspector').innerHTML = `<div class="inspector-card"><div class="insp-av">${name.charAt(0)}</div><div><div class="insp-name">${name}</div><div class="insp-role">${category}</div><div class="insp-meta"><i class="bi bi-calendar3"></i> ${new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})} &nbsp;|&nbsp; <i class="bi bi-clock"></i> ${new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}</div></div></div>`;
+    document.getElementById('dpInspector').innerHTML = `<div class="inspector-card"><div class="insp-av st-${statusSlug}">${name.charAt(0)}</div><div><div class="insp-name">${name}</div><div class="insp-role">${category}</div><div class="insp-meta"><i class="bi bi-calendar3"></i> ${new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})} &nbsp;|&nbsp; <i class="bi bi-clock"></i> ${new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}</div></div></div>`;
   } else {
     let feHtml = '';
     let alertHtml = '';
@@ -390,7 +285,7 @@ function selectMapBuilding(el) {
     const assigned  = units[0]?.assigned || '—';
     document.getElementById('dpInspector').innerHTML = `
       <div class="inspector-card">
-        <div class="insp-av">${inspector.charAt(0)}</div>
+        <div class="insp-av st-${statusSlug}">${inspector.charAt(0)}</div>
         <div>
           <div class="insp-name">${inspector}</div>
           <div class="insp-role">Safety Inspector</div>
@@ -399,7 +294,7 @@ function selectMapBuilding(el) {
       </div>`;
   }
 
-  if (area.missing) {
+  if (missing) {
     const alertBanner = document.getElementById('missingAlert');
     document.getElementById('missingAlertMsg').textContent = `⚠ Missing fire extinguisher detected in ${area.name}. Admin notified.`;
     alertBanner.style.display = 'flex';
@@ -416,7 +311,7 @@ const mapBuildings = [
   {n:5, name:'Museo de Vicente', cat:'Green', x:129, y:529, w:82, h:78, hasExt:true, circle:false},
   {n:6, name:'Bunk house', cat:'Green', x:57, y:529, w:61, h:103, hasExt:false, circle:false},
   {n:7, name:'Service / exit gate', cat:'NA', x:67, y:488, w:51, h:41, hasExt:true, circle:false},
-  {n:8, name:'University library', cat:'Green', x:90, y:406, w:131, h:72, hasExt:true, circle:false, status:'new'},
+  {n:8, name:'University library', cat:'Green', x:90, y:406, w:131, h:72, hasExt:true, circle:false, areaKey:'library'},
   {n:9, name:'Electric pump house', cat:'Green', x:206, y:380, w:41, h:31, hasExt:false, circle:false},
   {n:10, name:'Executive house', cat:'Violet', x:129, y:272, w:108, h:62, hasExt:true, circle:false},
   {n:11, name:'Water pump', cat:'NA', x:167, y:216, w:20, h:20, hasExt:false, circle:true},
@@ -429,8 +324,8 @@ const mapBuildings = [
   {n:19, name:'College of Art & Sciences building', cat:'Yellow', x:519, y:406, w:67, h:185, hasExt:true, circle:false},
   {n:20, name:'Art & Science laboratories / audio visual rooms', cat:'Yellow', x:586, y:411, w:226, h:149, hasExt:true, circle:false},
   {n:21, name:'College of Business Economics and Accountancy', cat:'Pink', x:704, y:237, w:185, h:92, hasExt:true, circle:false},
-  {n:22, name:'College of Nursing', cat:'Yellow', x:812, y:360, w:77, h:236, hasExt:true, circle:false, status:'expires'},
-  {n:23, name:'Administration building', cat:'Yellow', x:745, y:555, w:144, h:103, hasExt:true, circle:false, status:'warning'},
+  {n:22, name:'College of Nursing', cat:'Yellow', x:812, y:360, w:77, h:236, hasExt:true, circle:false},
+  {n:23, name:'Administration building', cat:'Yellow', x:745, y:555, w:144, h:103, hasExt:true, circle:false, areaKey:'admin'},
   {n:24, name:'Rizal monument / social garden', cat:'NA', x:596, y:591, w:149, h:93, hasExt:false, circle:false},
   {n:25, name:'Registrar\'s office', cat:'Orange', x:694, y:720, w:195, h:36, hasExt:true, circle:false},
   {n:26, name:'Business and Finance office', cat:'Orange', x:694, y:756, w:195, h:46, hasExt:false, circle:false},
@@ -463,21 +358,29 @@ const flowPaths = [
   "M596,650 C580,680 560,710 520,740"
 ];
 
+// Single source of truth for a zone's status — driven entirely by its real
+// fire_extinguishers rows, so the map badge and the Critical Alerts count
+// (computed the same way, below) can never disagree.
 function getAreaStatus(building) {
-  if (building?.status) return building.status;
+  const areaKey = building?.areaKey;
+  const area = areaKey ? AREAS[areaKey] : null;
+  if (!area) return 'normal';
 
-  const normalizedName = (building?.name || '').toLowerCase();
-  const areaKey = Object.keys(AREAS).find(key => AREAS[key].name.toLowerCase() === normalizedName);
-  if (!areaKey) return null;
+  const units = feRegistry.filter(u => u.loc === area.name);
+  if (units.length === 0) return 'normal';
 
-  const area = AREAS[areaKey];
-  const units = feRegistry.filter(u => area.units.includes(u.id));
   const today = new Date();
+  const daysLeft = u => Math.ceil((new Date(u.nextDue) - today) / 86400000);
 
-  return area.missing || units.some(u => {
-    const daysLeft = Math.ceil((new Date(u.nextDue) - today) / 86400000);
-    return u.status === 'Refillable' || u.status === 'Defective' || daysLeft < 30;
-  }) ? 'warning' : null;
+  const isCritical = units.some(u => u.status === 'Missing' || u.status === 'Defective' || daysLeft(u) < 0);
+  if (isCritical) return 'warning';
+
+  const expiresSoon = units.some(u => u.status === 'Refillable' || daysLeft(u) < 30);
+  if (expiresSoon) return 'expires';
+
+  if (units.every(u => u.status === 'New')) return 'new';
+
+  return 'normal';
 }
 
 const campusBuildingsGroup = document.getElementById('buildings');
@@ -502,6 +405,7 @@ mapBuildings.forEach(b => {
   const areaStatus = getAreaStatus(b);
   if (areaStatus) shape.classList.add(`area-${areaStatus}`);
   if (b.id) shape.setAttribute('id', b.id);
+  if (b.areaKey) shape.setAttribute('data-area-key', b.areaKey);
   shape.setAttribute('data-name', b.name);
   shape.setAttribute('data-cat', b.cat);
   shape.setAttribute('aria-label', b.name);
@@ -562,6 +466,18 @@ mapBuildings.forEach(b => {
   labelGroup.appendChild(label);
   campusBuildingsGroup.appendChild(labelGroup);
 
+  const statusIcons = { warning: '⚠️', new: '🆕', expires: '⏳', normal: '⚪' };
+  if (areaStatus && statusIcons[areaStatus]) {
+    const badge = document.createElementNS(ns, 'text');
+    badge.setAttribute('class', `status-icon-badge status-icon-${areaStatus}`);
+    badge.setAttribute('x', b.x + b.w - 3);
+    badge.setAttribute('y', b.y + 13);
+    badge.setAttribute('text-anchor', 'end');
+    badge.setAttribute('pointer-events', 'none');
+    badge.textContent = statusIcons[areaStatus];
+    campusBuildingsGroup.appendChild(badge);
+  }
+
   if (b.hasExt) {
     const ext = document.createElementNS(ns, 'rect');
     ext.setAttribute('class', 'ext');
@@ -572,6 +488,15 @@ mapBuildings.forEach(b => {
     campusExtGroup.appendChild(ext);
   }
 });
+
+// Critical Alerts stat card — counts the SAME buildings just colored "warning"
+// above, using the same getAreaStatus() call, so the number always matches
+// exactly what's flagged red on the map.
+const criticalAreas = mapBuildings.filter(b => b.areaKey && getAreaStatus(b) === 'warning');
+document.getElementById('criticalAlertsValue').textContent = `${criticalAreas.length} active`;
+document.getElementById('criticalAlertsSub').textContent = criticalAreas.length
+  ? `Attention needed: ${criticalAreas.map(b => b.name).join(', ')}`
+  : 'No critical areas detected';
 
 const campusFlowsGroup = document.getElementById('flows');
 flowPaths.forEach(d => {
@@ -598,96 +523,6 @@ function logCheck(cb, area, item) {
   console.log(`[${t}] ${area} — ${item}: ${cb.checked ? 'Checked' : 'Unchecked'}`);
 }
 
-function renderRegistry(data) {
-  const rows = data || feRegistry;
-  const today = new Date();
-  document.getElementById('registryBody').innerHTML = rows.map(u => {
-    const d = Math.ceil((new Date(u.nextDue) - today) / 86400000);
-    const age = today.getFullYear() - u.year;
-    const sc = u.status==='New' ? 'st-new' : u.status==='Refillable' ? 'st-refill' : 'st-defect';
-    const dc = d < 0 ? 'text-danger' : d < 30 ? 'text-warn' : '';
-    return `<tr>
-      <td><strong>${u.id}</strong></td>
-      <td>${u.type}</td>
-      <td>${u.loc}</td>
-      <td>${u.kg} kg</td>
-      <td>${u.lastInsp}</td>
-      <td class="${dc}">${u.nextDue} ${d<0?'<span class="badge-urgent">OVERDUE</span>':d<30?'<span class="badge-warn">Soon</span>':''}</td>
-      <td><span class="fe-status-badge ${sc}">${u.status}</span></td>
-      <td>${age} yr${age!==1?'s':''}</td>
-      <td><button class="tbl-btn" onclick="drillDown('${Object.keys(AREAS).find(k=>AREAS[k].units.includes(u.id))||''}');switchSubTab('map')">View</button></td>
-    </tr>`;
-  }).join('');
-}
-
-function filterRegistry() {
-  const q  = document.getElementById('registrySearch').value.toLowerCase();
-  const st = document.getElementById('registryStatus').value;
-  renderRegistry(feRegistry.filter(u =>
-    (!q  || u.id.toLowerCase().includes(q) || u.loc.toLowerCase().includes(q)) &&
-    (!st || u.status === st)
-  ));
-}
-
-function saveNewFE() {
-  const id  = document.getElementById('feUnitId').value.trim();
-  if (!id) { alert('Unit ID required'); return; }
-  feRegistry.push({
-    id, type: document.getElementById('feType').value,
-    loc:  document.getElementById('feLocation').value,
-    kg:   parseFloat(document.getElementById('feWeight').value)||0,
-    lastInsp: document.getElementById('feLastInsp').value,
-    nextDue:  document.getElementById('feNextDue').value,
-    status:   document.getElementById('feStatus').value,
-    year: parseInt(document.getElementById('feYear').value)||new Date().getFullYear(),
-    inspector:'—', assigned:'—',
-  });
-  closeModal('addFEModal');
-  renderRegistry();
-  showToast('Fire extinguisher unit added.');
-}
-
-function renderWorkOrders() {
-  const stages = { 'Issue Logged':'st-log', 'In Progress':'st-prog', 'Pending Parts':'st-warn', 'Completed/Verified':'st-done' };
-  document.getElementById('woBody').innerHTML = workOrders.map(w => `
-    <tr>
-      <td><strong>${w.id}</strong></td>
-      <td>${w.issue}</td>
-      <td>${w.loc}</td>
-      <td>${w.by}</td>
-      <td>${w.date}</td>
-      <td>${w.assigned}</td>
-      <td><span class="stage-badge ${stages[w.stage]||'st-log'}">${w.stage}</span></td>
-      <td>
-        <select class="stage-select" onchange="updateWOStage('${w.id}',this.value)">
-          <option ${w.stage==='Issue Logged'?'selected':''}>Issue Logged</option>
-          <option ${w.stage==='In Progress'?'selected':''}>In Progress</option>
-          <option ${w.stage==='Pending Parts'?'selected':''}>Pending Parts</option>
-          <option ${w.stage==='Completed/Verified'?'selected':''}>Completed/Verified</option>
-        </select>
-      </td>
-    </tr>`).join('');
-}
-
-function updateWOStage(id, stage) {
-  const wo = workOrders.find(w => w.id === id);
-  if (wo) { wo.stage = stage; renderWorkOrders(); showToast(`WO ${id} updated to: ${stage}`); }
-}
-
-function saveNewWO() {
-  workOrders.unshift({
-    id:'WO-00'+(workOrders.length+1),
-    issue:    document.getElementById('woIssue').value,
-    loc:      document.getElementById('woLocation').value,
-    by:       document.getElementById('woReporter').value,
-    date:     new Date().toISOString().split('T')[0],
-    assigned: document.getElementById('woAssigned').value,
-    stage:    'Issue Logged',
-  });
-  closeModal('addWOModal');
-  renderWorkOrders();
-  showToast('Work order created.');
-}
 
 // Keylogs and Guard dashboard scripts removed; functionality moved to dedicated pages
 
@@ -728,8 +563,6 @@ function generateReport() {
   document.getElementById('reportOutput').innerHTML = html;
 }
 
-function openAddWOModal() { document.getElementById('addWOModal').style.display = 'flex'; }
-function openAddFEModal() { document.getElementById('addFEModal').style.display = 'flex'; }
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 document.querySelectorAll('.sj-modal-overlay').forEach(o => {
   o.addEventListener('click', e => { if (e.target === o) o.style.display = 'none'; });
@@ -744,8 +577,5 @@ function showToast(msg, isError=false) {
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),400); }, 3500);
 }
 
-
-renderRegistry();
-renderWorkOrders();
 </script>
 <?= $this->endSection() ?>

@@ -6,7 +6,7 @@
 :root {
     --maroon: #800000;
     --maroon-dark: #5a0909;
-    --gold: #C9A84C;
+    --gold: #d6d6d6;
     --surface: #ffffff;
     --surface-alt: #f8f4f4;
     --border: #e0d5d5;
@@ -194,6 +194,23 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+}
+
+.cal-priority-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .cal-priority-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cal-priority-row .sidebar-card {
+    margin-bottom: 0;
 }
 
 .cal-top {

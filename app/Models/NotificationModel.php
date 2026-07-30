@@ -18,11 +18,11 @@ class NotificationModel extends Model
 
     public function getUnreadCount()
     {
-        return $this->where('status', 'Unread')->countAllResults();
+        return $this->where('is_read', 0)->countAllResults();
     }
 
     public function markAllRead()
     {
-        $this->where('status', 'Unread')->set(['status' => 'Read', 'is_read' => 1])->update();
+        $this->where('is_read', 0)->set(['is_read' => 1, 'read_at' => date('Y-m-d H:i:s')])->update();
     }
 }

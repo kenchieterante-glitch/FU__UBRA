@@ -10,13 +10,6 @@
     </div>
 </div>
 
-<?php if (!empty($flash_success)): ?>
-    <div class="alert-success"><i class="bi bi-check-circle-fill"></i> <?= esc($flash_success) ?></div>
-<?php endif; ?>
-<?php if (!empty($flash_error)): ?>
-    <div class="alert-error"><i class="bi bi-exclamation-triangle-fill"></i> <?= esc($flash_error) ?></div>
-<?php endif; ?>
-
 <div class="card">
     <div class="card-head">
         <h3>Profile Information</h3>
@@ -26,7 +19,7 @@
         <div class="form-grid">
             <div class="form-group">
                 <label>Full Name</label>
-                <input type="text" name="name" value="<?= esc($user['name'] ?? '') ?>" required>
+                <input type="text" name="name" value="<?= esc($user['full_name'] ?? '') ?>" required>
             </div>
             <div class="form-group">
                 <label>Employee ID</label>

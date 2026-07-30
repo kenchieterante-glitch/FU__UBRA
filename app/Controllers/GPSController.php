@@ -22,7 +22,9 @@ class GPSController extends BaseController
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
 
-        $vehicles = $this->vehicleModel->findAll();
+        // gps_status lives on the vehicles table itself — that's the single source of
+        // truth for online/offline, matching what Vehicle Management shows for the same field.
+        $vehicles = $this->vehicleModel->where('is_archived', 0)->findAll();
         $gpsLogs  = $this->gpsModel->getLatestPerVehicle();
 
         $gpsMap = [];
@@ -34,13 +36,13 @@ class GPSController extends BaseController
         foreach ($vehicles as $v) {
             $gps     = $gpsMap[$v['id']] ?? null;
             $fleet[] = array_merge($v, [
-                'gps_status'    => $gps['status']          ?? 'Offline',
+                'gps_status'    => $v['gps_status']        ?? 'Offline',
                 'latitude'      => $gps['latitude']        ?? null,
                 'longitude'     => $gps['longitude']       ?? null,
                 'speed'         => 0,
                 'signal'        => $gps['signal_strength'] ?? '—',
                 'last_location' => '—',
-                'logged_at'     => null,
+                'logged_at'     => $gps['logged_at']       ?? null,
                 'device_id'     => $gps['device_id']       ?? null,
                 // map vehicle fields to expected view keys
                 'model'         => $v['vehicle_name']      ?? '—',
@@ -79,7 +81,7 @@ class GPSController extends BaseController
         $latestGPS = $this->gpsModel->where('vehicle_id', $id)->orderBy('id', 'DESC')->first();
 
         return $this->response->setJSON(array_merge($vehicle, [
-            'gps_status'    => $latestGPS['status']          ?? 'Offline',
+            'gps_status'    => $vehicle['gps_status']        ?? 'Offline',
             'latitude'      => $latestGPS['latitude']        ?? null,
             'longitude'     => $latestGPS['longitude']       ?? null,
             'speed'         => 0,

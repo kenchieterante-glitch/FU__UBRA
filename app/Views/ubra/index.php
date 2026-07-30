@@ -218,8 +218,6 @@ let isLoading   = false;
 
 const CHAT_URL    = '<?= base_url('ubra/chat') ?>';
 const QUICK_URL   = '<?= base_url('ubra/quickAction') ?>';
-const CSRF_TOKEN  = '<?= csrf_hash() ?>';
-const CSRF_NAME   = '<?= csrf_token() ?>';
 
 // ── Send message ───────────────────────────────────────────────
 async function sendMessage(overrideText = null) {
@@ -236,11 +234,10 @@ async function sendMessage(overrideText = null) {
 
     try {
         const fd = new FormData();
-        fd.append(CSRF_NAME, CSRF_TOKEN);
         fd.append('message', message);
         fd.append('history',  JSON.stringify(chatHistory.slice(-10)));
 
-        const res  = await fetch(CHAT_URL, { method: 'POST', body: fd });
+        const res  = await fetch(CHAT_URL, { method: 'POST', headers: csrfHeaders(), body: fd });
         const data = await res.json();
         const reply = data.reply || data.error || 'Sorry, something went wrong.';
 
@@ -254,7 +251,6 @@ async function sendMessage(overrideText = null) {
         appendMessage('assistant', '⚠️ Connection error. Please check your network and try again.');
     } finally {
         setLoading(false);
-        refreshCsrf();
     }
 }
 
@@ -278,10 +274,9 @@ async function quickAction(action) {
 
     try {
         const fd = new FormData();
-        fd.append(CSRF_NAME, CSRF_TOKEN);
         fd.append('action', action);
 
-        const res  = await fetch(QUICK_URL, { method: 'POST', body: fd });
+        const res  = await fetch(QUICK_URL, { method: 'POST', headers: csrfHeaders(), body: fd });
         const data = await res.json();
         const reply = data.reply || data.error || 'Sorry, something went wrong.';
 
@@ -292,7 +287,6 @@ async function quickAction(action) {
         appendMessage('assistant', '⚠️ Connection error. Please try again.');
     } finally {
         setLoading(false);
-        refreshCsrf();
     }
 }
 
@@ -401,14 +395,6 @@ function addRecentRec(text) {
     li.innerHTML = `<i class="bi bi-dot"></i> ${text}`;
     list.insertBefore(li, list.firstChild);
     if (list.children.length > 4) list.removeChild(list.lastChild);
-}
-
-// ── CSRF refresh after each POST ──────────────────────────────
-async function refreshCsrf() {
-    try {
-        // CodeIgniter regenerates CSRF on each request if enabled
-        // Token is already updated in the response cookie; this is a no-op stub
-    } catch(e) {}
 }
 
 // ── Load context snapshot ──────────────────────────────────────

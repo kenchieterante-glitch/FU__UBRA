@@ -69,85 +69,85 @@
         <div class="mark"><i class="fa-solid fa-shield-halved"></i></div>
       <?php endif; ?>
       <div class="txt"><b>FU_UBRA</b><small>FOUNDATION UNIVERSITY</small></div>
+      <button type="button" class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar">
+        <i class="fa-solid fa-angles-left"></i>
+      </button>
     </div>
 
     <nav class="sidebar-nav">
-      <a href="<?= base_url('dashboard') ?>" class="<?= navActive('dashboard') ?>"><i class="fa-solid fa-table-cells-large"></i> Dashboard</a>
+      <a href="<?= base_url('dashboard') ?>" class="<?= navActive('dashboard') ?>" data-tooltip="Dashboard"><i class="fa-solid fa-table-cells-large"></i> <span class="nav-label">Dashboard</span></a>
 
       <?php $isPersonnelSection = $currentUri === 'personnel' || strpos($currentUri, 'personnel/') === 0; ?>
       <div class="nav-parent-group <?= $isPersonnelSection ? 'open' : '' ?>">
-        <a href="<?= base_url('personnel') ?>" class="nav-parent-link <?= $isPersonnelSection ? 'active open' : '' ?>" data-personnel-toggle>
+        <a href="<?= base_url('personnel') ?>" class="nav-parent-link <?= $isPersonnelSection ? 'active open' : '' ?>" data-personnel-toggle data-tooltip="Personnel Management">
           <i class="fa-solid fa-users"></i>
-          <span>Personnel Management</span>
+          <span class="nav-label">Personnel Management</span>
           <i class="fa-solid fa-chevron-down nav-parent-caret"></i>
         </a>
         <div class="nav-submenu" id="personnel-submenu">
-          <a href="<?= base_url('personnel') ?>" class="<?= navActive('personnel') ?>"><i class="fa-solid fa-users"></i> All Personnel</a>
-          <a href="<?= base_url('personnel/drivers') ?>" class="<?= navActive('personnel/drivers') ?>"><i class="fa-solid fa-id-badge"></i> Drivers</a>
-          <a href="<?= base_url('personnel/janitors') ?>" class="<?= navActive('personnel/janitors') ?>"><i class="fa-solid fa-broom"></i> Janitors</a>
-          <a href="<?= base_url('personnel/carpentries') ?>" class="<?= navActive('personnel/carpentries') ?>"><i class="fa-solid fa-hammer"></i> Carpentries</a>
-          <a href="<?= base_url('personnel/maintenance') ?>" class="<?= navActive('personnel/maintenance') ?>"><i class="fa-solid fa-wrench"></i> Maintenance</a>
+          <a href="<?= base_url('personnel') ?>" class="<?= navActive('personnel') ?>"><i class="fa-solid fa-users"></i> <span class="nav-label">All Personnel</span></a>
+          <a href="<?= base_url('personnel/drivers') ?>" class="<?= navActive('personnel/drivers') ?>"><i class="fa-solid fa-id-badge"></i> <span class="nav-label">Drivers</span></a>
+          <a href="<?= base_url('personnel/janitors') ?>" class="<?= navActive('personnel/janitors') ?>"><i class="fa-solid fa-broom"></i> <span class="nav-label">Janitors</span></a>
+          <a href="<?= base_url('personnel/carpentries') ?>" class="<?= navActive('personnel/carpentries') ?>"><i class="fa-solid fa-hammer"></i> <span class="nav-label">Carpentries</span></a>
+          <a href="<?= base_url('personnel/maintenance') ?>" class="<?= navActive('personnel/maintenance') ?>"><i class="fa-solid fa-wrench"></i> <span class="nav-label">Maintenance</span></a>
         </div>
       </div>
 
       <?php $isVehicleSection = $currentUri === 'vehicles' || $currentUri === 'travel' || $currentUri === 'gps'; ?>
       <div class="nav-parent-group <?= $isVehicleSection ? 'open' : '' ?>">
-        <a href="<?= base_url('vehicles') ?>" class="nav-parent-link <?= $isVehicleSection ? 'active open' : '' ?>" data-vehicle-toggle>
+        <a href="<?= base_url('vehicles') ?>" class="nav-parent-link <?= $isVehicleSection ? 'active open' : '' ?>" data-vehicle-toggle data-tooltip="Vehicle Management">
           <i class="fa-solid fa-truck"></i>
-          <span>Vehicle Management</span>
+          <span class="nav-label">Vehicle Management</span>
           <i class="fa-solid fa-chevron-down nav-parent-caret"></i>
         </a>
         <div class="nav-submenu" id="vehicle-submenu">
-          <a href="<?= base_url('vehicles') ?>" class="<?= navActive('vehicles') ?>"><i class="fa-solid fa-truck"></i> Vehicle Management</a>
-          <a href="<?= base_url('travel') ?>" class="<?= navActive('travel') ?>"><i class="fa-solid fa-road"></i> Travel Management</a>
-          <a href="<?= base_url('gps') ?>" class="<?= navActive('gps') ?>"><i class="fa-solid fa-location-dot"></i> GPS Tracker</a>
+          <a href="<?= base_url('vehicles') ?>" class="<?= navActive('vehicles') ?>"><i class="fa-solid fa-truck"></i> <span class="nav-label">Vehicle Management</span></a>
+          <a href="<?= base_url('travel') ?>" class="<?= navActive('travel') ?>"><i class="fa-solid fa-road"></i> <span class="nav-label">Travel Management</span></a>
+          <a href="<?= base_url('gps') ?>" class="<?= navActive('gps') ?>"><i class="fa-solid fa-location-dot"></i> <span class="nav-label">GPS Tracker</span></a>
         </div>
       </div>
 
-      <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="fa-solid fa-boxes-stacked"></i> Tools Management</a>
+      <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>" data-tooltip="Tools Management"><i class="fa-solid fa-boxes-stacked"></i> <span class="nav-label">Tools Management</span></a>
 
-      <a href="<?= base_url('safety') ?>" class="<?= navActive('safety') ?>"><i class="fa-solid fa-hard-hat"></i> Safety Maintenance</a>
-      <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>"><i class="fa-solid fa-tv"></i> Guard Dashboard</a>
-      <a href="<?= base_url('janitorial') ?>" class="<?= navActive('janitorial') ?>"><i class="fa-solid fa-broom"></i> Janitorial Monitoring</a>
-      <a href="<?= base_url('calendar') ?>" class="<?= navActive('calendar') ?>"><i class="fa-solid fa-calendar-days"></i> Calendar</a>
-      <a href="<?= base_url('notifications') ?>" class="<?= navActive('notifications') ?>"><i class="fa-solid fa-bell"></i> Notifications</a>
-      <a href="<?= base_url('reports') ?>" class="<?= navActive('reports') ?>"><i class="fa-solid fa-folder-closed"></i> Records, Archiving & Reports</a>
+      <a href="<?= base_url('safety') ?>" class="<?= navActive('safety') ?>" data-tooltip="Safety Maintenance"><i class="fa-solid fa-hard-hat"></i> <span class="nav-label">Safety Maintenance</span></a>
+      <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>" data-tooltip="Guard Dashboard"><i class="fa-solid fa-tv"></i> <span class="nav-label">Guard Dashboard</span></a>
+      <a href="<?= base_url('janitorial') ?>" class="<?= navActive('janitorial') ?>" data-tooltip="Janitorial Monitoring"><i class="fa-solid fa-broom"></i> <span class="nav-label">Janitorial Monitoring</span></a>
+      <a href="<?= base_url('calendar') ?>" class="<?= navActive('calendar') ?>" data-tooltip="Calendar"><i class="fa-solid fa-calendar-days"></i> <span class="nav-label">Calendar</span></a>
+      <a href="<?= base_url('notifications') ?>" class="<?= navActive('notifications') ?>" data-tooltip="Notifications"><i class="fa-solid fa-bell"></i> <span class="nav-label">Notifications</span></a>
+      <a href="<?= base_url('reports') ?>" class="<?= navActive('reports') ?>" data-tooltip="Records, Archiving & Reports"><i class="fa-solid fa-folder-closed"></i> <span class="nav-label">Records, Archiving & Reports</span></a>
       <div class="nav-sep"></div>
-      <a href="<?= base_url('ubra') ?>" class="ai-link <?= navActive('ubra') ?>"><i class="fa-solid fa-robot"></i> Mr. UBRA AI <span class="dot"></span></a>
-      <a href="<?= base_url('settings') ?>" class="<?= navActive('settings') ?>"><i class="fa-solid fa-gear"></i> Settings</a>
+      <a href="<?= base_url('ubra') ?>" class="ai-link <?= navActive('ubra') ?>" data-tooltip="Mr. UBRA AI"><i class="fa-solid fa-robot"></i> <span class="nav-label">Mr. UBRA AI</span> <span class="dot"></span></a>
+      <a href="<?= base_url('settings') ?>" class="<?= navActive('settings') ?>" data-tooltip="Settings"><i class="fa-solid fa-gear"></i> <span class="nav-label">Settings</span></a>
     </nav>
 
     <div class="sidebar-footer">
-      <a href="<?= base_url('profile') ?>">
+      <a href="<?= base_url('profile') ?>" data-tooltip="View Profile">
         <span class="av"><?= esc($initials) ?></span>
-        <span><?= esc($fullName) ?><small>View Profile</small></span>
+        <span class="nav-label"><?= esc($fullName) ?><small>View Profile</small></span>
       </a>
     </div>
   </aside>
 
   <!--MAIN CONTENT  -->
   <div class="main-content">
+    <?php $showTopbar = $showTopbar ?? true; ?>
+    <?php if ($showTopbar): ?>
     <header class="topbar">
       <div class="topbar-left">
-        <button type="button" class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar">
-          <i class="fa-solid fa-bars"></i>
-        </button>
         <div class="search">
-          <button type="button" class="topbar-search-btn" aria-label="Search">
-            <i class="fa-solid fa-magnifying-glass"></i>
-          </button>
           <input type="text" class="search-box" placeholder="Search operational resources...">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
         </div>
       </div>
       <div class="topbar-right">
         <span class="date"><i class="fa-regular fa-calendar"></i> <?= date('l, F d, Y') ?></span>
         <a href="<?= base_url('notifications') ?>" class="icon-btn"><i class="fa-regular fa-bell"></i></a>
-        <div class="user-chip">
-          <span class="av"><?= esc($initials) ?></span>
-          <span><b><?= esc($fullName) ?></b><small><?= esc($role) ?></small></span>
-        </div>
+        <?php if (!empty($logoAsset)): ?>
+          <img class="topbar-logo" src="<?= esc($logoAsset) ?>" alt="System logo">
+        <?php endif; ?>
       </div>
     </header>
+    <?php endif; ?>
 
     <main class="page-content">
       <?php if (session()->getFlashdata('success')): ?>
@@ -163,27 +163,52 @@
 </div>
 
 <script>
+// CSRF helper for fetch()-based POST calls. The token cookie is re-issued by
+// the server after every validated request, so this must read document.cookie
+// fresh on each call rather than caching the value at page load.
+function csrfHeaders(extra) {
+  const match = document.cookie.match('(^|;)\\s*<?= esc(config('Security')->cookieName, 'js') ?>\\s*=\\s*([^;]+)');
+  const token = match ? decodeURIComponent(match.pop()) : '';
+  return Object.assign({}, extra || {}, { '<?= esc(config('Security')->headerName, 'js') ?>': token });
+}
+
 // Sidebar toggle function
+function updateSidebarToggleIcon() {
+  const icon = document.querySelector('.sidebar-toggle-btn i');
+  if (!icon) return;
+  const isCollapsed = document.body.classList.contains('sidebar-collapsed');
+  icon.classList.toggle('fa-angles-left', !isCollapsed);
+  icon.classList.toggle('fa-angles-right', isCollapsed);
+}
+
 function toggleSidebar() {
   document.body.classList.toggle('sidebar-collapsed');
   const isCollapsed = document.body.classList.contains('sidebar-collapsed');
   localStorage.setItem('sidebarCollapsed', isCollapsed);
+  updateSidebarToggleIcon();
+  hideRailTooltip();
 }
 
-// Search toggle for collapsed sidebar
-function toggleSearchBar() {
-  const searchEl = document.querySelector('.topbar .search');
-  const isSidebarCollapsed = document.body.classList.contains('sidebar-collapsed');
-  
-  if (isSidebarCollapsed && searchEl) {
-    searchEl.classList.toggle('expanded');
-    // Focus input when expanding
-    if (searchEl.classList.contains('expanded')) {
-      const input = searchEl.querySelector('.search-box');
-      if (input) input.focus();
-    }
-  }
+// Floating tooltip for the collapsed icon-rail sidebar
+const railTooltip = document.createElement('div');
+railTooltip.className = 'rail-tooltip';
+document.body.appendChild(railTooltip);
+
+function hideRailTooltip() {
+  railTooltip.classList.remove('visible');
 }
+
+document.querySelectorAll('.sidebar-nav a[data-tooltip], .sidebar-footer a[data-tooltip]').forEach(link => {
+  link.addEventListener('mouseenter', () => {
+    if (!document.body.classList.contains('sidebar-collapsed')) return;
+    const rect = link.getBoundingClientRect();
+    railTooltip.textContent = link.dataset.tooltip;
+    railTooltip.style.top = (rect.top + rect.height / 2) + 'px';
+    railTooltip.style.left = (rect.right + 12) + 'px';
+    railTooltip.classList.add('visible');
+  });
+  link.addEventListener('mouseleave', hideRailTooltip);
+});
 
 // Load sidebar state from localStorage on page load
 window.addEventListener('DOMContentLoaded', () => {
@@ -191,25 +216,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (sidebarCollapsed) {
     document.body.classList.add('sidebar-collapsed');
   }
-  
-  // Add search toggle handler
-  const searchBtn = document.querySelector('.topbar .search button.topbar-search-btn');
-  if (searchBtn) {
-    searchBtn.addEventListener('click', toggleSearchBar);
-  }
-  
-  // Close search when clicking outside (on collapsed view)
-  document.addEventListener('click', (e) => {
-    const searchEl = document.querySelector('.topbar .search');
-    const searchBtn = document.querySelector('.topbar .search button.topbar-search-btn');
-    const isSidebarCollapsed = document.body.classList.contains('sidebar-collapsed');
-    
-    if (isSidebarCollapsed && searchEl && searchEl.classList.contains('expanded')) {
-      if (!searchEl.contains(e.target)) {
-        searchEl.classList.remove('expanded');
-      }
-    }
-  });
+  updateSidebarToggleIcon();
 });
 
 // generic modal helpers used across pages
