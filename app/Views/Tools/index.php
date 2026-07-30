@@ -13,19 +13,19 @@
 </div>
 
 <div class="stat-cards">
-  <div class="stat-card">
+  <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('')" role="button" tabindex="0">
     <h3>Total Tools</h3>
     <div class="value"><?= esc((string) ((int) ($total_tools ?? 0))) ?></div>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('available')" role="button" tabindex="0">
     <h3>Available Tools</h3>
     <div class="value"><?= esc((string) ((int) ($available_tools ?? 0))) ?></div>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('borrowed')" role="button" tabindex="0">
     <h3>Borrowed Tools</h3>
     <div class="value"><?= esc((string) ((int) ($borrowed_tools ?? 0))) ?></div>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('maintenance')" role="button" tabindex="0">
     <h3>Needs Maintenance</h3>
     <div class="value"><?= esc((string) ((int) ($maintenance_tools ?? 0))) ?></div>
   </div>
@@ -64,6 +64,15 @@
               <option value="Available">Available</option>
               <option value="Borrowed">Borrowed</option>
               <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <label for="toolsCondition">Condition</label>
+            <select id="toolsCondition" onchange="filterToolsTable()">
+              <option value="">All Conditions</option>
+              <option value="Excellent">Excellent</option>
+              <option value="Good">Good</option>
+              <option value="Poor">Poor</option>
             </select>
           </div>
         </div>
@@ -118,16 +127,43 @@ function filterToolsTable() {
   const search = document.getElementById('toolsSearch').value.toLowerCase();
   const category = document.getElementById('toolsCategory').value.toLowerCase();
   const availability = document.getElementById('toolsAvailability').value.toLowerCase();
+  const condition = document.getElementById('toolsCondition').value.toLowerCase();
   document.querySelectorAll('#toolsTable tbody tr').forEach(row => {
     const text = row.innerText.toLowerCase();
     const categoryText = row.children[2]?.innerText.toLowerCase() ?? '';
+    const conditionText = row.children[5]?.innerText.toLowerCase() ?? '';
     const availabilityText = row.children[6]?.innerText.toLowerCase() ?? '';
     const matches = text.includes(search)
       && (!category || categoryText === category)
-      && (!availability || availabilityText === availability);
+      && (!availability || availabilityText === availability)
+      && (!condition || conditionText === condition);
     row.style.display = matches ? '' : 'none';
   });
 }
+
+// Stat cards act as quick filters into the table below.
+function filterToolsByStat(kind) {
+  document.getElementById('toolsSearch').value = '';
+  document.getElementById('toolsCategory').value = '';
+  document.getElementById('toolsAvailability').value = '';
+  document.getElementById('toolsCondition').value = '';
+
+  if (kind === 'available')   document.getElementById('toolsAvailability').value = 'Available';
+  if (kind === 'borrowed')    document.getElementById('toolsAvailability').value = 'Borrowed';
+  if (kind === 'maintenance') document.getElementById('toolsCondition').value = 'Poor';
+
+  filterToolsTable();
+  document.querySelector('.table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.querySelectorAll('.stat-card-clickable').forEach(card => {
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      card.click();
+    }
+  });
+});
 
 function toggleToolsFilterMenu() {
   const popup = document.getElementById('toolsFilterPopup');

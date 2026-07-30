@@ -69,7 +69,7 @@
             <div class="dp-title" id="dpTitle">Admin Building</div>
             <div class="dp-sub" id="dpSub">Fire Extinguisher Status</div>
           </div>
-          <button class="dp-close" onclick="closeDrill()"><i class="bi bi-x-lg"></i> Back to Map</button>
+          <button class="dp-close" onclick="closeDrill()"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="dp-status-box" id="dpStatusBox">Status summary will appear here.</div>
         <div class="dp-fe-grid" id="dpFeGrid"></div>

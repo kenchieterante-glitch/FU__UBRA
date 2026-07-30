@@ -55,7 +55,12 @@
         <!-- Trip Table -->
         <div class="table-panel">
             <div class="table-toolbar">
-                <h2 class="panel-title">Driver's Trip Tickets</h2>
+                <div class="toolbar-left">
+                    <div class="toolbar-search">
+                      <input type="text" id="searchInput" class="search-box" placeholder="Search requester..." oninput="filterTable()">
+                      <i class="bi bi-search search-icon"></i>
+                    </div>
+                </div>
                 <div class="toolbar-right">
                     <div class="filter-menu-wrapper">
                       <button type="button" class="filter-btn" onclick="toggleTravelFilterMenu()" aria-label="Open filters">
@@ -74,10 +79,6 @@
                           </select>
                         </div>
                       </div>
-                    </div>
-                    <div class="toolbar-search">
-                      <input type="text" id="searchInput" class="search-box" placeholder="Search requester..." oninput="filterTable()">
-                      <i class="bi bi-search search-icon"></i>
                     </div>
                 </div>
             </div>
@@ -109,7 +110,7 @@
                                         <span class="req-dept"><?= esc($trip['department_name'] ?? '') ?></span>
                                     </div>
                                 </td>
-                                <td><?= esc($trip['destination']) ?></td>
+                                <td class="destination-cell"><?= esc($trip['destination']) ?></td>
                                 <td class="purpose-cell"><?= esc($trip['purpose']) ?></td>
                                 <td>
                                     <div class="datetime-cell">

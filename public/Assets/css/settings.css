@@ -339,6 +339,25 @@
     }
 }
 
+/* Profile page: portrait cards side by side instead of full-width landscape
+   boxes — narrower, fields stacked in a single column. */
+.profile-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.profile-card {
+    flex: 1 1 380px;
+    max-width: 420px;
+    margin-bottom: 0;
+}
+
+.profile-card .form-grid {
+    grid-template-columns: 1fr;
+}
+
 .form-group {
     display: flex;
     flex-direction: column;

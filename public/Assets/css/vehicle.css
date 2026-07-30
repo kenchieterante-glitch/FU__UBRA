@@ -116,6 +116,8 @@
 }
 
 .modal-box h3 {
+    font-family: var(--heading-font);
+    font-weight: var(--fw-bold);
     margin-bottom: 16px;
 }
 

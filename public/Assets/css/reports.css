@@ -37,8 +37,9 @@
 }
 
 .page-title {
+    font-family: var(--heading-font);
     font-size: 1.6rem;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     color: var(--maroon);
     margin: 0;
     display: flex;
@@ -47,6 +48,8 @@
 }
 
 .page-subtitle {
+    font-family: var(--subhead-font);
+    font-weight: var(--fw-medium);
     color: var(--text-muted);
     font-size: .875rem;
     margin: .25rem 0 0;
@@ -180,6 +183,8 @@
 }
 
 .reports-toolbar-meta {
+    font-family: var(--subhead-font);
+    font-weight: var(--fw-medium);
     display: flex;
     flex-wrap: wrap;
     gap: .75rem;
@@ -270,8 +275,9 @@
 }
 
 .reports-list-title {
+    font-family: var(--heading-font);
     font-size: .9rem;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     color: var(--maroon);
 }
 
@@ -352,8 +358,9 @@
 }
 
 .reports-filter-row .filter-popup-title {
+    font-family: var(--heading-font);
     font-size: 0.8rem;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: #4e4e55;
@@ -367,6 +374,8 @@
 }
 
 .reports-filter-row .filter-row label {
+    font-family: var(--subhead-font);
+    font-weight: var(--fw-medium);
     font-size: 11px;
     text-transform: uppercase;
     color: #67676d;
@@ -388,6 +397,8 @@
 }
 
 .reports-filter-label {
+    font-family: var(--subhead-font);
+    font-weight: var(--fw-medium);
     font-size: .78rem;
     color: var(--text-muted);
 }
@@ -457,6 +468,8 @@
 }
 
 .review-sheet-label {
+    font-family: var(--subhead-font);
+    font-weight: var(--fw-medium);
     font-size: .75rem;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -464,8 +477,9 @@
 }
 
 .review-sheet-title {
+    font-family: var(--heading-font);
     font-size: 1rem;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     color: var(--maroon);
 }
 
@@ -521,8 +535,9 @@
 }
 
 .reports-list-table thead th {
+    font-family: var(--subhead-font);
     color: var(--text-muted);
-    font-weight: 600;
+    font-weight: var(--fw-medium);
 }
 
 .reports-status {
@@ -609,8 +624,9 @@
 }
 
 .filter-group label {
+    font-family: var(--subhead-font);
     font-size: .7rem;
-    font-weight: 700;
+    font-weight: var(--fw-medium);
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: .4px;
@@ -652,6 +668,8 @@
 /* No override - use base.css for stat cards */
 
 .kpi-sub {
+    font-family: var(--subhead-font);
+    font-weight: var(--fw-medium);
     font-size: .7rem;
     margin-top: .35rem;
     display: flex;
@@ -696,12 +714,15 @@
 }
 
 .chart-title {
+    font-family: var(--heading-font);
     font-size: .88rem;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     color: var(--maroon);
 }
 
 .chart-sub {
+    font-family: var(--subhead-font);
+    font-weight: var(--fw-medium);
     font-size: .72rem;
     color: var(--text-muted);
 }
@@ -757,8 +778,9 @@
 }
 
 .panel-title {
+    font-family: var(--heading-font);
     font-size: 1rem;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     color: var(--maroon);
     margin: 0;
 }
@@ -781,9 +803,10 @@
 }
 
 .rpt-table thead th {
+    font-family: var(--subhead-font);
     padding: .7rem 1rem;
     text-align: left;
-    font-weight: 600;
+    font-weight: var(--fw-medium);
     white-space: nowrap;
 }
 
@@ -808,10 +831,13 @@
 }
 
 .rpt-name {
-    font-weight: 600;
+    font-family: var(--heading-font);
+    font-weight: var(--fw-bold);
 }
 
 .time-muted {
+    font-family: var(--subhead-font);
+    font-weight: var(--fw-medium);
     font-size: .7rem;
     color: var(--text-muted);
 }
@@ -947,20 +973,24 @@
 }
 
 .ubra-name {
-    font-weight: 800;
+    font-family: var(--heading-font);
+    font-weight: var(--fw-bold);
     font-size: .85rem;
     color: #fff;
     letter-spacing: .3px;
 }
 
 .ubra-sub {
+    font-family: var(--subhead-font);
+    font-weight: var(--fw-medium);
     font-size: .7rem;
     color: rgba(255, 255, 255, .65);
 }
 
 .ubra-section-title {
+    font-family: var(--heading-font);
     font-size: .7rem;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     text-transform: uppercase;
     letter-spacing: .5px;
     color: var(--gold);
@@ -1050,8 +1080,9 @@
 }
 
 .sc-title {
+    font-family: var(--heading-font);
     font-size: .75rem;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     text-transform: uppercase;
     letter-spacing: .5px;
     color: var(--maroon);
@@ -1076,8 +1107,9 @@
 }
 
 .util-name {
+    font-family: var(--heading-font);
     font-size: .78rem;
-    font-weight: 600;
+    font-weight: var(--fw-bold);
     color: var(--text);
 }
 
@@ -1162,8 +1194,9 @@
 }
 
 .modal-header h3 {
+    font-family: var(--heading-font);
     font-size: .95rem;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     color: var(--maroon);
     margin: 0;
     display: flex;

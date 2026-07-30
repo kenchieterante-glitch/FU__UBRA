@@ -27,9 +27,17 @@
   --radius: 14px;
   --shadow: 0 2px 10px rgba(24, 24, 40, 0.06);
   --shadow-lg: 0 8px 30px rgba(24, 24, 40, 0.1);
-  --brand-font: "Times New Roman", Georgia, serif;
-  --heading-font: "Bebas Neue", "Arial Narrow", sans-serif;
-  --body-font: "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+  /* Brand wordmark ("FOUNDATION UNIVERSITY") — Times New Roman Regular ONLY. Do not use elsewhere. */
+  --brand-font: "Times New Roman", Times, serif;
+  /* Headlines, titles, event names */
+  --heading-font: "Bebas Neue Pro", "Bebas Neue", "Arial Narrow", sans-serif;
+  /* Body copy */
+  --body-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* Subheadlines / secondary text (same family as body, Medium weight) */
+  --subhead-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-bold: 700;
 }
 
 * {
@@ -43,6 +51,7 @@ body {
   color: var(--text);
   font-size: 14px;
   line-height: 1.5;
+  font-weight: var(--fw-regular);
 }
 a {
   text-decoration: none;
@@ -50,6 +59,8 @@ a {
 }
 small {
   font-size: 11.5px;
+  font-family: var(--subhead-font);
+  font-weight: var(--fw-medium);
 }
 img {
   max-width: 100%;
@@ -137,7 +148,7 @@ a:hover,
 .login-logo h1 {
   color: var(--maroon);
   font-family: var(--brand-font);
-  font-weight: 700;
+  font-weight: var(--fw-regular);
   letter-spacing: 1px;
   text-transform: uppercase;
 }
@@ -145,12 +156,15 @@ a:hover,
   font-size: 12px;
   color: var(--muted);
   margin-top: 4px;
+  font-family: var(--subhead-font);
+  font-weight: var(--fw-medium);
 }
 .login-card label {
   display: block;
   margin-top: 14px;
   font-size: 12.5px;
-  font-weight: 500;
+  font-family: var(--subhead-font);
+  font-weight: var(--fw-medium);
   color: #444;
 }
 .login-card input {
@@ -249,7 +263,8 @@ a:hover,
 }
 .sidebar-logo .txt b {
   color: #fff;
-  font-family: var(--brand-font);
+  font-family: var(--heading-font);
+  font-weight: var(--fw-bold);
   font-size: 16px;
   letter-spacing: 0.5px;
   display: block;
@@ -259,6 +274,9 @@ a:hover,
   color: #8a8a90;
   font-size: 9.5px;
   letter-spacing: 1px;
+  /* Literal "FOUNDATION UNIVERSITY" wordmark — Times New Roman Regular only, per brand guideline */
+  font-family: var(--brand-font);
+  font-weight: var(--fw-regular);
 }
 
 .sidebar-nav {
@@ -457,7 +475,8 @@ a:hover,
 .page-content .sidebar-card-title,
 .page-content .panel-title {
   font-size: .82rem;
-  font-weight: 700;
+  font-family: var(--heading-font);
+  font-weight: var(--fw-bold);
   color: var(--maroon);
   text-transform: uppercase;
   letter-spacing: .5px;
@@ -756,6 +775,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   color: var(--muted);
   font-size: 13px;
   margin-top: 2px;
+  font-family: var(--subhead-font);
+  font-weight: var(--fw-medium);
 }
 
 /*GRID*/
@@ -802,7 +823,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.45px;
-  font-weight: 700;
+  font-family: var(--subhead-font);
+  font-weight: var(--fw-medium);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -864,12 +886,15 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .card h3,
 .card-title {
   font-size: 15px;
-  font-weight: 600;
+  font-family: var(--heading-font);
+  font-weight: var(--fw-bold);
   color: var(--ink);
 }
 .card .sub {
   font-size: 12px;
   color: var(--muted);
+  font-family: var(--subhead-font);
+  font-weight: var(--fw-medium);
 }
 .grid-2 {
   display: grid;
@@ -921,6 +946,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   color: #67676d;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  font-family: var(--subhead-font);
+  font-weight: var(--fw-medium);
 }
 .table-toolbar input,
 .table-toolbar select {
@@ -1022,7 +1049,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 }
 .table-toolbar .filter-popup-title {
   font-size: 0.8rem;
-  font-weight: 700;
+  font-family: var(--heading-font);
+  font-weight: var(--fw-bold);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #4e4e55;
@@ -1042,6 +1070,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   text-transform: uppercase;
   color: #67676d;
   letter-spacing: 0.08em;
+  font-family: var(--subhead-font);
+  font-weight: var(--fw-medium);
 }
 .table-toolbar .filter-popup select,
 .table-toolbar .filter-popup input {
@@ -1072,7 +1102,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .data-table th {
   background: #fafafb;
   color: #9a9aa2;
-  font-weight: 600;
+  font-family: var(--subhead-font);
+  font-weight: var(--fw-medium);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -1327,6 +1358,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 }
 .ubra-panel .head b {
   font-size: 15px;
+  font-family: var(--heading-font);
+  font-weight: var(--fw-bold);
 }
 .ubra-panel .head small {
   color: rgba(255, 255, 255, 0.7);
@@ -1335,7 +1368,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .ubra-panel h4 {
   font-size: 16px;
   margin: 10px 0;
-  font-weight: 600;
+  font-family: var(--heading-font);
+  font-weight: var(--fw-bold);
 }
 .ubra-panel .intel {
   background: rgba(0, 0, 0, 0.16);
@@ -1346,7 +1380,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .ubra-panel .intel .t {
   color: var(--gold-soft);
   font-size: 11px;
-  font-weight: 700;
+  font-family: var(--heading-font);
+  font-weight: var(--fw-bold);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -1434,7 +1469,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 }
 .side-card h4 {
   font-size: 14px;
-  font-weight: 600;
+  font-family: var(--heading-font);
+  font-weight: var(--fw-bold);
   margin-bottom: 14px;
   color: var(--ink);
 }
@@ -1451,6 +1487,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .mini-stat .k {
   font-size: 11px;
   color: var(--muted);
+  font-family: var(--subhead-font);
+  font-weight: var(--fw-medium);
 }
 
 /*MODAL*/
@@ -1481,12 +1519,15 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   font-size: 17px;
   margin-bottom: 18px;
   color: var(--ink);
+  font-family: var(--heading-font);
+  font-weight: var(--fw-bold);
 }
 .modal-box label {
   display: block;
   margin-top: 12px;
   font-size: 12.5px;
-  font-weight: 500;
+  font-family: var(--subhead-font);
+  font-weight: var(--fw-medium);
   color: #555;
 }
 .modal-box input,

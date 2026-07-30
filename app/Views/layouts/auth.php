@@ -12,11 +12,15 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>FU_UBRA | <?= esc($title ?? 'Login') ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
             min-height: 100vh;
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-weight: 400;
             background: linear-gradient(135deg, #f7f1f1 0%, #f0e2e2 100%);
             color: #333;
         }
@@ -36,6 +40,24 @@
             border-radius: 14px;
             box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
             padding: 30px;
+        }
+
+        .auth-card h1 {
+            font-family: "Bebas Neue Pro", "Bebas Neue", "Arial Narrow", sans-serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #800000;
+        }
+
+        .auth-card p {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .auth-card label {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-weight: 500;
         }
     </style>
 </head>
