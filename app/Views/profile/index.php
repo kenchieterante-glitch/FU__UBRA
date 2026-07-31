@@ -1,5 +1,6 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
+<?php $user = $user ?? []; ?>
 
 <link rel="stylesheet" href="<?= base_url('Assets/css/settings.css') ?>">
 

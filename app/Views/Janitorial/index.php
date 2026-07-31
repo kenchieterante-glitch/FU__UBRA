@@ -1,5 +1,11 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
+<?php
+  $areas_json = $areas_json ?? '{}';
+  $staff_json = $staff_json ?? '[]';
+  $checklists_json = $checklists_json ?? '{}';
+  $inventory_json = $inventory_json ?? '[]';
+?>
 
 <div class="page-header">
   <div>

@@ -99,7 +99,6 @@ $draft_count = $draft_count ?? 0;
                                 <select id="catFilter" onchange="filterTable()">
                                     <option value=""> All Categories</option>
                                     <option value="Vehicle Inspection"> Vehicle Inspection</option>
-                                    <option value="Travel Reminder"> Travel Reminder</option>
                                     <option value="Air-Con Cleaning"> Air-Con Cleaning</option>
                                     <option value="Janitorial Assignment"> Janitorial Assignment</option>
                                     <option value="Inventory Low Stock"> Inventory Low Stock</option>
@@ -152,7 +151,6 @@ $draft_count = $draft_count ?? 0;
                                 };
                                 $catIcon  = match($n['category'] ?? '') {
                                     'Vehicle Inspection'    => 'bi-truck',
-                                    'Travel Reminder'       => 'bi-airplane',
                                     'Air-Con Cleaning'      => 'bi-wind',
                                     'Janitorial Assignment' => 'bi-brush',
                                     'Inventory Low Stock'   => 'bi-box-seam',
@@ -190,7 +188,6 @@ $draft_count = $draft_count ?? 0;
                                     <?php
                                     $actionBtn = match($n['category'] ?? '') {
                                         'Vehicle Inspection'    => ['label' => 'Verify',  'value' => 'verified'],
-                                        'Travel Reminder'       => ['label' => 'Notify',  'value' => 'notified'],
                                         'Air-Con Cleaning'      => ['label' => 'Assign',  'value' => 'assigned'],
                                         'Janitorial Assignment' => ['label' => 'Reassign','value' => 'assigned'],
                                         'Inventory Low Stock'   => ['label' => 'Order',   'value' => 'ordered'],

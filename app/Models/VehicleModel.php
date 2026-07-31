@@ -50,7 +50,7 @@ class VehicleModel extends Model
     }
 
     // Single source of truth for fleet counts — reused by Dashboard, Vehicle Management,
-    // Travel Management, and GPS Tracker so the same numbers show everywhere.
+    // and GPS Tracker so the same numbers show everywhere.
     public function getFleetStats(): array
     {
         $total = $this->where('is_archived', 0)->countAllResults();

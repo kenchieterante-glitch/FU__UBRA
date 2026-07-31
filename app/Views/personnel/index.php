@@ -6,7 +6,7 @@
 $title = $title ?? 'Personnel Management';
 $departments = $departments ?? [];
 $personnel = $personnel ?? [];
-$positionOptions = ['Guard', 'Driver', 'Janitor', 'Maintenance', 'Carpenter', 'Security', 'Office Staff', 'Administrator'];
+$positionOptions = ['Guard', 'Driver', 'Janitor', 'Maintenance', 'Carpenter', 'Construction Worker', 'Security', 'Office Staff', 'Administrator'];
 if (!empty($personnel)) {
   foreach ($personnel as $person) {
     if (!empty($person['position'])) {
@@ -15,7 +15,7 @@ if (!empty($personnel)) {
   }
 }
 $positionOptions = array_values(array_unique(array_filter($positionOptions)));
-$showStatusTabs = in_array($title, ['Drivers', 'Janitors', 'Carpentries', 'Maintenance'], true);
+$showStatusTabs = in_array($title, ['Drivers', 'Janitors', 'Carpentries Shop', 'Maintenance', 'Construction Workers'], true);
 $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
 ?>
 
@@ -26,6 +26,43 @@ $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
   </div>
   <button class="btn-add" onclick="document.getElementById('addModal').style.display='flex'">+ Add Personnel</button>
 </div>
+
+<?php if (!$showStatusTabs): ?>
+<div class="stat-cards">
+  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel') ?>'" role="button" tabindex="0">
+    <h3>Total Personnel</h3>
+    <div class="value"><?= esc((string) ((int) ($total_personnel_count ?? 0))) ?></div>
+  </div>
+  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel/drivers') ?>'" role="button" tabindex="0">
+    <h3>Drivers</h3>
+    <div class="value"><?= esc((string) ((int) ($drivers_count ?? 0))) ?></div>
+  </div>
+  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel/janitors') ?>'" role="button" tabindex="0">
+    <h3>Janitors</h3>
+    <div class="value"><?= esc((string) ((int) ($janitors_count ?? 0))) ?></div>
+  </div>
+  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel/carpentries') ?>'" role="button" tabindex="0">
+    <h3>Carpentries Shop</h3>
+    <div class="value"><?= esc((string) ((int) ($carpentries_count ?? 0))) ?></div>
+  </div>
+  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel/maintenance') ?>'" role="button" tabindex="0">
+    <h3>Maintenance</h3>
+    <div class="value"><?= esc((string) ((int) ($maintenance_count ?? 0))) ?></div>
+  </div>
+  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel/construction-workers') ?>'" role="button" tabindex="0">
+    <h3>Construction Workers</h3>
+    <div class="value"><?= esc((string) ((int) ($construction_count ?? 0))) ?></div>
+  </div>
+  <div class="stat-card stat-card-clickable" onclick="filterPersonnelByStat('Active')" role="button" tabindex="0">
+    <h3>Active</h3>
+    <div class="value"><?= esc((string) ((int) ($active_count ?? 0))) ?></div>
+  </div>
+  <div class="stat-card stat-card-clickable" onclick="filterPersonnelByStat('On Leave')" role="button" tabindex="0">
+    <h3>On Leave</h3>
+    <div class="value"><?= esc((string) ((int) ($on_leave_count ?? 0))) ?></div>
+  </div>
+</div>
+<?php endif; ?>
 
 <div class="table-card">
   <div class="table-toolbar">
@@ -51,11 +88,21 @@ $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
             <?php endforeach; ?>
           </select>
         </div>
+        <div class="filter-row">
+          <label for="personnelStatus">Status</label>
+          <select id="personnelStatus" onchange="filterPersonnelTable()">
+            <option value="">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="On Leave">On Leave</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
+<div class="personnel-table-scroll">
 <table id="personnelTable" class="data-table">
   <thead>
     <tr>
@@ -148,6 +195,7 @@ $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
   </tbody>
 </table>
 </div>
+</div>
 
 <script>
 const personnelLookup = <?= json_encode(array_values(array_filter(array_map(function($person) {
@@ -163,17 +211,29 @@ const personnelLookup = <?= json_encode(array_values(array_filter(array_map(func
 function filterPersonnelTable() {
   const searchValue = document.getElementById('personnelSearch').value.toLowerCase().trim();
   const departmentValue = document.getElementById('personnelDepartment').value.toLowerCase().trim();
+  const statusValue = document.getElementById('personnelStatus').value.toLowerCase().trim();
   const rows = document.querySelectorAll('#personnelTable tbody tr[data-search]');
 
   rows.forEach(row => {
     const rowText = (row.dataset.search || '').toLowerCase().trim();
     const departmentCell = (row.dataset.department || '').toLowerCase().trim();
+    const statusCell = (row.dataset.status || '').toLowerCase().trim();
 
     const matchesSearch = !searchValue || rowText.includes(searchValue);
     const matchesDepartment = !departmentValue || departmentCell === departmentValue;
+    const matchesStatus = !statusValue || statusCell === statusValue;
 
-    row.style.display = (matchesSearch && matchesDepartment) ? '' : 'none';
+    row.style.display = (matchesSearch && matchesDepartment && matchesStatus) ? '' : 'none';
   });
+}
+
+// Active / On Leave stat cards act as quick filters into the table below.
+function filterPersonnelByStat(status) {
+  document.getElementById('personnelSearch').value = '';
+  document.getElementById('personnelDepartment').value = '';
+  document.getElementById('personnelStatus').value = status;
+  filterPersonnelTable();
+  document.querySelector('.table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function togglePersonnelFilterMenu() {

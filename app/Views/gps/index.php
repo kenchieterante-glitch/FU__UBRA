@@ -1,5 +1,15 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
+<?php
+  $title = $title ?? 'GPS Tracker';
+  $fleet = $fleet ?? [];
+  $online_count = $online_count ?? 0;
+  $offline_count = $offline_count ?? 0;
+  $transit_count = $transit_count ?? 0;
+  $maint_count = $maint_count ?? 0;
+  $total = $total ?? 0;
+  $vehicles = $vehicles ?? [];
+?>
 
 <link rel="stylesheet" href="<?= base_url('Assets/css/gps.css') ?>">
 

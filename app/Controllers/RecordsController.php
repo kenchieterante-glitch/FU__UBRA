@@ -3,7 +3,6 @@
 namespace App\Controllers;
 
 use App\Models\BorrowModel;
-use App\Models\TravelModel;
 use App\Models\ReportModel;
 use App\Models\DisposalLogModel;
 
@@ -11,7 +10,6 @@ class RecordsController extends BaseController
 {
     protected $session;
     protected $borrowModel;
-    protected $travelModel;
     protected $reportModel;
     protected $disposalLogModel;
 
@@ -19,7 +17,6 @@ class RecordsController extends BaseController
     {
         $this->session = \Config\Services::session();
         $this->borrowModel = new BorrowModel();
-        $this->travelModel = new TravelModel();
         $this->reportModel = new ReportModel();
         $this->disposalLogModel = new DisposalLogModel();
     }
@@ -32,12 +29,10 @@ class RecordsController extends BaseController
 
         // Auto-flag records for archiving
         $this->borrowModel->autoFlagForArchiving();
-        $this->travelModel->autoFlagForArchiving();
         $this->reportModel->autoFlagForArchiving();
 
         // Get all records (including archived — this page needs to show every state)
         $borrowRecords = $this->borrowModel->getAllWithDetailsForRecords();
-        $travelRecords = $this->travelModel->getAllWithDetailsForRecords();
         $reportRecords = $this->reportModel->getAllWithDetailsForRecords();
         $disposalLogs  = $this->disposalLogModel->getAllWithDetails();
 
@@ -70,25 +65,6 @@ class RecordsController extends BaseController
                 'record_sub'  => 'ID: ' . ($r['asset_code'] ?? ('TL-' . str_pad((string) $r['id'], 5, '0', STR_PAD_LEFT))),
                 'action'      => $r['status'] ?? 'Borrowed',
                 'performed_by'=> $r['borrower_name'] ?? $r['borrower'] ?? '—',
-                'status'      => !empty($r['is_archived']) ? 'Archived' : ($r['status'] ?? '—'),
-                'is_archived' => !empty($r['is_archived']),
-                'disposal_status' => $r['disposal_status'] ?? 'None',
-            ];
-        }
-
-        foreach ($travelRecords as $r) {
-            if (($r['disposal_status'] ?? 'None') === 'Disposed') continue;
-
-            $activities[] = [
-                'type'        => 'travel',
-                'id'          => $r['id'],
-                'date'        => $r['travel_date'] ?? $r['last_activity_at'] ?? null,
-                'module'      => 'Vehicle',
-                'kind'        => !empty($r['is_archived']) ? 'Archive' : 'Record',
-                'record'      => $r['destination'] ?? 'Trip',
-                'record_sub'  => $r['trip_id'] ?? ('VH-' . str_pad((string) $r['id'], 5, '0', STR_PAD_LEFT)),
-                'action'      => $r['status'] ?? 'Pending',
-                'performed_by'=> $r['requester_name'] ?? '—',
                 'status'      => !empty($r['is_archived']) ? 'Archived' : ($r['status'] ?? '—'),
                 'is_archived' => !empty($r['is_archived']),
                 'disposal_status' => $r['disposal_status'] ?? 'None',
@@ -134,7 +110,7 @@ class RecordsController extends BaseController
         });
 
         $today = date('Y-m-d');
-        $archivableSets = [$borrowRecords, $travelRecords, $reportRecords];
+        $archivableSets = [$borrowRecords, $reportRecords];
         $archivedCount = 0;
         foreach ($archivableSets as $set) {
             foreach ($set as $r) {
@@ -145,7 +121,7 @@ class RecordsController extends BaseController
         }
 
         $stats = [
-            'total_records'     => count($borrowRecords) + count($travelRecords) + count($reportRecords),
+            'total_records'     => count($borrowRecords) + count($reportRecords),
             'archived_records'  => $archivedCount,
             'reports_generated' => count($reportRecords),
             'today_activities'  => count(array_filter($activities, fn($a) => ($a['date'] ?? '') !== null && date('Y-m-d', strtotime($a['date'])) === $today)),
@@ -235,7 +211,6 @@ class RecordsController extends BaseController
 
         $data = [
             'borrow' => $this->borrowModel->findAll(),
-            'travel' => $this->travelModel->findAll(),
             'report' => $this->reportModel->findAll(),
             'disposal' => $this->disposalLogModel->getAllWithDetails(),
         ];
@@ -257,9 +232,8 @@ class RecordsController extends BaseController
             'FU-UBRA Records, Archiving and Reports Summary',
             'Generated: ' . date('M j, Y g:i A'),
             '',
-            'Total operational records: ' . (count($data['borrow']) + count($data['travel']) + count($data['report'])),
+            'Total operational records: ' . (count($data['borrow']) + count($data['report'])),
             'Tool borrow logs: ' . count($data['borrow']),
-            'Trip tickets: ' . count($data['travel']),
             'Reports generated: ' . count($data['report']),
             'Disposal actions logged: ' . count($data['disposal']),
         ];
@@ -313,18 +287,6 @@ class RecordsController extends BaseController
             ]);
         }
         
-        // Write travel records
-        foreach ($data['travel'] as $row) {
-            fputcsv($file, [
-                'Trip Ticket',
-                $row['id'],
-                $row['status'] ?? '',
-                $row['archived_at'] ?? '',
-                $row['disposal_status'] ?? '',
-                $row['disposal_date'] ?? ''
-            ]);
-        }
-        
         // Write report records
         foreach ($data['report'] as $row) {
             fputcsv($file, [
@@ -360,8 +322,6 @@ class RecordsController extends BaseController
         switch ($type) {
             case 'borrow':
                 return $this->borrowModel;
-            case 'travel':
-                return $this->travelModel;
             case 'report':
                 return $this->reportModel;
             default:

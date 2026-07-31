@@ -3,7 +3,6 @@
 namespace App\Controllers;
 
 use App\Models\VehicleModel;
-use App\Models\TravelModel;
 use App\Models\PersonnelModel;
 use App\Models\ToolsModel;
 
@@ -105,10 +104,9 @@ class UbraController extends BaseController
         $action = $this->request->getPost('action');
         $prompts = [
             'daily_summary'   => 'Give me a concise daily operations summary for today based on the current system context.',
-            'pending_trips'   => 'List all pending trip requests that need approval and suggest which to prioritize.',
             'vehicle_health'  => 'Summarize the current vehicle fleet health, GPS status, and any vehicles needing attention.',
             'maintenance_due' => 'What maintenance tasks are coming up or overdue? List them with recommended actions.',
-            'weekly_report'   => 'Generate a brief weekly operations report covering trips, assets, personnel, and alerts.',
+            'weekly_report'   => 'Generate a brief weekly operations report covering assets, personnel, and alerts.',
             'staff_summary'   => 'Give me a personnel summary — who is on duty today and any unassigned staff.',
         ];
 
@@ -128,10 +126,6 @@ class UbraController extends BaseController
             $ctx['total_personnel']   = (new PersonnelModel())->countAll();
             $ctx['on_duty']           = (new PersonnelModel())->where('status','Active')->countAllResults();
             $ctx['total_assets']      = (new ToolsModel())->countAll();
-            $allTrips                 = (new TravelModel())->findAll();
-            $ctx['pending_trips']     = count(array_filter($allTrips, fn($t) => $t['status'] === 'Pending'));
-            $ctx['today_trips']       = count(array_filter($allTrips, fn($t) => $t['travel_date'] === date('Y-m-d')));
-            $ctx['completed_trips']   = count(array_filter($allTrips, fn($t) => $t['status'] === 'Completed'));
         } catch (\Exception $e) {
             $ctx = ['error' => 'Some context unavailable'];
         }
@@ -146,9 +140,7 @@ class UbraController extends BaseController
             . "CURRENT SYSTEM SNAPSHOT ({$ctx['current_date']} {$ctx['current_time']}):\n"
             . "- Vehicles: " . ($ctx['total_vehicles'] ?? 0) . " total | " . ($ctx['available_vehicles'] ?? 0) . " available\n"
             . "- Personnel: " . ($ctx['total_personnel'] ?? 0) . " total | " . ($ctx['on_duty'] ?? 0) . " on duty\n"
-            . "- Assets: " . ($ctx['total_assets'] ?? 0) . "\n"
-            . "- Pending Trips: " . ($ctx['pending_trips'] ?? 0) . "\n"
-            . "- Today's Trips: " . ($ctx['today_trips'] ?? 0) . "\n\n"
+            . "- Assets: " . ($ctx['total_assets'] ?? 0) . "\n\n"
             . "Be concise, professional, and action-oriented. Use bullet points and bold for key figures. Stay focused on FU-UBRA operations only.";
     }
 

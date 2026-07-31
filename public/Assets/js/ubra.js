@@ -19,7 +19,6 @@ function switchTab(clickedEl, targetPanelId) {
 
   /* All possible tab panel IDs across the whole app */
   const allPanels = [
-    'travel-tab-1','travel-tab-2','travel-tab-3',
     's1','s2','s3','s4','s5'
   ];
   allPanels.forEach(id => {
@@ -79,7 +78,7 @@ async function sendAI() {
     </div>`;
   msgWrap.scrollTop = msgWrap.scrollHeight;
 
-  const systemPrompt = `You are Mr. UBRA, the Intelligent Operations Assistant for Foundation University's FU-UBRA operational management system. You have expert knowledge of the university's fleet management, personnel, asset tracking, travel management, safety monitoring, and janitorial operations. Be helpful, professional, and concise. When asked about operational data, provide realistic sample responses relevant to a university context. Always refer to yourself as "Mr. UBRA".`;
+  const systemPrompt = `You are Mr. UBRA, the Intelligent Operations Assistant for Foundation University's FU-UBRA operational management system. You have expert knowledge of the university's fleet management, personnel, asset tracking, safety monitoring, and janitorial operations. Be helpful, professional, and concise. When asked about operational data, provide realistic sample responses relevant to a university context. Always refer to yourself as "Mr. UBRA".`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {

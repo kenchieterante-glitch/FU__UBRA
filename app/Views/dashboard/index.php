@@ -1,5 +1,10 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
+<?php
+  $kpis = $kpis ?? [];
+  $alerts = $alerts ?? [];
+  $activity = $activity ?? [];
+?>
 
 <div class="groundworks-shell">
   <div class="groundworks-header">
@@ -20,25 +25,6 @@
         <div class="kpi-sub"><?= esc($kpi['sub']) ?></div>
       </article>
     <?php endforeach; ?>
-  </section>
-
-  <section class="board-card" aria-label="Travel history">
-    <div class="board-head">
-      <h2>Travel History</h2>
-      <p>Recent trip tickets across the fleet.</p>
-    </div>
-    <div class="board-list">
-      <?php foreach ($travelHistory as $index => $trip): ?>
-        <div class="board-row">
-          <div class="board-id">0<?= $index + 1 ?></div>
-          <div class="board-copy">
-            <div class="board-name"><?= esc($trip['destination']) ?></div>
-            <div class="board-reason"><?= esc($trip['reason']) ?></div>
-          </div>
-          <span class="status-pill <?= esc($trip['statusClass']) ?>"><?= esc($trip['status']) ?></span>
-        </div>
-      <?php endforeach; ?>
-    </div>
   </section>
 
   <div class="lower-grid">

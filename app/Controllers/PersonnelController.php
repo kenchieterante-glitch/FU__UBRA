@@ -26,12 +26,12 @@ class PersonnelController extends BaseController
             return redirect()->to('/login');
         }
 
-        $data = [
+        $data = array_merge([
             'title'       => 'Personnel Management',
             'pageCss'     => 'personnel.css',
             'personnel'   => $this->personnelModel->getAllWithDetails(),
             'departments' => $this->departmentModel->findAll(),
-        ];
+        ], $this->getStatCounts());
 
         return view('personnel/index', $data);
     }
@@ -42,12 +42,12 @@ class PersonnelController extends BaseController
             return redirect()->to('/login');
         }
 
-        $data = [
+        $data = array_merge([
             'title'       => 'Drivers',
             'pageCss'     => 'personnel.css',
             'personnel'   => $this->personnelModel->getDrivers(),
             'departments' => $this->departmentModel->findAll(),
-        ];
+        ], $this->getStatCounts());
 
         return view('personnel/index', $data);
     }
@@ -58,7 +58,7 @@ class PersonnelController extends BaseController
             return redirect()->to('/login');
         }
 
-        $data = [
+        $data = array_merge([
             'title'       => 'Janitors',
             'pageCss'     => 'personnel.css',
             'personnel'   => $this->personnelModel->groupStart()
@@ -67,7 +67,7 @@ class PersonnelController extends BaseController
                                                   ->groupEnd()
                                                   ->findAll() ?: [],
             'departments' => $this->departmentModel->findAll(),
-        ];
+        ], $this->getStatCounts());
 
         return view('personnel/index', $data);
     }
@@ -78,12 +78,28 @@ class PersonnelController extends BaseController
             return redirect()->to('/login');
         }
 
-        $data = [
-            'title'       => 'Carpentries',
+        $data = array_merge([
+            'title'       => 'Carpentries Shop',
             'pageCss'     => 'personnel.css',
             'personnel'   => $this->personnelModel->getByPositionKeyword('Carpenter') ?: [],
             'departments' => $this->departmentModel->findAll(),
-        ];
+        ], $this->getStatCounts());
+
+        return view('personnel/index', $data);
+    }
+
+    public function constructionWorkers()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $data = array_merge([
+            'title'       => 'Construction Workers',
+            'pageCss'     => 'personnel.css',
+            'personnel'   => $this->personnelModel->getByPositionKeyword('Construction') ?: [],
+            'departments' => $this->departmentModel->findAll(),
+        ], $this->getStatCounts());
 
         return view('personnel/index', $data);
     }
@@ -94,16 +110,36 @@ class PersonnelController extends BaseController
             return redirect()->to('/login');
         }
 
-        $data = [
+        $data = array_merge([
             'title'       => 'Maintenance',
             'pageCss'     => 'personnel.css',
             'personnel'   => $this->personnelModel->like('position', 'Maintenance')
                                                   ->orLike('position', 'Physical Plant')
                                                   ->findAll() ?: [],
             'departments' => $this->departmentModel->findAll(),
-        ];
+        ], $this->getStatCounts());
 
         return view('personnel/index', $data);
+    }
+
+    private function getStatCounts(): array
+    {
+        return [
+            'total_personnel_count' => $this->personnelModel->countAllResults(),
+            'drivers_count'         => $this->personnelModel->like('position', 'Driver')->countAllResults(),
+            'janitors_count'        => $this->personnelModel->groupStart()
+                                                              ->like('position', 'Janitor')
+                                                              ->orLike('position', 'Cleaning')
+                                                              ->groupEnd()
+                                                              ->countAllResults(),
+            'carpentries_count'     => $this->personnelModel->like('position', 'Carpenter')->countAllResults(),
+            'maintenance_count'     => $this->personnelModel->like('position', 'Maintenance')
+                                                              ->orLike('position', 'Physical Plant')
+                                                              ->countAllResults(),
+            'construction_count'    => $this->personnelModel->like('position', 'Construction')->countAllResults(),
+            'active_count'          => $this->personnelModel->where('status', 'Active')->countAllResults(),
+            'on_leave_count'        => $this->personnelModel->where('status', 'On Leave')->countAllResults(),
+        ];
     }
 
     public function add()

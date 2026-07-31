@@ -373,17 +373,4 @@
     border-radius: 50%;
     background: #38d66b;
     flex-shrink: 0;
-    animation: pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        box-shadow: 0 0 0 0 rgba(56, 214, 107, .5);
-    }
-
-    50% {
-        box-shadow: 0 0 0 5px rgba(56, 214, 107, 0);
-    }
 }

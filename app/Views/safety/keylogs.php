@@ -1,6 +1,11 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
+<?php
+  $title = $title ?? 'Keylogs';
+  $key_logs_json = $key_logs_json ?? '[]';
+?>
+
 <link rel="stylesheet" href="<?= base_url('Assets/css/safety.css') ?>">
 
 <div class="page-header">

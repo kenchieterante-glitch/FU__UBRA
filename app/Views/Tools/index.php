@@ -29,6 +29,10 @@
     <h3>Needs Maintenance</h3>
     <div class="value"><?= esc((string) ((int) ($maintenance_tools ?? 0))) ?></div>
   </div>
+  <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('disposal')" role="button" tabindex="0">
+    <h3>Disposal</h3>
+    <div class="value"><?= esc((string) ((int) ($disposal_tools ?? 0))) ?></div>
+  </div>
 </div>
 
 <div class="table-card">
@@ -50,11 +54,10 @@
             <label for="toolsCategory">Category</label>
             <select id="toolsCategory" onchange="filterToolsTable()">
               <option value="">All Categories</option>
-              <?php foreach (array_unique(array_column($toolList, 'category')) as $category): ?>
-                <?php if (!empty($category)): ?>
-                  <option value="<?= esc($category) ?>"><?= esc($category) ?></option>
-                <?php endif; ?>
-              <?php endforeach; ?>
+              <option value="Tools Equipment">Tools Equipment</option>
+              <option value="Electronic Devices">Electronic Devices</option>
+              <option value="Accessories">Accessories</option>
+              <option value="Consumable">Consumable</option>
             </select>
           </div>
           <div class="filter-row">
@@ -64,6 +67,7 @@
               <option value="Available">Available</option>
               <option value="Borrowed">Borrowed</option>
               <option value="Maintenance">Maintenance</option>
+              <option value="Disposal">Disposal</option>
             </select>
           </div>
           <div class="filter-row">
@@ -72,6 +76,7 @@
               <option value="">All Conditions</option>
               <option value="Excellent">Excellent</option>
               <option value="Good">Good</option>
+              <option value="Fair">Fair</option>
               <option value="Poor">Poor</option>
             </select>
           </div>
@@ -80,6 +85,7 @@
     </div>
   </div>
 
+  <div class="tools-table-scroll">
   <table id="toolsTable" class="data-table">
   <thead>
     <tr>
@@ -109,6 +115,8 @@
               <span class="status-badge status-borrowed">In Use</span>
             <?php elseif (($t['availability'] ?? '') === 'Maintenance'): ?>
               <span class="status-badge status-maintenance">Under Repair</span>
+            <?php elseif (($t['availability'] ?? '') === 'Disposal'): ?>
+              <span class="status-badge status-disposal">None</span>
             <?php else: ?>
               <span class="status-badge status-available">Ready</span>
             <?php endif; ?>
@@ -120,6 +128,7 @@
     <?php endif; ?>
   </tbody>
 </table>
+  </div>
 </div>
 
 <script>
@@ -151,6 +160,7 @@ function filterToolsByStat(kind) {
   if (kind === 'available')   document.getElementById('toolsAvailability').value = 'Available';
   if (kind === 'borrowed')    document.getElementById('toolsAvailability').value = 'Borrowed';
   if (kind === 'maintenance') document.getElementById('toolsCondition').value = 'Poor';
+  if (kind === 'disposal')    document.getElementById('toolsAvailability').value = 'Disposal';
 
   filterToolsTable();
   document.querySelector('.table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -190,7 +200,13 @@ document.addEventListener('click', e => {
       <label>Tool Code</label>
       <input type="text" name="asset_code">
       <label>Category</label>
-      <input type="text" name="category">
+      <select name="category">
+        <option value="">— Select Category —</option>
+        <option value="Tools Equipment">Tools Equipment</option>
+        <option value="Electronic Devices">Electronic Devices</option>
+        <option value="Accessories">Accessories</option>
+        <option value="Consumable">Consumable</option>
+      </select>
       <label>Location</label>
       <input type="text" name="location">
       <label>Custodian</label>

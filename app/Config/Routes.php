@@ -50,6 +50,7 @@ $routes->get ('personnel/drivers',   'PersonnelController::drivers');
 $routes->get ('personnel/janitors',  'PersonnelController::janitors');
 $routes->get ('personnel/carpentries','PersonnelController::carpentries');
 $routes->get ('personnel/maintenance','PersonnelController::maintenance');
+$routes->get ('personnel/construction-workers','PersonnelController::constructionWorkers');
 $routes->post('personnel/add',       'PersonnelController::add');
 $routes->post('personnel/add/',      'PersonnelController::add');
 $routes->post('personnel/edit/(:num)','PersonnelController::edit/$1');
@@ -75,31 +76,13 @@ $routes->post('vehicles/edit/(:num)',  'VehicleController::edit/$1');
 $routes->post('vehicles/delete/(:num)','VehicleController::delete/$1');
 
 
-// TRAVEL MANAGEMENT + GPS (COMBINED)
-// GPS Tracker remains available from the Travel section.
-
-
-$routes->get ('travel',                  'TravelController::index');
-$routes->post('travel/add',              'TravelController::add');
-$routes->post('travel/approve/(:num)',   'TravelController::approve/$1');
-$routes->post('travel/reject/(:num)',    'TravelController::reject/$1');
-$routes->post('travel/complete/(:num)',  'TravelController::complete/$1');
-$routes->post('travel/edit/(:num)',      'TravelController::edit/$1');
-$routes->post('travel/delete/(:num)',    'TravelController::delete/$1');
-$routes->get ('travel/getTrip/(:num)',   'TravelController::getTrip/$1');
-$routes->post('travel/checkIn/(:num)',   'TravelController::checkIn/$1');
-$routes->post('travel/checkOut/(:num)',  'TravelController::checkOut/$1');
-
+// ============================================================
+// GPS
+// ============================================================
 $routes->get ('gps',                     'GPSController::index');
 $routes->get ('gps/getVehicle/(:num)',   'GPSController::getVehicle/$1');
 $routes->get ('gps/sync/(:num)',         'GPSController::sync/$1');
 $routes->post('gps/logPing',             'GPSController::logPing');
-
-// ============================================================
-// GUARD DASHBOARD
-// ============================================================
-$routes->get ('guard', 'GuardController::index');
-$routes->get ('guard/check/(:num)', 'GuardController::check/$1');
 
 // ============================================================
 // SAFETY MONITORING (Separated from Janitorial)

@@ -31,10 +31,6 @@
                         <i class="bi bi-sun-fill"></i>
                         <span>Daily Summary</span>
                     </button>
-                    <button class="qa-btn" onclick="quickAction('pending_trips')">
-                        <i class="bi bi-airplane-fill"></i>
-                        <span>Pending Trips</span>
-                    </button>
                     <button class="qa-btn" onclick="quickAction('vehicle_health')">
                         <i class="bi bi-truck-front-fill"></i>
                         <span>Fleet Health</span>
@@ -74,9 +70,6 @@
                     </button>
                     <button class="suggest-btn" onclick="insertSuggestion('Are there any overdue maintenance tasks?')">
                         Any overdue maintenance tasks?
-                    </button>
-                    <button class="suggest-btn" onclick="insertSuggestion('Give me a summary of this week\\'s trip activity.')">
-                        Summary of this week's trips
                     </button>
                     <button class="suggest-btn" onclick="insertSuggestion('What assets are currently borrowed and overdue for return?')">
                         What assets are overdue for return?
@@ -134,7 +127,7 @@
                         <div class="msg-sender">Mr. UBRA <span class="msg-time"><?= date('h:i A') ?></span></div>
                         <div class="msg-text">
                             <strong>Good <?= date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Evening') ?>, Operations Office.</strong><br><br>
-                            I'm Mr. UBRA, your Intelligent Operations Assistant. I have live access to your fleet, personnel, assets, and trip data.<br><br>
+                            I'm Mr. UBRA, your Intelligent Operations Assistant. I have live access to your fleet, personnel, and asset data.<br><br>
                             How can I assist you today? Use the <strong>Quick Actions</strong> on the left for instant summaries, or ask me anything about FU-UBRA operations.
                         </div>
                     </div>
@@ -147,7 +140,7 @@
                     <textarea
                         id="chatInput"
                         class="chat-input"
-                        placeholder="Ask Mr. UBRA about operations, vehicles, trips, maintenance…"
+                        placeholder="Ask Mr. UBRA about operations, vehicles, maintenance…"
                         rows="1"
                         onkeydown="handleKey(event)"
                         oninput="autoResize(this)"
@@ -174,7 +167,6 @@
                         ['url'=>'personnel',     'icon'=>'bi-people-fill',         'label'=>'Personnel'],
                         ['url'=>'assets',        'icon'=>'bi-box-seam-fill',       'label'=>'Asset Management'],
                         ['url'=>'vehicles',      'icon'=>'bi-truck-front-fill',    'label'=>'Vehicle Management'],
-                        ['url'=>'travel',        'icon'=>'bi-airplane-fill',       'label'=>'Travel Management'],
                         ['url'=>'gps',           'icon'=>'bi-broadcast',           'label'=>'GPS Tracker'],
                         ['url'=>'calendar',      'icon'=>'bi-calendar3',           'label'=>'Calendar'],
                         ['url'=>'notifications', 'icon'=>'bi-bell-fill',           'label'=>'Notifications'],
@@ -198,7 +190,6 @@
                 <ul class="cap-list">
                     <li><i class="bi bi-check-circle-fill"></i> Daily operations intelligence</li>
                     <li><i class="bi bi-check-circle-fill"></i> Fleet & GPS status summaries</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Trip approval recommendations</li>
                     <li><i class="bi bi-check-circle-fill"></i> Maintenance alerts & scheduling</li>
                     <li><i class="bi bi-check-circle-fill"></i> Asset & borrowing overviews</li>
                     <li><i class="bi bi-check-circle-fill"></i> Personnel on-duty tracking</li>
@@ -260,7 +251,6 @@ async function quickAction(action) {
 
     const labels = {
         daily_summary:  '📋 Give me today\'s daily operations summary.',
-        pending_trips:  '✈️ Show me pending trip requests that need approval.',
         vehicle_health: '🚛 What is the current fleet health and GPS status?',
         maintenance_due:'🔧 What maintenance tasks are coming up or overdue?',
         weekly_report:  '📊 Generate a brief weekly operations report.',
@@ -417,11 +407,6 @@ function renderContext(data) {
             <div class="ctx-icon"><i class="bi bi-truck"></i></div>
             <div class="ctx-label">Vehicles</div>
             <div class="ctx-value" id="ctxVehicles">—</div>
-        </div>
-        <div class="ctx-item">
-            <div class="ctx-icon"><i class="bi bi-airplane"></i></div>
-            <div class="ctx-label">Today's Trips</div>
-            <div class="ctx-value" id="ctxTrips">—</div>
         </div>
         <div class="ctx-item">
             <div class="ctx-icon"><i class="bi bi-people"></i></div>

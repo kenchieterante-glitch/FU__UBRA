@@ -293,7 +293,6 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                 <div class="form-group">
                     <label>Type / Module</label>
                     <select name="type_module" id="editorTypeModule" required>
-                        <option>Travel Operations</option>
                         <option>Facilities Management</option>
                         <option>Asset Inventory</option>
                         <option>Vehicle Fleet</option>

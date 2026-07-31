@@ -1,6 +1,10 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
+<?php
+  $title = $title ?? 'Departments';
+  $departments = $departments ?? [];
+?>
 
 <div class="page-header">
   <div>

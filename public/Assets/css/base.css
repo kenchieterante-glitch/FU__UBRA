@@ -67,8 +67,6 @@ img {
   display: block;
 }
 
-button,
-a,
 .icon-action,
 .card,
 .stat-card,
@@ -80,8 +78,6 @@ a,
   transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
 }
 
-button:hover,
-a:hover,
 .icon-action:hover,
 .card:hover,
 .stat-card:hover,
@@ -92,7 +88,6 @@ a:hover,
   transform: translateY(-1px);
   color: var(--maroon);
   border-color: var(--maroon);
-  box-shadow: 0 8px 18px rgba(122, 31, 43, 0.12);
 }
 
 .attention-text {
@@ -178,7 +173,6 @@ a:hover,
 .login-card input:focus {
   outline: none;
   border-color: var(--maroon);
-  box-shadow: 0 0 0 3px rgba(122, 31, 43, 0.12);
 }
 
 .btn-maroon {
@@ -331,7 +325,6 @@ a:hover,
 .sidebar-nav a.active {
   background: var(--maroon);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(122, 31, 43, 0.4);
   font-weight: 700;
 }
 .sidebar-nav .nav-parent-group {
@@ -371,7 +364,6 @@ a:hover,
 .sidebar-nav .nav-parent-link.active {
   background: var(--maroon);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(122, 31, 43, 0.4);
 }
 .sidebar-nav .nav-parent-link .nav-parent-caret {
   margin-left: auto;
@@ -1083,7 +1075,6 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .table-toolbar select:focus {
   outline: none;
   border-color: rgba(122, 31, 43, 0.35);
-  box-shadow: 0 0 0 3px rgba(122, 31, 43, 0.08);
 }
 .data-table {
   width: 100%;
@@ -1545,7 +1536,6 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .modal-box textarea:focus {
   outline: none;
   border-color: var(--maroon);
-  box-shadow: 0 0 0 3px rgba(122, 31, 43, 0.1);
 }
 .modal-actions {
   display: flex;

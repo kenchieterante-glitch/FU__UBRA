@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Models\VehicleModel;
 use App\Models\BorrowModel;
-use App\Models\TravelModel;
 use App\Models\FireExtinguisherModel;
 use App\Models\SafetyWorkOrderModel;
 use App\Models\JanitorialAssignmentModel;
@@ -16,7 +15,6 @@ class Dashboard extends BaseController
     {
         $vehicleModel     = new VehicleModel();
         $borrowModel      = new BorrowModel();
-        $travelModel      = new TravelModel();
         $fireModel        = new FireExtinguisherModel();
         $workOrderModel   = new SafetyWorkOrderModel();
         $assignmentModel  = new JanitorialAssignmentModel();
@@ -24,19 +22,17 @@ class Dashboard extends BaseController
 
         $today = date('Y-m-d');
 
-        // ── Pending Requests: real open items across Tools, Vehicle, and Maintenance ──
+        // ── Pending Requests: real open items across Tools and Maintenance ──
         $borrowedTools   = $borrowModel->where('status', 'Borrowed')->countAllResults();
-        $pendingTrips    = $travelModel->where('status', 'Pending')->countAllResults();
         $openWorkOrders  = $workOrderModel->where('stage !=', 'Completed/Verified')->countAllResults();
-        $pendingRequests = $borrowedTools + $pendingTrips + $openWorkOrders;
+        $pendingRequests = $borrowedTools + $openWorkOrders;
 
         // ── Active Borrowings ──
         $activeBorrowings = $borrowModel->where('status', 'Borrowed')->countAllResults();
         $dueBackToday     = $borrowModel->where('status', 'Borrowed')->where('expected_return', $today)->countAllResults();
 
-        // ── Vehicles in Use — same shared query used by Vehicle Management, Travel, and GPS Tracker ──
+        // ── Vehicles in Use — same shared query used by Vehicle Management and GPS Tracker ──
         $fleetStats       = $vehicleModel->getFleetStats();
-        $unassignedTrips  = $travelModel->where('status', 'Pending')->where('assigned_vehicle_id', null)->countAllResults();
 
         // ── Maintenance Due: open work orders + fire extinguishers overdue for inspection ──
         $overdueFe       = $fireModel->where('next_due <', $today)->countAllResults();
@@ -75,14 +71,6 @@ class Dashboard extends BaseController
                     : "{$b['asset_name']} borrowed by {$b['borrower']}.",
             ];
         }
-        foreach ($travelModel->getAllWithDetails() as $t) {
-            if (empty($t['last_activity_at'])) continue;
-            $activityFeed[] = [
-                'ts'   => $t['last_activity_at'],
-                'tag'  => 'Vehicle',
-                'text' => "Trip {$t['trip_id']} to {$t['destination']} marked {$t['status']}.",
-            ];
-        }
         foreach ($allTasks as $task) {
             if ((int) $task['is_done'] !== 1 || empty($task['completed_at'])) continue;
             $zone = $assignmentsById[$task['assignment_id']]['assigned_zone'] ?? 'a zone';
@@ -99,23 +87,6 @@ class Dashboard extends BaseController
             'text' => $a['text'],
         ], array_slice($activityFeed, 0, 7));
 
-        $statusPill = [
-            'Completed' => 'pill-green',
-            'Approved'  => 'pill-green',
-            'Pending'   => 'pill-gold',
-            'Rejected'  => 'pill-red',
-            'Cancelled' => 'pill-red',
-        ];
-        $travelHistory = [];
-        foreach (array_slice($travelModel->getAllWithDetails(), 0, 5) as $t) {
-            $travelHistory[] = [
-                'destination' => $t['destination'],
-                'reason'      => ($t['requester_name'] ?? 'Unassigned') . ' · ' . $t['purpose'],
-                'status'      => $t['status'],
-                'statusClass' => $statusPill[$t['status']] ?? 'pill-gold',
-            ];
-        }
-
         $data = [
             'title' => 'GroundWorks Monitoring Dashboard',
             'pageCss' => 'dashboard.css',
@@ -125,7 +96,7 @@ class Dashboard extends BaseController
                 [
                     'label' => 'Pending Requests',
                     'value' => (string) $pendingRequests,
-                    'meta' => "{$borrowedTools} tools · {$pendingTrips} vehicle · {$openWorkOrders} work orders",
+                    'meta' => "{$borrowedTools} tools · {$openWorkOrders} work orders",
                     'sub' => 'Waiting on approval',
                     'tone' => 'tone-gold',
                     'icon' => 'fa-clipboard-list',
@@ -141,7 +112,7 @@ class Dashboard extends BaseController
                 [
                     'label' => 'Vehicles in Use',
                     'value' => "{$fleetStats['in_use']}/{$fleetStats['total']}",
-                    'meta' => "{$unassignedTrips} unassigned trip requests",
+                    'meta' => "{$fleetStats['available']} available",
                     'sub' => 'Dispatch coverage',
                     'tone' => 'tone-neutral',
                     'icon' => 'fa-truck',
@@ -163,7 +134,6 @@ class Dashboard extends BaseController
                     'icon' => 'fa-broom',
                 ],
             ],
-            'travelHistory' => $travelHistory,
             'alerts' => [
                 [
                     'icon' => 'fa-circle-exclamation',
@@ -177,13 +147,6 @@ class Dashboard extends BaseController
                     'tone' => 'pending',
                     'title' => "{$borrowedTools} tools currently borrowed",
                     'subtitle' => 'Tracked in Tools Management',
-                    'time' => 'Today',
-                ],
-                [
-                    'icon' => 'fa-circle-exclamation',
-                    'tone' => 'urgent',
-                    'title' => "{$pendingTrips} trip requests pending approval",
-                    'subtitle' => 'Travel Management queue',
                     'time' => 'Today',
                 ],
                 [

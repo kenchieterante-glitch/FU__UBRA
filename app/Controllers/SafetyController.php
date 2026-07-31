@@ -4,14 +4,12 @@ namespace App\Controllers;
 
 use App\Models\FireExtinguisherModel;
 use App\Models\KeyBorrowLogModel;
-use App\Models\TravelModel;
 
 class SafetyController extends BaseController
 {
     protected $session;
     protected $fireExtinguisherModel;
     protected $keyBorrowLogModel;
-    protected $travelModel;
 
     // Maps each real fire-extinguisher location onto the fixed slug used by the campus map SVG.
     private const ZONE_SLUGS = [
@@ -31,7 +29,6 @@ class SafetyController extends BaseController
         $this->session = \Config\Services::session();
         $this->fireExtinguisherModel = new FireExtinguisherModel();
         $this->keyBorrowLogModel = new KeyBorrowLogModel();
-        $this->travelModel = new TravelModel();
     }
 
     public function index()
@@ -80,14 +77,6 @@ class SafetyController extends BaseController
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
-        // Only Approved/Completed trips have actually been released — a Pending
-        // trip has no business showing up here or being linked to a key issuance.
-        $allTrips = $this->travelModel->getAllWithDetails();
-        $releasedTrips = array_values(array_filter(
-            $allTrips,
-            fn($t) => in_array($t['status'], ['Approved', 'Completed'], true)
-        ));
-
         $keyLogs = $this->keyBorrowLogModel->getAllWithTrip();
         $activeBorrows = array_values(array_filter($keyLogs, fn($k) => $k['status'] === 'Active'));
 
@@ -105,15 +94,6 @@ class SafetyController extends BaseController
         return view('safety/guard_dashboard', [
             'title' => 'Guard Dashboard',
             'openModule' => 'safety',
-            'trip_tickets_json' => $this->jsonForScript(array_map(fn($t) => [
-                'no'         => $t['trip_id'],
-                'requester'  => $t['requester_name'],
-                'vehicle'    => trim(($t['vehicle_model'] ?? '') . ' ' . ($t['vehicle_plate'] ?? '')) ?: 'Unassigned',
-                'dest'       => $t['destination'],
-                'dep'        => $t['departure_time'] ? date('h:i A', strtotime($t['departure_time'])) : '—',
-                'approvedBy' => '—',
-                'status'     => $t['status'],
-            ], $releasedTrips)),
             'key_logs_json' => $this->jsonForScript(array_map(fn($k) => [
                 'id'       => $k['log_number'],
                 'name'     => $k['full_name'],

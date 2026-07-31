@@ -5,6 +5,15 @@
     margin-bottom: 20px;
 }
 
+.stat-cards {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+@media (max-width: 900px) {
+    .stat-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 .alert-success {
     background: #e6f4ea;
     color: #2e7d32;
@@ -80,6 +89,22 @@
 .status-borrowed {
     background: #fdecea;
     color: #b3261e;
+}
+
+.status-disposal {
+    background: #e8eaed;
+    color: #3c4043;
+}
+
+.tools-table-scroll {
+    max-height: 520px;
+    overflow-y: auto;
+}
+
+.tools-table-scroll #toolsTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 .modal {

@@ -144,10 +144,6 @@
     font-weight: 700;
 }
 
-.vsw-btn:hover:not(.active) {
-    background: var(--surface-alt);
-}
-
 /* ── Legend ──────────────────────────────────────────────────── */
 .cal-legend {
     display: flex;
@@ -291,11 +287,6 @@
     border-radius: 7px;
     margin-bottom: .4rem;
     border-left: 3px solid var(--warning);
-    background: #fffbeb;
-}
-
-.today-event.travel {
-    border-left-color: var(--warning);
     background: #fffbeb;
 }
 
@@ -530,11 +521,6 @@
     font-weight: 700;
     padding: .2rem .6rem;
     border-radius: 12px;
-}
-
-.edp-travel {
-    background: #fef3c7;
-    color: #92400e;
 }
 
 .edp-inspection {

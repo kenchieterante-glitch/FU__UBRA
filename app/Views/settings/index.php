@@ -1,6 +1,11 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
-
+<?php
+  $settings = $settings ?? [];
+  $users = $users ?? [];
+  $logs = $logs ?? [];
+  $sys_info = $sys_info ?? [];
+?>
 <link rel="stylesheet" href="<?= base_url('Assets/css/settings.css') ?>">
 
 <div class="stg-wrapper">
@@ -135,9 +140,9 @@
                     ['name'=>'System Administrator','access'=>'Full system access — all modules, settings, user management','color'=>'role-admin'],
                     ['name'=>'B&G Head / Facilities Head','access'=>'Dashboard, all modules, reports, approvals, digital signatures','color'=>'role-head'],
                     ['name'=>'Maintenance Technician','access'=>'Maintenance module, asset inspection, task completion logging','color'=>'role-tech'],
-                    ['name'=>'Motorpool Driver','access'=>'Trip schedule, pre-trip inspection checklist, trip logbook','color'=>'role-driver'],
+                    ['name'=>'Motorpool Driver','access'=>'Vehicle assignments, pre-trip inspection checklist','color'=>'role-driver'],
                     ['name'=>'Janitorial Staff','access'=>'Daily task checklists, work evaluation view','color'=>'role-jan'],
-                    ['name'=>'Borrower (Faculty/Staff)','access'=>'Asset borrowing, trip requests, borrow history','color'=>'role-borrower'],
+                    ['name'=>'Borrower (Faculty/Staff)','access'=>'Asset borrowing, borrow history','color'=>'role-borrower'],
                 ];
                 foreach ($roles as $r):
                 ?>
@@ -160,7 +165,6 @@
                     ['module'=>'Dashboard',       'roles'=>['Admin','B&G Head','All Roles']],
                     ['module'=>'Asset Management','roles'=>['Admin','B&G Head','Borrower']],
                     ['module'=>'Vehicle Mgmt',    'roles'=>['Admin','B&G Head','Driver']],
-                    ['module'=>'Travel Mgmt',     'roles'=>['Admin','B&G Head','Borrower','Driver']],
                     ['module'=>'GPS Tracker',     'roles'=>['Admin','B&G Head']],
                     ['module'=>'Maintenance',     'roles'=>['Admin','B&G Head','Technician']],
                     ['module'=>'Janitorial',      'roles'=>['Admin','B&G Head','Janitorial Staff']],
@@ -235,7 +239,6 @@
                             ['key'=>'notif_vehicle',    'label'=>'Vehicle Alerts',           'sub'=>'Pre-trip inspection reminders and overdue alerts'],
                             ['key'=>'notif_janitorial', 'label'=>'Janitorial Notifications', 'sub'=>'Daily checklist reminders for janitorial staff'],
                             ['key'=>'notif_asset',      'label'=>'Asset Overdue Alerts',     'sub'=>'Notify admin when borrowed assets are not returned'],
-                            ['key'=>'notif_travel',     'label'=>'Travel Reminders',         'sub'=>'Driver assignment alerts and trip departure reminders'],
                         ];
                         foreach ($toggles as $t):
                             $on = ($settings[$t['key']] ?? '1') === '1';
@@ -271,7 +274,7 @@
                     <div class="int-body">
                         <div class="int-name">Google Calendar API</div>
                         <div class="int-status connected"><i class="bi bi-circle-fill"></i> Connected</div>
-                        <div class="int-desc">Maintenance events, vehicle trips, and cleaning cycles automatically sync to the shared B&G Google Calendar. Events update in real time when schedules change.</div>
+                        <div class="int-desc">Maintenance events and cleaning cycles automatically sync to the shared B&G Google Calendar. Events update in real time when schedules change.</div>
                     </div>
                 </div>
                 <div class="form-group" style="max-width:480px;margin-top:1.2rem;">
@@ -320,7 +323,7 @@
                 </div>
                 <div class="int-note" style="margin-top:1rem;">
                     <i class="bi bi-robot"></i>
-                    Mr. UBRA is powered by the Anthropic Claude API. Enter your API key in General → API Integration Keys. The AI sidebar panel appears on Dashboard, Personnel, Travel, Calendar, Notifications, Reports, GPS Tracker, and Vehicle Management.
+                    Mr. UBRA is powered by the Anthropic Claude API. Enter your API key in General → API Integration Keys. The AI sidebar panel appears on Dashboard, Personnel, Calendar, Notifications, Reports, GPS Tracker, and Vehicle Management.
                 </div>
             </div>
 

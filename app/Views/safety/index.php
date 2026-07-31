@@ -1,5 +1,15 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
+<?php
+  $title = $title ?? 'Safety Maintenance';
+  $coverage_total = $coverage_total ?? 0;
+  $coverage_attention = $coverage_attention ?? 0;
+  $coverage_refill = $coverage_refill ?? 0;
+  $inspection_readiness = $inspection_readiness ?? 0;
+  $areas_json = $areas_json ?? '{}';
+  $fe_registry_json = $fe_registry_json ?? '[]';
+?>
+
 <link rel="stylesheet" href="<?= base_url('Assets/css/safety.css') ?>">
 
 <div class="sj-wrapper">
@@ -32,6 +42,16 @@
       <div class="card-title"><i class="bi bi-exclamation-octagon"></i> Critical Alerts</div>
       <div class="card-value" id="criticalAlertsValue">0 active</div>
       <div class="card-sub" id="criticalAlertsSub">No critical areas detected</div>
+    </div>
+    <div class="overview-card">
+      <div class="card-title"><i class="bi bi-building-check"></i> Buildings Check</div>
+      <div class="card-value">Not Tracked Yet</div>
+      <div class="card-sub">Building inspection checklist — to be connected to the system soon</div>
+    </div>
+    <div class="overview-card">
+      <div class="card-title"><i class="bi bi-snow2"></i> Aircon</div>
+      <div class="card-value">Not Tracked Yet</div>
+      <div class="card-sub">Aircon maintenance checklist — to be connected to the system soon</div>
     </div>
   </div>
 
@@ -75,6 +95,10 @@
         <div class="dp-fe-grid" id="dpFeGrid"></div>
         <div class="dp-section-title"><i class="bi bi-clock-history"></i> Expiry Alerts</div>
         <div id="dpAlerts" class="dp-alerts"></div>
+        <div class="dp-section-title"><i class="bi bi-building-check"></i> Buildings Check</div>
+        <div class="dp-not-tracked">Not tracked yet — will be connected to the system soon.</div>
+        <div class="dp-section-title"><i class="bi bi-snow2"></i> Aircon</div>
+        <div class="dp-not-tracked">Not tracked yet — will be connected to the system soon.</div>
         <div class="dp-section-title"><i class="bi bi-clipboard2-check"></i> Inspection Checklist</div>
         <div id="dpChecklist" class="dp-checklist"></div>
         <div class="dp-section-title"><i class="bi bi-person-badge"></i> Assigned Inspector</div>
@@ -83,7 +107,6 @@
     </div>
   </div>
 
-  </div>
 </div>
 
 <!-- ── MODALS ───────────────────────────────────────────────────────── -->
@@ -242,7 +265,7 @@ function selectMapBuilding(el) {
     document.getElementById('dpFeGrid').innerHTML = `<div class="no-data" style="padding:1rem;">No fire extinguisher records available for ${name}.</div>`;
     document.getElementById('dpAlerts').innerHTML = `<div class="no-alert">Tap a unit row to see more details.</div>`;
     document.getElementById('dpChecklist').innerHTML = '';
-    document.getElementById('dpInspector').innerHTML = `<div class="inspector-card"><div class="insp-av st-${statusSlug}">${name.charAt(0)}</div><div><div class="insp-name">${name}</div><div class="insp-role">${category}</div><div class="insp-meta"><i class="bi bi-calendar3"></i> ${new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})} &nbsp;|&nbsp; <i class="bi bi-clock"></i> ${new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}</div></div></div>`;
+    document.getElementById('dpInspector').innerHTML = `<div class="no-data">No inspector assigned for this area.</div>`;
   } else {
     let feHtml = '';
     let alertHtml = '';

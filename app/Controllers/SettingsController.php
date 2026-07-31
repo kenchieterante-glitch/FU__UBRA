@@ -89,7 +89,7 @@ class SettingsController extends BaseController
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
 
         $ok = true;
-        foreach (['notif_maintenance','notif_vehicle','notif_janitorial','notif_asset','notif_travel'] as $key) {
+        foreach (['notif_maintenance','notif_vehicle','notif_janitorial','notif_asset'] as $key) {
             $ok = $this->upsertSetting($key, $this->request->getPost($key) ? '1' : '0') && $ok;
         }
         $ok = $this->upsertSetting('reminder_days', $this->request->getPost('reminder_days') ?? '5') && $ok;
@@ -182,7 +182,6 @@ class SettingsController extends BaseController
             'notif_vehicle'     => '1',
             'notif_janitorial'  => '1',
             'notif_asset'       => '1',
-            'notif_travel'      => '1',
             'reminder_days'     => '5',
         ];
 

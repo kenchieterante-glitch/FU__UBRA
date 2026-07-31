@@ -1,6 +1,12 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
+<?php
+  $title = $title ?? 'Guard Dashboard';
+  $key_logs_json = $key_logs_json ?? '[]';
+  $activity_json = $activity_json ?? '[]';
+?>
+
 <link rel="stylesheet" href="<?= base_url('Assets/css/safety.css') ?>">
 
 <div class="page-header">
@@ -19,16 +25,6 @@
           <span class="guard-shift">On Duty: <strong>Guard Santos, J.</strong></span>
           <span class="guard-time" id="guardClock"></span>
         </div>
-      </div>
-
-      <div class="gc-title"><i class="bi bi-ticket-perforated-fill"></i> Trip Tickets Released Today</div>
-      <div class="table-wrap">
-        <table class="sj-table">
-          <thead>
-            <tr><th>Ticket #</th><th>Requester</th><th>Vehicle</th><th>Destination</th><th>Departure</th><th>Approved By</th><th>Status</th></tr>
-          </thead>
-          <tbody id="tripTicketBody"></tbody>
-        </table>
       </div>
     </div>
 
@@ -59,24 +55,11 @@
 </div>
 
 <script>
-// Trip tickets, key logs, and the activity feed all come from the database —
-// see SafetyController::guardDashboard(). No hardcoded demo values.
-const tripTickets = <?= $trip_tickets_json ?>;
+// Key logs and the activity feed come from the database — see SafetyController::guardDashboard().
 const keyLogs = <?= $key_logs_json ?>;
 const guardActLog = <?= $activity_json ?>;
 
 function renderGuardDashboard() {
-  document.getElementById('tripTicketBody').innerHTML = tripTickets.map(t => `
-    <tr>
-      <td><strong>${t.no}</strong></td>
-      <td>${t.requester}</td>
-      <td>${t.vehicle}</td>
-      <td>${t.dest}</td>
-      <td>${t.dep}</td>
-      <td>${t.approvedBy}</td>
-      <td><span class="tt-badge tt-${t.status.toLowerCase()}">${t.status}</span></td>
-    </tr>`).join('');
-
   const active = keyLogs.filter(k => k.status === 'Active');
   document.getElementById('activeBorrows').innerHTML = active.length
     ? active.map(k => `

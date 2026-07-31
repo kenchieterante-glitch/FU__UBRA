@@ -45,11 +45,6 @@ class AiServices
     {
         // Check for various intents and keywords
         $intents = [
-            'travel' => [
-                'keywords' => ['travel', 'trip', 'request', 'destination', 'departure'],
-                'response' => 'I can help you with travel requests. You can request a vehicle for a specific date and destination. Would you like to submit a new travel request?',
-                'actions' => ['create_travel_request', 'view_travel_history'],
-            ],
             'vehicle' => [
                 'keywords' => ['vehicle', 'car', 'truck', 'fleet', 'transportation', 'gps'],
                 'response' => 'I can help you manage vehicles. You can view vehicle status, track GPS locations, or manage maintenance. What would you like to do?',
@@ -77,7 +72,7 @@ class AiServices
             ],
             'help' => [
                 'keywords' => ['help', 'how', 'what can', 'guide', 'tutorial', 'support'],
-                'response' => 'I\'m Mr. UBRA, your AI assistant. I can help you with: travel requests, vehicle management, inventory, personnel, reports, and safety monitoring. What would you like to do?',
+                'response' => 'I\'m Mr. UBRA, your AI assistant. I can help you with: vehicle management, inventory, personnel, reports, and safety monitoring. What would you like to do?',
                 'actions' => ['view_help', 'contact_support'],
             ],
         ];
@@ -127,11 +122,6 @@ class AiServices
                 'description' => 'Check status of all vehicles and recent GPS logs',
                 'action' => 'view_fleet_status',
             ],
-            'pending_requests' => [
-                'title' => 'Pending Travel Requests',
-                'description' => 'Review and approve pending travel requests',
-                'action' => 'approve_travel_requests',
-            ],
             'overdue_returns' => [
                 'title' => 'Overdue Tool Returns',
                 'description' => 'Track tools that haven\'t been returned on time',
@@ -179,7 +169,7 @@ class AiServices
             ],
             'cost_optimization' => [
                 'title' => 'Cost Optimization Opportunities',
-                'description' => 'Consider consolidating trips to reduce fuel consumption.',
+                'description' => 'Consider optimizing vehicle routes to reduce fuel consumption.',
                 'confidence' => 0.78,
             ],
             'inventory_optimization' => [

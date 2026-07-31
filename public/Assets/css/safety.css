@@ -126,16 +126,10 @@
     transition: all .2s;
 }
 
-.sj-tab:hover {
-    border-color: var(--m);
-    color: var(--m);
-}
-
 .sj-tab.active {
     background: var(--m);
     border-color: var(--m);
     color: #fff;
-    box-shadow: 0 4px 14px rgba(122, 31, 43, .28);
 }
 
 /* ── Sub-tabs ────────────────────────────────────────────────── */
@@ -161,11 +155,6 @@
     color: var(--muted);
     cursor: pointer;
     transition: all .15s;
-}
-
-.sub-tab:hover {
-    background: var(--bg);
-    color: var(--m);
 }
 
 .sub-tab.active {
@@ -208,7 +197,7 @@
 
 .overview-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 1rem;
     margin-bottom: 1rem;
 }
@@ -224,6 +213,15 @@
     align-items: center;
     text-align: center;
     gap: 0.4rem;
+}
+
+.overview-card .card-title,
+.overview-card .card-value,
+.overview-card .card-sub {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .overview-card .card-value {
@@ -449,7 +447,6 @@
 
 .campus-area:hover,
 .jan-area:hover {
-    filter: drop-shadow(0 0 8px rgba(122, 31, 43, .35));
     stroke-width: 3;
 }
 
@@ -794,7 +791,8 @@
 }
 
 .no-alert,
-.no-data {
+.no-data,
+.dp-not-tracked {
     font-size: .75rem;
     color: var(--muted);
     padding: .4rem 0;
@@ -1562,19 +1560,6 @@
     color: var(--m);
     display: block;
     margin-bottom: .5rem;
-    animation: scanPulse 1.5s ease-in-out infinite;
-}
-
-@keyframes scanPulse {
-
-    0%,
-    100% {
-        opacity: .5
-    }
-
-    50% {
-        opacity: 1
-    }
 }
 
 .scan-zone p {

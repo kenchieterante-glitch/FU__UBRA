@@ -39,6 +39,7 @@ class ToolsController extends BaseController
             'available_tools' => $this->toolsModel->where('availability', 'Available')->where('is_archived', 0)->countAllResults(),
             'borrowed_tools'  => $this->toolsModel->where('availability', 'Borrowed')->where('is_archived', 0)->countAllResults(),
             'maintenance_tools' => $this->toolsModel->where('condition_status', 'Poor')->where('is_archived', 0)->countAllResults(),
+            'disposal_tools'  => $this->toolsModel->where('availability', 'Disposal')->where('is_archived', 0)->countAllResults(),
             'personnel'       => $this->personnelModel->findAll(),
         ];
 

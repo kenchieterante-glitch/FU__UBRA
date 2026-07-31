@@ -1,5 +1,9 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
+<?php
+  $title = $title ?? 'Operations Calendar';
+  $events_json = $events_json ?? '[]';
+?>
 
 <link rel="stylesheet" href="<?= base_url('Assets/css/calendar.css') ?>">
 <!-- FullCalendar 6 (CDN) -->
@@ -11,7 +15,7 @@
     <div class="page-header">
         <div>
             <h1 class="page-title"><i class="bi bi-calendar3"></i> Operations Calendar</h1>
-            <p class="page-subtitle">Manage travel schedules, inspections, maintenance, and operational activities.</p>
+            <p class="page-subtitle">Manage inspections, maintenance, and operational activities.</p>
         </div>
         <div class="header-actions">
             <button class="btn-primary" id="addEventBtn">
@@ -27,7 +31,6 @@
 
     <!-- ── LEGEND ────────────────────────────────────────────────── -->
     <div class="cal-legend">
-        <span class="legend-item"><span class="legend-dot" style="background:#d97706"></span> Travel</span>
         <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Inspection</span>
         <span class="legend-item"><span class="legend-dot" style="background:#7c3aed"></span> Maintenance</span>
         <span class="legend-item"><span class="legend-dot" style="background:#2563eb"></span> Compliance</span>
@@ -45,37 +48,12 @@
                     <div class="sc-title">Today's Schedule</div>
                     <div class="sc-date"><?= date('l, M j, Y') ?></div>
                 </div>
-                <?php if (empty($today_trips)): ?>
-                    <div class="empty-day"><i class="bi bi-calendar-check"></i> No trips scheduled today.</div>
-                <?php else: ?>
-                    <?php foreach ($today_trips as $t): ?>
-                    <div class="today-event travel">
-                        <div class="te-time"><?= date('h:i A', strtotime($t['departure_time'])) ?></div>
-                        <div class="te-body">
-                            <div class="te-title">Trip Ticket #<?= esc($t['trip_id']) ?></div>
-                            <div class="te-sub"><?= date('h:i A', strtotime($t['departure_time'])) ?> – <?= esc($t['destination']) ?></div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                <div class="empty-day"><i class="bi bi-calendar-check"></i> Nothing scheduled today.</div>
             </div>
 
             <!-- Upcoming Events -->
             <div class="sidebar-card">
                 <div class="sc-title">Upcoming Events</div>
-                <?php if (empty($approved_trips)): ?>
-                    <div class="empty-day">No upcoming approved trips.</div>
-                <?php else: ?>
-                    <?php foreach (array_slice($approved_trips, 0, 4) as $t): ?>
-                    <div class="upcoming-item">
-                        <span class="up-dot" style="background:#16a34a"></span>
-                        <div>
-                            <div class="up-title"><?= esc($t['destination']) ?></div>
-                            <div class="up-sub"><?= date('M j', strtotime($t['travel_date'])) ?> · <?= esc($t['requester_name']) ?></div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
                 <!-- Static maintenance placeholders (wired to maintenance module in a later step) -->
                 <div class="upcoming-item">
                     <span class="up-dot" style="background:#7c3aed"></span>
@@ -89,29 +67,11 @@
 
             <!-- Pending Approvals -->
             <div class="sidebar-card">
-                <div class="sc-title">
-                    Pending Approvals
-                    <?php if (!empty($pending_trips)): ?>
-                        <span class="pending-count"><?= count($pending_trips) ?></span>
-                    <?php endif; ?>
+                <div class="sc-title">Pending Approvals</div>
+                <div class="pending-item">
+                    <div><div class="pi-title">Vehicle Insurance Renewal</div><div class="pi-sub">Scheduled renewal</div></div>
+                    <span class="pi-action">Authorize →</span>
                 </div>
-                <?php if (empty($pending_trips)): ?>
-                    <div class="empty-day">No pending approvals.</div>
-                <?php else: ?>
-                    <?php foreach ($pending_trips as $t): ?>
-                    <div class="pending-item">
-                        <div>
-                            <div class="pi-title">Driver Assignment (<?= esc($t['vehicle_plate'] ?? 'TBD') ?>)</div>
-                            <div class="pi-sub"><?= date('M j', strtotime($t['travel_date'])) ?> · <?= esc($t['requester_name']) ?></div>
-                        </div>
-                        <a href="<?= base_url('travel') ?>" class="pi-action">Review →</a>
-                    </div>
-                    <?php endforeach; ?>
-                    <div class="pending-item">
-                        <div><div class="pi-title">Vehicle Insurance Renewal</div><div class="pi-sub">Scheduled renewal</div></div>
-                        <span class="pi-action">Authorize →</span>
-                    </div>
-                <?php endif; ?>
             </div>
         </div>
 
@@ -138,7 +98,7 @@
             <!-- Event detail panel (shown when event clicked) -->
             <div id="eventDetailPanel" class="event-detail-panel" style="display:none;">
                 <div class="edp-header">
-                    <div class="edp-badge" id="edpBadge">Travel</div>
+                    <div class="edp-badge" id="edpBadge">Event</div>
                     <span class="edp-status" id="edpStatus">Active</span>
                 </div>
                 <div class="edp-title" id="edpTitle">—</div>
@@ -162,14 +122,6 @@
                 </div>
                 <div class="ubra-section-title">Daily Operations Summary</div>
                 <ul class="ubra-list">
-                    <?php if (!empty($today_trips)): ?>
-                        <li><i class="bi bi-dot"></i> <?= count($today_trips) ?> trip(s) scheduled to depart today.</li>
-                    <?php else: ?>
-                        <li><i class="bi bi-dot"></i> No trips scheduled today.</li>
-                    <?php endif; ?>
-                    <?php if (!empty($pending_trips)): ?>
-                        <li><i class="bi bi-dot"></i> <?= count($pending_trips) ?> driver assignment(s) pending approval.</li>
-                    <?php endif; ?>
                     <li><i class="bi bi-dot"></i> Bldg A AC cleaning starts in 2 days.</li>
                     <li><i class="bi bi-dot"></i> 1 maintenance schedule due next week.</li>
                 </ul>
@@ -178,12 +130,12 @@
                     <button class="ubra-btn" onclick="notifyDriver()"><i class="bi bi-person-fill"></i> Notify Driver (Van-03)</button>
                     <button class="ubra-btn" onclick="notifyCleaning()"><i class="bi bi-brush"></i> Notify Cleaning Personnel</button>
                     <button class="ubra-btn" onclick="generateSummary()"><i class="bi bi-file-earmark-text"></i> Generate Weekly Summary</button>
-                    <button class="ubra-btn primary" onclick="openTripSchedule()"><i class="bi bi-truck"></i> Open Trip Schedule</button>
                 </div>
             </div>
         </div>
 
     </div>
+</div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -208,7 +160,6 @@
                 <div class="form-group">
                     <label>Type</label>
                     <select id="evtType">
-                        <option value="Travel">Travel</option>
                         <option value="Inspection">Inspection</option>
                         <option value="Maintenance">Maintenance</option>
                         <option value="Compliance">Compliance</option>
@@ -239,7 +190,6 @@ const localEvents = [];
 
 // Type → color map
 const typeColors = {
-    Travel:      '#d97706',
     Inspection:  '#f59e0b',
     Maintenance: '#7c3aed',
     Compliance:  '#2563eb',
@@ -287,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // ── Event detail panel ─────────────────────────────────────────
 function openEventDetail(event) {
     const p    = event.extendedProps || {};
-    const type = p.type || 'Travel';
+    const type = p.type || 'Event';
     const statusClass = {
         Approved: 'status-approved', Completed: 'status-completed',
         Cancelled: 'status-cancelled', Pending: 'status-pending'
@@ -349,7 +299,6 @@ function closeAddModal() { document.getElementById('addEventModal').style.displa
 function notifyDriver()   { showToast('Notification sent to Van-03 driver.'); }
 function notifyCleaning() { showToast('Notification sent to Cleaning Personnel.'); }
 function generateSummary(){ showToast('Weekly summary report is being generated…'); }
-function openTripSchedule(){ window.location.href = '<?= base_url('travel') ?>'; }
 
 // ── Utility ────────────────────────────────────────────────────
 function esc(s) {

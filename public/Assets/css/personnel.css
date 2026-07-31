@@ -14,6 +14,22 @@
     font-size: 13px;
 }
 
+.personnel-table-scroll {
+    max-height: 520px;
+    overflow-y: auto;
+}
+
+.stat-cards .stat-card {
+    align-items: center;
+    text-align: center;
+}
+
+.personnel-table-scroll #personnelTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
 .modal {
     display: none;
     position: fixed;

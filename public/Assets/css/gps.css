@@ -541,7 +541,6 @@
     height: 8px;
     background: var(--success);
     border-radius: 50%;
-    animation: pulse 1.4s ease-in-out infinite;
 }
 
 .dead-dot {
@@ -550,18 +549,6 @@
     height: 8px;
     background: #9ca3af;
     border-radius: 50%;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        box-shadow: 0 0 0 0 rgba(22, 163, 74, .5);
-    }
-
-    50% {
-        box-shadow: 0 0 0 5px rgba(22, 163, 74, 0);
-    }
 }
 
 /* ── GPS Badge ───────────────────────────────────────────────── */

@@ -4,7 +4,6 @@ TRUNCATE departments;
 TRUNCATE personnel;
 TRUNCATE tools;
 TRUNCATE vehicles;
-TRUNCATE travel_requests;
 TRUNCATE notifications;
 TRUNCATE janitorial;
 TRUNCATE gps_logs;
@@ -45,18 +44,8 @@ INSERT INTO vehicles (vehicle_name,plate_no,type,driver,department,gps_status,in
 ('Toyota Innova','FUA-7712','7-Seater MPV','Goyo del Pilar','College of Nursing','Online','Completed','Reserved'),
 ('Isuzu Elf Truck','FUA-5099','6-Wheeler Cargo','Jose Rizal','Campus Physical','Online','Expired','Maintenance');
 
-INSERT INTO travel_requests (trip_id,requester,destination,purpose,travel_date,departure_time,return_time,assigned_driver,assigned_vehicle,status) VALUES
-('TR-2026-089','Dr. Jose Rizal','Bacolod Coliseum','Regional Meet','2026-07-17','07:30:00','17:00:00','Juan Santos','Toyota Coaster Bus-02','Approved'),
-('TR-2026-090','Prof. Kenchie Terante','Dumaguete IT Hub','Cybersecurity Conf','2026-07-18','09:00:00','16:00:00','Pending','Vehicle Pending','Pending'),
-('TR-2026-088','Dean Clara Samson','Brgy Hall','Community Clinic','2026-07-19','08:00:00','14:00:00','Goyo del Pilar','Toyota Innova MPV-01','Approved'),
-('TR-2026-085','Dr. Andres Bonifacio','Ocean Research Forum','Joint Research','2026-07-15','06:00:00','20:00:00','Pedro Penduko','Nissan Urvan Van-01','Completed'),
-('TR-2026-084','Pedro Calungsod','Valencia Resort','Teambuilding','2026-07-12','08:00:00','18:00:00','Unassigned','No Vehicle','Rejected'),
-('TR-2026-083','Maria Clara','Sogod Depot','Supplies Pick-up','2026-07-10','07:30:00','15:00:00','Cardo Dalisay','Toyota Hilux Pickup','Cancelled'),
-('TR-2026-082','Juan dela Cruz','Bais City Civic Center','Socio-Civic Mission','2026-07-22','05:30:00','17:00:00','Andres Bonifacio','Hyundai County Bus-01','Approved');
-
 INSERT INTO notifications (category,description,recipient,priority,status) VALUES
 ('Vehicle Inspection','Routine vehicle health compliance check is scheduled tomorrow.','Operations Team','Critical','Unread'),
-('Travel Reminder','Driver Mark has an assigned dispatch schedule soon.','Driver Mark','Warning','Unread'),
 ('Air-Con Cleaning','Air Conditioner Building A preventive maintenance starts in 2 days.','Facilities Dept','Routine','Read'),
 ('Janitorial Assignment','Weekly deep disinfection assignment schedule for Team B begins tomorrow.','Team B Duty','Routine','Read'),
 ('Inventory Low Stock','Critical spare parts are low on warehouse inventory.','Office Supplies','Critical','Unread'),
@@ -68,12 +57,11 @@ INSERT INTO janitorial (team_name,assigned_area,task,schedule_date,status) VALUE
 ('Team C','Admin Building','AC Filter Cleaning','2026-07-20','Completed');
 
 INSERT INTO predictions (module,insight_text,suggestion_text) VALUES
-('Dashboard','Three trips are scheduled this week.','Schedule Maintenance'),
 ('Dashboard','Vehicle Van-01 inspection is due tomorrow.','Generate Report'),
 ('Dashboard','Inventory of cleaning chemicals is running low.','Notify Personnel');
 
 INSERT INTO reports (report_name,generated_by,type_module,status,file_path) VALUES
-('Q3_Fleet_Compliance_v2','Admin Rodrigo','Travel Operations','Completed',''),
+('Q3_Fleet_Compliance_v2','Admin Rodrigo','Vehicle Fleet','Completed',''),
 ('Weekly_Maintenance_Audit','Supervisor Gomez','Facilities Management','Completed','');
 
 INSERT INTO gps_logs (vehicle_id,device_id,latitude,longitude,signal_strength,status) VALUES

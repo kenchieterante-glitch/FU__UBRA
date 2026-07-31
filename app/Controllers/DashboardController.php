@@ -5,7 +5,6 @@ namespace App\Controllers;
 use App\Models\ToolsModel;
 use App\Models\VehicleModel;
 use App\Models\PersonnelModel;
-use App\Models\TravelModel;
 
 class DashboardController extends BaseController
 {
@@ -19,7 +18,6 @@ class DashboardController extends BaseController
         $toolsModel = new ToolsModel();
         $vehicleModel = new VehicleModel();
         $personnelModel = new PersonnelModel();
-        $travelModel = new TravelModel();
 
         $data = [
             'title'             => 'Dashboard',
@@ -27,7 +25,6 @@ class DashboardController extends BaseController
             'total_tools'       => $toolsModel->where('is_archived', 0)->countAllResults(),
             'total_vehicles'    => $vehicleModel->where('is_archived', 0)->countAllResults(),
             'total_personnel'   => $personnelModel->countAllResults(),
-            'scheduled_trips'   => $travelModel->where('status', 'Pending')->where('is_archived', 0)->countAllResults(),
             'active_vehicles'   => $vehicleModel->where('availability', 'In Use')->where('is_archived', 0)->findAll(),
         ];
 

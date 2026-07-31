@@ -393,7 +393,6 @@
 .reports-filter-row select:focus {
     outline: none;
     border-color: rgba(122, 31, 43, 0.35);
-    box-shadow: 0 0 0 3px rgba(122, 31, 43, 0.08);
 }
 
 .reports-filter-label {
@@ -590,11 +589,6 @@
     cursor: pointer;
     transition: all .2s ease;
     box-shadow: var(--shadow);
-}
-
-.report-tab:hover {
-    border-color: rgba(128, 0, 0, .5);
-    color: var(--maroon);
 }
 
 .report-tab.active {
@@ -848,11 +842,6 @@
     font-weight: 700;
     padding: .2rem .6rem;
     border-radius: 12px;
-}
-
-.type-travel {
-    background: #fef3c7;
-    color: #92400e;
 }
 
 .type-facilities {

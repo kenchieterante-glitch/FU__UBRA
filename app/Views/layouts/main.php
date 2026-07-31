@@ -12,7 +12,7 @@
           return $uri === 'personnel' || strpos($uri, 'personnel/') === 0 ? 'active' : '';
       }
       if ($seg === 'vehicles') {
-          return $uri === 'vehicles' || $uri === 'travel' || $uri === 'gps' ? 'active' : '';
+          return $uri === 'vehicles' || $uri === 'gps' ? 'active' : '';
       }
       return $uri === $seg || strpos($uri, $seg . '/') === 0 ? 'active' : '';
   }
@@ -88,12 +88,13 @@
           <a href="<?= base_url('personnel') ?>" class="<?= navActive('personnel') ?>"><i class="fa-solid fa-users"></i> <span class="nav-label">All Personnel</span></a>
           <a href="<?= base_url('personnel/drivers') ?>" class="<?= navActive('personnel/drivers') ?>"><i class="fa-solid fa-id-badge"></i> <span class="nav-label">Drivers</span></a>
           <a href="<?= base_url('personnel/janitors') ?>" class="<?= navActive('personnel/janitors') ?>"><i class="fa-solid fa-broom"></i> <span class="nav-label">Janitors</span></a>
-          <a href="<?= base_url('personnel/carpentries') ?>" class="<?= navActive('personnel/carpentries') ?>"><i class="fa-solid fa-hammer"></i> <span class="nav-label">Carpentries</span></a>
+          <a href="<?= base_url('personnel/carpentries') ?>" class="<?= navActive('personnel/carpentries') ?>"><i class="fa-solid fa-hammer"></i> <span class="nav-label">Carpentries Shop</span></a>
           <a href="<?= base_url('personnel/maintenance') ?>" class="<?= navActive('personnel/maintenance') ?>"><i class="fa-solid fa-wrench"></i> <span class="nav-label">Maintenance</span></a>
+          <a href="<?= base_url('personnel/construction-workers') ?>" class="<?= navActive('personnel/construction-workers') ?>"><i class="fa-solid fa-helmet-safety"></i> <span class="nav-label">Construction Workers</span></a>
         </div>
       </div>
 
-      <?php $isVehicleSection = $currentUri === 'vehicles' || $currentUri === 'travel' || $currentUri === 'gps'; ?>
+      <?php $isVehicleSection = $currentUri === 'vehicles' || $currentUri === 'gps'; ?>
       <div class="nav-parent-group <?= $isVehicleSection ? 'open' : '' ?>">
         <a href="<?= base_url('vehicles') ?>" class="nav-parent-link <?= $isVehicleSection ? 'active open' : '' ?>" data-vehicle-toggle data-tooltip="Vehicle Management">
           <i class="fa-solid fa-truck"></i>
@@ -102,7 +103,6 @@
         </a>
         <div class="nav-submenu" id="vehicle-submenu">
           <a href="<?= base_url('vehicles') ?>" class="<?= navActive('vehicles') ?>"><i class="fa-solid fa-truck"></i> <span class="nav-label">Vehicle Management</span></a>
-          <a href="<?= base_url('travel') ?>" class="<?= navActive('travel') ?>"><i class="fa-solid fa-road"></i> <span class="nav-label">Travel Management</span></a>
           <a href="<?= base_url('gps') ?>" class="<?= navActive('gps') ?>"><i class="fa-solid fa-location-dot"></i> <span class="nav-label">GPS Tracker</span></a>
         </div>
       </div>
@@ -110,7 +110,6 @@
       <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>" data-tooltip="Tools Management"><i class="fa-solid fa-boxes-stacked"></i> <span class="nav-label">Tools Management</span></a>
 
       <a href="<?= base_url('safety') ?>" class="<?= navActive('safety') ?>" data-tooltip="Safety Maintenance"><i class="fa-solid fa-hard-hat"></i> <span class="nav-label">Safety Maintenance</span></a>
-      <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>" data-tooltip="Guard Dashboard"><i class="fa-solid fa-tv"></i> <span class="nav-label">Guard Dashboard</span></a>
       <a href="<?= base_url('janitorial') ?>" class="<?= navActive('janitorial') ?>" data-tooltip="Janitorial Monitoring"><i class="fa-solid fa-broom"></i> <span class="nav-label">Janitorial Monitoring</span></a>
       <a href="<?= base_url('calendar') ?>" class="<?= navActive('calendar') ?>" data-tooltip="Calendar"><i class="fa-solid fa-calendar-days"></i> <span class="nav-label">Calendar</span></a>
       <a href="<?= base_url('notifications') ?>" class="<?= navActive('notifications') ?>" data-tooltip="Notifications"><i class="fa-solid fa-bell"></i> <span class="nav-label">Notifications</span></a>
@@ -245,7 +244,7 @@ const vehicleGroup = vehicleLink?.closest('.nav-parent-group');
 if (vehicleLink && vehicleGroup) {
   vehicleLink.addEventListener('click', (event) => {
     const currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
-    const isVehicleRoute = currentPath === 'vehicles' || currentPath === 'travel' || currentPath === 'gps';
+    const isVehicleRoute = currentPath === 'vehicles' || currentPath === 'gps';
     const clickedCaret = event.target.closest('.nav-parent-caret');
 
     if (clickedCaret || isVehicleRoute) {
