@@ -13,7 +13,6 @@
                 <h1 class="page-title">Mr. UBRA</h1>
                 <p class="page-subtitle">Foundation University's Intelligent Operations Assistant</p>
             </div>
-            <span class="ubra-online-badge"><span class="pulse-dot"></span> Online</span>
         </div>
     </div>
 

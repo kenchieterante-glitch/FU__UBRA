@@ -304,17 +304,12 @@ a {
     font-size: 1.1rem;
 }
 
-.ubra-online-badge {
-    margin-left: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: .45rem;
-    padding: .45rem .75rem;
-    border-radius: 999px;
-    background: #e8f5e9;
-    color: var(--green);
-    font-size: .78rem;
-    font-weight: 700;
+.pulse-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
 }
 
 .ubra-body {
@@ -454,6 +449,9 @@ a {
 }
 
 .ch-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
     color: var(--text-muted);
     font-size: .75rem;
 }

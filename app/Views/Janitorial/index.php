@@ -58,7 +58,7 @@
             <div class="dp-title" id="janDpTitle">Select an area</div>
             <div class="dp-sub">Janitorial Checklist & Assignment</div>
           </div>
-          <button class="dp-close" onclick="closeJanDrill()"><i class="bi bi-x-lg"></i> Back to Map</button>
+          <button class="dp-close" onclick="closeJanDrill()"><i class="bi bi-x-lg"></i></button>
         </div>
         <div id="janDpContent"></div>
       </div>
