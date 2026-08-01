@@ -17,6 +17,14 @@ class PersonnelModel extends Model
         return $this->like('position', $keyword)->findAll();
     }
 
+    public function getByEmpId($empId)
+    {
+        return $this->select('personnel.*, departments.name as department_name')
+                    ->join('departments', 'departments.id = personnel.department_id', 'left')
+                    ->where('personnel.emp_id', $empId)
+                    ->first();
+    }
+
     public function getAllWithDetails()
     {
         $builder = $this->select('personnel.*, departments.name as department_name')

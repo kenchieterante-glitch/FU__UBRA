@@ -11,4 +11,11 @@ class FireExtinguisherModel extends Model
         'unit_id', 'type', 'location', 'weight_kg', 'last_inspection', 'next_due',
         'status', 'year_acquired', 'inspector', 'assigned_guard', 'notes',
     ];
+
+    public function getBuildingCounts(): array
+    {
+        return $this->select('location, COUNT(*) AS count')
+                    ->groupBy('location')
+                    ->findAll();
+    }
 }
