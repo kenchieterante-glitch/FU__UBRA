@@ -174,6 +174,79 @@ $routes->get('/', function() {
     return redirect()->to(base_url('dashboard'));
 });
 
+// ============================================================
+// JSON API (for the Expo mobile app)
+// ============================================================
+$routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {
+    $routes->post('login', 'AuthController::login');
+
+  $routes->group('', ['filter' => 'apiauth'], function ($routes) {
+    $routes->post('logout', 'AuthController::logout');
+    $routes->get('me', 'AuthController::me');
+
+    $routes->get('dashboard', 'DashboardController::index');
+
+    $routes->get('personnel', 'PersonnelController::index');
+    $routes->get('personnel/lookup/(:any)', 'PersonnelController::lookup/$1');
+    $routes->get('personnel/drivers', 'PersonnelController::drivers');
+    $routes->get('personnel/janitors', 'PersonnelController::janitors');
+    $routes->get('personnel/carpentries', 'PersonnelController::carpentries');
+    $routes->get('personnel/construction-workers', 'PersonnelController::constructionWorkers');
+    $routes->get('personnel/maintenance', 'PersonnelController::maintenance');
+    $routes->post('personnel/add', 'PersonnelController::add');
+    $routes->post('personnel/edit/(:num)', 'PersonnelController::edit/$1');
+    $routes->post('personnel/delete/(:num)', 'PersonnelController::delete/$1');
+
+    $routes->get('tools', 'ToolsController::index');
+    $routes->post('tools/add', 'ToolsController::add');
+    $routes->post('tools/edit/(:num)', 'ToolsController::edit/$1');
+    $routes->post('tools/delete/(:num)', 'ToolsController::delete/$1');
+    $routes->post('tools/borrow/(:num)', 'ToolsController::borrow/$1');
+    $routes->post('tools/returnTool/(:num)', 'ToolsController::returnTool/$1');
+
+    $routes->get('vehicles', 'VehicleController::index');
+    $routes->post('vehicles/add', 'VehicleController::add');
+    $routes->post('vehicles/edit/(:num)', 'VehicleController::edit/$1');
+    $routes->post('vehicles/delete/(:num)', 'VehicleController::delete/$1');
+
+    $routes->get('janitorial', 'JanitorialController::index');
+    $routes->get('janitorial/checklists', 'JanitorialController::checklists');
+    $routes->get('janitorial/my', 'JanitorialController::my');
+    $routes->post('janitorial/tasks/(:num)/toggle', 'JanitorialController::toggleTask/$1');
+    $routes->post('janitorial/refillInventory/(:num)', 'JanitorialController::refillInventory/$1');
+    $routes->post('janitorial/addInventoryItem', 'JanitorialController::addInventoryItem');
+
+    $routes->get('travel', 'TravelController::index');
+    $routes->post('travel/add', 'TravelController::add');
+    $routes->get('travel/today', 'TravelController::today');
+    $routes->post('travel/(:num)/scanout', 'TravelController::scanOut/$1');
+    $routes->post('travel/(:num)/scanin', 'TravelController::scanIn/$1');
+
+    $routes->get('safety', 'SafetyController::index');
+    $routes->post('safety/addExtinguisher', 'SafetyController::addExtinguisher');
+    $routes->get('safety/guard-dashboard', 'SafetyController::guardDashboard');
+    $routes->get('safety/keylogs', 'SafetyController::keylogs');
+
+    $routes->get('aircon', 'AirconController::index');
+    $routes->post('aircon/add', 'AirconController::add');
+
+    $routes->get('guard/keylogs', 'GuardController::keylogs');
+    $routes->post('guard/keyborrow', 'GuardController::keyBorrow');
+    $routes->post('guard/keyreturn/(:num)', 'GuardController::keyReturn/$1');
+
+    $routes->get('notifications', 'NotificationController::index');
+    $routes->post('notifications/markAllRead', 'NotificationController::markAllRead');
+    $routes->post('notifications/markRead/(:num)', 'NotificationController::markRead/$1');
+    $routes->post('notifications/dismiss/(:num)', 'NotificationController::dismiss/$1');
+    $routes->post('notifications/action/(:num)', 'NotificationController::action/$1');
+    $routes->get('notifications/unreadCount', 'NotificationController::unreadCount');
+
+    $routes->get('profile', 'ProfileController::index');
+    $routes->post('profile/updateProfile', 'ProfileController::updateProfile');
+    $routes->post('profile/changePassword', 'ProfileController::changePassword');
+  });
+});
+
 /*
  * --------------------------------------------------------------------
  * Additional Routing

@@ -30,6 +30,14 @@ class PersonnelModel extends Model
         return $this->like('position', 'Driver')->findAll();
     }
 
+    public function getByEmpId(?string $empId)
+    {
+        if ($empId === null || trim($empId) === '') {
+            return null;
+        }
+        return $this->where('emp_id', trim($empId))->first();
+    }
+
     public function isEmpIdTaken($empId, $excludeId = null)
     {
         $builder = $this->where('emp_id', $empId);

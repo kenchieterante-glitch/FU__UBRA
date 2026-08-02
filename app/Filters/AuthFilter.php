@@ -51,8 +51,7 @@ class AuthFilter implements FilterInterface
         }
 
         if (!$session->get('isLoggedIn')) {
-            return redirect()->to('/login')
-                ->with('error', 'Please log in to access this page.');
+            return redirect()->to('/login');
         }
 
         return;
