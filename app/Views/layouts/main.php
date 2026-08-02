@@ -46,11 +46,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FU_UBRA | <?= esc($title ?? 'Dashboard') ?></title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Helvetica+Neue&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <meta name="csrf-token-name" content="<?= esc(csrf_token(), 'attr') ?>">
+  <meta name="csrf-token-value" content="<?= esc(csrf_hash(), 'attr') ?>">
+  <meta name="csrf-header-name" content="<?= esc(csrf_header(), 'attr') ?>">
+  <link rel="stylesheet" href="<?= base_url('fonts/bebas-neue/bebas-neue.css') ?>">
+  <link rel="stylesheet" href="<?= base_url('icons/fontawesome/css/all.min.css') ?>">
+  <link rel="stylesheet" href="<?= base_url('icons/bootstrap-icons/bootstrap-icons.css') ?>">
   <link rel="stylesheet" href="<?= base_url('Assets/css/base.css') ?>">
   <?php if (!empty($pageCss)): ?><link rel="stylesheet" href="<?= base_url('Assets/css/'.$pageCss) ?>"><?php endif; ?>
   <?php if (!empty($logoAsset)): ?><link rel="icon" href="<?= esc($logoAsset) ?>">
@@ -162,13 +163,15 @@
 </div>
 
 <script>
-// CSRF helper for fetch()-based POST calls. The token cookie is re-issued by
-// the server after every validated request, so this must read document.cookie
-// fresh on each call rather than caching the value at page load.
+// CSRF helper for fetch()-based POST calls. The token is session-backed
+// (not cookie-based) and rendered into a <meta> tag at page load — it can't
+// be read from document.cookie, since the session cookie itself is HttpOnly
+// (as it should be, to keep it safe from XSS) and was never meant to hold
+// the CSRF value in the first place.
 function csrfHeaders(extra) {
-  const match = document.cookie.match('(^|;)\\s*<?= esc(config('Security')->cookieName, 'js') ?>\\s*=\\s*([^;]+)');
-  const token = match ? decodeURIComponent(match.pop()) : '';
-  return Object.assign({}, extra || {}, { '<?= esc(config('Security')->headerName, 'js') ?>': token });
+  const headerName = document.querySelector('meta[name="csrf-header-name"]')?.content || '';
+  const token = document.querySelector('meta[name="csrf-token-value"]')?.content || '';
+  return Object.assign({}, extra || {}, { [headerName]: token });
 }
 
 // Sidebar toggle function

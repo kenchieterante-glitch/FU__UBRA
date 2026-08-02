@@ -6,8 +6,10 @@ $coverage_total = $coverage_total ?? 0;
 $coverage_attention = $coverage_attention ?? 0;
 $coverage_refill = $coverage_refill ?? 0;
 $inspection_readiness = $inspection_readiness ?? 0;
-$areas_json = $areas_json ?? '{}';
 $fe_registry_json = $fe_registry_json ?? '[]';
+$aircon_registry_json = $aircon_registry_json ?? '[]';
+$aircon_total = $aircon_total ?? 0;
+$aircon_attention = $aircon_attention ?? 0;
 ?>
 
 <link rel="stylesheet" href="<?= base_url('Assets/css/safety.css') ?>">
@@ -18,13 +20,6 @@ $fe_registry_json = $fe_registry_json ?? '[]';
       <h1><?= esc($title) ?></h1>
       <p class="page-subtitle">Campus fire safety coverage and inspection readiness at a glance.</p>
     </div>
-  </div>
-
-  <div class="sub-tabs">
-    <div class="sub-tab-spacer"></div>
-    <button class="btn-report" onclick="openReportModal()">
-      <i class="bi bi-file-earmark-bar-graph-fill"></i> View Report
-    </button>
   </div>
 
   <div class="overview-grid">
@@ -50,8 +45,8 @@ $fe_registry_json = $fe_registry_json ?? '[]';
     </div>
     <div class="overview-card">
       <div class="card-title"><i class="bi bi-snow2"></i> Aircon</div>
-      <div class="card-value">Untracked</div>
-      <div class="card-sub">Aircon maintenance checklist — to be connected to the system soon</div>
+      <div class="card-value"><?= (int) $aircon_total ?> units</div>
+      <div class="card-sub"><?= (int) $aircon_attention ?> need attention</div>
     </div>
   </div>
 
@@ -98,7 +93,7 @@ $fe_registry_json = $fe_registry_json ?? '[]';
         <div class="dp-section-title"><i class="bi bi-building-check"></i> Buildings Check</div>
         <div class="dp-not-tracked">Not tracked yet — will be connected to the system soon.</div>
         <div class="dp-section-title"><i class="bi bi-snow2"></i> Aircon</div>
-        <div class="dp-not-tracked">Not tracked yet — will be connected to the system soon.</div>
+        <div id="dpAircon" class="dp-aircon"></div>
         <div class="dp-section-title"><i class="bi bi-clipboard2-check"></i> Inspection Checklist</div>
         <div id="dpChecklist" class="dp-checklist"></div>
         <div class="dp-section-title"><i class="bi bi-person-badge"></i> Assigned Inspector</div>
@@ -109,142 +104,17 @@ $fe_registry_json = $fe_registry_json ?? '[]';
 
 </div>
 
-<!-- ── MODALS ───────────────────────────────────────────────────────── -->
-<div id="reportModal" class="sj-modal-overlay" style="display:none">
-  <div class="sj-modal">
-    <div class="sj-modal-header">
-      <h3><i class="bi bi-file-earmark-bar-graph-fill"></i> Safety Inspection Report</h3>
-      <button onclick="closeModal('reportModal')"><i class="bi bi-x-lg"></i></button>
-    </div>
-    <div class="sj-modal-body">
-      <div class="report-filters">
-        <div class="rf-group"><label>View By</label>
-          <select id="rptView">
-            <option>Day</option>
-            <option>Month</option>
-            <option>Year</option>
-          </select>
-        </div>
-        <div class="rf-group"><label>Date</label>
-          <input type="date" id="rptDate" value="<?= date('Y-m-d') ?>">
-        </div>
-        <div class="rf-group"><label>Building</label>
-          <select id="rptBuilding">
-            <option value="">All</option>
-            <option>Admin Building</option>
-            <option>Library</option>
-            <option>Science Building</option>
-            <option>Gymnasium</option>
-            <option>Canteen</option>
-            <option>Engineering</option>
-            <option>CCS Building</option>
-            <option>Clinic</option>
-          </select>
-        </div>
-        <button class="btn-maroon-sm" onclick="generateReport()"><i class="bi bi-search"></i> Generate</button>
-      </div>
-      <div id="reportOutput" class="report-output">
-        <div class="report-empty">Select filters and click Generate to view report.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
+<!-- Report modal removed; reporting now lives in Records, Archiving & Reports -->
 <!-- Keyscan modal removed; Keylogs moved to Safety -> Keylogs page -->
 
 <script>
-  // AREAS and feRegistry come straight from the database (fire_extinguishers) —
-  // see SafetyController::index(). No hardcoded demo values.
-  const AREAS = <?= $areas_json ?>;
+  // feRegistry and airconRegistry come straight from the database
+  // (fire_extinguishers / aircon_units) — see SafetyController::index().
+  // Aircon units are registered from the mobile app; this just displays them.
   let feRegistry = <?= $fe_registry_json ?>;
+  let airconRegistry = <?= $aircon_registry_json ?>;
 
   // Keylogs and Guard data moved to separate Safety pages (sidebar)
-
-  function drillDown(areaKey) {
-    const area = AREAS[areaKey];
-    if (!area) return;
-
-    document.querySelectorAll('.campus-area').forEach(g => g.classList.remove('area-selected'));
-    const el = document.getElementById('area-' + areaKey);
-    if (el) el.classList.add('area-selected');
-
-    document.getElementById('mapLayout').classList.add('drilled');
-
-    const units = feRegistry.filter(u => u.loc === area.name);
-    const missing = units.some(u => u.status === 'Missing');
-
-    document.getElementById('dpTitle').textContent = area.name;
-    document.getElementById('dpSub').textContent = missing ? '⚠ Missing Fire Extinguisher Detected' : 'Fire Extinguisher Status';
-
-    const areaStatus = getAreaStatus({
-      areaKey
-    });
-    const drillPanelEl = document.getElementById('drillPanel');
-    drillPanelEl.classList.remove('st-warning', 'st-new', 'st-expires', 'st-normal');
-    drillPanelEl.classList.add(`st-${areaStatus}`);
-
-    const today = new Date();
-    let feHtml = '';
-    units.forEach(u => {
-      const daysLeft = Math.ceil((new Date(u.nextDue) - today) / 86400000);
-      const urgency = daysLeft < 0 ? 'fe-urgent' : daysLeft < 30 ? 'fe-warn' : 'fe-ok';
-      const age = today.getFullYear() - u.year;
-      feHtml += `
-    <div class="fe-card ${urgency}">
-      <div class="fec-id">${u.id}</div>
-      <div class="fec-status status-${u.status.toLowerCase().replace(' ','')}">
-        ${u.status === 'New' ? '🟢' : u.status === 'Refillable' ? '🟠' : '⚫'} ${u.status}
-      </div>
-      <div class="fec-row"><span>Type</span><strong>${u.type}</strong></div>
-      <div class="fec-row"><span>Installed</span><strong>${u.year}</strong></div>
-      <div class="fec-row"><span>Weight</span><strong>${u.kg} kg</strong></div>
-      <div class="fec-row"><span>Installed by</span><strong>${u.inspector}</strong></div>
-      <div class="fec-row"><span>Assigned Guard</span><strong>${u.assigned}</strong></div>
-      <div class="fec-row"><span>Last Insp.</span><strong>${u.lastInsp}</strong></div>
-      <div class="fec-row"><span>Next Due</span><strong class="${daysLeft<0?'text-danger':daysLeft<30?'text-warn':''}">${u.nextDue} (${daysLeft<0?'OVERDUE':daysLeft+'d'})</strong></div>
-    </div>`;
-    });
-    document.getElementById('dpFeGrid').innerHTML = feHtml || '<div class="no-data">No units registered for this area.</div>';
-
-    let alertHtml = '';
-    units.forEach(u => {
-      const d = Math.ceil((new Date(u.nextDue) - today) / 86400000);
-      if (d < 0) alertHtml += `<div class="dp-alert-item urgent"><i class="bi bi-exclamation-octagon-fill"></i> <strong>${u.id}</strong> — OVERDUE by ${Math.abs(d)} days. Immediate action required.</div>`;
-      else if (d < 30) alertHtml += `<div class="dp-alert-item warn"><i class="bi bi-exclamation-triangle-fill"></i> <strong>${u.id}</strong> — Inspection due in ${d} days (${u.nextDue}).</div>`;
-    });
-    if (missing) alertHtml += `<div class="dp-alert-item urgent"><i class="bi bi-fire"></i> Missing fire extinguisher slot detected — Admin has been notified.</div>`;
-    document.getElementById('dpAlerts').innerHTML = alertHtml || '<div class="no-alert">No alerts for this area.</div>';
-
-    const checklists = {
-      all: ['Inspect pressure gauge', 'Check for physical damage', 'Verify pin and seal intact', 'Check weight (kg)', 'Record inspection date', 'Update digital registry', 'Confirm location accessibility']
-    };
-    let clHtml = '';
-    checklists.all.forEach((item, i) => {
-      const done = i < 5;
-      clHtml += `<label class="cl-item ${done?'done':''}"><input type="checkbox" ${done?'checked':''} onchange="logCheck(this,'${areaKey}','${item}')"> ${item}</label>`;
-    });
-    document.getElementById('dpChecklist').innerHTML = clHtml;
-
-    const inspector = units[0]?.inspector || '—';
-    const assigned = units[0]?.assigned || '—';
-    document.getElementById('dpInspector').innerHTML = `
-    <div class="inspector-card">
-      <div class="insp-av st-${areaStatus}">${inspector.charAt(0)}</div>
-      <div>
-        <div class="insp-name">${inspector}</div>
-        <div class="insp-role">Safety Inspector</div>
-        <div class="insp-meta"><i class="bi bi-person-badge"></i> ${assigned} &nbsp;|&nbsp; <i class="bi bi-calendar3"></i> ${new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})} &nbsp;|&nbsp; <i class="bi bi-clock"></i> ${new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}</div>
-      </div>
-    </div>`;
-
-    if (missing) {
-      const alertBanner = document.getElementById('missingAlert');
-      document.getElementById('missingAlertMsg').textContent = `⚠ Missing fire extinguisher detected in ${area.name}. Admin notified.`;
-      alertBanner.style.display = 'flex';
-    }
-
-    document.getElementById('drillPanel').style.display = 'block';
-  }
 
   function selectMapBuilding(el) {
     document.querySelectorAll('#campusSVG .campus-area').forEach(g => g.classList.remove('area-selected'));
@@ -252,8 +122,7 @@ $fe_registry_json = $fe_registry_json ?? '[]';
 
     const name = el.getAttribute('data-name') || el.id || 'Campus area';
     const category = el.getAttribute('data-cat') || 'Campus zone';
-    const areaKey = el.getAttribute('data-area-key');
-    const area = areaKey ? AREAS[areaKey] : {
+    const area = {
       name
     };
 
@@ -312,7 +181,7 @@ $fe_registry_json = $fe_registry_json ?? '[]';
       let clHtml = '';
       checklists.all.forEach((item, i) => {
         const done = i < 5;
-        clHtml += `<label class="cl-item ${done?'done':''}"><input type="checkbox" ${done?'checked':''} onchange="logCheck(this,'${areaKey}','${item}')"> ${item}</label>`;
+        clHtml += `<label class="cl-item ${done?'done':''}"><input type="checkbox" ${done?'checked':''} onchange="logCheck(this,'${name}','${item}')"> ${item}</label>`;
       });
       document.getElementById('dpChecklist').innerHTML = clHtml;
 
@@ -329,6 +198,8 @@ $fe_registry_json = $fe_registry_json ?? '[]';
       </div>`;
     }
 
+    renderAircon(area.name);
+
     if (missing) {
       const alertBanner = document.getElementById('missingAlert');
       document.getElementById('missingAlertMsg').textContent = `⚠ Missing fire extinguisher detected in ${area.name}. Admin notified.`;
@@ -336,6 +207,39 @@ $fe_registry_json = $fe_registry_json ?? '[]';
     }
 
     document.getElementById('drillPanel').style.display = 'block';
+  }
+
+  // Renders whichever aircon unit is registered for this building — same
+  // shape as the mobile app's SafetyScreen "Aircon checklist" section, since
+  // both read from the same aircon_units / aircon_checklist_items tables.
+  function renderAircon(buildingName) {
+    const unit = airconRegistry.find(u => u.loc === buildingName);
+    const target = document.getElementById('dpAircon');
+
+    if (!unit) {
+      target.innerHTML = `<div class="no-data">No aircon unit recorded for this building yet.</div>`;
+      return;
+    }
+
+    const conditionOk = unit.condition === 'Operational';
+    const done = unit.checklist.filter(t => t.done).length;
+    const total = unit.checklist.length;
+
+    target.innerHTML = `
+      <div class="fe-card ${conditionOk ? 'fe-ok' : 'fe-warn'}">
+        <div class="fec-id">${esc(unit.unit)}</div>
+        <div class="fec-status status-${unit.condition.toLowerCase().replace(/ /g,'')}">${conditionOk ? '🟢' : '🟠'} ${esc(unit.condition)}</div>
+        <div class="fec-row"><span>Last Cleaning</span><strong>${unit.lastClean || '—'}</strong></div>
+        <div class="fec-row"><span>Next Schedule</span><strong>${unit.nextDue || '—'}</strong></div>
+        <div class="fec-row"><span>Assigned Tech</span><strong>${esc(unit.tech)}</strong></div>
+        <div class="fec-row"><span>Checklist</span><strong>${done}/${total} done</strong></div>
+      </div>`;
+  }
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = String(s ?? '');
+    return d.innerHTML;
   }
 
   const mapBuildings = [{
@@ -424,8 +328,7 @@ $fe_registry_json = $fe_registry_json ?? '[]';
       w: 131,
       h: 72,
       hasExt: true,
-      circle: false,
-      areaKey: 'library'
+      circle: false
     },
     {
       n: 9,
@@ -580,8 +483,7 @@ $fe_registry_json = $fe_registry_json ?? '[]';
       w: 144,
       h: 103,
       hasExt: true,
-      circle: false,
-      areaKey: 'admin'
+      circle: false
     },
     {
       n: 24,
@@ -679,11 +581,9 @@ $fe_registry_json = $fe_registry_json ?? '[]';
   // fire_extinguishers rows, so the map badge and the Critical Alerts count
   // (computed the same way, below) can never disagree.
   function getAreaStatus(building) {
-    const areaKey = building?.areaKey;
-    const area = areaKey ? AREAS[areaKey] : null;
-    if (!area) return 'normal';
+    if (!building?.name) return 'normal';
 
-    const units = feRegistry.filter(u => u.loc === area.name);
+    const units = feRegistry.filter(u => u.loc === building.name);
     if (units.length === 0) return 'normal';
 
     const today = new Date();
@@ -722,7 +622,6 @@ $fe_registry_json = $fe_registry_json ?? '[]';
     const areaStatus = getAreaStatus(b);
     if (areaStatus) shape.classList.add(`area-${areaStatus}`);
     if (b.id) shape.setAttribute('id', b.id);
-    if (b.areaKey) shape.setAttribute('data-area-key', b.areaKey);
     shape.setAttribute('data-name', b.name);
     shape.setAttribute('data-cat', b.cat);
     shape.setAttribute('aria-label', b.name);
@@ -814,7 +713,7 @@ $fe_registry_json = $fe_registry_json ?? '[]';
   // Critical Alerts stat card — counts the SAME buildings just colored "warning"
   // above, using the same getAreaStatus() call, so the number always matches
   // exactly what's flagged red on the map.
-  const criticalAreas = mapBuildings.filter(b => b.areaKey && getAreaStatus(b) === 'warning');
+  const criticalAreas = mapBuildings.filter(b => getAreaStatus(b) === 'warning');
   document.getElementById('criticalAlertsValue').textContent = `${criticalAreas.length} active`;
   document.getElementById('criticalAlertsSub').textContent = criticalAreas.length ?
     `Attention needed: ${criticalAreas.map(b => b.name).join(', ')}` :
@@ -850,57 +749,7 @@ $fe_registry_json = $fe_registry_json ?? '[]';
 
 
   // Keylogs and Guard dashboard scripts removed; functionality moved to dedicated pages
-
-  function openReportModal() {
-    document.getElementById('reportModal').style.display = 'flex';
-  }
-
-  function generateReport() {
-    const bldg = document.getElementById('rptBuilding').value;
-    const date = document.getElementById('rptDate').value;
-    const view = document.getElementById('rptView').value;
-    const today = new Date();
-
-    const filtered = feRegistry.filter(u => !bldg || u.loc === bldg);
-    const overdue = filtered.filter(u => new Date(u.nextDue) < today);
-    const soon = filtered.filter(u => {
-      const d = Math.ceil((new Date(u.nextDue) - today) / 86400000);
-      return d >= 0 && d < 30;
-    });
-
-    let html = `
-  <div class="rpt-header">
-    <div><h3>Safety Inspection Report</h3><p>${bldg||'All Buildings'} — ${view}: ${date}</p></div>
-    <div class="rpt-summary">
-      <span class="rpt-stat"><i class="bi bi-fire"></i> ${filtered.length} Units</span>
-      <span class="rpt-stat danger"><i class="bi bi-exclamation-octagon"></i> ${overdue.length} Overdue</span>
-      <span class="rpt-stat warn"><i class="bi bi-clock"></i> ${soon.length} Due Soon</span>
-    </div>
-  </div>
-  <table class="sj-table" style="font-size:.78rem">
-    <thead><tr><th>Unit ID</th><th>Type</th><th>Location</th><th>Weight</th><th>Status</th><th>Last Insp.</th><th>Next Due</th><th>Inspector</th><th>Assigned Guard</th></tr></thead>
-    <tbody>${filtered.map(u=>{
-      const d = Math.ceil((new Date(u.nextDue)-today)/86400000);
-      return `<tr>
-        <td><strong>${u.id}</strong></td><td>${u.type}</td><td>${u.loc}</td><td>${u.kg}kg</td>
-        <td><span class="fe-status-badge st-${u.status.toLowerCase().replace(' ','')}">${u.status}</span></td>
-        <td>${u.lastInsp}</td>
-        <td class="${d<0?'text-danger':d<30?'text-warn':''}">${u.nextDue}</td>
-        <td>${u.inspector}</td><td>${u.assigned}</td>
-      </tr>`;
-    }).join('')}</tbody>
-  </table>`;
-    document.getElementById('reportOutput').innerHTML = html;
-  }
-
-  function closeModal(id) {
-    document.getElementById(id).style.display = 'none';
-  }
-  document.querySelectorAll('.sj-modal-overlay').forEach(o => {
-    o.addEventListener('click', e => {
-      if (e.target === o) o.style.display = 'none';
-    });
-  });
+  // Report generation removed; reporting now lives in Records, Archiving & Reports
 
   function showToast(msg, isError = false) {
     const t = document.createElement('div');

@@ -838,6 +838,12 @@
     color: var(--danger);
 }
 
+.field-hint {
+    font-size: .74rem;
+    color: var(--text-muted);
+    margin: .35rem 0 0;
+}
+
 .btn-cancel {
     background: var(--surface-alt, #f8f4f4);
     border: 1.5px solid var(--border);
