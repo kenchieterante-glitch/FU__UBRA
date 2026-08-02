@@ -15,7 +15,14 @@ class Security extends BaseConfig
      *
      * @var string 'cookie' or 'session'
      */
-    public string $csrfProtection = 'cookie';
+    // 'session' rather than 'cookie': the cookie method requires JS to read the
+    // token straight out of document.cookie for fetch()-based POSTs (see
+    // csrfHeaders() in layouts/main.php) — but the app's cookie config keeps
+    // HttpOnly=true (correctly, for the real session cookie's sake), which
+    // silently made that token unreadable and every fetch() POST across the
+    // app fail CSRF validation. 'session' keeps the token server-side and lets
+    // it be rendered into the page via csrf_hash() instead.
+    public string $csrfProtection = 'session';
 
     /**
      * --------------------------------------------------------------------------

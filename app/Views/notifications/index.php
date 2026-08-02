@@ -103,6 +103,9 @@ $draft_count = $draft_count ?? 0;
                                     <option value="Janitorial Assignment"> Janitorial Assignment</option>
                                     <option value="Inventory Low Stock"> Inventory Low Stock</option>
                                     <option value="Vehicle Expiry">🗓 Vehicle Expiry</option>
+                                    <option value="Fire Extinguisher Installed"> Fire Extinguisher Installed</option>
+                                    <option value="Cleaning Scheduled"> Cleaning Scheduled</option>
+                                    <option value="Urgent Cleaning Scheduled"> Urgent Cleaning Scheduled</option>
                                 </select>
                             </div>
                             <div class="filter-row">
@@ -155,6 +158,9 @@ $draft_count = $draft_count ?? 0;
                                     'Janitorial Assignment' => 'bi-brush',
                                     'Inventory Low Stock'   => 'bi-box-seam',
                                     'Vehicle Expiry'        => 'bi-card-checklist',
+                                    'Fire Extinguisher Installed' => 'bi-fire',
+                                    'Cleaning Scheduled'          => 'bi-brush',
+                                    'Urgent Cleaning Scheduled'   => 'bi-exclamation-triangle',
                                     default                 => 'bi-bell',
                                 };
                             ?>
@@ -192,6 +198,9 @@ $draft_count = $draft_count ?? 0;
                                         'Janitorial Assignment' => ['label' => 'Reassign','value' => 'assigned'],
                                         'Inventory Low Stock'   => ['label' => 'Order',   'value' => 'ordered'],
                                         'Vehicle Expiry'        => ['label' => 'Review',  'value' => 'reviewed'],
+                                        'Fire Extinguisher Installed' => ['label' => 'Verify', 'value' => 'verified'],
+                                        'Cleaning Scheduled'          => ['label' => 'Assign', 'value' => 'assigned'],
+                                        'Urgent Cleaning Scheduled'   => ['label' => 'Assign', 'value' => 'assigned'],
                                         default                 => ['label' => 'Acknowledge', 'value' => 'acknowledged'],
                                     };
                                     ?>
@@ -260,6 +269,7 @@ window.addEventListener('click', function (e) {
 
 // ── Action button (Verify / Notify / Assign / Order …) ────────
 function doAction(id, action, btn) {
+    const originalLabel = btn.textContent;
     btn.disabled = true;
     btn.textContent = '…';
 
@@ -267,20 +277,27 @@ function doAction(id, action, btn) {
     fd.append('action', action);
 
     fetch(ACTION_URL + id, { method: 'POST', headers: csrfHeaders(), body: fd })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) {
-                const row = btn.closest('tr');
-                // Mark row read visually
-                row.classList.remove('row-unread');
-                row.classList.add('row-read');
-                row.dataset.read = 'read';
-                // Replace button with Done chip
-                btn.outerHTML = '<span class="action-done"><i class="bi bi-check-circle-fill"></i> Done</span>';
-                decrementUnread();
-            }
+        .then(r => {
+            if (!r.ok) throw new Error('Request failed (' + r.status + ')');
+            return r.json();
         })
-        .catch(() => { btn.disabled = false; btn.textContent = 'Retry'; });
+        .then(res => {
+            if (!res.success) throw new Error(res.message || 'Action was not confirmed by the server.');
+
+            const row = btn.closest('tr');
+            // Mark row read visually
+            row.classList.remove('row-unread');
+            row.classList.add('row-read');
+            row.dataset.read = 'read';
+            // Replace button with Done chip
+            btn.outerHTML = '<span class="action-done"><i class="bi bi-check-circle-fill"></i> Done</span>';
+            decrementUnread();
+        })
+        .catch(() => {
+            btn.disabled = false;
+            btn.textContent = originalLabel;
+            showToast('Could not complete that action. Please try again.', true);
+        });
 }
 
 // ── Row click → mark read ──────────────────────────────────────
@@ -311,10 +328,10 @@ function decrementUnread() {
 
 function generateWeeklySummary() { showToast('Weekly summary is being compiled…'); }
 
-function showToast(msg) {
+function showToast(msg, isError = false) {
     const t = document.createElement('div');
-    t.className = 'notif-toast';
-    t.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${msg}`;
+    t.className = 'notif-toast' + (isError ? ' toast-error' : '');
+    t.innerHTML = `<i class="bi bi-${isError ? 'exclamation-triangle' : 'check-circle'}-fill"></i> ${msg}`;
     document.body.appendChild(t);
     setTimeout(() => t.classList.add('toast-show'), 10);
     setTimeout(() => { t.classList.remove('toast-show'); setTimeout(() => t.remove(), 400); }, 3500);

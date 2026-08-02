@@ -102,7 +102,9 @@ $routes->post('janitorial/addInventoryItem',       'JanitorialController::addInv
 // ============================================================
 // CALENDAR
 // ============================================================
-$routes->get('calendar', 'CalendarController::index');
+$routes->get ('calendar',                   'CalendarController::index');
+$routes->post('calendar/scheduleCleaning',  'CalendarController::scheduleCleaning');
+$routes->post('calendar/scheduleMaintenance','CalendarController::scheduleMaintenance');
 
 // ============================================================
 // NOTIFICATIONS
@@ -181,6 +183,8 @@ $routes->group('api', function ($routes) {
 
     $routes->get('safety/buildings', 'Api::safetyBuildings');
     $routes->get('safety/aircon', 'Api::safetyAircon');
+    $routes->post('safety/aircon', 'Api::saveAirconUnit');
+    $routes->post('safety/aircon/checklist/(:num)', 'Api::saveAirconChecklist/$1');
     $routes->post('safety/fire-extinguishers', 'Api::saveExtinguisher');
 
     $routes->get('janitorial/zones', 'Api::janitorialZones');
@@ -191,6 +195,10 @@ $routes->group('api', function ($routes) {
     $routes->post('guard/keylog/scan-borrow', 'Api::guardScanBorrow');
     $routes->post('guard/keylog/scan-return', 'Api::guardScanReturn');
     $routes->get('guard/trip-tickets/today', 'Api::guardTripTicketsToday');
+
+    $routes->get('notifications', 'Api::notifications');
+    $routes->get('notifications/unread-count', 'Api::notificationsUnreadCount');
+    $routes->post('notifications/(:num)/mark-read', 'Api::markNotificationRead/$1');
 });
 
 // ============================================================

@@ -12,9 +12,11 @@ use App\Models\DepartmentModel;
 use App\Models\TravelRequestModel;
 use App\Models\FireExtinguisherModel;
 use App\Models\AirconUnitModel;
+use App\Models\AirconChecklistItemModel;
 use App\Models\JanitorialAssignmentModel;
 use App\Models\JanitorialTaskModel;
 use App\Models\KeyBorrowLogModel;
+use App\Models\NotificationModel;
 
 /**
  * JSON API layer for the FU-UBRA Expo mobile app — wired to the same tables/Models
@@ -23,18 +25,38 @@ use App\Models\KeyBorrowLogModel;
  */
 class Api extends BaseController
 {
-    // Friendly building name <-> campus-map slug, same mapping used by
-    // SafetyController/JanitorialController so mobile and web agree on zones.
+    // Real campus building name <-> slug, matching the actual evacuation-map
+    // layout rendered on the web dashboard's Safety Maintenance page (same
+    // 28 buildings, same names) so mobile and web always agree on zones.
     private const ZONE_SLUGS = [
-        'Admin Building'    => 'admin',
-        'Library'           => 'library',
-        'Science Building'  => 'science',
-        'Gymnasium'         => 'gym',
-        'Canteen'           => 'canteen',
-        'Engineering'       => 'engr',
-        'CCS Building'      => 'ccs',
-        'Clinic'            => 'clinic',
-        'Guard House'       => 'guard-post',
+        'Main entrance gate'                                    => 'main-entrance-gate',
+        'University cafeteria / bookstore / sewing'              => 'cafeteria',
+        'College of Law building'                                => 'law',
+        'College of Agriculture and SIE'                         => 'agriculture',
+        'Museo de Vicente'                                       => 'museo-de-vicente',
+        'Bunk house'                                             => 'bunk-house',
+        'Service / exit gate'                                    => 'service-gate',
+        'University library'                                     => 'library',
+        'Electric pump house'                                    => 'electric-pump',
+        'Executive house'                                        => 'executive-house',
+        'Water pump'                                             => 'water-pump',
+        'Guest house'                                            => 'guest-house',
+        'HRM kitchen'                                            => 'hrm-kitchen',
+        'College of Education building'                          => 'education',
+        'Animation Lab / ROTC office'                            => 'animation-rotc',
+        'LG Sinco Computer Center building'                      => 'lg-sinco-computer-center',
+        'Sofia Soller Sinco Hall'                                => 'sofia-soller-sinco-hall',
+        'College of Art & Sciences building'                     => 'art-sciences',
+        'Art & Science laboratories / audio visual rooms'        => 'art-science-labs',
+        'College of Business Economics and Accountancy'          => 'business-economics',
+        'College of Nursing'                                     => 'nursing',
+        'Administration building'                                => 'admin',
+        'Rizal monument / social garden'                         => 'rizal-monument',
+        "Registrar's office"                                     => 'registrar',
+        'Business and Finance office'                            => 'business-finance',
+        'Old College of Industrial Engineering and Technology'   => 'old-cie',
+        'Overhead water supply tank'                             => 'water-tank',
+        'Flag pole'                                              => 'flag-pole',
     ];
 
     // ---------- AUTH ----------
@@ -90,17 +112,52 @@ class Api extends BaseController
     private function buildAuthPayload(array $user, string $fallbackId): array
     {
         // TODO: generate a real signed token (e.g. firebase/php-jwt) instead of this placeholder
-        $token = bin2hex(random_bytes(24));
+        $token      = bin2hex(random_bytes(24));
+        $employeeId = $user['emp_id'] ?? $fallbackId;
+
+        // Persist token -> employee_id so later requests (e.g. saveExtinguisher)
+        // can identify who's logged in from the Authorization header alone,
+        // instead of trusting whatever the client happens to put in the body.
+        cache()->save('api_token_' . $token, $employeeId, 60 * 60 * 24 * 30);
 
         return [
             'token' => $token,
             'user' => [
                 'name'        => $user['full_name'] ?? $user['emp_id'] ?? 'User',
-                'employee_id' => $user['emp_id'] ?? $fallbackId,
+                'employee_id' => $employeeId,
                 'department'  => $user['department'] ?? '',
                 'role'        => $user['role'] ?? null,
                 'is_guard'    => strtolower((string) ($user['role'] ?? '')) === 'guard',
             ],
+        ];
+    }
+
+    // Resolves the currently-authenticated employee from the Authorization:
+    // Bearer <token> header issued by login()/scanLogin(). This is the
+    // authoritative source for "who is doing this action" on write endpoints
+    // — falls back to null if no valid/known token was sent.
+    private function currentApiUser(): ?array
+    {
+        $header = $this->request->getHeaderLine('Authorization');
+        if (empty($header) || stripos($header, 'Bearer ') !== 0) {
+            return null;
+        }
+
+        $token      = trim(substr($header, 7));
+        $employeeId = $token !== '' ? cache()->get('api_token_' . $token) : null;
+        if (empty($employeeId)) {
+            return null;
+        }
+
+        $userModel = new UserModel();
+        $user      = $userModel->getByEmployeeId($employeeId);
+        if (!$user) {
+            return null;
+        }
+
+        return [
+            'name'        => $user['full_name'] ?? $employeeId,
+            'employee_id' => $user['emp_id'] ?? $employeeId,
         ];
     }
 
@@ -400,15 +457,92 @@ class Api extends BaseController
             return $this->response->setJSON(['unit' => null]);
         }
 
+        $checklistModel = new AirconChecklistItemModel();
+        $tasks = $checklistModel->getForUnit((int) $unit['id']);
+
         return $this->response->setJSON([
             'unit' => [
+                'id'             => (int) $unit['id'],
                 'unit'           => $unit['unit_name'],
                 'location'       => $unit['location'],
                 'last_cleaning'  => $unit['last_cleaning'],
                 'next_schedule'  => $unit['next_schedule'],
                 'condition'      => $unit['condition_status'],
                 'assigned_tech'  => $unit['assigned_tech'],
+                'checklist'      => array_map(fn($t) => [
+                    'id'   => $t['id'],
+                    'task' => $t['task_name'],
+                    'done' => (bool) $t['is_done'],
+                    'time' => $t['completed_at'] ? date('h:i A', strtotime($t['completed_at'])) : null,
+                ], $tasks),
             ],
+        ]);
+    }
+
+    // Registers a new aircon unit for a building (there was previously no way
+    // to add one — only to read one that already existed) and seeds it with
+    // a standard maintenance checklist.
+    public function saveAirconUnit()
+    {
+        $data = $this->request->getJSON(true) ?? [];
+        $slug = trim((string) ($data['building'] ?? ''));
+        $locationName = array_search($slug, self::ZONE_SLUGS, true);
+
+        if (!$locationName) {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'Unknown building.']);
+        }
+
+        $unitName = trim((string) ($data['unit_name'] ?? ''));
+        if ($unitName === '') {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'Unit name/model is required.']);
+        }
+
+        $model = new AirconUnitModel();
+        $id = $model->insert([
+            'location'          => $locationName,
+            'unit_name'         => $unitName,
+            'last_cleaning'     => $data['last_cleaning'] ?: null,
+            'next_schedule'     => $data['next_schedule'] ?: null,
+            'condition_status'  => $data['condition'] ?: 'Operational',
+            'assigned_tech'     => $data['assigned_tech'] ?: null,
+        ]);
+
+        (new AirconChecklistItemModel())->seedDefaultTasks((int) $id);
+
+        (new NotificationModel())->insert([
+            'category'    => 'Aircon Unit Registered',
+            'description' => "New aircon unit ({$unitName}) registered at {$locationName}.",
+            'recipient'   => 'Maintenance Team',
+            'priority'    => 'ROUTINE',
+            'status'      => 'Pending',
+            'is_read'     => 0,
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        return $this->response->setJSON(['message' => 'Aircon unit saved', 'id' => $id]);
+    }
+
+    public function saveAirconChecklist($unitId)
+    {
+        $data = $this->request->getJSON(true) ?? [];
+        $checklistModel = new AirconChecklistItemModel();
+
+        foreach (($data['tasks'] ?? []) as $t) {
+            if (empty($t['id'])) continue;
+            $checklistModel->update($t['id'], [
+                'is_done'      => !empty($t['done']) ? 1 : 0,
+                'completed_at' => !empty($t['done']) ? date('Y-m-d H:i:s') : null,
+            ]);
+        }
+
+        $tasks = $checklistModel->getForUnit((int) $unitId);
+
+        return $this->response->setJSON([
+            'message'   => "Aircon checklist for unit {$unitId} saved",
+            'checklist' => array_map(fn($t) => [
+                'id' => $t['id'], 'task' => $t['task_name'], 'done' => (bool) $t['is_done'],
+                'time' => $t['completed_at'] ? date('h:i A', strtotime($t['completed_at'])) : null,
+            ], $tasks),
         ]);
     }
 
@@ -426,16 +560,44 @@ class Api extends BaseController
             $unitCode = 'FE-' . strtoupper(bin2hex(random_bytes(3)));
         }
 
+        // "Installed by" reflects whoever is logged in when this unit is saved.
+        // Priority: the Authorization: Bearer token issued at login (authoritative —
+        // can't be spoofed by just editing the request body), then whatever the
+        // client explicitly sent in the body, then the web session as a last resort
+        // for browser-based testing.
+        $apiUser = $this->currentApiUser();
+        $installedByName = trim((string) ($apiUser['name'] ?? $data['installed_by'] ?? $data['employee_name'] ?? session()->get('full_name') ?? ''));
+        $installedById    = trim((string) ($apiUser['employee_id'] ?? $data['employee_id'] ?? session()->get('emp_id') ?? ''));
+        $inspector = $installedByName !== '' ? $installedByName : ($installedById !== '' ? $installedById : null);
+
+        $type = in_array($data['type'] ?? '', ['CO2', 'Dry Chemical', 'Wet Chemical', 'Foam'], true) ? $data['type'] : 'Dry Chemical';
+
         $id = $model->insert([
             'unit_id'         => $unitCode,
-            'type'            => in_array($data['type'] ?? '', ['CO2', 'Dry Chemical', 'Wet Chemical', 'Foam'], true) ? $data['type'] : 'Dry Chemical',
+            'type'            => $type,
             'location'        => $locationName,
             'weight_kg'       => (float) ($data['kg'] ?? 6.0),
             'last_inspection' => $data['inspected'] ?: null,
             'next_due'        => $data['expiry'] ?: null,
             'status'          => 'New',
             'year_acquired'   => $data['installed'] ? date('Y', strtotime($data['installed'])) : date('Y'),
+            'inspector'       => $inspector,
             'notes'           => $data['notes'] ?? null,
+        ]);
+
+        // Surface every newly-installed unit on the Notification Center, same
+        // as any other operational alert — so Safety/Ops sees it without
+        // having to go check the map themselves.
+        $locationText = $locationName !== '' ? $locationName : 'an unspecified building';
+        $byText       = $inspector !== null ? " by {$inspector}" : '';
+        (new NotificationModel())->insert([
+            'category'    => 'Fire Extinguisher Installed',
+            'description' => "New {$type} fire extinguisher ({$unitCode}) installed at {$locationText}{$byText}.",
+            'recipient'   => 'Safety Team',
+            'priority'    => 'ROUTINE',
+            'status'      => 'Pending',
+            'is_read'     => 0,
+            'created_at'  => date('Y-m-d H:i:s'),
         ]);
 
         return $this->response->setJSON(['message' => 'Fire extinguisher record saved', 'id' => $id, 'unit_id' => $unitCode]);
@@ -613,5 +775,37 @@ class Api extends BaseController
                 ];
             }, $rows),
         ]);
+    }
+
+    // ---------- NOTIFICATIONS ----------
+
+    public function notifications()
+    {
+        $model = new NotificationModel();
+        $rows  = $model->getAllSorted();
+
+        return $this->response->setJSON([
+            'notifications' => array_map(fn($n) => [
+                'id'          => (int) $n['id'],
+                'category'    => $n['category'],
+                'description' => $n['description'],
+                'priority'    => $n['priority'],
+                'status'      => $n['status'],
+                'is_read'     => (bool) $n['is_read'],
+                'created_at'  => $n['created_at'],
+            ], $rows),
+            'unread_count' => $model->getUnreadCount(),
+        ]);
+    }
+
+    public function notificationsUnreadCount()
+    {
+        return $this->response->setJSON(['count' => (new NotificationModel())->getUnreadCount()]);
+    }
+
+    public function markNotificationRead($id)
+    {
+        (new NotificationModel())->update($id, ['is_read' => 1, 'read_at' => date('Y-m-d H:i:s')]);
+        return $this->response->setJSON(['message' => 'Notification marked as read']);
     }
 }

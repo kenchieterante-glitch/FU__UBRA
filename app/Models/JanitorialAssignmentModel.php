@@ -9,7 +9,7 @@ class JanitorialAssignmentModel extends Model
     protected $useTimestamps = false;
     protected $allowedFields = [
         'staff_name', 'assigned_zone', 'shift_start', 'shift_end',
-        'date_assigned', 'status',
+        'date_assigned', 'status', 'priority',
     ];
 
     public function getTodayAssignments()

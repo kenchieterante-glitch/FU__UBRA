@@ -12,17 +12,22 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>FU_UBRA | <?= esc($title ?? 'Login') ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?= base_url('fonts/bebas-neue/bebas-neue.css') ?>">
     <style>
         body {
             margin: 0;
             min-height: 100vh;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             font-weight: 400;
-            background: linear-gradient(135deg, #f7f1f1 0%, #f0e2e2 100%);
             color: #333;
+            background-color: #2a1414;
+            background-image:
+                linear-gradient(135deg, rgba(40, 10, 10, .55) 0%, rgba(20, 5, 5, .6) 100%),
+                url('<?= base_url('images/' . rawurlencode('BnG background.jpg')) ?>');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
 
         .auth-shell {
@@ -38,7 +43,7 @@
             max-width: 420px;
             background: #fff;
             border-radius: 14px;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
             padding: 30px;
         }
 

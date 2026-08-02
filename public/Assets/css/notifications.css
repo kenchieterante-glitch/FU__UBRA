@@ -216,6 +216,13 @@
     overflow: hidden;
 }
 
+/* The filter popup is an absolutely-positioned child that needs to escape
+   the panel's rounded-corner clipping while it's open, without permanently
+   removing that clipping (which keeps the table header's corners rounded). */
+.table-panel:has(.filter-popup.visible) {
+    overflow: visible;
+}
+
 .table-toolbar {
     padding: .85rem 1rem;
     border-bottom: 1px solid var(--border);
@@ -683,5 +690,9 @@ td .pri-critical {
 .notif-toast.toast-show {
     opacity: 1;
     transform: translateY(0);
+}
+
+.notif-toast.toast-error {
+    background: var(--danger, #b3261e);
 }
 

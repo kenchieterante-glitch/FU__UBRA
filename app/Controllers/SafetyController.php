@@ -4,31 +4,24 @@ namespace App\Controllers;
 
 use App\Models\FireExtinguisherModel;
 use App\Models\KeyBorrowLogModel;
+use App\Models\AirconUnitModel;
+use App\Models\AirconChecklistItemModel;
 
 class SafetyController extends BaseController
 {
     protected $session;
     protected $fireExtinguisherModel;
     protected $keyBorrowLogModel;
-
-    // Maps each real fire-extinguisher location onto the fixed slug used by the campus map SVG.
-    private const ZONE_SLUGS = [
-        'Admin Building'    => 'admin',
-        'Library'           => 'library',
-        'Science Building'  => 'science',
-        'Gymnasium'         => 'gym',
-        'Canteen'           => 'canteen',
-        'Engineering'       => 'engr',
-        'CCS Building'      => 'ccs',
-        'Clinic'            => 'clinic',
-        'Guard House'       => 'guard-post',
-    ];
+    protected $airconUnitModel;
+    protected $airconChecklistModel;
 
     public function __construct()
     {
         $this->session = \Config\Services::session();
         $this->fireExtinguisherModel = new FireExtinguisherModel();
         $this->keyBorrowLogModel = new KeyBorrowLogModel();
+        $this->airconUnitModel = new AirconUnitModel();
+        $this->airconChecklistModel = new AirconChecklistItemModel();
     }
 
     public function index()
@@ -56,20 +49,44 @@ class SafetyController extends BaseController
             'assigned'  => $u['assigned_guard'] ?? '—',
         ], $units);
 
-        $areas = [];
-        foreach (self::ZONE_SLUGS as $locationName => $slug) {
-            $areas[$slug] = ['name' => $locationName];
-        }
+        // Aircon units are registered from the mobile app (scan a building,
+        // register its unit) — this just displays what's already there,
+        // same read-only relationship the web side has with fire extinguishers.
+        $airconUnits = $this->airconUnitModel->findAll();
+        $airconNeedsAttention = count(array_filter($airconUnits, fn($u) =>
+            $u['condition_status'] !== 'Operational'
+            || (!empty($u['next_schedule']) && $u['next_schedule'] < $today)
+        ));
+
+        $airconRegistry = array_map(function ($u) {
+            $tasks = $this->airconChecklistModel->getForUnit((int) $u['id']);
+            return [
+                'id'        => (int) $u['id'],
+                'unit'      => $u['unit_name'],
+                'loc'       => $u['location'],
+                'condition' => $u['condition_status'],
+                'lastClean' => $u['last_cleaning'],
+                'nextDue'   => $u['next_schedule'],
+                'tech'      => $u['assigned_tech'] ?? '—',
+                'checklist' => array_map(fn($t) => [
+                    'id'   => $t['id'],
+                    'task' => $t['task_name'],
+                    'done' => (bool) $t['is_done'],
+                ], $tasks),
+            ];
+        }, $airconUnits);
 
         return view('safety/index', [
             'title' => 'Safety Maintenance',
             'openModule' => 'safety',
             'fe_registry_json' => $this->jsonForScript($feRegistry),
-            'areas_json'       => $this->jsonForScript($areas),
             'coverage_total'      => count($units),
             'coverage_attention'  => $needsAttention,
             'coverage_refill'     => $dueForRefill,
             'inspection_readiness' => $readiness,
+            'aircon_registry_json' => $this->jsonForScript($airconRegistry),
+            'aircon_total'         => count($airconUnits),
+            'aircon_attention'     => $airconNeedsAttention,
         ]);
     }
 

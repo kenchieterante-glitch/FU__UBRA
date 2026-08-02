@@ -34,6 +34,8 @@
         <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Inspection</span>
         <span class="legend-item"><span class="legend-dot" style="background:#7c3aed"></span> Maintenance</span>
         <span class="legend-item"><span class="legend-dot" style="background:#2563eb"></span> Compliance</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#16a34a"></span> Cleaning</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#dc2626"></span> Urgent Cleaning</span>
     </div>
 
     <!-- ── MAIN LAYOUT ───────────────────────────────────────────── -->
@@ -159,12 +161,64 @@
                 </div>
                 <div class="form-group">
                     <label>Type</label>
-                    <select id="evtType">
+                    <select id="evtType" onchange="toggleCleaningZone()">
                         <option value="Inspection">Inspection</option>
                         <option value="Maintenance">Maintenance</option>
                         <option value="Compliance">Compliance</option>
+                        <option value="Cleaning">Cleaning</option>
+                        <option value="Urgent Cleaning">Urgent Cleaning</option>
                     </select>
                 </div>
+            </div>
+            <div class="form-group" id="evtZoneGroup" style="display:none;">
+                <label>Building / Zone <span class="req">*</span></label>
+                <select id="evtZone">
+                    <option value="">— Select building —</option>
+                    <option>Admin Building</option>
+                    <option>Library</option>
+                    <option>Science Building</option>
+                    <option>Gymnasium</option>
+                    <option>Canteen</option>
+                    <option>Engineering</option>
+                    <option>CCS Building</option>
+                    <option>Clinic</option>
+                </select>
+                <p class="field-hint">Schedules a real Janitorial Monitoring assignment for this zone and notifies the Janitorial account.</p>
+            </div>
+            <div class="form-group" id="evtMaintZoneGroup" style="display:none;">
+                <label>Building <span class="req">*</span></label>
+                <select id="evtMaintZone">
+                    <option value="">— Select building —</option>
+                    <option>Main entrance gate</option>
+                    <option>University cafeteria / bookstore / sewing</option>
+                    <option>College of Law building</option>
+                    <option>College of Agriculture and SIE</option>
+                    <option>Museo de Vicente</option>
+                    <option>Bunk house</option>
+                    <option>Service / exit gate</option>
+                    <option>University library</option>
+                    <option>Electric pump house</option>
+                    <option>Executive house</option>
+                    <option>Water pump</option>
+                    <option>Guest house</option>
+                    <option>HRM kitchen</option>
+                    <option>College of Education building</option>
+                    <option>Animation Lab / ROTC office</option>
+                    <option>LG Sinco Computer Center building</option>
+                    <option>Sofia Soller Sinco Hall</option>
+                    <option>College of Art & Sciences building</option>
+                    <option>Art & Science laboratories / audio visual rooms</option>
+                    <option>College of Business Economics and Accountancy</option>
+                    <option>College of Nursing</option>
+                    <option>Administration building</option>
+                    <option>Rizal monument / social garden</option>
+                    <option>Registrar's office</option>
+                    <option>Business and Finance office</option>
+                    <option>Old College of Industrial Engineering and Technology</option>
+                    <option>Overhead water supply tank</option>
+                    <option>Flag pole</option>
+                </select>
+                <p class="field-hint">Logs a real Safety work order for this building and notifies the Maintenance Team.</p>
             </div>
             <div class="form-group">
                 <label>Notes</label>
@@ -190,9 +244,11 @@ const localEvents = [];
 
 // Type → color map
 const typeColors = {
-    Inspection:  '#f59e0b',
-    Maintenance: '#7c3aed',
-    Compliance:  '#2563eb',
+    Inspection:      '#f59e0b',
+    Maintenance:     '#7c3aed',
+    Compliance:      '#2563eb',
+    Cleaning:        '#16a34a',
+    'Urgent Cleaning': '#dc2626',
 };
 
 // ── FullCalendar init ──────────────────────────────────────────
@@ -255,16 +311,28 @@ function openEventDetail(event) {
     document.getElementById('edpMeta').innerHTML = `
         <div class="edp-row"><span>Date</span><strong>${start}</strong></div>
         <div class="edp-row"><span>Time</span><strong>${time}</strong></div>
-        ${p.requester ? `<div class="edp-row"><span>Requester</span><strong>${esc(p.requester)}</strong></div>` : ''}
-        ${p.driver    ? `<div class="edp-row"><span>Driver</span><strong>${esc(p.driver)}</strong></div>` : ''}
-        ${p.vehicle   ? `<div class="edp-row"><span>Vehicle</span><strong>${esc(p.vehicle.trim())}</strong></div>` : ''}
-        ${p.purpose   ? `<div class="edp-row full"><span>Purpose</span><strong>${esc(p.purpose)}</strong></div>` : ''}
+        ${p.requester  ? `<div class="edp-row"><span>Requester</span><strong>${esc(p.requester)}</strong></div>` : ''}
+        ${p.driver     ? `<div class="edp-row"><span>Driver</span><strong>${esc(p.driver)}</strong></div>` : ''}
+        ${p.vehicle    ? `<div class="edp-row"><span>Vehicle</span><strong>${esc(p.vehicle.trim())}</strong></div>` : ''}
+        ${p.purpose    ? `<div class="edp-row full"><span>Purpose</span><strong>${esc(p.purpose)}</strong></div>` : ''}
+        ${p.zone       ? `<div class="edp-row"><span>Zone</span><strong>${esc(p.zone)}</strong></div>` : ''}
+        ${p.assignedTo ? `<div class="edp-row"><span>Assigned To</span><strong>${esc(p.assignedTo)}</strong></div>` : ''}
     `;
 
     document.getElementById('eventDetailPanel').style.display = 'block';
 }
 
-// ── Add local event ────────────────────────────────────────────
+// Cleaning / Urgent Cleaning need a real building/zone (they create a real
+// Janitorial assignment); Maintenance needs a real building too (it creates a
+// real Safety work order) — so each field only appears/is required for its type.
+function toggleCleaningZone() {
+    const type = document.getElementById('evtType').value;
+    const isCleaning = type === 'Cleaning' || type === 'Urgent Cleaning';
+    document.getElementById('evtZoneGroup').style.display = isCleaning ? 'block' : 'none';
+    document.getElementById('evtMaintZoneGroup').style.display = type === 'Maintenance' ? 'block' : 'none';
+}
+
+// ── Add event ─────────────────────────────────────────────────
 function addLocalEvent() {
     const title = document.getElementById('evtTitle').value.trim();
     const date  = document.getElementById('evtDate').value;
@@ -272,6 +340,16 @@ function addLocalEvent() {
     const notes = document.getElementById('evtNotes').value.trim();
 
     if (!title || !date) { showToast('Title and date are required.', true); return; }
+
+    if (type === 'Cleaning' || type === 'Urgent Cleaning') {
+        scheduleCleaning(type === 'Urgent Cleaning', date, notes);
+        return;
+    }
+
+    if (type === 'Maintenance') {
+        scheduleMaintenance(date, title, notes);
+        return;
+    }
 
     const color = typeColors[type] || '#7B0D0D';
     window._cal.addEvent({
@@ -287,6 +365,57 @@ function addLocalEvent() {
     closeAddModal();
     document.getElementById('evtTitle').value = '';
     document.getElementById('evtNotes').value = '';
+}
+
+// Persists a real Janitorial Monitoring assignment for the chosen zone/date
+// and notifies the Janitorial account — not just a calendar-only note.
+function scheduleCleaning(urgent, date, notes) {
+    const zone = document.getElementById('evtZone').value;
+    if (!zone) { showToast('Select a building/zone for the cleaning schedule.', true); return; }
+
+    fetch('<?= base_url('calendar/scheduleCleaning') ?>', {
+        method: 'POST',
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ zone, date, urgent, notes }),
+    })
+        .then(r => r.json().then(body => ({ ok: r.ok, body })))
+        .then(({ ok, body }) => {
+            if (!ok || !body.success) throw new Error(body.message || 'Could not schedule cleaning.');
+
+            window._cal.addEvent(body.event);
+            showToast(body.message);
+            closeAddModal();
+            document.getElementById('evtTitle').value = '';
+            document.getElementById('evtNotes').value = '';
+            document.getElementById('evtZone').value = '';
+        })
+        .catch(err => showToast(err.message, true));
+}
+
+// Persists a real Safety work order for the chosen building/date and notifies
+// the Maintenance Team — not just a calendar-only note.
+function scheduleMaintenance(date, issue, notes) {
+    const location = document.getElementById('evtMaintZone').value;
+    if (!location) { showToast('Select a building for the maintenance work order.', true); return; }
+    if (!issue) { showToast('Event title is used as the work order description — please enter one.', true); return; }
+
+    fetch('<?= base_url('calendar/scheduleMaintenance') ?>', {
+        method: 'POST',
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ location, date, issue, notes }),
+    })
+        .then(r => r.json().then(body => ({ ok: r.ok, body })))
+        .then(({ ok, body }) => {
+            if (!ok || !body.success) throw new Error(body.message || 'Could not log maintenance work order.');
+
+            window._cal.addEvent(body.event);
+            showToast(body.message);
+            closeAddModal();
+            document.getElementById('evtTitle').value = '';
+            document.getElementById('evtNotes').value = '';
+            document.getElementById('evtMaintZone').value = '';
+        })
+        .catch(err => showToast(err.message, true));
 }
 
 function openAddModalOnDate(dateStr) {
