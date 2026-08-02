@@ -20,7 +20,7 @@ class AuthFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         $session = session();
-        $currentPath = trim($request->getUri()->getPath(), '/');
+        $currentPath = trim($request->getPath(), '/');
 
         if ($currentPath === '' || $currentPath === 'login') {
             if ($session->get('isLoggedIn')) {
