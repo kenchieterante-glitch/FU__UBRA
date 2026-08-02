@@ -165,6 +165,7 @@ $routes->post('profile/updateSettings',   'ProfileController::updateSettings');
 // ============================================================
 $routes->group('api', function ($routes) {
     $routes->post('auth/login', 'Api::login');
+    $routes->post('auth/scan-login', 'Api::scanLogin');
 
     $routes->get('tools', 'Api::tools');
     $routes->get('tools/categories', 'Api::toolCategories');

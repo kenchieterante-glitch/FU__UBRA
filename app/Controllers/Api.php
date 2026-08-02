@@ -62,19 +62,46 @@ class Api extends BaseController
             return $this->response->setStatusCode(401)->setJSON(['message' => 'Invalid credentials']);
         }
 
+        return $this->response->setJSON($this->buildAuthPayload($user, $employeeId));
+    }
+
+    // Login by scanning the campus ID card's barcode instead of typing a
+    // password — the scanned code is looked up the same way as the manual
+    // employee-ID field (emp_id / employee_id / username).
+    public function scanLogin()
+    {
+        $body = $this->request->getJSON(true) ?? [];
+        $code = trim((string) ($body['code'] ?? ''));
+
+        if ($code === '') {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'No code scanned.']);
+        }
+
+        $userModel = new UserModel();
+        $user      = $userModel->getByEmployeeId($code);
+
+        if (!$user) {
+            return $this->response->setStatusCode(401)->setJSON(['message' => 'ID not recognized. Please sign in manually.']);
+        }
+
+        return $this->response->setJSON($this->buildAuthPayload($user, $code));
+    }
+
+    private function buildAuthPayload(array $user, string $fallbackId): array
+    {
         // TODO: generate a real signed token (e.g. firebase/php-jwt) instead of this placeholder
         $token = bin2hex(random_bytes(24));
 
-        return $this->response->setJSON([
+        return [
             'token' => $token,
             'user' => [
                 'name'        => $user['full_name'] ?? $user['emp_id'] ?? 'User',
-                'employee_id' => $user['emp_id'] ?? $employeeId,
+                'employee_id' => $user['emp_id'] ?? $fallbackId,
                 'department'  => $user['department'] ?? '',
                 'role'        => $user['role'] ?? null,
                 'is_guard'    => strtolower((string) ($user['role'] ?? '')) === 'guard',
             ],
-        ]);
+        ];
     }
 
     // ---------- TOOLS ----------
