@@ -100,6 +100,7 @@ class Dashboard extends BaseController
                     'sub' => 'Waiting on approval',
                     'tone' => 'tone-gold',
                     'icon' => 'fa-clipboard-list',
+                    'url' => 'tools',
                 ],
                 [
                     'label' => 'Active Borrowings',
@@ -108,6 +109,7 @@ class Dashboard extends BaseController
                     'sub' => 'Tracked across campus',
                     'tone' => 'tone-neutral',
                     'icon' => 'fa-hand-holding',
+                    'url' => 'tools',
                 ],
                 [
                     'label' => 'Vehicles in Use',
@@ -116,6 +118,7 @@ class Dashboard extends BaseController
                     'sub' => 'Dispatch coverage',
                     'tone' => 'tone-neutral',
                     'icon' => 'fa-truck',
+                    'url' => 'vehicles',
                 ],
                 [
                     'label' => 'Maintenance Due',
@@ -124,6 +127,7 @@ class Dashboard extends BaseController
                     'sub' => 'Immediate attention',
                     'tone' => 'tone-red',
                     'icon' => 'fa-screwdriver-wrench',
+                    'url' => 'safety',
                 ],
                 [
                     'label' => 'Cleaning Completion',
@@ -132,6 +136,7 @@ class Dashboard extends BaseController
                     'sub' => 'As of ' . date('g:i A'),
                     'tone' => 'tone-green',
                     'icon' => 'fa-broom',
+                    'url' => 'janitorial',
                 ],
             ],
             'alerts' => [
@@ -141,6 +146,7 @@ class Dashboard extends BaseController
                     'title' => "{$overdueFe} overdue maintenance tasks",
                     'subtitle' => 'Fire extinguisher inspections past due',
                     'time' => 'Today',
+                    'url' => 'safety',
                 ],
                 [
                     'icon' => 'fa-hourglass-half',
@@ -148,6 +154,7 @@ class Dashboard extends BaseController
                     'title' => "{$borrowedTools} tools currently borrowed",
                     'subtitle' => 'Tracked in Tools Management',
                     'time' => 'Today',
+                    'url' => 'tools',
                 ],
                 [
                     'icon' => 'fa-circle-exclamation',
@@ -155,6 +162,7 @@ class Dashboard extends BaseController
                     'title' => ($totalZones - $cleanedZones) . ' janitorial zones not yet complete',
                     'subtitle' => 'Janitorial Monitoring',
                     'time' => 'Today',
+                    'url' => 'janitorial',
                 ],
                 [
                     'icon' => 'fa-hourglass-half',
@@ -162,6 +170,7 @@ class Dashboard extends BaseController
                     'title' => "{$openWorkOrders} maintenance work orders open",
                     'subtitle' => 'Safety Maintenance',
                     'time' => 'This week',
+                    'url' => 'safety',
                 ],
             ],
             'activity' => $activity,

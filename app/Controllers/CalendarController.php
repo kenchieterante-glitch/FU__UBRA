@@ -179,7 +179,7 @@ class CalendarController extends BaseController
             $a['id'],
             $a['assigned_zone'],
             $a['date_assigned'],
-            $a['priority'] === 'Urgent',
+            ($a['priority'] ?? null) === 'Urgent',
             $a['staff_name']
         ), (new JanitorialAssignmentModel())->findAll());
 

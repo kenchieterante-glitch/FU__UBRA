@@ -4,6 +4,7 @@
   $kpis = $kpis ?? [];
   $alerts = $alerts ?? [];
   $activity = $activity ?? [];
+  $quickAccess = $quickAccess ?? [];
 ?>
 
 <div class="groundworks-shell">
@@ -15,7 +16,7 @@
 
   <section class="kpi-grid" aria-label="Key performance indicators">
     <?php foreach ($kpis as $kpi): ?>
-      <article class="kpi-card <?= esc($kpi['tone'] ?? 'tone-neutral') ?>">
+      <a class="kpi-card <?= esc($kpi['tone'] ?? 'tone-neutral') ?>" href="<?= esc(site_url($kpi['url'] ?? '#')) ?>">
         <div class="kpi-top">
           <span class="kpi-icon"><i class="fa-solid <?= esc($kpi['icon']) ?>"></i></span>
           <span class="kpi-label"><?= esc($kpi['label']) ?></span>
@@ -23,9 +24,20 @@
         <div class="kpi-value"><?= esc($kpi['value']) ?></div>
         <div class="kpi-meta"><?= esc($kpi['meta']) ?></div>
         <div class="kpi-sub"><?= esc($kpi['sub']) ?></div>
-      </article>
+      </a>
     <?php endforeach; ?>
   </section>
+
+  <?php if ($quickAccess): ?>
+    <section class="quick-access-row" aria-label="Quick access">
+      <?php foreach ($quickAccess as $q): ?>
+        <a class="quick-access-chip" href="<?= esc(site_url($q['url'])) ?>">
+          <i class="fa-solid <?= esc($q['icon']) ?>"></i>
+          <span><?= esc($q['label']) ?></span>
+        </a>
+      <?php endforeach; ?>
+    </section>
+  <?php endif; ?>
 
   <div class="lower-grid">
     <section class="panel-card alerts-panel" aria-label="Alerts">
@@ -35,14 +47,14 @@
       </div>
       <div class="alert-list">
         <?php foreach ($alerts as $alert): ?>
-          <div class="alert-item">
+          <a class="alert-item" href="<?= esc(site_url($alert['url'] ?? '#')) ?>">
             <span class="alert-icon <?= esc($alert['tone']) ?>"><i class="fa-solid <?= esc($alert['icon']) ?>"></i></span>
             <div class="alert-copy">
               <div class="alert-title"><?= esc($alert['title']) ?></div>
               <div class="alert-subtitle"><?= esc($alert['subtitle']) ?></div>
             </div>
             <div class="alert-time"><?= esc($alert['time']) ?></div>
-          </div>
+          </a>
         <?php endforeach; ?>
       </div>
     </section>

@@ -17,11 +17,14 @@ class PersonnelModel extends Model
         return $this->like('position', $keyword)->findAll();
     }
 
-    public function getByEmpId($empId)
+    public function getByEmpId(?string $empId)
     {
+        if ($empId === null || trim($empId) === '') {
+            return null;
+        }
         return $this->select('personnel.*, departments.name as department_name')
                     ->join('departments', 'departments.id = personnel.department_id', 'left')
-                    ->where('personnel.emp_id', $empId)
+                    ->where('personnel.emp_id', trim($empId))
                     ->first();
     }
 
@@ -36,14 +39,6 @@ class PersonnelModel extends Model
     public function getDrivers()
     {
         return $this->like('position', 'Driver')->findAll();
-    }
-
-    public function getByEmpId(?string $empId)
-    {
-        if ($empId === null || trim($empId) === '') {
-            return null;
-        }
-        return $this->where('emp_id', trim($empId))->first();
     }
 
     public function isEmpIdTaken($empId, $excludeId = null)
