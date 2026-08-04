@@ -179,7 +179,31 @@ class TravelController extends BaseController
             ]);
         }
 
-        return redirect()->to('/travel')->with('success', 'Trip approved.');
+        // Whichever driver ends up assigned — just now, or already set when
+        // the ticket was created — gets notified the ticket is dispatched to
+        // them, and the admin sees a pop verification confirming it was sent.
+        $finalDriverId = $driverId ?: $trip['assigned_driver_id'];
+        $redirect = redirect()->to('/travel')->with('success', 'Trip approved.');
+
+        if ($finalDriverId && ($driver = $this->personnelModel->find($finalDriverId))) {
+            $this->notificationModel->insert([
+                'category'    => 'Trip Ticket Assignment',
+                'description' => "Trip ticket {$trip['trip_id']} to {$trip['destination']} on " . date('M j, Y', strtotime($trip['travel_date'])) . " has been assigned to you. Report to the gate for dispatch clearance.",
+                'recipient'   => $driver['full_name'],
+                'priority'    => 'MODERATE',
+                'status'      => 'Pending',
+                'is_read'     => 0,
+                'created_at'  => date('Y-m-d H:i:s'),
+            ]);
+
+            $redirect = $redirect->with('ticket_sent', [
+                'trip_id'     => $trip['trip_id'],
+                'driver'      => $driver['full_name'],
+                'destination' => $trip['destination'],
+            ]);
+        }
+
+        return $redirect;
     }
 
     public function reject($id)

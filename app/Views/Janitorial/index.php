@@ -611,7 +611,12 @@ function refillItem(i) {
   const fd = new FormData();
   fd.append('quantity', qty);
   fetch(`<?= base_url('janitorial/refillInventory/') ?>${item.id}`, { method: 'POST', headers: csrfHeaders(), body: fd })
-    .then(() => window.location.reload());
+    .then(r => {
+      if (!r.ok) throw new Error('Refill failed');
+      showToast(`"${item.name}" refilled successfully — added ${qty} ${item.unit || ''}.`);
+      setTimeout(() => window.location.reload(), 900);
+    })
+    .catch(() => showToast('Could not refill this item. Please try again.', true));
 }
 
 function saveInventoryItem() {

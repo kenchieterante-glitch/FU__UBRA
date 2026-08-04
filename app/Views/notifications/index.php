@@ -110,6 +110,7 @@ $draft_count = $draft_count ?? 0;
                                     <option value="Cleaning Scheduled"> Cleaning Scheduled</option>
                                     <option value="Urgent Cleaning Scheduled"> Urgent Cleaning Scheduled</option>
                                     <option value="Trip Ticket Request">🎫 Trip Ticket Request</option>
+                                    <option value="Trip Ticket Assignment">🚚 Trip Ticket Assignment</option>
                                 </select>
                             </div>
                             <div class="filter-row">
@@ -169,6 +170,7 @@ $draft_count = $draft_count ?? 0;
                                     'Cleaning Scheduled'          => 'bi-brush',
                                     'Urgent Cleaning Scheduled'   => 'bi-exclamation-triangle',
                                     'Trip Ticket Request'         => 'bi-ticket-perforated',
+                                    'Trip Ticket Assignment'      => 'bi-truck',
                                     default                 => 'bi-bell',
                                 };
                             ?>
@@ -448,6 +450,18 @@ function decrementUnread() {
     if (card) {
         const n = Math.max(0, parseInt(card.textContent) - 1);
         card.textContent = n;
+    }
+
+    // Keep the topbar bell badge (shared across every page, not just this
+    // one) in sync live — no full page reload needed to see it drop.
+    const bellBadge = document.getElementById('topbarBellBadge');
+    if (bellBadge) {
+        const next = Math.max(0, (parseInt(bellBadge.textContent) || 0) - 1);
+        if (next === 0) {
+            bellBadge.remove();
+        } else {
+            bellBadge.textContent = next > 99 ? '99+' : next;
+        }
     }
 }
 

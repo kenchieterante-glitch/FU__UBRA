@@ -327,6 +327,29 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
+     MODAL: TICKET SENT TO DRIVER (pop verification)
+════════════════════════════════════════════════════════════════ -->
+<?php $ticketSent = session()->getFlashdata('ticket_sent'); ?>
+<?php if (!empty($ticketSent)): ?>
+<div id="ticketSentModal" class="modal-overlay" style="display:flex;">
+    <div class="modal-box modal-sm" style="text-align:center;">
+        <div class="modal-body">
+            <div style="font-size:2.6rem;color:var(--success);margin-bottom:.5rem;"><i class="bi bi-send-check-fill"></i></div>
+            <h3 style="justify-content:center;">Trip Ticket Sent</h3>
+            <p class="approve-info">
+                <strong><?= esc($ticketSent['trip_id']) ?></strong> for <?= esc($ticketSent['destination']) ?>
+                has been sent to <strong><?= esc($ticketSent['driver']) ?></strong>.
+            </p>
+            <p class="ts-sub">They'll see it under their assigned trips and can report to the gate for dispatch clearance.</p>
+        </div>
+        <div class="modal-footer" style="justify-content:center;">
+            <button type="button" class="btn-submit" onclick="document.getElementById('ticketSentModal').style.display='none'"><i class="bi bi-check-lg"></i> Got it</button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- ═══════════════════════════════════════════════════════════════
      SCRIPTS
 ════════════════════════════════════════════════════════════════ -->
 <script>

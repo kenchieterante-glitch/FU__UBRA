@@ -169,7 +169,7 @@
         <a href="<?= base_url('notifications') ?>" class="icon-btn" title="Notifications">
           <i class="fa-regular fa-bell"></i>
           <?php if ($topbarUnreadCount > 0): ?>
-            <span class="badge-dot"><?= $topbarUnreadCount > 99 ? '99+' : (int) $topbarUnreadCount ?></span>
+            <span class="badge-dot" id="topbarBellBadge"><?= $topbarUnreadCount > 99 ? '99+' : (int) $topbarUnreadCount ?></span>
           <?php endif; ?>
         </a>
         <?php if (!empty($logoAsset)): ?>

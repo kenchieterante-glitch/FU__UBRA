@@ -14,6 +14,7 @@ class TravelModel extends Model
         'departure_time', 'return_time', 'department_id',
         'assigned_driver_id', 'assigned_vehicle_id', 'status',
         'check_in_time', 'check_out_time', 'last_activity_at',
+        'is_archived', 'archived_at',
     ];
 
     public function generateTripId(): string
