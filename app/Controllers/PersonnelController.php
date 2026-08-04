@@ -65,6 +65,7 @@ class PersonnelController extends BaseController
                                                   ->like('position', 'Janitor')
                                                   ->orLike('position', 'Cleaning')
                                                   ->groupEnd()
+                                                  ->where('is_archived', 0)
                                                   ->findAll() ?: [],
             'departments' => $this->departmentModel->findAll(),
         ], $this->getStatCounts());
@@ -113,8 +114,11 @@ class PersonnelController extends BaseController
         $data = array_merge([
             'title'       => 'Maintenance',
             'pageCss'     => 'personnel.css',
-            'personnel'   => $this->personnelModel->like('position', 'Maintenance')
-                                                  ->orLike('position', 'Physical Plant')
+            'personnel'   => $this->personnelModel->where('is_archived', 0)
+                                                  ->groupStart()
+                                                      ->like('position', 'Maintenance')
+                                                      ->orLike('position', 'Physical Plant')
+                                                  ->groupEnd()
                                                   ->findAll() ?: [],
             'departments' => $this->departmentModel->findAll(),
         ], $this->getStatCounts());
@@ -125,20 +129,24 @@ class PersonnelController extends BaseController
     private function getStatCounts(): array
     {
         return [
-            'total_personnel_count' => $this->personnelModel->countAllResults(),
-            'drivers_count'         => $this->personnelModel->like('position', 'Driver')->countAllResults(),
-            'janitors_count'        => $this->personnelModel->groupStart()
-                                                              ->like('position', 'Janitor')
-                                                              ->orLike('position', 'Cleaning')
+            'total_personnel_count' => $this->personnelModel->where('is_archived', 0)->countAllResults(),
+            'drivers_count'         => $this->personnelModel->where('is_archived', 0)->like('position', 'Driver')->countAllResults(),
+            'janitors_count'        => $this->personnelModel->where('is_archived', 0)
+                                                              ->groupStart()
+                                                                  ->like('position', 'Janitor')
+                                                                  ->orLike('position', 'Cleaning')
                                                               ->groupEnd()
                                                               ->countAllResults(),
-            'carpentries_count'     => $this->personnelModel->like('position', 'Carpenter')->countAllResults(),
-            'maintenance_count'     => $this->personnelModel->like('position', 'Maintenance')
-                                                              ->orLike('position', 'Physical Plant')
+            'carpentries_count'     => $this->personnelModel->where('is_archived', 0)->like('position', 'Carpenter')->countAllResults(),
+            'maintenance_count'     => $this->personnelModel->where('is_archived', 0)
+                                                              ->groupStart()
+                                                                  ->like('position', 'Maintenance')
+                                                                  ->orLike('position', 'Physical Plant')
+                                                              ->groupEnd()
                                                               ->countAllResults(),
-            'construction_count'    => $this->personnelModel->like('position', 'Construction')->countAllResults(),
-            'active_count'          => $this->personnelModel->where('status', 'Active')->countAllResults(),
-            'on_leave_count'        => $this->personnelModel->where('status', 'On Leave')->countAllResults(),
+            'construction_count'    => $this->personnelModel->where('is_archived', 0)->like('position', 'Construction')->countAllResults(),
+            'active_count'          => $this->personnelModel->where('is_archived', 0)->where('status', 'Active')->countAllResults(),
+            'on_leave_count'        => $this->personnelModel->where('is_archived', 0)->where('status', 'On Leave')->countAllResults(),
         ];
     }
 
@@ -200,12 +208,11 @@ class PersonnelController extends BaseController
     {
         if ($resp = $this->requireAdmin()) return $resp;
 
-        try {
-            $this->personnelModel->delete($id);
-        } catch (\CodeIgniter\Database\Exceptions\DatabaseException $e) {
-            return redirect()->to('/personnel')->with('error', 'This person is referenced by other records (e.g. trips or vehicle assignments) and cannot be deleted.');
-        }
+        $this->personnelModel->update($id, [
+            'is_archived' => 1,
+            'archived_at' => date('Y-m-d H:i:s'),
+        ]);
 
-        return redirect()->to('/personnel')->with('success', 'Personnel removed.');
+        return redirect()->to('/personnel')->with('success', 'Personnel archived.');
     }
 }

@@ -1,4 +1,12 @@
 <?php
+  // Appends the file's last-modified time as a query string, so the browser
+  // treats every edit as a brand-new URL and fetches it automatically on
+  // the next normal page load — no more manual hard refresh (Ctrl+Shift+R)
+  // needed to see CSS/JS changes.
+  function assetVer($relativePath) {
+      $full = FCPATH . ltrim($relativePath, '/');
+      return base_url($relativePath) . (file_exists($full) ? '?v=' . filemtime($full) : '');
+  }
   $currentUri = trim(uri_string(), '/');
   function navActive($seg){
       $uri = trim(uri_string(), '/');
@@ -19,6 +27,7 @@
   $fullName = session()->get('full_name') ?? 'System Admin';
   $role     = session()->get('role') ?? 'Operations';
   $initials = strtoupper(substr($fullName,0,1) . (strpos($fullName,' ') !== false ? substr($fullName, strpos($fullName,' ')+1,1) : ''));
+  $topbarUnreadCount = session()->get('isLoggedIn') ? (new \App\Models\NotificationModel())->getUnreadCount() : 0;
   $logoAsset = null;
   $logoCandidates = [
       FCPATH . 'uploads/logo.png',
@@ -49,11 +58,11 @@
   <meta name="csrf-token-name" content="<?= esc(csrf_token(), 'attr') ?>">
   <meta name="csrf-token-value" content="<?= esc(csrf_hash(), 'attr') ?>">
   <meta name="csrf-header-name" content="<?= esc(csrf_header(), 'attr') ?>">
-  <link rel="stylesheet" href="<?= base_url('fonts/bebas-neue/bebas-neue.css') ?>">
-  <link rel="stylesheet" href="<?= base_url('icons/fontawesome/css/all.min.css') ?>">
-  <link rel="stylesheet" href="<?= base_url('icons/bootstrap-icons/bootstrap-icons.css') ?>">
-  <link rel="stylesheet" href="<?= base_url('Assets/css/base.css') ?>">
-  <?php if (!empty($pageCss)): ?><link rel="stylesheet" href="<?= base_url('Assets/css/'.$pageCss) ?>"><?php endif; ?>
+  <link rel="stylesheet" href="<?= assetVer('fonts/bebas-neue/bebas-neue.css') ?>">
+  <link rel="stylesheet" href="<?= assetVer('icons/fontawesome/css/all.min.css') ?>">
+  <link rel="stylesheet" href="<?= assetVer('icons/bootstrap-icons/bootstrap-icons.css') ?>">
+  <link rel="stylesheet" href="<?= assetVer('Assets/css/base.css') ?>">
+  <?php if (!empty($pageCss)): ?><link rel="stylesheet" href="<?= assetVer('Assets/css/'.$pageCss) ?>"><?php endif; ?>
   <?php if (!empty($logoAsset)): ?><link rel="icon" href="<?= esc($logoAsset) ?>">
   <?php endif; ?>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -79,8 +88,8 @@
       <a href="<?= base_url('dashboard') ?>" class="<?= navActive('dashboard') ?>" data-tooltip="Dashboard"><i class="fa-solid fa-table-cells-large"></i> <span class="nav-label">Dashboard</span></a>
 
       <?php $isPersonnelSection = $currentUri === 'personnel' || strpos($currentUri, 'personnel/') === 0; ?>
-      <div class="nav-parent-group <?= $isPersonnelSection ? 'open' : '' ?>">
-        <a href="<?= base_url('personnel') ?>" class="nav-parent-link <?= $isPersonnelSection ? 'active open' : '' ?>" data-personnel-toggle data-tooltip="Personnel Management">
+      <div class="nav-parent-group">
+        <a href="<?= base_url('personnel') ?>" class="nav-parent-link <?= $isPersonnelSection ? 'active' : '' ?>" data-personnel-toggle data-tooltip="Personnel Management">
           <i class="fa-solid fa-users"></i>
           <span class="nav-label">Personnel Management</span>
           <i class="fa-solid fa-chevron-down nav-parent-caret"></i>
@@ -95,7 +104,7 @@
         </div>
       </div>
 
-      <?php $isVehicleSection = $currentUri === 'vehicles' || $currentUri === 'gps'; ?>
+      <?php $isVehicleSection = $currentUri === 'vehicles' || $currentUri === 'gps' || $currentUri === 'travel'; ?>
       <div class="nav-parent-group <?= $isVehicleSection ? 'open' : '' ?>">
         <a href="<?= base_url('vehicles') ?>" class="nav-parent-link <?= $isVehicleSection ? 'active open' : '' ?>" data-vehicle-toggle data-tooltip="Vehicle Management">
           <i class="fa-solid fa-truck"></i>
@@ -105,12 +114,28 @@
         <div class="nav-submenu" id="vehicle-submenu">
           <a href="<?= base_url('vehicles') ?>" class="<?= navActive('vehicles') ?>"><i class="fa-solid fa-truck"></i> <span class="nav-label">Vehicle Management</span></a>
           <a href="<?= base_url('gps') ?>" class="<?= navActive('gps') ?>"><i class="fa-solid fa-location-dot"></i> <span class="nav-label">GPS Tracker</span></a>
+          <a href="<?= base_url('travel') ?>" class="<?= navActive('travel') ?>"><i class="fa-solid fa-ticket"></i> <span class="nav-label">Trip Ticket</span></a>
         </div>
       </div>
 
-      <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>" data-tooltip="Tools Management"><i class="fa-solid fa-boxes-stacked"></i> <span class="nav-label">Tools Management</span></a>
+      <?php $isToolsSection = $currentUri === 'tools' || strpos($currentUri, 'tools/') === 0; ?>
+      <div class="nav-parent-group <?= $isToolsSection ? 'open' : '' ?>">
+        <a href="<?= base_url('tools') ?>" class="nav-parent-link <?= $isToolsSection ? 'active open' : '' ?>" data-tools-toggle data-tooltip="Tools Management">
+          <i class="fa-solid fa-boxes-stacked"></i>
+          <span class="nav-label">Tools Management</span>
+          <i class="fa-solid fa-chevron-down nav-parent-caret"></i>
+        </a>
+        <div class="nav-submenu" id="tools-submenu">
+          <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="fa-solid fa-boxes-stacked"></i> <span class="nav-label">All Tools</span></a>
+          <a href="<?= base_url('tools/electronic-devices') ?>" class="<?= navActive('tools/electronic-devices') ?>"><i class="fa-solid fa-laptop"></i> <span class="nav-label">Electronic Devices</span></a>
+          <a href="<?= base_url('tools/accessories') ?>" class="<?= navActive('tools/accessories') ?>"><i class="fa-solid fa-plug"></i> <span class="nav-label">Accessories</span></a>
+          <a href="<?= base_url('tools/equipment') ?>" class="<?= navActive('tools/equipment') ?>"><i class="fa-solid fa-toolbox"></i> <span class="nav-label">Tools Equipment</span></a>
+          <a href="<?= base_url('tools/consumable') ?>" class="<?= navActive('tools/consumable') ?>"><i class="fa-solid fa-box"></i> <span class="nav-label">Consumable</span></a>
+        </div>
+      </div>
 
-      <a href="<?= base_url('safety') ?>" class="<?= navActive('safety') ?>" data-tooltip="Safety Maintenance"><i class="fa-solid fa-hard-hat"></i> <span class="nav-label">Safety Maintenance</span></a>
+      <a href="<?= base_url('safety') ?>" class="<?= navActive('safety') ?>" data-tooltip="Maintenance"><i class="fa-solid fa-hard-hat"></i> <span class="nav-label">Maintenance</span></a>
+      <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>" data-tooltip="Guard Dashboard"><i class="fa-solid fa-user-shield"></i> <span class="nav-label">Guard Dashboard</span></a>
       <a href="<?= base_url('janitorial') ?>" class="<?= navActive('janitorial') ?>" data-tooltip="Janitorial Monitoring"><i class="fa-solid fa-broom"></i> <span class="nav-label">Janitorial Monitoring</span></a>
       <a href="<?= base_url('calendar') ?>" class="<?= navActive('calendar') ?>" data-tooltip="Calendar"><i class="fa-solid fa-calendar-days"></i> <span class="nav-label">Calendar</span></a>
       <a href="<?= base_url('notifications') ?>" class="<?= navActive('notifications') ?>" data-tooltip="Notifications"><i class="fa-solid fa-bell"></i> <span class="nav-label">Notifications</span></a>
@@ -141,7 +166,12 @@
       </div>
       <div class="topbar-right">
         <span class="date"><i class="fa-regular fa-calendar"></i> <?= date('l, F d, Y') ?></span>
-        <a href="<?= base_url('notifications') ?>" class="icon-btn"><i class="fa-regular fa-bell"></i></a>
+        <a href="<?= base_url('notifications') ?>" class="icon-btn" title="Notifications">
+          <i class="fa-regular fa-bell"></i>
+          <?php if ($topbarUnreadCount > 0): ?>
+            <span class="badge-dot"><?= $topbarUnreadCount > 99 ? '99+' : (int) $topbarUnreadCount ?></span>
+          <?php endif; ?>
+        </a>
         <?php if (!empty($logoAsset)): ?>
           <img class="topbar-logo" src="<?= esc($logoAsset) ?>" alt="System logo">
         <?php endif; ?>
@@ -230,11 +260,11 @@ const personnelLink = document.querySelector('[data-personnel-toggle]');
 const personnelGroup = personnelLink?.closest('.nav-parent-group');
 if (personnelLink && personnelGroup) {
   personnelLink.addEventListener('click', (event) => {
-    const currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
-    const isPersonnelRoute = currentPath === 'personnel' || currentPath.startsWith('personnel/');
+    // Only the caret toggles the submenu open/closed — clicking anywhere
+    // else on the row (or navigating to a page within this section) must
+    // never silently expand/collapse it on its own.
     const clickedCaret = event.target.closest('.nav-parent-caret');
-
-    if (clickedCaret || isPersonnelRoute) {
+    if (clickedCaret) {
       event.preventDefault();
       personnelGroup.classList.toggle('open');
       personnelLink.classList.toggle('open');
@@ -247,13 +277,29 @@ const vehicleGroup = vehicleLink?.closest('.nav-parent-group');
 if (vehicleLink && vehicleGroup) {
   vehicleLink.addEventListener('click', (event) => {
     const currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
-    const isVehicleRoute = currentPath === 'vehicles' || currentPath === 'gps';
+    const isVehicleRoute = currentPath === 'vehicles' || currentPath === 'gps' || currentPath === 'travel';
     const clickedCaret = event.target.closest('.nav-parent-caret');
 
     if (clickedCaret || isVehicleRoute) {
       event.preventDefault();
       vehicleGroup.classList.toggle('open');
       vehicleLink.classList.toggle('open');
+    }
+  });
+}
+
+const toolsLink = document.querySelector('[data-tools-toggle]');
+const toolsGroup = toolsLink?.closest('.nav-parent-group');
+if (toolsLink && toolsGroup) {
+  toolsLink.addEventListener('click', (event) => {
+    const currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
+    const isToolsRoute = currentPath === 'tools' || currentPath.startsWith('tools/');
+    const clickedCaret = event.target.closest('.nav-parent-caret');
+
+    if (clickedCaret || isToolsRoute) {
+      event.preventDefault();
+      toolsGroup.classList.toggle('open');
+      toolsLink.classList.toggle('open');
     }
   });
 }
@@ -268,4 +314,4 @@ if (safetyLink && safetyGroup) {
   });
 }
 </script>
-  <script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
+  <script src="<?= assetVer('assets/js/dashboard.js') ?>"></script>

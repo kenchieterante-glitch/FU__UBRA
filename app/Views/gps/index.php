@@ -11,7 +11,7 @@
   $vehicles = $vehicles ?? [];
 ?>
 
-<link rel="stylesheet" href="<?= base_url('Assets/css/gps.css') ?>">
+<link rel="stylesheet" href="<?= base_url('Assets/css/gps.css') . '?v=' . @filemtime(FCPATH.'Assets/css/gps.css') ?>">
 
 <div class="gps-wrapper">
 

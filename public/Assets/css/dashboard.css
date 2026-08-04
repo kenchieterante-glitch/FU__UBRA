@@ -91,34 +91,6 @@
     background: var(--green-tint);
 }
 
-.quick-access-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 12px;
-}
-
-.quick-access-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--ink-soft);
-    font-size: 13px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: box-shadow .15s ease, transform .15s ease;
-}
-
-.quick-access-chip:hover,
-.quick-access-chip:focus-visible {
-    box-shadow: 0 4px 14px rgba(0, 0, 0, .12);
-    transform: translateY(-2px);
-}
-
 .kpi-top {
     display: flex;
     align-items: center;
@@ -178,7 +150,61 @@
     font-size: 12px;
 }
 
-.board-list,
+.pending-panel {
+    margin-bottom: 18px;
+}
+
+.pending-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.pending-column h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 8px;
+}
+
+.pending-list {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.pending-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.pending-item span {
+    color: var(--ink-soft);
+}
+
+.overview-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--maroon);
+    text-decoration: none;
+}
+
+.no-data {
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding: 6px 0;
+}
+
 .alert-list,
 .activity-list,
 .quick-access-list {
@@ -186,37 +212,45 @@
     gap: 10px;
 }
 
-.board-row {
-    display: grid;
-    grid-template-columns: 46px minmax(0, 1fr) auto;
-    gap: 12px;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--line);
+.board-panel .table-wrap {
+    overflow-x: auto;
+    /* .panel-card is a column flexbox; flex items default to min-width:auto
+       (sized to their content), which lets a wide nowrap table push this
+       whole panel past the viewport instead of scrolling inside it. */
+    min-width: 0;
 }
 
-.board-row:last-child {
-    border-bottom: 0;
-    padding-bottom: 0;
+.board-panel .data-table {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    table-layout: fixed;
+    min-width: 760px;
 }
 
-.board-id {
+.board-panel .data-table th,
+.board-panel .data-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.board-panel .data-table th:nth-child(1), .board-panel .data-table td:nth-child(1) { width: 13%; } /* Trip ID */
+.board-panel .data-table th:nth-child(2), .board-panel .data-table td:nth-child(2) { width: 10%; } /* Date */
+.board-panel .data-table th:nth-child(3), .board-panel .data-table td:nth-child(3) { width: 14%; } /* Requester */
+.board-panel .data-table th:nth-child(4), .board-panel .data-table td:nth-child(4) { width: 16%; } /* Destination */
+.board-panel .data-table th:nth-child(5), .board-panel .data-table td:nth-child(5) { width: 14%; } /* Driver */
+.board-panel .data-table th:nth-child(6), .board-panel .data-table td:nth-child(6) { width: 14%; } /* Vehicle */
+.board-panel .data-table th:nth-child(7), .board-panel .data-table td:nth-child(7) { width: 10%; } /* Tire Pressure */
+.board-panel .data-table th:nth-child(8), .board-panel .data-table td:nth-child(8) { width: 9%;  } /* Status */
+
+.board-table-row {
+    cursor: pointer;
+}
+
+.mono {
+    font-family: 'Courier New', monospace;
     color: var(--maroon);
-    font-family: Georgia, serif;
     font-weight: 700;
-    font-size: 16px;
-}
-
-.board-name {
-    font-family: Georgia, serif;
-    font-size: 16px;
-    color: var(--ink);
-    margin-bottom: 2px;
-}
-
-.board-reason {
-    font-size: 12px;
-    color: var(--ink-soft);
 }
 
 .status-pill {
@@ -351,7 +385,6 @@
         grid-template-columns: 1fr;
     }
 
-    .board-row,
     .alert-item,
     .activity-item {
         grid-template-columns: 1fr;

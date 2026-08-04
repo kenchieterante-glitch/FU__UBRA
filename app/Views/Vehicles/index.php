@@ -25,19 +25,19 @@
 </div>
 
 <div class="stat-cards">
-  <div class="stat-card">
+  <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('')" role="button" tabindex="0">
     <h3>Total Vehicles</h3>
     <div class="value"><?= (int) $total_vehicles ?></div>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('available')" role="button" tabindex="0">
     <h3>Available</h3>
     <div class="value"><?= (int) $available_vehicles ?></div>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('inuse')" role="button" tabindex="0">
     <h3>In Use</h3>
     <div class="value"><?= (int) $inuse_vehicles ?></div>
   </div>
-  <div class="stat-card">
+  <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('maintenance')" role="button" tabindex="0">
     <h3>Needs Maintenance</h3>
     <div class="value"><?= count(array_filter($vehicles, fn($v) => $v['inspection_status'] == 'Expired' || $v['availability'] == 'Maintenance')) ?></div>
   </div>
@@ -216,6 +216,45 @@ document.addEventListener('click', e => {
     popup.classList.remove('visible');
   }
 });
+
+// Stat cards act as quick filters into the table below.
+function filterVehiclesByStat(kind) {
+  document.getElementById('vehiclesSearch').value = '';
+  document.getElementById('vehiclesType').value = '';
+  document.getElementById('vehiclesAvailability').value = '';
+
+  if (kind === 'available') document.getElementById('vehiclesAvailability').value = 'Available';
+  if (kind === 'inuse')     document.getElementById('vehiclesAvailability').value = 'In Use';
+
+  if (kind === 'maintenance') {
+    // "Needs Maintenance" combines two different columns (Inspection = Expired
+    // OR Availability = Maintenance), so it can't be expressed as a single
+    // dropdown value — filter rows directly instead.
+    document.querySelectorAll('#vehiclesTable tbody tr').forEach(row => {
+      const inspectionText = row.children[6]?.innerText.toLowerCase() ?? '';
+      const availabilityText = row.children[7]?.innerText.toLowerCase() ?? '';
+      const matches = inspectionText === 'expired' || availabilityText === 'maintenance';
+      row.style.display = matches ? '' : 'none';
+    });
+  } else {
+    filterVehiclesTable();
+  }
+
+  document.querySelector('.table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.querySelectorAll('.stat-card-clickable').forEach(card => {
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      card.click();
+    }
+  });
+});
+
+// Arriving from the Dashboard's stat boxes (e.g. vehicles?filter=inuse).
+const vehiclesUrlFilter = new URLSearchParams(window.location.search).get('filter');
+if (vehiclesUrlFilter) filterVehiclesByStat(vehiclesUrlFilter);
 </script>
 
 <!-- ADD MODAL -->

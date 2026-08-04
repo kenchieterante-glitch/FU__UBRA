@@ -196,6 +196,31 @@ class Api extends BaseController
         ]);
     }
 
+    // Scan-to-lookup: shows the tool's info and current availability without
+    // committing to a borrow/return yet, so the app can display a "Borrow"
+    // button or "Unavailable" label and let the user confirm the action.
+    public function toolLookup($code = null)
+    {
+        $code = trim((string) ($code ?? $this->request->getGet('code') ?? ''));
+        if ($code === '') {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'No code scanned.']);
+        }
+
+        $tool = (new ToolsModel())->where('asset_code', $code)->where('is_archived', 0)->first();
+        if (!$tool) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'No tool found for that code.']);
+        }
+
+        return $this->response->setJSON([
+            'asset_id'  => $tool['asset_code'],
+            'tool_name' => $tool['asset_name'],
+            'category'  => $tool['category'],
+            'condition' => $tool['condition_status'],
+            'status'    => $tool['availability'],
+            'available' => $tool['availability'] === 'Available',
+        ]);
+    }
+
     public function toolsScanBorrow()
     {
         $body = $this->request->getJSON(true) ?? [];

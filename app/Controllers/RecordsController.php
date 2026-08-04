@@ -5,6 +5,9 @@ namespace App\Controllers;
 use App\Models\BorrowModel;
 use App\Models\ReportModel;
 use App\Models\DisposalLogModel;
+use App\Models\ToolsModel;
+use App\Models\VehicleModel;
+use App\Models\PersonnelModel;
 
 class RecordsController extends BaseController
 {
@@ -12,6 +15,9 @@ class RecordsController extends BaseController
     protected $borrowModel;
     protected $reportModel;
     protected $disposalLogModel;
+    protected $toolsModel;
+    protected $vehicleModel;
+    protected $personnelModel;
 
     public function __construct()
     {
@@ -19,6 +25,9 @@ class RecordsController extends BaseController
         $this->borrowModel = new BorrowModel();
         $this->reportModel = new ReportModel();
         $this->disposalLogModel = new DisposalLogModel();
+        $this->toolsModel = new ToolsModel();
+        $this->vehicleModel = new VehicleModel();
+        $this->personnelModel = new PersonnelModel();
     }
 
     public function index()
@@ -105,6 +114,63 @@ class RecordsController extends BaseController
             ];
         }
 
+        // Archived Tools, Vehicles, and Personnel — the catalog tables have their
+        // own "Archive" icon buttons (Tools Management, Vehicle Management,
+        // Personnel Management); this is what makes those actions show up here.
+        $archivedTools = $this->toolsModel->where('is_archived', 1)->orderBy('archived_at', 'DESC')->findAll();
+        foreach ($archivedTools as $t) {
+            $activities[] = [
+                'type'        => 'tool',
+                'id'          => $t['id'],
+                'date'        => $t['archived_at'] ?? $t['last_activity_at'] ?? null,
+                'module'      => 'Tools',
+                'kind'        => 'Archive',
+                'record'      => $t['asset_name'] ?? 'Tool',
+                'record_sub'  => 'Code: ' . ($t['asset_code'] ?: '—'),
+                'action'      => 'Archived',
+                'performed_by'=> $t['custodian'] ?: '—',
+                'status'      => 'Archived',
+                'is_archived' => true,
+                'disposal_status' => 'None',
+            ];
+        }
+
+        $archivedVehicles = $this->vehicleModel->where('is_archived', 1)->orderBy('archived_at', 'DESC')->findAll();
+        foreach ($archivedVehicles as $v) {
+            $activities[] = [
+                'type'        => 'vehicle',
+                'id'          => $v['id'],
+                'date'        => $v['archived_at'] ?? $v['last_activity_at'] ?? null,
+                'module'      => 'Vehicle',
+                'kind'        => 'Archive',
+                'record'      => $v['vehicle_name'] ?? 'Vehicle',
+                'record_sub'  => 'Plate: ' . ($v['plate_no'] ?: '—'),
+                'action'      => 'Archived',
+                'performed_by'=> '—',
+                'status'      => 'Archived',
+                'is_archived' => true,
+                'disposal_status' => 'None',
+            ];
+        }
+
+        $archivedPersonnel = $this->personnelModel->where('is_archived', 1)->orderBy('archived_at', 'DESC')->findAll();
+        foreach ($archivedPersonnel as $p) {
+            $activities[] = [
+                'type'        => 'personnel',
+                'id'          => $p['id'],
+                'date'        => $p['archived_at'] ?? null,
+                'module'      => 'Personnel',
+                'kind'        => 'Archive',
+                'record'      => $p['full_name'] ?? 'Personnel',
+                'record_sub'  => $p['position'] ?: '—',
+                'action'      => 'Archived',
+                'performed_by'=> '—',
+                'status'      => 'Archived',
+                'is_archived' => true,
+                'disposal_status' => 'None',
+            ];
+        }
+
         usort($activities, function ($a, $b) {
             return (strtotime($b['date'] ?? '') ?: 0) <=> (strtotime($a['date'] ?? '') ?: 0);
         });
@@ -119,6 +185,7 @@ class RecordsController extends BaseController
                 }
             }
         }
+        $archivedCount += count($archivedTools) + count($archivedVehicles) + count($archivedPersonnel);
 
         $stats = [
             'total_records'     => count($borrowRecords) + count($reportRecords),

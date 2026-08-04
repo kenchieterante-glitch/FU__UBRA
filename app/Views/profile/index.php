@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 <?php $user = $user ?? []; ?>
 
-<link rel="stylesheet" href="<?= base_url('Assets/css/settings.css') ?>">
+<link rel="stylesheet" href="<?= base_url('Assets/css/settings.css') . '?v=' . @filemtime(FCPATH.'Assets/css/settings.css') ?>">
 
 <div class="page-header">
     <div>

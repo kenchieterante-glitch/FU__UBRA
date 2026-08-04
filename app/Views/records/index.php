@@ -65,6 +65,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                 <button type="button" class="rec-icon-btn" data-value="vehicle" title="Vehicle"><i class="bi bi-truck"></i></button>
                 <button type="button" class="rec-icon-btn" data-value="safety" title="Safety"><i class="bi bi-shield-check"></i></button>
                 <button type="button" class="rec-icon-btn" data-value="janitorial" title="Janitorial"><i class="bi bi-brush"></i></button>
+                <button type="button" class="rec-icon-btn" data-value="personnel" title="Personnel"><i class="bi bi-people-fill"></i></button>
             </div>
             <div class="rec-icon-filter" id="kindFilterGroup" data-target="kind">
                 <button type="button" class="rec-icon-btn active" data-value="" title="All Types"><i class="bi bi-collection"></i></button>
@@ -139,6 +140,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                                 'Vehicle'    => 'bi-truck',
                                 'Safety'     => 'bi-shield-check',
                                 'Janitorial' => 'bi-brush',
+                                'Personnel'  => 'bi-people-fill',
                                 default      => 'bi-folder-fill',
                             };
                             $kindIcon = match ($act['kind']) {

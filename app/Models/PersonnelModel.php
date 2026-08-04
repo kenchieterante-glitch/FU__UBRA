@@ -9,12 +9,12 @@ class PersonnelModel extends Model
     protected $useTimestamps = false;
     protected $allowedFields = [
         'emp_id','user_id','full_name','email','department_id','position',
-        'assigned_task','status','created_at'
+        'assigned_task','status','is_archived','archived_at','created_at'
     ];
 
     public function getByPositionKeyword($keyword)
     {
-        return $this->like('position', $keyword)->findAll();
+        return $this->like('position', $keyword)->where('is_archived', 0)->findAll();
     }
 
     public function getByEmpId(?string $empId)
@@ -32,13 +32,23 @@ class PersonnelModel extends Model
     {
         $builder = $this->select('personnel.*, departments.name as department_name')
                         ->join('departments', 'departments.id = personnel.department_id', 'left')
+                        ->where('personnel.is_archived', 0)
+                        ->orderBy('personnel.id', 'DESC');
+        return $builder->findAll();
+    }
+
+    // Same as getAllWithDetails() but includes archived rows — used by Records, Archiving & Reports.
+    public function getAllWithDetailsForRecords()
+    {
+        $builder = $this->select('personnel.*, departments.name as department_name')
+                        ->join('departments', 'departments.id = personnel.department_id', 'left')
                         ->orderBy('personnel.id', 'DESC');
         return $builder->findAll();
     }
 
     public function getDrivers()
     {
-        return $this->like('position', 'Driver')->findAll();
+        return $this->like('position', 'Driver')->where('is_archived', 0)->findAll();
     }
 
     public function isEmpIdTaken($empId, $excludeId = null)

@@ -5,7 +5,7 @@
   $events_json = $events_json ?? '[]';
 ?>
 
-<link rel="stylesheet" href="<?= base_url('Assets/css/calendar.css') ?>">
+<link rel="stylesheet" href="<?= base_url('Assets/css/calendar.css') . '?v=' . @filemtime(FCPATH.'Assets/css/calendar.css') ?>">
 <!-- FullCalendar 6 (CDN) -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.11/index.global.min.css" rel="stylesheet">
 

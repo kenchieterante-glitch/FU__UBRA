@@ -5,6 +5,8 @@
   $staff_json = $staff_json ?? '[]';
   $checklists_json = $checklists_json ?? '{}';
   $inventory_json = $inventory_json ?? '[]';
+  $zone_total = $zone_total ?? 0;
+  $zone_cleaned = $zone_cleaned ?? 0;
 ?>
 
 <div class="page-header">
@@ -35,9 +37,10 @@
     <div class="map-layout" id="janMapLayout">
       <div class="map-container">
         <div class="map-legend">
-          <span class="leg-item"><span class="leg-dot clean"></span> ✅ Clean</span>
-          <span class="leg-item"><span class="leg-dot pending"></span> 🕒 Pending</span>
-          <span class="leg-item"><span class="leg-dot needs"></span> 🧹 Needs to Clean</span>
+          <span class="leg-item leg-clickable" data-status="clean" onclick="filterMapByStatus('clean')" role="button" tabindex="0">✅ Clean</span>
+          <span class="leg-item leg-clickable" data-status="pending" onclick="filterMapByStatus('pending')" role="button" tabindex="0">🕒 Pending</span>
+          <span class="leg-item leg-clickable" data-status="needs" onclick="filterMapByStatus('needs')" role="button" tabindex="0">🧹 Needs to Clean</span>
+          <span class="leg-item leg-clickable" data-status="untracked" onclick="filterMapByStatus('untracked')" role="button" tabindex="0">⚪ Not a Janitorial Zone</span>
         </div>
 
         <svg id="janSVG" viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg">
@@ -70,6 +73,11 @@
     <div class="pane-header">
       <h2 class="pane-title"><i class="bi bi-people-fill"></i> Active Shift Assignments</h2>
       <button class="btn-add-record" onclick="openAddShiftModal()"><i class="bi bi-plus-lg"></i> Assign Staff</button>
+    </div>
+    <div class="shift-filter-row" id="shiftFilterRow">
+      <button class="shift-filter-chip" data-kind="" onclick="filterShiftsByStat('')">All</button>
+      <button class="shift-filter-chip" data-kind="done" onclick="filterShiftsByStat('done')">Completed</button>
+      <button class="shift-filter-chip" data-kind="pending" onclick="filterShiftsByStat('pending')">Pending</button>
     </div>
     <div class="shift-cards" id="shiftCards"></div>
   </div>
@@ -125,6 +133,11 @@ const janAreaStatuses = {};
 const janStaff = <?= $staff_json ?>;
 const janAreaChecklists = <?= $checklists_json ?>;
 let inventoryItems = <?= $inventory_json ?>;
+// Zone counts (not per-shift) — a zone with two staff assigned only counts
+// as "cleaned" once every assignment mapped to it is done. See
+// JanitorialController::index() for the aggregation.
+const zoneTotal = <?= (int) $zone_total ?>;
+const zoneCleaned = <?= (int) $zone_cleaned ?>;
 
 function getJanStatusValue(areaKey) {
   const explicit = janAreaStatuses[areaKey];
@@ -136,19 +149,24 @@ function getJanStatusValue(areaKey) {
     const data = janAreaChecklists[areaKey];
     const done = data.tasks.filter(t => t.done).length;
     const total = data.tasks.length;
+    if (total === 0) return 'untracked';
     const pct = Math.round((done / total) * 100);
     if (pct === 100) return 'clean';
     if (pct >= 50) return 'pending';
     return 'needs';
-  }
+}
 
-  return 'pending';
+  // Most buildings on this map aren't assigned janitorial zones at all
+  // (only the 8 real ones are) — those must read as neutral/untracked,
+  // not amber "pending", or every unassigned building looks unfinished.
+  return 'untracked';
 }
 
 function getJanStatusDisplay(areaKey) {
   const value = getJanStatusValue(areaKey);
   if (value === 'clean') return { label: 'Clean', value: 'clean' };
   if (value === 'pending') return { label: 'Pending', value: 'pending' };
+  if (value === 'untracked') return { label: 'Not a Janitorial Zone', value: 'untracked' };
   return { label: 'Needs to Clean', value: 'needs' };
 }
 
@@ -262,7 +280,7 @@ const janMapBuildings = [
   {n:14, name:'College of Education building', cat:'Violet', x:278, y:62, w:185, h:72, hasExt:true, circle:false},
   {n:16, name:'Animation Lab / ROTC office', cat:'Pink', x:514, y:98, w:180, h:123, hasExt:false, circle:false},
   {n:17, name:'LG Sinco Computer Center building', cat:'Pink', x:553, y:221, w:141, h:98, hasExt:true, circle:false, areaKey:'ccs'},
-  {n:18, name:'Sofia Soller Sinco Hall', cat:'Pink', x:512, y:288, w:192, h:123, hasExt:true, circle:false},
+  {n:18, name:'Sofia Soller Sinco Hall', cat:'Pink', x:512, y:288, w:192, h:123, hasExt:true, circle:false, areaKey:'gym'},
   {n:19, name:'College of Art & Sciences building', cat:'Yellow', x:519, y:406, w:67, h:185, hasExt:true, circle:false},
   {n:20, name:'Art & Science laboratories / audio visual rooms', cat:'Yellow', x:586, y:411, w:226, h:149, hasExt:true, circle:false, areaKey:'science'},
   {n:21, name:'College of Business Economics and Accountancy', cat:'Pink', x:704, y:237, w:185, h:92, hasExt:true, circle:false},
@@ -424,8 +442,54 @@ function closeJanDrill() {
   document.querySelectorAll('.jan-area').forEach(g => g.classList.remove('area-selected'));
 }
 
+// Legend items act as a toggle filter on the map itself — click a status to
+// dim every building that isn't that status; click it again to clear.
+let mapStatusFilter = null;
+
+function filterMapByStatus(status) {
+  mapStatusFilter = (mapStatusFilter === status) ? null : status;
+
+  document.querySelectorAll('.map-legend .leg-item').forEach(el => {
+    el.classList.toggle('leg-active', el.getAttribute('data-status') === mapStatusFilter);
+  });
+
+  document.querySelectorAll('#janSVG .jan-area').forEach(el => {
+    const match = !mapStatusFilter || el.getAttribute('data-status') === mapStatusFilter;
+    el.classList.toggle('jan-area-dimmed', !match);
+  });
+}
+
+function clearMapFilter() {
+  mapStatusFilter = null;
+  document.querySelectorAll('.map-legend .leg-item').forEach(el => el.classList.remove('leg-active'));
+  document.querySelectorAll('#janSVG .jan-area').forEach(el => el.classList.remove('jan-area-dimmed'));
+}
+
+let shiftsFilter = null;
+
+// Called from the Dashboard's "Cleaning Completion" box and the filter chips
+// on the Active Shifts tab — 'done' shows only fully-completed shifts,
+// 'pending' shows only shifts still in progress, '' shows everything.
+function filterShiftsByStat(kind) {
+  shiftsFilter = kind || null;
+  switchJanTab('shifts');
+  document.querySelectorAll('#shiftFilterRow .shift-filter-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.getAttribute('data-kind') === (shiftsFilter || ''));
+  });
+}
+
 function renderShiftCards() {
-  document.getElementById('shiftCards').innerHTML = janStaff.map(s => {
+  const list = shiftsFilter === 'pending' ? janStaff.filter(s => s.done !== s.tasks)
+             : shiftsFilter === 'done'    ? janStaff.filter(s => s.tasks > 0 && s.done === s.tasks)
+             : janStaff;
+  if (!list.length) {
+    const msg = shiftsFilter === 'pending' ? 'All shifts are fully completed.'
+              : shiftsFilter === 'done'    ? 'No shifts are fully completed yet.'
+              : 'No shift assignments recorded yet.';
+    document.getElementById('shiftCards').innerHTML = `<div class="no-data">${msg}</div>`;
+    return;
+  }
+  document.getElementById('shiftCards').innerHTML = list.map(s => {
     const pct = Math.round((s.done/s.tasks)*100);
     const col = pct===100?'#16a34a':pct>=50?'#c8963e':'#9ca3af';
     return `
@@ -446,14 +510,38 @@ function renderShiftCards() {
   }).join('');
 }
 
+// 'low' and 'out' are mutually exclusive: an item at 0 stock is Out of
+// Stock, not Low Stock, even though 0 also satisfies "<= reorder threshold".
+function inventoryStatus(item) {
+  if (item.stock === 0) return 'out';
+  if (item.stock <= item.reorder) return 'low';
+  return 'ok';
+}
+
+let inventoryFilter = null;
+
+// Called from the summary cards — jump to Consumable Inventory and show
+// only items in that stock status.
+function filterInventoryByStat(kind) {
+  inventoryFilter = kind || null;
+  switchJanTab('inventory');
+}
+
 function renderInventory() {
-  document.getElementById('inventoryBody').innerHTML = inventoryItems.map((item,i) => {
-    const low  = item.stock <= item.reorder;
-    const pct  = Math.min(100, Math.round((item.stock / (item.reorder*3))*100));
-    const col  = item.stock === 0 ? 'text-danger' : low ? 'text-warn' : '';
-    const st   = item.stock === 0 ? '<span class="inv-badge inv-out">Out of Stock</span>'
-             : low ? '<span class="inv-badge inv-low">Low Stock ⚠</span>'
-             : '<span class="inv-badge inv-ok">OK</span>';
+  const indexed = inventoryItems.map((item, i) => ({ item, i }));
+  const list = inventoryFilter ? indexed.filter(({ item }) => inventoryStatus(item) === inventoryFilter) : indexed;
+
+  if (!list.length) {
+    document.getElementById('inventoryBody').innerHTML = `<tr><td colspan="8"><div class="no-data">No items match this filter.</div></td></tr>`;
+    return;
+  }
+
+  document.getElementById('inventoryBody').innerHTML = list.map(({ item, i }) => {
+    const status = inventoryStatus(item);
+    const col = status === 'out' ? 'text-danger' : status === 'low' ? 'text-warn' : '';
+    const st  = status === 'out' ? '<span class="inv-badge inv-out">Out of Stock</span>'
+              : status === 'low' ? '<span class="inv-badge inv-low">Low Stock ⚠</span>'
+              : '<span class="inv-badge inv-ok">OK</span>';
 
     return `<tr>
       <td><strong>${item.name}</strong></td>
@@ -473,38 +561,46 @@ function renderInventory() {
 function renderJanitorialSummary() {
   const totalZones = Object.keys(AREAS).length;
   const activeShifts = janStaff.length;
-  const lowStock = inventoryItems.filter(item => item.stock <= item.reorder).length;
-  const outOfStock = inventoryItems.filter(item => item.stock === 0).length;
-  const cleanedZones = janStaff.filter(s => s.done === s.tasks).length;
-  const pendingZones = janStaff.length - cleanedZones;
+  const lowStock = inventoryItems.filter(item => inventoryStatus(item) === 'low').length;
+  const outOfStock = inventoryItems.filter(item => inventoryStatus(item) === 'out').length;
+  const pendingZones = zoneTotal - zoneCleaned;
 
   document.getElementById('janitorialSummary').innerHTML = `
-    <div class="kpi-card">
+    <div class="kpi-card kpi-card-clickable" onclick="clearMapFilter();switchJanTab('janmap')" role="button" tabindex="0">
       <div class="card-title"><i class="bi bi-shield-check"></i> Janitorial Zones</div>
       <div class="card-value">${totalZones}</div>
       <div class="card-note">Monitored campus areas</div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card kpi-card-clickable" onclick="filterShiftsByStat('')" role="button" tabindex="0">
       <div class="card-title"><i class="bi bi-people-fill"></i> Active Shifts</div>
       <div class="card-value">${activeShifts}</div>
       <div class="card-note">Staff currently on duty</div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card kpi-card-clickable" onclick="filterShiftsByStat('pending')" role="button" tabindex="0">
       <div class="card-title"><i class="bi bi-broom"></i> Janitorial Completion</div>
-      <div class="card-value">${cleanedZones}/${janStaff.length} cleaned</div>
+      <div class="card-value">${zoneCleaned}/${zoneTotal} cleaned</div>
       <div class="card-note">${pendingZones} pending follow-up</div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card kpi-card-clickable" onclick="filterInventoryByStat('low')" role="button" tabindex="0">
       <div class="card-title"><i class="bi bi-box-seam"></i> Low Stock Items</div>
       <div class="card-value">${lowStock}</div>
       <div class="card-note">Need restock soon</div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card kpi-card-clickable" onclick="filterInventoryByStat('out')" role="button" tabindex="0">
       <div class="card-title"><i class="bi bi-exclamation-circle"></i> Out of Stock</div>
       <div class="card-value">${outOfStock}</div>
       <div class="card-note">Immediate replenishment</div>
     </div>
   `;
+
+  document.querySelectorAll('#janitorialSummary .kpi-card-clickable').forEach(card => {
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        card.click();
+      }
+    });
+  });
 }
 
 function refillItem(i) {
@@ -553,5 +649,11 @@ function showToast(msg, isError=false) {
 renderJanitorialSummary();
 renderShiftCards();
 renderInventory();
+document.querySelector('#shiftFilterRow .shift-filter-chip[data-kind=""]')?.classList.add('active');
+
+// Arriving from the Dashboard's "Cleaning Completion" box.
+if (new URLSearchParams(window.location.search).get('filter') === 'pending') {
+  filterShiftsByStat('pending');
+}
 </script>
 <?= $this->endSection() ?>

@@ -1,7 +1,7 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
 
-<link rel="stylesheet" href="<?= base_url('Assets/css/ubra.css') ?>">
+<link rel="stylesheet" href="<?= base_url('Assets/css/ubra.css') . '?v=' . @filemtime(FCPATH.'Assets/css/ubra.css') ?>">
 
 <div class="ubra-wrapper">
 

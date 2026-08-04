@@ -28,7 +28,7 @@ $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
 </div>
 
 <?php if (!$showStatusTabs): ?>
-<div class="stat-cards">
+<div class="stat-cards" id="personnelStatCards">
   <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel') ?>'" role="button" tabindex="0">
     <h3>Total Personnel</h3>
     <div class="value"><?= esc((string) ((int) ($total_personnel_count ?? 0))) ?></div>
@@ -61,6 +61,15 @@ $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
     <h3>On Leave</h3>
     <div class="value"><?= esc((string) ((int) ($on_leave_count ?? 0))) ?></div>
   </div>
+</div>
+
+<div class="stat-back-bar" id="personnelBackBar" style="display:none">
+  <button type="button" class="stat-back-btn" onclick="resetPersonnelOverview()"><i class="bi bi-arrow-left"></i> Back to Overview</button>
+  <h2 class="stat-list-title" id="personnelBackLabel"></h2>
+</div>
+<?php else: ?>
+<div class="stat-back-bar">
+  <a href="<?= base_url('personnel') ?>" class="stat-back-btn"><i class="bi bi-arrow-left"></i> Back to Overview</a>
 </div>
 <?php endif; ?>
 
@@ -139,9 +148,9 @@ $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
           <td>
             <div class="action-buttons">
               <button class="icon-btn" onclick="document.getElementById('editModal<?= $p['id'] ?>')  .style.display='flex'" title="Edit"><i class="fa-solid fa-pen"></i></button>
-              <form method="post" action="<?= base_url('personnel/delete/'.$p['id']) ?>" onsubmit="return confirm('Delete this personnel record?')" style="display:contents;">
+              <form method="post" action="<?= base_url('personnel/delete/'.$p['id']) ?>" onsubmit="return confirm('Archive this personnel record?')" style="display:contents;">
                 <?= csrf_field() ?>
-                <button type="submit" class="icon-btn delete" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                <button type="submit" class="icon-btn delete" title="Archive"><i class="fa-solid fa-archive"></i></button>
               </form>
             </div>
           </td>
@@ -227,13 +236,35 @@ function filterPersonnelTable() {
   });
 }
 
-// Active / On Leave stat cards act as quick filters into the table below.
+const personnelStatLabels = { 'Active': 'Active Personnel', 'On Leave': 'On Leave Personnel' };
+
+// Active / On Leave stat cards act as quick filters into the table below —
+// clicking one shows just that list, same as Tools Management, instead of
+// leaving the whole stat-cards row sitting on top of the filtered table.
 function filterPersonnelByStat(status) {
   document.getElementById('personnelSearch').value = '';
   document.getElementById('personnelDepartment').value = '';
   document.getElementById('personnelStatus').value = status;
+
+  document.getElementById('personnelStatCards')?.style.setProperty('display', 'none');
+  const backBar = document.getElementById('personnelBackBar');
+  if (backBar) {
+    backBar.style.display = 'flex';
+    document.getElementById('personnelBackLabel').textContent = personnelStatLabels[status] ?? 'Filtered';
+  }
+
   filterPersonnelTable();
   document.querySelector('.table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetPersonnelOverview() {
+  document.getElementById('personnelStatCards')?.style.setProperty('display', '');
+  document.getElementById('personnelBackBar').style.display = 'none';
+  document.getElementById('personnelSearch').value = '';
+  document.getElementById('personnelDepartment').value = '';
+  document.getElementById('personnelStatus').value = '';
+  filterPersonnelTable();
+  document.getElementById('personnelStatCards')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function togglePersonnelFilterMenu() {

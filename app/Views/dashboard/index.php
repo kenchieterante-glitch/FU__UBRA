@@ -4,7 +4,9 @@
   $kpis = $kpis ?? [];
   $alerts = $alerts ?? [];
   $activity = $activity ?? [];
-  $quickAccess = $quickAccess ?? [];
+  $pending_tools_json = $pending_tools_json ?? '[]';
+  $pending_workorders_json = $pending_workorders_json ?? '[]';
+  $travel_history = $travel_history ?? [];
 ?>
 
 <div class="groundworks-shell">
@@ -16,28 +18,51 @@
 
   <section class="kpi-grid" aria-label="Key performance indicators">
     <?php foreach ($kpis as $kpi): ?>
-      <a class="kpi-card <?= esc($kpi['tone'] ?? 'tone-neutral') ?>" href="<?= esc(site_url($kpi['url'] ?? '#')) ?>">
-        <div class="kpi-top">
-          <span class="kpi-icon"><i class="fa-solid <?= esc($kpi['icon']) ?>"></i></span>
-          <span class="kpi-label"><?= esc($kpi['label']) ?></span>
+      <?php if (!empty($kpi['expand'])): ?>
+        <div class="kpi-card <?= esc($kpi['tone'] ?? 'tone-neutral') ?>" onclick="togglePendingPanel()" role="button" tabindex="0">
+          <div class="kpi-top">
+            <span class="kpi-icon"><i class="fa-solid <?= esc($kpi['icon']) ?>"></i></span>
+            <span class="kpi-label"><?= esc($kpi['label']) ?></span>
+          </div>
+          <div class="kpi-value"><?= esc($kpi['value']) ?></div>
+          <div class="kpi-meta"><?= esc($kpi['meta']) ?></div>
+          <div class="kpi-sub"><?= esc($kpi['sub']) ?></div>
         </div>
-        <div class="kpi-value"><?= esc($kpi['value']) ?></div>
-        <div class="kpi-meta"><?= esc($kpi['meta']) ?></div>
-        <div class="kpi-sub"><?= esc($kpi['sub']) ?></div>
-      </a>
+      <?php else: ?>
+        <a class="kpi-card <?= esc($kpi['tone'] ?? 'tone-neutral') ?>" href="<?= esc(site_url($kpi['url'] ?? '#')) ?>">
+          <div class="kpi-top">
+            <span class="kpi-icon"><i class="fa-solid <?= esc($kpi['icon']) ?>"></i></span>
+            <span class="kpi-label"><?= esc($kpi['label']) ?></span>
+          </div>
+          <div class="kpi-value"><?= esc($kpi['value']) ?></div>
+          <div class="kpi-meta"><?= esc($kpi['meta']) ?></div>
+          <div class="kpi-sub"><?= esc($kpi['sub']) ?></div>
+        </a>
+      <?php endif; ?>
     <?php endforeach; ?>
   </section>
 
-  <?php if ($quickAccess): ?>
-    <section class="quick-access-row" aria-label="Quick access">
-      <?php foreach ($quickAccess as $q): ?>
-        <a class="quick-access-chip" href="<?= esc(site_url($q['url'])) ?>">
-          <i class="fa-solid <?= esc($q['icon']) ?>"></i>
-          <span><?= esc($q['label']) ?></span>
-        </a>
-      <?php endforeach; ?>
-    </section>
-  <?php endif; ?>
+  <!-- Pending Requests detail — shows both halves of the count (borrowed
+       tools + open work orders) right here, since they live on two
+       different pages and a single click can't route to both. -->
+  <section class="panel-card pending-panel" id="pendingPanel" style="display:none" aria-label="Pending requests detail">
+    <div class="panel-head">
+      <h2>Pending Requests</h2>
+      <p>Everything currently waiting on approval or resolution.</p>
+    </div>
+    <div class="pending-columns">
+      <div class="pending-column">
+        <h3><i class="fa-solid fa-hand-holding"></i> Borrowed Tools</h3>
+        <div id="pendingToolsList" class="pending-list"></div>
+        <a class="overview-link" href="<?= esc(site_url('tools?filter=borrowed')) ?>">View in Tools Management →</a>
+      </div>
+      <div class="pending-column">
+        <h3><i class="fa-solid fa-screwdriver-wrench"></i> Open Work Orders</h3>
+        <div id="pendingWorkOrdersList" class="pending-list"></div>
+        <a class="overview-link" href="<?= esc(site_url('safety?filter=duework')) ?>">View in Maintenance →</a>
+      </div>
+    </div>
+  </section>
 
   <div class="lower-grid">
     <section class="panel-card alerts-panel" aria-label="Alerts">
@@ -75,6 +100,103 @@
       </div>
     </section>
   </div>
+
+  <section class="panel-card board-panel" aria-label="Travel history" style="margin-top:12px;">
+    <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <div>
+        <h2>Travel History</h2>
+        <p>Recent driver trip tickets — connected live to Vehicle Management &amp; the Guard Dashboard.</p>
+      </div>
+      <a class="overview-link" href="<?= esc(site_url('travel')) ?>">View all trip tickets →</a>
+    </div>
+    <?php if (empty($travel_history)): ?>
+      <div class="no-data">No trip tickets recorded yet.</div>
+    <?php else: ?>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Trip ID</th>
+              <th>Date</th>
+              <th>Requester</th>
+              <th>Destination</th>
+              <th>Driver</th>
+              <th>Vehicle</th>
+              <th>Tire Pressure</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($travel_history as $t): ?>
+              <?php $pill = match ($t['status']) {
+                'Approved', 'Completed' => 'pill-green',
+                'Pending' => 'pill-gold',
+                default => 'pill-red',
+              }; ?>
+              <tr class="board-table-row" onclick="window.location='<?= esc(site_url('travel')) ?>'">
+                <td class="mono"><?= esc($t['trip_id']) ?></td>
+                <td><?= esc($t['date']) ?></td>
+                <td><?= esc($t['requester']) ?></td>
+                <td><?= esc($t['destination']) ?></td>
+                <td><?= esc($t['driver']) ?></td>
+                <td><?= esc($t['vehicle']) ?></td>
+                <td><?= esc($t['tire_pressure']) ?></td>
+                <td><span class="status-pill <?= $pill ?>"><?= esc($t['status']) ?></span></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+  </section>
 </div>
+
+<script>
+  const pendingTools = <?= $pending_tools_json ?>;
+  const pendingWorkOrders = <?= $pending_workorders_json ?>;
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = String(s ?? '');
+    return d.innerHTML;
+  }
+
+  function togglePendingPanel() {
+    const panel = document.getElementById('pendingPanel');
+    const opening = panel.style.display === 'none';
+    panel.style.display = opening ? 'block' : 'none';
+    if (opening) {
+      renderPendingLists();
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function renderPendingLists() {
+    document.getElementById('pendingToolsList').innerHTML = pendingTools.length
+      ? pendingTools.map(t => `
+        <div class="pending-item">
+          <strong>${esc(t.name)}</strong>
+          <span>${esc(t.borrower)} · due ${esc(t.due || '—')}</span>
+        </div>`).join('')
+      : '<div class="no-data">No tools currently borrowed.</div>';
+
+    document.getElementById('pendingWorkOrdersList').innerHTML = pendingWorkOrders.length
+      ? pendingWorkOrders.map(w => `
+        <div class="pending-item">
+          <strong>${esc(w.id)} — ${esc(w.issue)}</strong>
+          <span>${esc(w.loc)} · ${esc(w.priority)} priority</span>
+        </div>`).join('')
+      : '<div class="no-data">No open work orders.</div>';
+  }
+
+  document.querySelectorAll('.kpi-card[role="button"]').forEach(card => {
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        card.click();
+      }
+    });
+  });
+</script>
 
 <?= $this->endSection() ?>

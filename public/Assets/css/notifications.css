@@ -234,10 +234,15 @@
 }
 
 .panel-title {
-    font-size: 1rem;
     font-weight: 700;
     color: var(--maroon);
     margin: 0;
+}
+
+.notif-wrapper .panel-title {
+    font-size: 1.6rem;
+    text-transform: none;
+    letter-spacing: normal;
 }
 
 .toolbar-right {
@@ -486,6 +491,16 @@ td .pri-critical {
     color: var(--maroon);
 }
 
+.pg-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.pg-ellipsis {
+    color: var(--text-muted);
+    padding: 0 .2rem;
+}
+
 /* ── Right Sidebar ───────────────────────────────────────────── */
 .notif-sidebar {
     display: flex;
@@ -694,5 +709,27 @@ td .pri-critical {
 
 .notif-toast.toast-error {
     background: var(--danger, #b3261e);
+}
+
+.notif-detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .55rem 0;
+    border-bottom: 1px solid #eee;
+    font-size: .85rem;
+}
+
+.notif-detail-row:last-of-type {
+    border-bottom: none;
+}
+
+.notif-detail-row span {
+    color: #6b7280;
+    flex-shrink: 0;
+}
+
+.notif-detail-row strong {
+    text-align: right;
 }
 

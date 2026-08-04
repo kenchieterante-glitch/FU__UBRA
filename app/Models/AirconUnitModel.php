@@ -8,7 +8,7 @@ class AirconUnitModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
     protected $allowedFields = [
-        'location', 'unit_name', 'last_cleaning', 'next_schedule',
+        'location', 'floor', 'unit_name', 'last_cleaning', 'next_schedule',
         'condition_status', 'assigned_tech',
     ];
 

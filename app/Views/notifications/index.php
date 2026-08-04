@@ -1,7 +1,7 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
 
-<link rel="stylesheet" href="<?= base_url('Assets/css/notifications.css') ?>">
+<link rel="stylesheet" href="<?= base_url('Assets/css/notifications.css') . '?v=' . @filemtime(FCPATH.'Assets/css/notifications.css') ?>">
 
 <div class="notif-wrapper">
 
@@ -104,8 +104,12 @@ $draft_count = $draft_count ?? 0;
                                     <option value="Inventory Low Stock"> Inventory Low Stock</option>
                                     <option value="Vehicle Expiry">🗓 Vehicle Expiry</option>
                                     <option value="Fire Extinguisher Installed"> Fire Extinguisher Installed</option>
+                                    <option value="Fire Extinguisher Expiring Soon">⏳ Fire Extinguisher Expiring Soon</option>
+                                    <option value="Aircon Unit Registered"> Aircon Unit Registered</option>
+                                    <option value="Aircon Needs Cleaning">🧊 Aircon Needs Cleaning</option>
                                     <option value="Cleaning Scheduled"> Cleaning Scheduled</option>
                                     <option value="Urgent Cleaning Scheduled"> Urgent Cleaning Scheduled</option>
+                                    <option value="Trip Ticket Request">🎫 Trip Ticket Request</option>
                                 </select>
                             </div>
                             <div class="filter-row">
@@ -159,8 +163,12 @@ $draft_count = $draft_count ?? 0;
                                     'Inventory Low Stock'   => 'bi-box-seam',
                                     'Vehicle Expiry'        => 'bi-card-checklist',
                                     'Fire Extinguisher Installed' => 'bi-fire',
+                                    'Fire Extinguisher Expiring Soon' => 'bi-hourglass-split',
+                                    'Aircon Unit Registered'      => 'bi-snow2',
+                                    'Aircon Needs Cleaning'       => 'bi-snow2',
                                     'Cleaning Scheduled'          => 'bi-brush',
                                     'Urgent Cleaning Scheduled'   => 'bi-exclamation-triangle',
+                                    'Trip Ticket Request'         => 'bi-ticket-perforated',
                                     default                 => 'bi-bell',
                                 };
                             ?>
@@ -192,22 +200,36 @@ $draft_count = $draft_count ?? 0;
                                 <td><span class="pri-badge <?= $priClass ?>"><?= $priority ?></span></td>
                                 <td>
                                     <?php
-                                    $actionBtn = match($n['category'] ?? '') {
-                                        'Vehicle Inspection'    => ['label' => 'Verify',  'value' => 'verified'],
-                                        'Air-Con Cleaning'      => ['label' => 'Assign',  'value' => 'assigned'],
-                                        'Janitorial Assignment' => ['label' => 'Reassign','value' => 'assigned'],
-                                        'Inventory Low Stock'   => ['label' => 'Order',   'value' => 'ordered'],
-                                        'Vehicle Expiry'        => ['label' => 'Review',  'value' => 'reviewed'],
-                                        'Fire Extinguisher Installed' => ['label' => 'Verify', 'value' => 'verified'],
-                                        'Cleaning Scheduled'          => ['label' => 'Assign', 'value' => 'assigned'],
-                                        'Urgent Cleaning Scheduled'   => ['label' => 'Assign', 'value' => 'assigned'],
-                                        default                 => ['label' => 'Acknowledge', 'value' => 'acknowledged'],
+                                    // "Verify" now always opens the detail popup first (category,
+                                    // description — building/date/expiry/installer for Fire
+                                    // Extinguisher & Aircon notifications — recipient, priority) so
+                                    // it can be re-checked before approving, instead of the old
+                                    // one-click "instantly Done" button. $approveAs is just which
+                                    // status gets recorded once Approve is actually clicked.
+                                    $approveAs = match($n['category'] ?? '') {
+                                        'Vehicle Inspection'    => 'verified',
+                                        'Air-Con Cleaning'      => 'assigned',
+                                        'Janitorial Assignment' => 'assigned',
+                                        'Inventory Low Stock'   => 'ordered',
+                                        'Vehicle Expiry'        => 'reviewed',
+                                        'Fire Extinguisher Installed'     => 'verified',
+                                        'Fire Extinguisher Expiring Soon' => 'verified',
+                                        'Aircon Unit Registered'          => 'verified',
+                                        'Aircon Needs Cleaning'           => 'verified',
+                                        'Cleaning Scheduled'          => 'assigned',
+                                        'Urgent Cleaning Scheduled'   => 'assigned',
+                                        default                 => 'acknowledged',
                                     };
                                     ?>
                                     <?php if ($status === 'Pending'): ?>
                                         <button class="action-btn"
-                                            onclick="doAction(<?= $n['id'] ?>, '<?= $actionBtn['value'] ?>', this)">
-                                            <?= $actionBtn['label'] ?>
+                                            onclick="openNotifDetail(<?= $n['id'] ?>, '<?= $approveAs ?>', this)"
+                                            data-category="<?= esc($n['category'] ?? '—', 'attr') ?>"
+                                            data-description="<?= esc($n['description'] ?? '—', 'attr') ?>"
+                                            data-recipient="<?= esc($n['recipient'] ?? '—', 'attr') ?>"
+                                            data-date="<?= esc(date('M j, Y g:i A', strtotime($n['created_at'])), 'attr') ?>"
+                                            data-priority="<?= esc($priority, 'attr') ?>">
+                                            Verify
                                         </button>
                                     <?php else: ?>
                                         <span class="action-done"><i class="bi bi-check-circle-fill"></i> Done</span>
@@ -220,19 +242,29 @@ $draft_count = $draft_count ?? 0;
                 </table>
             </div>
 
-            <!-- Pagination stub -->
             <div class="table-footer">
-                Showing 1–<?= min(count($notifications), 10) ?> of <?= count($notifications) ?> notifications
-                <div class="pagination">
-                    <button class="pg-btn active">1</button>
-                    <?php if (count($notifications) > 10): ?>
-                    <button class="pg-btn">2</button>
-                    <button class="pg-btn">Next</button>
-                    <?php endif; ?>
-                </div>
+                <span id="entriesLabel">Showing 0 of 0 notifications</span>
+                <div class="pagination" id="paginationButtons"></div>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Notification detail popup — shown before approving, so an action never
+     just silently marks "Done" without the reviewer seeing what it's for. -->
+<div class="modal" id="notifDetailModal">
+  <div class="modal-box">
+    <h3><i class="bi bi-info-circle"></i> Notification Details</h3>
+    <div class="notif-detail-row"><span>Category</span><strong id="ndCategory"></strong></div>
+    <div class="notif-detail-row"><span>Details</span><strong id="ndDescription"></strong></div>
+    <div class="notif-detail-row"><span>Recipient</span><strong id="ndRecipient"></strong></div>
+    <div class="notif-detail-row"><span>Date &amp; Time</span><strong id="ndDate"></strong></div>
+    <div class="notif-detail-row"><span>Priority</span><strong id="ndPriority"></strong></div>
+    <div class="modal-actions">
+      <button type="button" onclick="closeNotifDetail()">Close</button>
+      <button type="button" class="btn-maroon" id="ndApproveBtn">Approve</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -252,9 +284,75 @@ function filterTable() {
         const matchPri  = !pri  || row.dataset.pri === pri;
         const matchRead = !read || row.dataset.read === read;
         const matchTerm = !term || row.dataset.search.includes(term);
-        row.style.display = (matchCat && matchPri && matchRead && matchTerm) ? '' : 'none';
+        row.classList.toggle('filtered-out', !(matchCat && matchPri && matchRead && matchTerm));
     });
+
+    currentPage = 1;
+    applyPagination();
 }
+
+// ── Pagination (client-side, over already-filtered rows) ─────────
+let currentPage = 1;
+const NOTIF_PAGE_SIZE = 10;
+
+function applyPagination() {
+    const rows = Array.from(document.querySelectorAll('#notifTable tbody .notif-row'))
+        .filter(r => !r.classList.contains('filtered-out'));
+    const total = rows.length;
+    const totalPages = Math.max(1, Math.ceil(total / NOTIF_PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    rows.forEach((row, i) => {
+        const page = Math.floor(i / NOTIF_PAGE_SIZE) + 1;
+        row.style.display = (page === currentPage) ? '' : 'none';
+    });
+    document.querySelectorAll('#notifTable tbody .notif-row.filtered-out').forEach(row => {
+        row.style.display = 'none';
+    });
+
+    const start = total === 0 ? 0 : (currentPage - 1) * NOTIF_PAGE_SIZE + 1;
+    const end   = Math.min(currentPage * NOTIF_PAGE_SIZE, total);
+    document.getElementById('entriesLabel').textContent =
+        total === 0 ? 'No notifications found' : `Showing ${start}–${end} of ${total} notifications`;
+
+    renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+    const wrap = document.getElementById('paginationButtons');
+    wrap.innerHTML = '';
+
+    const addBtn = (label, page, opts = {}) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pg-btn' + (opts.active ? ' active' : '');
+        b.textContent = label;
+        b.disabled = !!opts.disabled;
+        b.onclick = () => { currentPage = page; applyPagination(); };
+        wrap.appendChild(b);
+    };
+    const addEllipsis = () => {
+        const s = document.createElement('span');
+        s.className = 'pg-ellipsis';
+        s.textContent = '…';
+        wrap.appendChild(s);
+    };
+
+    addBtn('«', Math.max(1, currentPage - 1), { disabled: currentPage === 1 });
+
+    const maxButtons = 5;
+    let start = Math.max(1, currentPage - 2);
+    let end = Math.min(totalPages, start + maxButtons - 1);
+    start = Math.max(1, end - maxButtons + 1);
+
+    if (start > 1) { addBtn('1', 1); if (start > 2) addEllipsis(); }
+    for (let p = start; p <= end; p++) addBtn(String(p), p, { active: p === currentPage });
+    if (end < totalPages) { if (end < totalPages - 1) addEllipsis(); addBtn(String(totalPages), totalPages); }
+
+    addBtn('Next »', Math.min(totalPages, currentPage + 1), { disabled: currentPage === totalPages });
+}
+
+applyPagination();
 
 function toggleNotificationsFilterMenu() {
     const popup = document.getElementById('notificationsFilterPopup');
@@ -265,6 +363,33 @@ window.addEventListener('click', function (e) {
     const wrapper = e.target.closest('.filter-menu-wrapper');
     const popup = document.getElementById('notificationsFilterPopup');
     if (!wrapper) popup.classList.remove('visible');
+});
+
+// ── Notification detail popup: Verify opens this first, Approve inside
+// it is what actually calls doAction() — so nothing gets marked Done
+// without the reviewer seeing what it's for.
+let notifDetailCtx = null;
+
+function openNotifDetail(id, action, btn) {
+    notifDetailCtx = { id, action, btn };
+    document.getElementById('ndCategory').textContent = btn.dataset.category || '—';
+    document.getElementById('ndDescription').textContent = btn.dataset.description || '—';
+    document.getElementById('ndRecipient').textContent = btn.dataset.recipient || '—';
+    document.getElementById('ndDate').textContent = btn.dataset.date || '—';
+    document.getElementById('ndPriority').textContent = btn.dataset.priority || '—';
+    document.getElementById('notifDetailModal').style.display = 'flex';
+}
+
+function closeNotifDetail() {
+    document.getElementById('notifDetailModal').style.display = 'none';
+    notifDetailCtx = null;
+}
+
+document.getElementById('ndApproveBtn').addEventListener('click', () => {
+    if (!notifDetailCtx) return;
+    const { id, action, btn } = notifDetailCtx;
+    closeNotifDetail();
+    doAction(id, action, btn);
 });
 
 // ── Action button (Verify / Notify / Assign / Order …) ────────

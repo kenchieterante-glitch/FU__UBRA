@@ -25,13 +25,25 @@ class TravelModel extends Model
 
     public function getAllWithDetails()
     {
-        return $this->select('travel_requests.*, v.vehicle_name, v.plate_no, p.full_name as driver_name, d.name as department_name')
+        return $this->select('travel_requests.*, v.vehicle_name, v.plate_no, v.tire_pressure_psi, p.full_name as driver_name, d.name as department_name, r.full_name as requester_name')
             ->join('vehicles v', 'v.id = travel_requests.assigned_vehicle_id', 'left')
             ->join('personnel p', 'p.id = travel_requests.assigned_driver_id', 'left')
             ->join('departments d', 'd.id = travel_requests.department_id', 'left')
+            ->join('personnel r', 'r.id = travel_requests.requester_id', 'left')
             ->where('travel_requests.is_archived', 0)
             ->orderBy('travel_requests.id', 'DESC')
             ->findAll();
+    }
+
+    public function getTripWithDetails($id)
+    {
+        return $this->select('travel_requests.*, v.vehicle_name, v.plate_no, v.tire_pressure_psi, p.full_name as driver_name, d.name as department_name, r.full_name as requester_name')
+            ->join('vehicles v', 'v.id = travel_requests.assigned_vehicle_id', 'left')
+            ->join('personnel p', 'p.id = travel_requests.assigned_driver_id', 'left')
+            ->join('departments d', 'd.id = travel_requests.department_id', 'left')
+            ->join('personnel r', 'r.id = travel_requests.requester_id', 'left')
+            ->where('travel_requests.id', $id)
+            ->first();
     }
 
     public function getForRequester(int $requesterId)

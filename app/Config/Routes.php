@@ -61,11 +61,16 @@ $routes->post('personnel/delete/(:num)','PersonnelController::delete/$1');
 // TOOLS & EQUIPMENT
 // ============================================================
 $routes->get ('tools',                  'ToolsController::index');
+$routes->get ('tools/electronic-devices','ToolsController::electronicDevices');
+$routes->get ('tools/accessories',      'ToolsController::accessories');
+$routes->get ('tools/equipment',        'ToolsController::toolsEquipment');
+$routes->get ('tools/consumable',       'ToolsController::consumable');
 $routes->post('tools/add',              'ToolsController::add');
 $routes->post('tools/edit/(:num)',      'ToolsController::edit/$1');
 $routes->post('tools/delete/(:num)',    'ToolsController::delete/$1');
 $routes->post('tools/borrow/(:num)',    'ToolsController::borrow/$1');
 $routes->post('tools/returnTool/(:num)','ToolsController::returnTool/$1');
+$routes->post('tools/refillStock/(:num)','ToolsController::refillStock/$1');
 
 // ============================================================
 // VEHICLE MANAGEMENT
@@ -74,6 +79,19 @@ $routes->get ('vehicles',              'VehicleController::index');
 $routes->post('vehicles/add',          'VehicleController::add');
 $routes->post('vehicles/edit/(:num)',  'VehicleController::edit/$1');
 $routes->post('vehicles/delete/(:num)','VehicleController::delete/$1');
+
+// ============================================================
+// DRIVER'S TRIP TICKET
+// ============================================================
+$routes->get ('travel',                 'TravelController::index');
+$routes->get ('travel/getTrip/(:num)',  'TravelController::getTrip/$1');
+$routes->post('travel/add',             'TravelController::add');
+$routes->post('travel/approve/(:num)',  'TravelController::approve/$1');
+$routes->post('travel/reject/(:num)',   'TravelController::reject/$1');
+$routes->post('travel/complete/(:num)', 'TravelController::complete/$1');
+$routes->post('travel/delete/(:num)',   'TravelController::delete/$1');
+$routes->post('travel/checkin/(:num)',  'TravelController::checkIn/$1');
+$routes->post('travel/checkout/(:num)', 'TravelController::checkOut/$1');
 
 
 // ============================================================
@@ -90,6 +108,9 @@ $routes->post('gps/logPing',             'GPSController::logPing');
 $routes->get ('safety',                        'SafetyController::index');
 $routes->get ('safety/guard-dashboard',        'SafetyController::guardDashboard');
 $routes->get ('safety/keylogs',                'SafetyController::keylogs');
+$routes->get ('safety/keylogs/lookup/(:any)',  'SafetyController::lookupBorrower/$1');
+$routes->post('safety/keylogs/scan-borrow',    'SafetyController::scanBorrow');
+$routes->post('safety/keylogs/scan-return',    'SafetyController::scanReturn');
 
 // ============================================================
 // JANITORIAL MONITORING (Separated from Safety)
@@ -171,6 +192,7 @@ $routes->group('api', function ($routes) {
 
     $routes->get('tools', 'Api::tools');
     $routes->get('tools/categories', 'Api::toolCategories');
+    $routes->get('tools/lookup/(:any)', 'Api::toolLookup/$1');
     $routes->post('tools/scan-borrow', 'Api::toolsScanBorrow');
     $routes->post('tools/scan-return', 'Api::toolsScanReturn');
 

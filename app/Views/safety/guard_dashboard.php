@@ -3,11 +3,12 @@
 <?= $this->section('content') ?>
 <?php
   $title = $title ?? 'Guard Dashboard';
+  $trips = $trips ?? [];
   $key_logs_json = $key_logs_json ?? '[]';
   $activity_json = $activity_json ?? '[]';
 ?>
 
-<link rel="stylesheet" href="<?= base_url('Assets/css/safety.css') ?>">
+<link rel="stylesheet" href="<?= base_url('Assets/css/safety.css') . '?v=' . @filemtime(FCPATH.'Assets/css/safety.css') ?>">
 
 <div class="page-header">
   <div>
@@ -25,6 +26,59 @@
           <span class="guard-shift">On Duty: <strong>Guard Santos, J.</strong></span>
           <span class="guard-time" id="guardClock"></span>
         </div>
+      </div>
+    </div>
+
+    <div class="guard-card guard-card-full">
+      <div class="gc-title"><i class="bi bi-ticket-perforated-fill"></i> Approved Trip Tickets — Check In / Check Out</div>
+      <div class="table-wrap">
+        <table class="sj-table">
+          <thead>
+            <tr><th>Trip ID</th><th>Requester</th><th>Destination</th><th>Driver / Vehicle</th><th>Departure</th><th>Gate Status</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <?php if (empty($trips)): ?>
+              <tr><td colspan="7" class="empty-row">No approved trip tickets awaiting gate action.</td></tr>
+            <?php else: ?>
+              <?php foreach ($trips as $trip): ?>
+                <tr>
+                  <td><strong><?= esc($trip['trip_id']) ?></strong></td>
+                  <td><?= esc($trip['requester_name'] ?? 'Unknown') ?></td>
+                  <td><?= esc($trip['destination']) ?></td>
+                  <td>
+                    <?= esc($trip['driver_name'] ?? 'Unassigned') ?><br>
+                    <small><?= esc($trip['plate_no'] ?? 'No vehicle') ?></small>
+                  </td>
+                  <td><?= date('M d, h:i A', strtotime($trip['travel_date'] . ' ' . $trip['departure_time'])) ?></td>
+                  <td>
+                    <?php if (!empty($trip['check_out_time'])): ?>
+                      <span class="tt-badge tt-completed">Returned <?= date('h:i A', strtotime($trip['check_out_time'])) ?></span>
+                    <?php elseif (!empty($trip['check_in_time'])): ?>
+                      <span class="tt-badge tt-released">Out since <?= date('h:i A', strtotime($trip['check_in_time'])) ?></span>
+                    <?php else: ?>
+                      <span class="tt-badge tt-pending">Awaiting Dispatch</span>
+                    <?php endif; ?>
+                  </td>
+                  <td>
+                    <?php if (empty($trip['check_in_time'])): ?>
+                      <form method="post" action="<?= base_url('travel/checkin/'.$trip['id']) ?>" style="display:contents;">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn-primary btn-sm">Check In</button>
+                      </form>
+                    <?php elseif (empty($trip['check_out_time'])): ?>
+                      <form method="post" action="<?= base_url('travel/checkout/'.$trip['id']) ?>" style="display:contents;">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn-submit btn-sm">Check Out</button>
+                      </form>
+                    <?php else: ?>
+                      <span class="text-muted">Trip Complete</span>
+                    <?php endif; ?>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </tbody>
+        </table>
       </div>
     </div>
 

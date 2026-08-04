@@ -8,7 +8,7 @@ class FireExtinguisherModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [
-        'unit_id', 'type', 'location', 'weight_kg', 'last_inspection', 'next_due',
+        'unit_id', 'type', 'location', 'floor', 'weight_kg', 'last_inspection', 'next_due',
         'status', 'year_acquired', 'inspector', 'assigned_guard', 'notes',
     ];
 

@@ -29,21 +29,61 @@ class ToolsController extends BaseController
             return redirect()->to('/login');
         }
 
-        $tools = $this->toolsModel->getAllWithDetails();
-
-        $data = [
-            'title'           => 'Tools Equipment Management',
-            'pageCss'         => 'tools.css',
-            'tools'           => $tools,
-            'total_tools'     => count($tools),
-            'available_tools' => $this->toolsModel->where('availability', 'Available')->where('is_archived', 0)->countAllResults(),
-            'borrowed_tools'  => $this->toolsModel->where('availability', 'Borrowed')->where('is_archived', 0)->countAllResults(),
-            'maintenance_tools' => $this->toolsModel->where('condition_status', 'Poor')->where('is_archived', 0)->countAllResults(),
-            'disposal_tools'  => $this->toolsModel->where('availability', 'Disposal')->where('is_archived', 0)->countAllResults(),
-            'personnel'       => $this->personnelModel->findAll(),
-        ];
+        $data = array_merge([
+            'title'   => 'Tools Equipment Management',
+            'pageCss' => 'tools.css',
+            'tools'   => $this->toolsModel->getAllWithDetails(),
+            'personnel' => $this->personnelModel->findAll(),
+        ], $this->getStatCounts());
 
         return view('tools/index', $data);
+    }
+
+    public function electronicDevices()
+    {
+        return $this->categoryView('Electronic Devices');
+    }
+
+    public function accessories()
+    {
+        return $this->categoryView('Accessories');
+    }
+
+    public function toolsEquipment()
+    {
+        return $this->categoryView('Tools Equipment');
+    }
+
+    public function consumable()
+    {
+        return $this->categoryView('Consumable');
+    }
+
+    private function categoryView(string $category)
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $data = array_merge([
+            'title'   => $category,
+            'pageCss' => 'tools.css',
+            'tools'   => $this->toolsModel->getByCategory($category),
+            'personnel' => $this->personnelModel->findAll(),
+        ], $this->getStatCounts());
+
+        return view('tools/index', $data);
+    }
+
+    private function getStatCounts(): array
+    {
+        return [
+            'total_tools'       => $this->toolsModel->where('is_archived', 0)->countAllResults(),
+            'available_tools'   => $this->toolsModel->where('availability', 'Available')->where('is_archived', 0)->countAllResults(),
+            'borrowed_tools'    => $this->toolsModel->where('availability', 'Borrowed')->where('is_archived', 0)->countAllResults(),
+            'maintenance_tools' => $this->toolsModel->where('availability', 'Maintenance')->where('is_archived', 0)->countAllResults(),
+            'disposal_tools'    => $this->toolsModel->where('availability', 'Disposal')->where('is_archived', 0)->countAllResults(),
+        ];
     }
 
     public function add()
@@ -90,6 +130,23 @@ class ToolsController extends BaseController
             'archived_at' => date('Y-m-d H:i:s'),
         ]);
         return redirect()->to('/tools')->with('success', 'Asset archived.');
+    }
+
+    // Consumable items don't get archived when they run low — they get refilled.
+    public function refillStock($id)
+    {
+        $qty = (float) $this->request->getPost('quantity');
+        $item = $this->toolsModel->find($id);
+        if (!$item || $qty <= 0) {
+            return redirect()->to('/tools/consumable')->with('error', 'Invalid refill quantity.');
+        }
+
+        $this->toolsModel->update($id, [
+            'current_stock'     => (float) ($item['current_stock'] ?? 0) + $qty,
+            'last_activity_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        return redirect()->to('/tools/consumable')->with('success', $item['asset_name'] . ' refilled by ' . $qty . '.');
     }
 
     // --- BORROW ---

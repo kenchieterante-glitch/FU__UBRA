@@ -47,45 +47,78 @@ class JanitorialController extends BaseController
             $tasksByAssignment[$task['assignment_id']][] = $task;
         }
 
-        // Build the zone map (AREAS) and per-zone checklists from the SAME assignment rows,
-        // so the "Total Zones" stat and the "X/Y cleaned" stat can never disagree again.
+        // A building can have more than one staff/shift assigned to it (e.g.
+        // CCS Building has two). Group by zone FIRST, then build one merged
+        // checklist per zone — so the map color, the drill-down panel, and
+        // the "X/Y cleaned" stat all read from the exact same merged data
+        // and can never disagree with each other.
+        $assignmentsByZone = [];
+        foreach ($assignments as $a) {
+            $slug = self::ZONE_SLUGS[$a['assigned_zone']] ?? strtolower(preg_replace('/[^a-z0-9]+/', '-', $a['assigned_zone']));
+            $assignmentsByZone[$slug][] = $a;
+        }
+
         $areas = [];
         $checklists = [];
         $staff = [];
 
-        foreach ($assignments as $a) {
-            $slug = self::ZONE_SLUGS[$a['assigned_zone']] ?? strtolower(preg_replace('/[^a-z0-9]+/', '-', $a['assigned_zone']));
-            $tasks = $tasksByAssignment[$a['id']] ?? [];
-            $done  = count(array_filter($tasks, fn($t) => (int) $t['is_done'] === 1));
-            $total = count($tasks);
+        foreach ($assignmentsByZone as $slug => $zoneAssignments) {
+            $zoneName   = $zoneAssignments[0]['assigned_zone'];
+            $multiStaff = count($zoneAssignments) > 1;
+            $areas[$slug] = ['name' => $zoneName];
 
-            $areas[$slug] = ['name' => $a['assigned_zone']];
+            $mergedTasks  = [];
+            $staffNames   = [];
+            $shiftLabels  = [];
+
+            foreach ($zoneAssignments as $a) {
+                $tasks = $tasksByAssignment[$a['id']] ?? [];
+                $done  = count(array_filter($tasks, fn($t) => (int) $t['is_done'] === 1));
+                $total = count($tasks);
+                $shift = date('gA', strtotime($a['shift_start'])) . '-' . date('gA', strtotime($a['shift_end']));
+
+                $staffNames[]  = $a['staff_name'];
+                $shiftLabels[] = $shift;
+
+                foreach ($tasks as $t) {
+                    $mergedTasks[] = [
+                        't'    => $multiStaff ? "{$t['task_name']} ({$a['staff_name']})" : $t['task_name'],
+                        'done' => (bool) $t['is_done'],
+                        'time' => $t['completed_at'] ? date('H:i', strtotime($t['completed_at'])) : null,
+                    ];
+                }
+
+                $staff[] = [
+                    'name'  => $a['staff_name'],
+                    'zone'  => $zoneName,
+                    'tasks' => $total,
+                    'done'  => $done,
+                    'photo' => strtoupper(substr($a['staff_name'], 0, 1)),
+                    'shift' => $shift,
+                    'area'  => $slug,
+                ];
+            }
 
             $checklists[$slug] = [
-                'staff' => $a['staff_name'],
-                'shift' => date('gA', strtotime($a['shift_start'])) . '-' . date('gA', strtotime($a['shift_end'])),
-                'tasks' => array_map(fn($t) => [
-                    't'    => $t['task_name'],
-                    'done' => (bool) $t['is_done'],
-                    'time' => $t['completed_at'] ? date('H:i', strtotime($t['completed_at'])) : null,
-                ], $tasks),
-            ];
-
-            $staff[] = [
-                'name'  => $a['staff_name'],
-                'zone'  => $a['assigned_zone'],
-                'tasks' => $total,
-                'done'  => $done,
-                'photo' => strtoupper(substr($a['staff_name'], 0, 1)),
-                'shift' => $checklists[$slug]['shift'],
-                'area'  => $slug,
+                'staff' => implode(' & ', $staffNames),
+                'shift' => implode(' / ', array_unique($shiftLabels)),
+                'tasks' => $mergedTasks,
             ];
         }
 
         $inventory = $this->inventoryModel->findAll();
 
-        $totalZones    = count($areas);
-        $cleanedZones  = count(array_filter($staff, fn($s) => $s['tasks'] > 0 && $s['done'] === $s['tasks']));
+        // A zone counts as cleaned only when every task across every
+        // assignment mapped to it is done — read straight from the same
+        // merged checklist the map and drill-down panel use.
+        $totalZones   = count($checklists);
+        $cleanedZones = count(array_filter($checklists, function ($c) {
+            if (empty($c['tasks'])) return false;
+            foreach ($c['tasks'] as $t) {
+                if (!$t['done']) return false;
+            }
+            return true;
+        }));
         $pendingZones  = $totalZones - $cleanedZones;
         $lowStock      = count(array_filter($inventory, fn($i) => (float) $i['current_stock'] <= (float) $i['reorder_threshold'] && (float) $i['current_stock'] > 0));
         $outOfStock    = count(array_filter($inventory, fn($i) => (float) $i['current_stock'] <= 0));
@@ -105,6 +138,8 @@ class JanitorialController extends BaseController
                 'reorder'    => (float) $i['reorder_threshold'],
                 'lastRefill' => $i['last_refill'],
             ], $inventory)),
+            'zone_total'   => $totalZones,
+            'zone_cleaned' => $cleanedZones,
             'summary' => [
                 'total_zones'   => $totalZones,
                 'active_shifts' => count($staff),

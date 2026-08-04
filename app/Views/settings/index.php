@@ -6,7 +6,7 @@
   $logs = $logs ?? [];
   $sys_info = $sys_info ?? [];
 ?>
-<link rel="stylesheet" href="<?= base_url('Assets/css/settings.css') ?>">
+<link rel="stylesheet" href="<?= base_url('Assets/css/settings.css') . '?v=' . @filemtime(FCPATH.'Assets/css/settings.css') ?>">
 
 <div class="stg-wrapper">
 
