@@ -36,12 +36,26 @@ class CalendarController extends BaseController
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
 
         $data = [
-            'title'         => 'Operations Calendar',
-            'events_json'   => $this->jsonForScript($this->persistedEvents()),
-            'flash_success' => $this->session->getFlashdata('success'),
+            'title'            => 'Operations Calendar',
+            'events_json'      => $this->jsonForScript($this->persistedEvents()),
+            'flash_success'    => $this->session->getFlashdata('success'),
+            'pending_renewals' => $this->pendingVehicleRenewals(),
         ];
 
         return view('calendar/index', $data);
+    }
+
+    // Real renewals due for review — vehicles whose inspection is expired or
+    // due soon. Replaces the old hardcoded "Vehicle Insurance Renewal"
+    // placeholder (there's no insurance-expiry field tracked in this system,
+    // inspection_status is the real equivalent already recorded per vehicle).
+    private function pendingVehicleRenewals(): array
+    {
+        return (new VehicleModel())
+            ->whereIn('inspection_status', ['Expired', 'Due Soon'])
+            ->where('is_archived', 0)
+            ->orderBy('inspection_status', 'ASC')
+            ->findAll();
     }
 
     public function add()

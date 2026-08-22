@@ -26,18 +26,22 @@
 
 <div class="stat-cards">
   <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('')" role="button" tabindex="0">
+    <span class="stat-icon tone-maroon"><i class="fa-solid fa-truck"></i></span>
     <h3>Total Vehicles</h3>
     <div class="value"><?= (int) $total_vehicles ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('available')" role="button" tabindex="0">
+    <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
     <h3>Available</h3>
     <div class="value"><?= (int) $available_vehicles ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('inuse')" role="button" tabindex="0">
+    <span class="stat-icon tone-neutral"><i class="fa-solid fa-road"></i></span>
     <h3>In Use</h3>
     <div class="value"><?= (int) $inuse_vehicles ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('maintenance')" role="button" tabindex="0">
+    <span class="stat-icon tone-red"><i class="fa-solid fa-screwdriver-wrench"></i></span>
     <h3>Needs Maintenance</h3>
     <div class="value"><?= count(array_filter($vehicles, fn($v) => $v['inspection_status'] == 'Expired' || $v['availability'] == 'Maintenance')) ?></div>
   </div>
@@ -47,7 +51,7 @@
   <div class="table-toolbar">
     <div class="toolbar-left">
       <div class="toolbar-search">
-        <input type="text" id="vehiclesSearch" class="search-box" placeholder="Search vehicle, plate, driver, department" oninput="filterVehiclesTable()">
+        <input type="text" id="vehiclesSearch" class="search-box" placeholder="Search vehicles…" title="Search by vehicle, plate, driver, or department" oninput="filterVehiclesTable()">
         <i class="bi bi-search search-icon"></i>
       </div>
     </div>
@@ -85,6 +89,7 @@
     </div>
   </div>
 
+  <div class="vehicles-table-scroll">
   <table id="vehiclesTable" class="data-table">
   <thead>
     <tr>
@@ -116,10 +121,10 @@
           <td><span class="status-badge status-<?= esc($availabilityClass) ?>"><?= esc($v['availability']) ?></span></td>
           <td class="action-cell">
             <div class="action-buttons">
-              <button type="button" class="icon-btn" onclick="document.getElementById('editModal<?= $v['id'] ?>').style.display='flex'" title="Edit"><i class="fa-solid fa-pen"></i></button>
+              <button type="button" class="icon-btn" onclick="document.getElementById('editModal<?= $v['id'] ?>').style.display='flex'" title="Edit" aria-label="Edit <?= esc($v['vehicle_name']) ?>"><i class="fa-solid fa-pen"></i></button>
               <form method="post" action="<?= base_url('vehicles/delete/'.$v['id']) ?>" onsubmit="return confirm('Archive this vehicle?')" style="display:contents;">
                 <?= csrf_field() ?>
-                <button type="submit" class="icon-btn delete" title="Archive"><i class="fa-solid fa-archive"></i></button>
+                <button type="submit" class="icon-btn delete" title="Archive" aria-label="Archive <?= esc($v['vehicle_name']) ?>"><i class="fa-solid fa-archive"></i></button>
               </form>
             </div>
           </td>
@@ -131,6 +136,7 @@
   </tbody>
 </table>
 </div>
+</div>
 
 <?php if (!empty($vehicles)): ?>
   <?php foreach ($vehicles as $v): ?>
@@ -139,9 +145,9 @@
         <h3>Edit Vehicle</h3>
         <form action="<?= base_url('vehicles/edit/'.$v['id']) ?>" method="post">
           <?= csrf_field() ?>
-          <label>Vehicle Name / Model</label>
+          <label>Vehicle Name / Model <span class="required-mark">*</span></label>
           <input type="text" name="vehicle_name" value="<?= esc($v['vehicle_name']) ?>" required>
-          <label>Plate Number</label>
+          <label>Plate Number <span class="required-mark">*</span></label>
           <input type="text" name="plate_no" value="<?= esc($v['plate_no']) ?>" required>
           <label>Type</label>
           <input type="text" name="type" value="<?= esc($v['type']) ?>">
@@ -263,9 +269,10 @@ if (vehiclesUrlFilter) filterVehiclesByStat(vehiclesUrlFilter);
     <h3>Add Vehicle</h3>
     <form action="<?= base_url('vehicles/add') ?>" method="post">
       <?= csrf_field() ?>
-      <label>Vehicle Name / Model</label>
+      <p class="required-note">Fields marked <span class="required-mark">*</span> are required.</p>
+      <label>Vehicle Name / Model <span class="required-mark">*</span></label>
       <input type="text" name="vehicle_name" required>
-      <label>Plate Number</label>
+      <label>Plate Number <span class="required-mark">*</span></label>
       <input type="text" name="plate_no" required>
       <label>Type</label>
       <input type="text" name="type">

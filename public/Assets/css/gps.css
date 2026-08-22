@@ -4,14 +4,10 @@
 ════════════════════════════════════════════════════════════════ */
 
 :root {
-    --maroon: #800000;
-    --maroon-dark: #5a0909;
     --maroon-light: #9B1B1B;
-    --gold: #6b6b6b;
     --surface: #ffffff;
     --surface-alt: #f8f4f4;
     --border: #e0d5d5;
-    --text: #1a1a1a;
     --text-muted: #6b6b6b;
     --success: #16a34a;
     --warning: #d97706;
@@ -563,8 +559,8 @@
 }
 
 .gps-online {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--green-bg, #e6f4ea);
+    color: var(--green, #2e7d32);
 }
 
 .gps-offline {

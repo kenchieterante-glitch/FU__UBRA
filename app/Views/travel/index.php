@@ -29,36 +29,36 @@
     </div>
 
     <!-- ── SUMMARY CARDS ───────────────────────────────────────── -->
-    <div class="summary-grid">
-        <div class="summary-card pending">
-            <div class="summary-label">Pending Requests</div>
-            <div class="summary-value"><?= $pending_count ?? 0 ?></div>
-            <div class="summary-sub warning"><i class="bi bi-exclamation-circle"></i> Requires Approval</div>
+    <div class="stat-cards">
+        <div class="stat-card">
+            <span class="stat-icon tone-gold"><i class="fa-solid fa-hourglass-half"></i></span>
+            <h3>Pending Requests</h3>
+            <div class="value"><?= $pending_count ?? 0 ?></div>
         </div>
-        <div class="summary-card approved">
-            <div class="summary-label">Approved Trips</div>
-            <div class="summary-value"><?= $approved_count ?? 0 ?></div>
-            <div class="summary-sub success"><i class="bi bi-check-circle"></i> Scheduled / Dispatched</div>
+        <div class="stat-card">
+            <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
+            <h3>Approved Trips</h3>
+            <div class="value"><?= $approved_count ?? 0 ?></div>
         </div>
-        <div class="summary-card today">
-            <div class="summary-label">Today's Trips</div>
-            <div class="summary-value"><?= $today_count ?? 0 ?></div>
-            <div class="summary-sub info"><i class="bi bi-truck"></i> Active Dispatch</div>
+        <div class="stat-card">
+            <span class="stat-icon tone-maroon"><i class="fa-solid fa-calendar-day"></i></span>
+            <h3>Today's Trips</h3>
+            <div class="value"><?= $today_count ?? 0 ?></div>
         </div>
-        <div class="summary-card completed">
-            <div class="summary-label">Completed Trips</div>
-            <div class="summary-value"><?= $completed_count ?? 0 ?></div>
-            <div class="summary-sub muted">This academic term</div>
+        <div class="stat-card">
+            <span class="stat-icon tone-neutral"><i class="fa-solid fa-flag-checkered"></i></span>
+            <h3>Completed Trips</h3>
+            <div class="value"><?= $completed_count ?? 0 ?></div>
         </div>
-        <div class="summary-card cancelled">
-            <div class="summary-label">Rejected / Cancelled</div>
-            <div class="summary-value"><?= $cancelled_count ?? 0 ?></div>
-            <div class="summary-sub danger">Cancelled / Archived</div>
+        <div class="stat-card">
+            <span class="stat-icon tone-red"><i class="fa-solid fa-circle-xmark"></i></span>
+            <h3>Rejected / Cancelled</h3>
+            <div class="value"><?= $cancelled_count ?? 0 ?></div>
         </div>
-        <div class="summary-card vehicles">
-            <div class="summary-label">Available Vehicles</div>
-            <div class="summary-value"><?= $available_vehicles ?? 0 ?>/<?= $total_vehicles ?? count($vehicles ?? []) ?></div>
-            <div class="summary-sub success">Ready to assign</div>
+        <div class="stat-card">
+            <span class="stat-icon tone-neutral"><i class="fa-solid fa-truck"></i></span>
+            <h3>Available Vehicles</h3>
+            <div class="value"><?= $available_vehicles ?? 0 ?>/<?= $total_vehicles ?? count($vehicles ?? []) ?></div>
         </div>
     </div>
 
@@ -69,7 +69,7 @@
             <div class="table-toolbar">
                 <div class="toolbar-left">
                     <div class="toolbar-search">
-                      <input type="text" id="searchInput" class="search-box" placeholder="Search requester, destination..." oninput="filterTable()">
+                      <input type="text" id="searchInput" class="search-box" placeholder="Search trips…" title="Search by requester or destination" oninput="filterTable()">
                       <i class="bi bi-search search-icon"></i>
                     </div>
                 </div>
@@ -163,17 +163,6 @@
                                             <i class="bi bi-eye-fill"></i>
                                         </button>
 
-                                        <?php if ($trip['status'] === 'Pending'): ?>
-                                            <button class="icon-btn approve" title="Approve Trip"
-                                                onclick="openApproveModal(<?= $trip['id'] ?>, '<?= esc($trip['trip_id']) ?>', '<?= esc($trip['destination']) ?>')">
-                                                <i class="bi bi-check-circle-fill"></i>
-                                            </button>
-                                            <form method="post" action="<?= base_url('travel/reject/'.$trip['id']) ?>" onsubmit="return confirm('Reject this trip request?')" style="display:contents;">
-                                                <?= csrf_field() ?>
-                                                <button type="submit" class="icon-btn reject" title="Reject Trip"><i class="bi bi-x-circle-fill"></i></button>
-                                            </form>
-                                        <?php endif; ?>
-
                                         <form method="post" action="<?= base_url('travel/delete/'.$trip['id']) ?>" onsubmit="return confirm('Archive this trip ticket?')" style="display:contents;">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="icon-btn" style="background:#f3f4f6;color:#6b7280;" title="Archive"><i class="bi bi-archive-fill"></i></button>
@@ -266,46 +255,6 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     MODAL: APPROVE TRIP
-════════════════════════════════════════════════════════════════ -->
-<div id="approveModal" class="modal-overlay" style="display:none;">
-    <div class="modal-box modal-sm">
-        <div class="modal-header">
-            <h3><i class="bi bi-check-circle"></i> Approve Trip</h3>
-            <button class="modal-close" onclick="closeApproveModal()"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <form method="post" id="approveForm">
-            <?= csrf_field() ?>
-            <div class="modal-body">
-                <p class="approve-info">Approving: <strong id="approveLabel"></strong></p>
-                <div class="form-group">
-                        <label>Assign Driver</label>
-                        <select name="assigned_driver_id">
-                            <option value="">— Select Driver —</option>
-                            <?php foreach (($drivers ?? []) as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= esc($p['full_name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Assign Vehicle</label>
-                        <select name="assigned_vehicle_id">
-                            <option value="">— Select Vehicle —</option>
-                            <?php foreach (($vehicles ?? []) as $v): ?>
-                                <option value="<?= $v['id'] ?>"><?= esc($v['vehicle_name']) ?> — <?= esc($v['plate_no']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeApproveModal()">Cancel</button>
-                <button type="submit" class="btn-submit approve-submit"><i class="bi bi-check-lg"></i> Approve Trip</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════
      MODAL: DIGITAL TRIP TICKET
 ════════════════════════════════════════════════════════════════ -->
 <div id="ticketModal" class="modal-overlay" style="display:none;">
@@ -313,7 +262,7 @@
         <div class="modal-header">
             <div>
                 <h3><i class="bi bi-ticket-perforated"></i> Digital Trip Ticket</h3>
-                <span class="modal-sub">Paperless vehicle travel authorization • FU-UBRA</span>
+                <span class="modal-sub">Paperless vehicle travel authorization • UBRA</span>
             </div>
             <div class="ticket-header-right">
                 <button class="btn-outline-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
@@ -354,14 +303,7 @@
 ════════════════════════════════════════════════════════════════ -->
 <script>
 // ── Modal helpers ──────────────────────────────────────────────
-function closeApproveModal(){ document.getElementById('approveModal').style.display = 'none'; }
 function closeTicketModal(){ document.getElementById('ticketModal').style.display = 'none'; }
-
-function openApproveModal(id, tripId, destination) {
-    document.getElementById('approveLabel').textContent = tripId + ' → ' + destination;
-    document.getElementById('approveForm').action = '<?= base_url('travel/approve/') ?>' + id;
-    document.getElementById('approveModal').style.display = 'flex';
-}
 
 // ── View ticket (AJAX) ─────────────────────────────────────────
 function viewTicket(id) {
@@ -414,19 +356,6 @@ function viewTicket(id) {
                         <div class="ts-sub">Trip ID: ${t.trip_id || '—'}</div>
                         <div class="ts-verify ${verifyTone}"><i class="bi ${verifyIcon}"></i> ${verifyText}</div>
                     </div>
-                    ${t.status === 'Pending' ? `
-                    <div class="ticket-approval-panel">
-                        <div class="ts-label">Admin Action</div>
-                        <p class="ts-sub" style="margin-bottom:.6rem;">Approving or denying is the only action needed here.</p>
-                        <form method="post" action="<?= base_url('travel/approve/') ?>${t.id}" style="display:contents;">
-                            <?= csrf_field() ?>
-                            <button type="submit" class="btn-submit approve-submit" style="width:100%;justify-content:center;margin-bottom:.5rem;"><i class="bi bi-check-lg"></i> Approve</button>
-                        </form>
-                        <form method="post" action="<?= base_url('travel/reject/') ?>${t.id}" onsubmit="return confirm('Deny this trip request?')" style="display:contents;">
-                            <?= csrf_field() ?>
-                            <button type="submit" class="btn-cancel" style="width:100%;justify-content:center;color:var(--danger);"><i class="bi bi-x-lg"></i> Deny</button>
-                        </form>
-                    </div>` : ''}
                     <div class="ticket-action-row" style="margin-top:1rem;">
                         <button class="btn-submit" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
                         <button class="btn-cancel" onclick="closeTicketModal()"><i class="bi bi-x"></i> Close</button>

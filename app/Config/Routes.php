@@ -41,6 +41,9 @@ $routes->set404Override();
 // DASHBOARD
 // ============================================================
 $routes->get('dashboard', 'Dashboard::index');
+$routes->get('security-dashboard', 'SecurityDashboardController::index');
+$routes->get('tools-dashboard', 'ToolsDashboardController::index');
+$routes->get('facilities-dashboard', 'FacilitiesDashboardController::index');
 
 // ============================================================
 // PERSONNEL
@@ -56,13 +59,33 @@ $routes->post('personnel/add/',      'PersonnelController::add');
 $routes->post('personnel/edit/(:num)','PersonnelController::edit/$1');
 $routes->post('personnel/edit/(:num)/','PersonnelController::edit/$1');
 $routes->post('personnel/delete/(:num)','PersonnelController::delete/$1');
+$routes->get ('personnel/view/(:num)', 'PersonnelController::view/$1');
+$routes->get ('personnel/on-job-order', 'PersonnelController::jobOrder');
+$routes->post('personnel/assign-job-order/(:num)', 'PersonnelController::assignJobOrder/$1');
+
+// ------------------------------------------------------------
+// Job Order Personnel Monitoring (nested under personnel/* so the
+// existing 'facilities' role AuthFilter allowance covers it automatically)
+// ------------------------------------------------------------
+$routes->get ('personnel/monitoring', 'PersonnelMonitoringController::index');
+
+$routes->get ('personnel/job-orders',                'JobOrderController::index');
+$routes->get ('personnel/job-orders/view/(:num)',    'JobOrderController::view/$1');
+$routes->post('personnel/job-orders/add',            'JobOrderController::add');
+$routes->post('personnel/job-orders/edit/(:num)',    'JobOrderController::edit/$1');
+$routes->post('personnel/job-orders/archive/(:num)', 'JobOrderController::archive/$1');
+$routes->post('personnel/job-orders/assign/(:num)',  'JobOrderController::assignPersonnel/$1');
+$routes->post('personnel/assignments/end/(:num)',    'JobOrderController::endAssignment/$1');
+
+$routes->post('personnel/documents/add',           'PersonnelDocumentController::add');
+$routes->post('personnel/documents/verify/(:num)', 'PersonnelDocumentController::verify/$1');
+$routes->post('personnel/documents/reject/(:num)', 'PersonnelDocumentController::reject/$1');
 
 // ============================================================
 // TOOLS & EQUIPMENT
 // ============================================================
 $routes->get ('tools',                  'ToolsController::index');
 $routes->get ('tools/electronic-devices','ToolsController::electronicDevices');
-$routes->get ('tools/accessories',      'ToolsController::accessories');
 $routes->get ('tools/equipment',        'ToolsController::toolsEquipment');
 $routes->get ('tools/consumable',       'ToolsController::consumable');
 $routes->post('tools/add',              'ToolsController::add');
@@ -137,6 +160,9 @@ $routes->post('notifications/markRead/(:num)', 'NotificationController::markRead
 $routes->post('notifications/dismiss/(:num)',  'NotificationController::dismiss/$1');
 $routes->post('notifications/action/(:num)',   'NotificationController::action/$1');
 $routes->get ('notifications/unreadCount',     'NotificationController::unreadCount');
+$routes->post('notifications/saveDraft',       'NotificationController::saveDraft');
+$routes->post('notifications/sendDraft/(:num)', 'NotificationController::sendDraft/$1');
+$routes->post('notifications/deleteDraft/(:num)', 'NotificationController::deleteDraft/$1');
 
 // ============================================================
 // RECORDS, ARCHIVING & REPORTS
@@ -152,12 +178,15 @@ $routes->get ('reports/chartData',          'ReportController::chartData');
 $routes->get ('ubra', 'UbraController::index');
 $routes->post('ubra/chat', 'UbraController::chat');
 $routes->post('ubra/quickAction', 'UbraController::quickAction');
+$routes->get ('ubra/history', 'UbraController::history');
+$routes->post('ubra/clearHistory', 'UbraController::clearHistory');
 
 // ============================================================
 // SETTINGS
 // ============================================================
 $routes->get ('settings',                 'SettingsController::index');
 $routes->post('settings/saveGeneral',     'SettingsController::saveGeneral');
+$routes->post('settings/saveAI',          'SettingsController::saveAI');
 $routes->post('settings/saveEmail',       'SettingsController::saveEmail');
 $routes->post('settings/saveNotifications','SettingsController::saveNotifications');
 $routes->post('settings/saveRoles',       'SettingsController::saveRoles');

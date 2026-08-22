@@ -44,11 +44,6 @@ class ToolsController extends BaseController
         return $this->categoryView('Electronic Devices');
     }
 
-    public function accessories()
-    {
-        return $this->categoryView('Accessories');
-    }
-
     public function toolsEquipment()
     {
         return $this->categoryView('Tools Equipment');

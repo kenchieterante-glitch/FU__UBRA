@@ -16,27 +16,20 @@
     <p class="subtle" style="font-size:.75rem;opacity:.7;">Last updated: <?= esc($last_updated ?? date('M j, Y g:i A')) ?></p>
   </div>
 
-  <section class="kpi-grid" aria-label="Key performance indicators">
+  <section class="stat-cards" aria-label="Key performance indicators">
     <?php foreach ($kpis as $kpi): ?>
+      <?php $tone = esc($kpi['tone'] ?? 'tone-maroon', 'attr'); ?>
       <?php if (!empty($kpi['expand'])): ?>
-        <div class="kpi-card <?= esc($kpi['tone'] ?? 'tone-neutral') ?>" onclick="togglePendingPanel()" role="button" tabindex="0">
-          <div class="kpi-top">
-            <span class="kpi-icon"><i class="fa-solid <?= esc($kpi['icon']) ?>"></i></span>
-            <span class="kpi-label"><?= esc($kpi['label']) ?></span>
-          </div>
-          <div class="kpi-value"><?= esc($kpi['value']) ?></div>
-          <div class="kpi-meta"><?= esc($kpi['meta']) ?></div>
-          <div class="kpi-sub"><?= esc($kpi['sub']) ?></div>
+        <div class="stat-card stat-card-clickable" onclick="togglePendingPanel()" role="button" tabindex="0">
+          <span class="stat-icon <?= $tone ?>"><i class="fa-solid <?= esc($kpi['icon'] ?? 'fa-chart-simple', 'attr') ?>"></i></span>
+          <h3><?= esc($kpi['label']) ?></h3>
+          <div class="value"><?= esc($kpi['value']) ?></div>
         </div>
       <?php else: ?>
-        <a class="kpi-card <?= esc($kpi['tone'] ?? 'tone-neutral') ?>" href="<?= esc(site_url($kpi['url'] ?? '#')) ?>">
-          <div class="kpi-top">
-            <span class="kpi-icon"><i class="fa-solid <?= esc($kpi['icon']) ?>"></i></span>
-            <span class="kpi-label"><?= esc($kpi['label']) ?></span>
-          </div>
-          <div class="kpi-value"><?= esc($kpi['value']) ?></div>
-          <div class="kpi-meta"><?= esc($kpi['meta']) ?></div>
-          <div class="kpi-sub"><?= esc($kpi['sub']) ?></div>
+        <a class="stat-card stat-card-clickable" href="<?= esc(site_url($kpi['url'] ?? '#')) ?>">
+          <span class="stat-icon <?= $tone ?>"><i class="fa-solid <?= esc($kpi['icon'] ?? 'fa-chart-simple', 'attr') ?>"></i></span>
+          <h3><?= esc($kpi['label']) ?></h3>
+          <div class="value"><?= esc($kpi['value']) ?></div>
         </a>
       <?php endif; ?>
     <?php endforeach; ?>
@@ -129,9 +122,9 @@
           <tbody>
             <?php foreach ($travel_history as $t): ?>
               <?php $pill = match ($t['status']) {
-                'Approved', 'Completed' => 'pill-green',
-                'Pending' => 'pill-gold',
-                default => 'pill-red',
+                'Approved', 'Completed' => 'green',
+                'Pending' => 'amber',
+                default => 'red',
               }; ?>
               <tr class="board-table-row" onclick="window.location='<?= esc(site_url('travel')) ?>'">
                 <td class="mono"><?= esc($t['trip_id']) ?></td>
@@ -141,7 +134,7 @@
                 <td><?= esc($t['driver']) ?></td>
                 <td><?= esc($t['vehicle']) ?></td>
                 <td><?= esc($t['tire_pressure']) ?></td>
-                <td><span class="status-pill <?= $pill ?>"><?= esc($t['status']) ?></span></td>
+                <td><span class="badge <?= $pill ?>"><?= esc($t['status']) ?></span></td>
               </tr>
             <?php endforeach; ?>
           </tbody>
@@ -189,7 +182,7 @@
       : '<div class="no-data">No open work orders.</div>';
   }
 
-  document.querySelectorAll('.kpi-card[role="button"]').forEach(card => {
+  document.querySelectorAll('.stat-card[role="button"]').forEach(card => {
     card.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();

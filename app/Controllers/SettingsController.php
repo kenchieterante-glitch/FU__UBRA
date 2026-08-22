@@ -69,6 +69,16 @@ class SettingsController extends BaseController
         return redirect()->to('/settings');
     }
 
+    public function saveAI()
+    {
+        if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
+
+        $ok = $this->upsertSetting('ai_api_key', $this->request->getPost('ai_api_key') ?? '');
+
+        $this->session->setFlashdata($ok ? 'success' : 'error', $ok ? 'AI configuration saved.' : 'AI configuration could not be saved.');
+        return redirect()->to('/settings');
+    }
+
     public function saveEmail()
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
@@ -169,14 +179,15 @@ class SettingsController extends BaseController
     private function getSettings(): array
     {
         $defaults = [
-            'system_name'       => 'FU-UBRA Operational Portal',
+            'system_name'       => 'UBRA Operational Portal',
             'university'        => 'Foundation University',
             'api_key'           => '',
+            'ai_api_key'        => '',
             'smtp_host'         => 'smtp.gmail.com',
             'smtp_port'         => '587',
             'smtp_user'         => '',
             'smtp_from'         => '',
-            'smtp_name'         => 'FU-UBRA System',
+            'smtp_name'         => 'UBRA System',
             'smtp_pass'         => '',
             'notif_maintenance' => '1',
             'notif_vehicle'     => '1',

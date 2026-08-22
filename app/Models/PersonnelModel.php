@@ -8,9 +8,27 @@ class PersonnelModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [
-        'emp_id','user_id','full_name','email','department_id','position',
-        'assigned_task','status','is_archived','archived_at','created_at'
+        'emp_id','user_id','full_name','email','department_id','employment_type',
+        'position','assigned_task','status','is_archived','archived_at','created_at'
     ];
+
+    public function getWithDetails(int $id)
+    {
+        return $this->select('personnel.*, departments.name as department_name')
+                    ->join('departments', 'departments.id = personnel.department_id', 'left')
+                    ->where('personnel.id', $id)
+                    ->first();
+    }
+
+    public function getJobOrderPersonnel()
+    {
+        return $this->select('personnel.*, departments.name as department_name')
+                    ->join('departments', 'departments.id = personnel.department_id', 'left')
+                    ->where('personnel.is_archived', 0)
+                    ->where('personnel.employment_type', 'JobOrder')
+                    ->orderBy('personnel.id', 'DESC')
+                    ->findAll();
+    }
 
     public function getByPositionKeyword($keyword)
     {

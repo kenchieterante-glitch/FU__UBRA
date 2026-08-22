@@ -4,13 +4,9 @@
 ════════════════════════════════════════════════════════════════ */
 
 :root {
-    --maroon: #800000;
-    --maroon-dark: #5a0909;
-    --gold: #d6d6d6;
     --surface: #ffffff;
     --surface-alt: #f8f4f4;
     --border: #e0d5d5;
-    --text: #1a1a1a;
     --text-muted: #6b6b6b;
     --success: #16a34a;
     --warning: #d97706;
@@ -463,6 +459,12 @@
     font-size: .72rem !important;
     padding: .1rem .3rem !important;
     cursor: pointer;
+}
+
+.fc .fc-event-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .fc .fc-more-link {

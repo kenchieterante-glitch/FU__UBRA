@@ -59,7 +59,7 @@
                             <label>System Name</label>
                             <input type="text" name="system_name"
                                 value="<?= esc($settings['system_name'] ?? '') ?>"
-                                placeholder="FU-UBRA Operational Portal">
+                                placeholder="UBRA Operational Portal">
                         </div>
                         <div class="form-group">
                             <label>University Name</label>
@@ -69,11 +69,11 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>API Integration Keys</label>
+                        <label>Google Calendar API Key</label>
                         <input type="text" name="api_key"
                             value="<?= esc($settings['api_key'] ?? '') ?>"
-                            placeholder="Google Calendar API / GPS API / OpenAI Key">
-                        <div class="field-hint">Used by Google Calendar, GPS integration, and Mr. UBRA AI.</div>
+                            placeholder="Enter your Google Calendar API key">
+                        <div class="field-hint">Used for the Google Calendar sync. Mr. UBRA's key is set separately under AI Configuration — GPS doesn't need one, devices POST directly to this system.</div>
                     </div>
                     <button type="submit" class="btn-save">
                         <i class="bi bi-floppy-fill"></i> Save Changes
@@ -218,7 +218,7 @@
                         </div>
                         <div class="form-group">
                             <label>From Name</label>
-                            <input type="text" name="smtp_name" value="<?= esc($settings['smtp_name'] ?? '') ?>" placeholder="FU-UBRA System">
+                            <input type="text" name="smtp_name" value="<?= esc($settings['smtp_name'] ?? '') ?>" placeholder="UBRA System">
                         </div>
                     </div>
                     <button type="submit" class="btn-save">
@@ -277,14 +277,20 @@
                         <div class="int-desc">Maintenance events and cleaning cycles automatically sync to the shared B&G Google Calendar. Events update in real time when schedules change.</div>
                     </div>
                 </div>
-                <div class="form-group" style="max-width:480px;margin-top:1.2rem;">
-                    <label>Google Calendar API Key / OAuth Client ID</label>
-                    <input type="text" name="api_key" value="<?= esc($settings['api_key'] ?? '') ?>" placeholder="Enter your Google Calendar API key">
-                    <div class="field-hint">Set up at <strong>console.cloud.google.com</strong> → APIs & Services → Credentials.</div>
-                </div>
+                <form method="post" action="<?= base_url('settings/saveGeneral') ?>">
+                    <?= csrf_field() ?>
+                    <div class="form-group" style="max-width:480px;margin-top:1.2rem;">
+                        <label>Google Calendar API Key / OAuth Client ID</label>
+                        <input type="text" name="api_key" value="<?= esc($settings['api_key'] ?? '') ?>" placeholder="Enter your Google Calendar API key">
+                        <div class="field-hint">Set up at <strong>console.cloud.google.com</strong> → APIs & Services → Credentials.</div>
+                    </div>
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-floppy-fill"></i> Save Changes
+                    </button>
+                </form>
                 <div class="int-note">
                     <i class="bi bi-info-circle"></i>
-                    Confirmed with B&G staff that Google Calendar is already used for scheduling. GroundWorks builds on this habit by automatically syncing all events.
+                    Confirmed with B&G staff that Google Calendar is already used for scheduling. UBRA builds on this habit by automatically syncing all events.
                 </div>
             </div>
 
@@ -301,7 +307,7 @@
                 </div>
                 <div class="int-note" style="margin-top:1rem;">
                     <i class="bi bi-info-circle"></i>
-                    GPS devices must be fitted on official vehicles and configured to POST to the endpoint above. Signal data is stored in <code>gps_logs</code> and displayed on the GPS Tracker page.
+                    GPS devices must be fitted on official vehicles and configured to POST to the endpoint above. Signal data is stored in <code>gps_logs</code> and displayed on the GPS Tracker page. No API key is needed here — devices push directly to this system rather than this system calling out to one.
                 </div>
                 <div class="code-block">
                     <div class="code-label">GPS Device POST Endpoint</div>
@@ -321,9 +327,20 @@
                         <div class="int-desc">Mr. UBRA provides AI-powered operational insights, smart scheduling suggestions, dispatch recommendations, and automated report summaries across all modules.</div>
                     </div>
                 </div>
+                <form method="post" action="<?= base_url('settings/saveAI') ?>">
+                    <?= csrf_field() ?>
+                    <div class="form-group" style="max-width:480px;margin-top:1.2rem;">
+                        <label>AI API Key</label>
+                        <input type="text" name="ai_api_key" value="<?= esc($settings['ai_api_key'] ?? '') ?>" placeholder="sk-ant-... or gsk_...">
+                        <div class="field-hint">Powers Mr. UBRA's responses. Provider is auto-detected from the key: <strong>Anthropic</strong> (console.anthropic.com, starts with <code>sk-ant-</code>, paid) or <strong>Groq</strong> (console.groq.com, starts with <code>gsk_</code>, free tier). Kept separate from the Google Calendar key on the General tab.</div>
+                    </div>
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-floppy-fill"></i> Save Changes
+                    </button>
+                </form>
                 <div class="int-note" style="margin-top:1rem;">
                     <i class="bi bi-robot"></i>
-                    Mr. UBRA is powered by the Anthropic Claude API. Enter your API key in General → API Integration Keys. The AI sidebar panel appears on Dashboard, Personnel, Calendar, Notifications, Reports, GPS Tracker, and Vehicle Management.
+                    Mr. UBRA supports Anthropic Claude or Groq. The AI sidebar panel appears on Dashboard, Personnel, Calendar, Notifications, Reports, GPS Tracker, and Vehicle Management.
                 </div>
             </div>
 

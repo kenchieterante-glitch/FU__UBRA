@@ -24,31 +24,26 @@ $work_order_total = $work_order_total ?? 0;
     </div>
   </div>
 
-  <div class="overview-grid" id="overviewGrid">
-    <div class="overview-card overview-card-clickable" onclick="showStatusList('coverage')" role="button" tabindex="0">
-      <div class="card-title"><i class="bi bi-fire"></i> Fire Safety Coverage</div>
-      <div class="card-value"><?= (int) $coverage_total ?> units</div>
-      <div class="card-sub"><?= (int) $coverage_attention ?> require attention • <?= (int) $coverage_refill ?> due for refill</div>
+  <div class="stat-cards" id="overviewGrid">
+    <div class="stat-card stat-card-clickable" onclick="showStatusList('coverage')" role="button" tabindex="0">
+      <h3>Fire Safety Coverage</h3>
+      <div class="value"><?= (int) $coverage_total ?> units</div>
     </div>
-    <div class="overview-card overview-card-clickable" onclick="showStatusList('readiness')" role="button" tabindex="0">
-      <div class="card-title"><i class="bi bi-clipboard2-check"></i> Inspection Readiness</div>
-      <div class="card-value"><?= (int) $inspection_readiness ?>%</div>
-      <div class="card-sub">Share of units not past their next inspection due date</div>
+    <div class="stat-card stat-card-clickable" onclick="showStatusList('readiness')" role="button" tabindex="0">
+      <h3>Inspection Readiness</h3>
+      <div class="value"><?= (int) $inspection_readiness ?>%</div>
     </div>
-    <div class="overview-card overview-card-clickable" onclick="showStatusList('critical')" role="button" tabindex="0">
-      <div class="card-title"><i class="bi bi-exclamation-octagon"></i> Critical Alerts</div>
-      <div class="card-value" id="criticalAlertsValue">0 active</div>
-      <div class="card-sub" id="criticalAlertsSub">No critical areas detected</div>
+    <div class="stat-card stat-card-clickable" onclick="showStatusList('critical')" role="button" tabindex="0">
+      <h3>Critical Alerts</h3>
+      <div class="value" id="criticalAlertsValue">0 active</div>
     </div>
-    <div class="overview-card overview-card-clickable" onclick="showStatusList('aircon')" role="button" tabindex="0">
-      <div class="card-title"><i class="bi bi-snow2"></i> Aircon</div>
-      <div class="card-value"><?= (int) $aircon_total ?> units</div>
-      <div class="card-sub"><?= (int) $aircon_attention ?> need attention</div>
+    <div class="stat-card stat-card-clickable" onclick="showStatusList('aircon')" role="button" tabindex="0">
+      <h3>Aircon</h3>
+      <div class="value"><?= (int) $aircon_total ?> units</div>
     </div>
-    <div class="overview-card overview-card-clickable" onclick="scrollToMaintenance()" role="button" tabindex="0" style="display:none">
-      <div class="card-title"><i class="bi bi-clipboard2-pulse"></i> Work Orders</div>
-      <div class="card-value" id="workOrderCount"><?= (int) $work_order_total ?> open</div>
-      <div class="card-sub">Reported issues awaiting resolution</div>
+    <div class="stat-card stat-card-clickable" onclick="scrollToMaintenance()" role="button" tabindex="0" style="display:none">
+      <h3>Work Orders</h3>
+      <div class="value" id="workOrderCount"><?= (int) $work_order_total ?> open</div>
     </div>
   </div>
 
@@ -85,18 +80,34 @@ $work_order_total = $work_order_total ?? 0;
   <div id="subtab-map" class="sub-pane active">
     <div class="map-layout" id="mapLayout">
       <div class="map-container" id="mapContainer">
-        <div class="map-legend" id="legendFe">
-          <span class="leg-title" title="Fire Extinguisher Legend">🧯</span>
-          <span class="leg-item leg-clickable" data-status="normal" onclick="filterMapByStatus('normal')" role="button" tabindex="0">⚪ Normal</span>
-          <span class="leg-item leg-clickable" data-status="warning" onclick="filterMapByStatus('warning')" role="button" tabindex="0">⚠️ Warning</span>
-          <span class="leg-item leg-clickable" data-status="new" onclick="filterMapByStatus('new')" role="button" tabindex="0">🆕 New Installed</span>
-          <span class="leg-item leg-clickable" data-status="expires" onclick="filterMapByStatus('expires')" role="button" tabindex="0">⏳ Expires Soon</span>
+        <div class="map-search-row">
+          <div class="map-search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" id="mapSearchInput" placeholder="Search building…" oninput="onMapSearch(this.value)" autocomplete="off">
+            <button type="button" class="map-search-clear" id="mapSearchClearBtn" onclick="clearMapSearch()" style="display:none" aria-label="Clear search"><i class="bi bi-x"></i></button>
+          </div>
+          <div class="map-search-results" id="mapSearchResults" style="display:none"></div>
         </div>
-        <div class="map-legend" id="legendAircon" style="display:none">
-          <span class="leg-item leg-clickable" data-status="normal" onclick="filterMapByStatus('normal')" role="button" tabindex="0">⚪ Not Tracked</span>
-          <span class="leg-item leg-clickable" data-status="warning" onclick="filterMapByStatus('warning')" role="button" tabindex="0">❌ Not Working</span>
-          <span class="leg-item leg-clickable" data-status="new" onclick="filterMapByStatus('new')" role="button" tabindex="0">✅ Operational</span>
-          <span class="leg-item leg-clickable" data-status="expires" onclick="filterMapByStatus('expires')" role="button" tabindex="0">🧊 Needs Cleaning</span>
+        <div class="map-legend-toggle-wrap">
+          <button type="button" class="map-legend-btn" id="mapLegendBtn" onclick="toggleMapLegend()" aria-label="Toggle legend">
+            <i class="bi bi-funnel"></i> Legend
+          </button>
+          <div class="map-legend-popup" id="mapLegendPopup">
+            <div class="map-legend" id="legendFe">
+              <span class="leg-title">Fire Extinguisher</span>
+              <span class="leg-item leg-clickable" data-status="normal" onclick="filterMapByStatus('normal')" role="button" tabindex="0"><span class="leg-dot leg-dot-gray"></span> Normal</span>
+              <span class="leg-item leg-clickable" data-status="warning" onclick="filterMapByStatus('warning')" role="button" tabindex="0"><span class="leg-dot leg-dot-red"></span> Warning</span>
+              <span class="leg-item leg-clickable" data-status="new" onclick="filterMapByStatus('new')" role="button" tabindex="0"><span class="leg-dot leg-dot-green"></span> New Installed</span>
+              <span class="leg-item leg-clickable" data-status="expires" onclick="filterMapByStatus('expires')" role="button" tabindex="0"><span class="leg-dot leg-dot-amber"></span> Expires Soon</span>
+            </div>
+            <div class="map-legend" id="legendAircon" style="display:none">
+              <span class="leg-title">Aircon Condition</span>
+              <span class="leg-item leg-clickable" data-status="normal" onclick="filterMapByStatus('normal')" role="button" tabindex="0"><span class="leg-dot leg-dot-gray"></span> Not Tracked</span>
+              <span class="leg-item leg-clickable" data-status="warning" onclick="filterMapByStatus('warning')" role="button" tabindex="0"><span class="leg-dot leg-dot-red"></span> Not Working</span>
+              <span class="leg-item leg-clickable" data-status="new" onclick="filterMapByStatus('new')" role="button" tabindex="0"><span class="leg-dot leg-dot-green"></span> Operational</span>
+              <span class="leg-item leg-clickable" data-status="expires" onclick="filterMapByStatus('expires')" role="button" tabindex="0"><span class="leg-dot leg-dot-blue"></span> Needs Cleaning</span>
+            </div>
+          </div>
         </div>
 
         <svg id="campusSVG" viewBox="0 0 950 900" xmlns="http://www.w3.org/2000/svg">
@@ -669,6 +680,9 @@ $work_order_total = $work_order_total ?? 0;
     });
     if (currentLine) lines.push(currentLine);
     const visibleLines = lines.slice(0, 2);
+    if (lines.length > visibleLines.length) {
+      visibleLines[visibleLines.length - 1] += '…';
+    }
     const lineHeight = fontSize + 2;
     const boxWidth = Math.min(Math.max(b.w - 4, 16), 100);
     const boxHeight = Math.max(visibleLines.length * lineHeight + 4, fontSize + 6);
@@ -781,9 +795,6 @@ $work_order_total = $work_order_total ?? 0;
 
     const criticalAreas = mapBuildings.filter(b => computeAreaStatus(b.name, 'fe') === 'warning');
     document.getElementById('criticalAlertsValue').textContent = `${criticalAreas.length} active`;
-    document.getElementById('criticalAlertsSub').textContent = criticalAreas.length ?
-      `Attention needed: ${criticalAreas.map(b => b.name).join(', ')}` :
-      'No critical areas detected';
   }
 
   recolorMap();
@@ -806,11 +817,93 @@ $work_order_total = $work_order_total ?? 0;
     document.getElementById('drillPanel').style.display = 'none';
     document.querySelectorAll('.campus-area').forEach(g => g.classList.remove('area-selected'));
     document.getElementById('missingAlert').style.display = 'none';
+    resetMapZoom();
+  }
+
+  // ── Search-to-zoom: typing a building name pans/zooms the SVG to it and
+  // opens the same full-detail drill panel a click on the shape would. ──
+  const CAMPUS_VIEWBOX = '0 0 950 900';
+
+  function escapeHtmlAttr(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function onMapSearch(query) {
+    query = query.trim().toLowerCase();
+    const resultsEl = document.getElementById('mapSearchResults');
+    document.getElementById('mapSearchClearBtn').style.display = query ? 'inline-flex' : 'none';
+
+    if (!query) {
+      resultsEl.style.display = 'none';
+      resultsEl.innerHTML = '';
+      return;
+    }
+
+    const matches = mapBuildings.filter(b => b.name.toLowerCase().includes(query)).slice(0, 8);
+    resultsEl.style.display = 'block';
+    resultsEl.innerHTML = matches.length
+      ? matches.map(b => `<div class="map-search-item" data-building="${escapeHtmlAttr(b.name)}">${escapeHtmlAttr(b.name)}</div>`).join('')
+      : '<div class="map-search-empty">No matching building.</div>';
+  }
+
+  document.getElementById('mapSearchResults').addEventListener('click', (e) => {
+    const item = e.target.closest('.map-search-item');
+    if (item) zoomToBuilding(item.dataset.building);
+  });
+
+  function zoomToBuilding(name) {
+    const b = mapBuildings.find(x => x.name === name);
+    if (!b) return;
+
+    const pad = 50;
+    const vx = Math.max(0, b.x - pad);
+    const vy = Math.max(0, b.y - pad);
+    const vw = b.w + pad * 2;
+    const vh = b.h + pad * 2;
+    document.getElementById('campusSVG').setAttribute('viewBox', `${vx} ${vy} ${vw} ${vh}`);
+    document.getElementById('mapContainer').classList.add('map-zoomed');
+
+    const shape = Array.from(document.querySelectorAll('#campusSVG .campus-area'))
+      .find(el => el.getAttribute('data-name') === name);
+    if (shape) selectMapBuilding(shape);
+
+    document.getElementById('mapSearchInput').value = name;
+    document.getElementById('mapSearchResults').style.display = 'none';
+  }
+
+  function resetMapZoom() {
+    document.getElementById('campusSVG').setAttribute('viewBox', CAMPUS_VIEWBOX);
+    document.getElementById('mapContainer').classList.remove('map-zoomed');
+  }
+
+  function clearMapSearch() {
+    document.getElementById('mapSearchInput').value = '';
+    document.getElementById('mapSearchClearBtn').style.display = 'none';
+    document.getElementById('mapSearchResults').style.display = 'none';
+    document.getElementById('mapSearchResults').innerHTML = '';
+    resetMapZoom();
   }
 
 
   // Keylogs and Guard dashboard scripts removed; functionality moved to dedicated pages
   // Report generation removed; reporting now lives in Records, Archiving & Reports
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.map-search-row')) {
+      document.getElementById('mapSearchResults').style.display = 'none';
+    }
+    if (!e.target.closest('.map-legend-toggle-wrap')) {
+      document.getElementById('mapLegendPopup').classList.remove('visible');
+      document.getElementById('mapLegendBtn').classList.remove('active');
+    }
+  });
+
+  function toggleMapLegend() {
+    document.getElementById('mapLegendPopup').classList.toggle('visible');
+    document.getElementById('mapLegendBtn').classList.toggle('active');
+  }
 
   function showToast(msg, isError = false) {
     const t = document.createElement('div');

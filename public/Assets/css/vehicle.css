@@ -5,16 +5,8 @@
     margin-bottom: 20px;
 }
 
-.stat-cards .stat-card-clickable {
-    cursor: pointer;
-    transition: transform .15s ease, box-shadow .15s ease;
-}
-
-.stat-cards .stat-card-clickable:hover,
-.stat-cards .stat-card-clickable:focus-visible {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    outline: none;
+.vehicles-table-scroll {
+    overflow-x: auto;
 }
 
 .alert-success {
@@ -38,31 +30,6 @@
     gap: 8px;
     align-items: center;
     justify-content: center;
-}
-
-.action-buttons .icon-btn {
-    background: none;
-    border: none;
-    color: #666;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-}
-
-.action-buttons .icon-btn:hover {
-    background: #f0f0f0;
-    color: #333;
-}
-
-.action-buttons .icon-btn.delete:hover {
-    background: #fee;
-    color: #d32f2f;
 }
 
 .status-badge {
@@ -129,7 +96,7 @@
 
 .modal-box h3 {
     font-family: var(--heading-font);
-    font-weight: var(--fw-bold);
+    font-weight: 400;
     margin-bottom: 16px;
 }
 

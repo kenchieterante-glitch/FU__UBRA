@@ -38,6 +38,42 @@ abstract class BaseController extends Controller
     }
 
     /**
+     * Head of Security and Head of Tools Equipment are scoped to their own
+     * sub-system (own dashboard, restricted sidebar) — everyone else
+     * (Administrator, and any other existing role) keeps full access,
+     * unchanged from before these two roles existed.
+     */
+    protected function userRole(): string
+    {
+        return (string) service('session')->get('role');
+    }
+
+    protected function isSecurityHead(): bool
+    {
+        return strtolower($this->userRole()) === 'security';
+    }
+
+    protected function isToolsHead(): bool
+    {
+        return strtolower($this->userRole()) === 'tools';
+    }
+
+    protected function isFacilitiesSupervisor(): bool
+    {
+        return strtolower($this->userRole()) === 'facilities';
+    }
+
+    protected function roleLandingUrl(): string
+    {
+        return match (strtolower($this->userRole())) {
+            'security'   => '/security-dashboard',
+            'tools'      => '/tools-dashboard',
+            'facilities' => '/facilities-dashboard',
+            default      => '/dashboard',
+        };
+    }
+
+    /**
      * Call at the top of a destructive/admin-only action. Returns a redirect
      * response if the current session isn't an Administrator, or null to
      * let the caller proceed.
@@ -49,6 +85,46 @@ abstract class BaseController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Job Order Personnel Monitoring is managed by Administrator or
+     * the Facilities Supervisor (Head of Facilities) — narrower than
+     * requireAdmin() because Facilities is the intended day-to-day owner of
+     * this module, per the module's design (MIS shouldn't be the one
+     * manually monitoring Job Order personnel).
+     */
+    protected function canManageJobOrderPersonnel(): bool
+    {
+        return $this->isAdmin() || $this->isFacilitiesSupervisor();
+    }
+
+    protected function requireJobOrderManager()
+    {
+        if (!$this->canManageJobOrderPersonnel()) {
+            return redirect()->back()->with('error', 'You do not have permission to perform this action.');
+        }
+
+        return null;
+    }
+
+    /**
+     * Writes to the existing activity_logs table/model (previously read-only
+     * everywhere in the app — Settings displays it, but nothing wrote to
+     * it). Used by the Job Order Personnel Monitoring module for
+     * its audit trail rather than introducing a second logging table.
+     */
+    protected function logActivity(string $module, string $action): void
+    {
+        try {
+            (new \App\Models\ActivityLogModel())->insert([
+                'user_id' => service('session')->get('user_id'),
+                'module'  => $module,
+                'action'  => $action,
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'ActivityLog insert failed: ' . $e->getMessage());
+        }
     }
 
     /**

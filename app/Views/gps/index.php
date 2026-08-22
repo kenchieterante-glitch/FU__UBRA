@@ -33,46 +33,31 @@
     </div>
 
     <!-- ── SUMMARY CARDS ────────────────────────────────────────── -->
-    <div class="summary-grid">
-        <div class="summary-card total">
-            <div class="sc-icon"><i class="bi bi-truck"></i></div>
-            <div class="sc-body">
-                <div class="sc-value"><?= $total ?></div>
-                <div class="sc-label">Total Vehicles</div>
-                <div class="sc-sub">Active fleet use</div>
-            </div>
+    <div class="stat-cards">
+        <div class="stat-card">
+            <span class="stat-icon tone-maroon"><i class="fa-solid fa-truck"></i></span>
+            <h3>Total Vehicles</h3>
+            <div class="value"><?= $total ?></div>
         </div>
-        <div class="summary-card online">
-            <div class="sc-icon"><i class="bi bi-wifi"></i></div>
-            <div class="sc-body">
-                <div class="sc-value"><?= $online_count ?></div>
-                <div class="sc-label">GPS Online</div>
-                <div class="sc-sub success">Transmitting</div>
-            </div>
+        <div class="stat-card">
+            <span class="stat-icon tone-green"><i class="fa-solid fa-signal"></i></span>
+            <h3>GPS Online</h3>
+            <div class="value"><?= $online_count ?></div>
         </div>
-        <div class="summary-card offline">
-            <div class="sc-icon"><i class="bi bi-wifi-off"></i></div>
-            <div class="sc-body">
-                <div class="sc-value"><?= $offline_count ?></div>
-                <div class="sc-label">GPS Offline</div>
-                <div class="sc-sub danger">No signal</div>
-            </div>
+        <div class="stat-card">
+            <span class="stat-icon tone-neutral"><i class="fa-solid fa-satellite-dish"></i></span>
+            <h3>GPS Offline</h3>
+            <div class="value"><?= $offline_count ?></div>
         </div>
-        <div class="summary-card transit">
-            <div class="sc-icon"><i class="bi bi-arrow-right-circle"></i></div>
-            <div class="sc-body">
-                <div class="sc-value"><?= $transit_count ?></div>
-                <div class="sc-label">In Transit</div>
-                <div class="sc-sub info">Active trips</div>
-            </div>
+        <div class="stat-card">
+            <span class="stat-icon tone-gold"><i class="fa-solid fa-route"></i></span>
+            <h3>In Transit</h3>
+            <div class="value"><?= $transit_count ?></div>
         </div>
-        <div class="summary-card maintenance">
-            <div class="sc-icon"><i class="bi bi-tools"></i></div>
-            <div class="sc-body">
-                <div class="sc-value"><?= $maint_count ?></div>
-                <div class="sc-label">Under Maintenance</div>
-                <div class="sc-sub warning">Unavailable</div>
-            </div>
+        <div class="stat-card">
+            <span class="stat-icon tone-red"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+            <h3>Under Maintenance</h3>
+            <div class="value"><?= $maint_count ?></div>
         </div>
     </div>
 

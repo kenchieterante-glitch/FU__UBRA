@@ -1,279 +1,27 @@
 /* ============================================================
-   FU-UBRA Global Stylesheet
-   File: public/assets/css/fuubra.css
+   Mr. UBRA — page-specific styles only.
+   The sidebar, topbar, body font, and .page-content all come from
+   the shared layout (layouts/main.php + base.css) — this file used
+   to carry its own copies of those from before this page adopted
+   the shared layout, which silently overrode the real ones since
+   they share the same class names. Removed; only the genuinely
+   page-local pieces below remain.
    ============================================================ */
 
-/* ---- CSS VARIABLES ---- */
+/* ---- CSS VARIABLES ----
+   Brand colors (--maroon, --green, --red, --bg, etc.) come from
+   base.css's shared :root — not redeclared here, so this page can't
+   drift out of sync with the rest of the system. Only page-local
+   structural tokens (not defined anywhere else) live below. */
 :root {
-    --maroon: #800000;
-    --maroon-dark: #5a0909;
-    --maroon-light: #9e1a2e;
-    --gold: #5c5c5c;
-    --sidebar-bg: #1a1a1a;
-    --sidebar-text: #e0e0e0;
-    --bg: #f4f4f4;
     --white: #ffffff;
     --border: #e0e0e0;
-    --text: #222222;
     --text-muted: #666666;
-    --green: #2e7d32;
-    --green-bg: #e8f5e9;
-    --red: #c62828;
-    --red-bg: #ffebee;
     --yellow: #f57f17;
     --yellow-bg: #fff8e1;
     --blue: #1565c0;
     --blue-bg: #e3f2fd;
     --gray-bg: #f0f0f0;
-}
-
-/* ---- RESET ---- */
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-a {
-    text-decoration: none;
-}
-
-/* ============================================================
-   LAYOUT
-   ============================================================ */
-.app {
-    display: flex;
-    height: 100vh;
-}
-
-.main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.page-content {
-    flex: 1;
-    overflow-y: auto;
-    background: var(--bg);
-    padding: 28px;
-}
-
-/* ============================================================
-   SIDEBAR
-   ============================================================ */
-.sidebar {
-    width: 220px;
-    min-width: 220px;
-    background: var(--sidebar-bg);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-}
-
-/* Logo */
-.sidebar-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 18px 16px 14px;
-    border-bottom: 1px solid #333;
-}
-
-.sidebar-logo .logo-badge {
-    width: 36px;
-    height: 36px;
-    background: var(--maroon);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-weight: 700;
-    font-size: 13px;
-    flex-shrink: 0;
-}
-
-.sidebar-logo .logo-text {
-    color: #fff;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.3;
-}
-
-.sidebar-logo .logo-sub {
-    color: #aaa;
-    font-size: 10px;
-}
-
-/* Nav links */
-.sidebar nav {
-    flex: 1;
-    padding: 8px 0;
-}
-
-.sidebar nav a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 16px;
-    color: var(--sidebar-text);
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.15s;
-    border-left: 3px solid transparent;
-}
-
-.sidebar nav a:hover {
-    background: #2a2a2a;
-}
-
-.sidebar nav a.active {
-    background: #2d0a11;
-    border-left-color: var(--maroon);
-    color: #fff;
-}
-
-.sidebar nav a .nav-icon {
-    font-size: 16px;
-    width: 20px;
-    text-align: center;
-}
-
-/* User footer */
-.sidebar-footer {
-    padding: 12px 16px;
-    border-top: 1px solid #333;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-}
-
-.sidebar-footer .avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--maroon);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
-.sidebar-footer .user-info {
-    flex: 1;
-}
-
-.sidebar-footer .user-name {
-    color: #fff;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.sidebar-footer .user-role {
-    color: #aaa;
-    font-size: 10px;
-}
-
-/* ============================================================
-   TOPBAR
-   ============================================================ */
-.topbar {
-    background: #fff;
-    border-bottom: 1px solid var(--border);
-    padding: 0 24px;
-    height: 54px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-    gap: 16px;
-}
-
-.topbar .search-input {
-    background: #f5f5f5;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-size: 13px;
-    width: 260px;
-    outline: none;
-}
-
-.topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.topbar-date {
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-.topbar-icons {
-    display: flex;
-    gap: 10px;
-}
-
-.topbar-icons button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 17px;
-    color: #555;
-    padding: 4px;
-}
-
-.topbar-user {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-}
-
-.topbar-user:hover {
-    background: #f5f5f5;
-}
-
-.topbar-user .av {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: var(--maroon);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.topbar-user .uname {
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.topbar-user .urole {
-    font-size: 10px;
-    color: var(--text-muted);
 }
 
 /* ============================================================
@@ -595,16 +343,21 @@ a {
 
 .ctx-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: .55rem;
 }
 
 .ctx-item {
-    background: var(--gray-bg);
+    background: #fff;
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: .7rem;
     font-size: .78rem;
     color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
 }
 
 .ctx-item strong {
@@ -612,6 +365,33 @@ a {
     color: var(--maroon);
     font-size: .85rem;
     margin-bottom: .15rem;
+}
+
+.ctx-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: #f5e6e6;
+    color: var(--maroon);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.ctx-label {
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.ctx-value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #000;
 }
 
 .loading {

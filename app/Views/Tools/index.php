@@ -6,7 +6,7 @@
 $toolList = $tools ?? [];
 $personnelList = $personnel ?? [];
 $title = $title ?? 'Tools Equipment Management';
-$showCategoryTabs = in_array($title, ['Electronic Devices', 'Accessories', 'Tools Equipment', 'Consumable'], true);
+$showCategoryTabs = in_array($title, ['Electronic Devices', 'Tools Equipment', 'Consumable'], true);
 ?>
 
 <div class="page-header">
@@ -20,22 +20,27 @@ $showCategoryTabs = in_array($title, ['Electronic Devices', 'Accessories', 'Tool
 <?php if (!$showCategoryTabs): ?>
 <div class="stat-cards" id="toolsStatCards">
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('')" role="button" tabindex="0">
+    <span class="stat-icon tone-maroon"><i class="fa-solid fa-toolbox"></i></span>
     <h3>Total Tools</h3>
     <div class="value"><?= esc((string) ((int) ($total_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('available')" role="button" tabindex="0">
+    <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
     <h3>Available Tools</h3>
     <div class="value"><?= esc((string) ((int) ($available_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('borrowed')" role="button" tabindex="0">
+    <span class="stat-icon tone-neutral"><i class="fa-solid fa-hand-holding"></i></span>
     <h3>Borrowed Tools</h3>
     <div class="value"><?= esc((string) ((int) ($borrowed_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('maintenance')" role="button" tabindex="0">
+    <span class="stat-icon tone-gold"><i class="fa-solid fa-screwdriver-wrench"></i></span>
     <h3>Needs Maintenance</h3>
     <div class="value"><?= esc((string) ((int) ($maintenance_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('disposal')" role="button" tabindex="0">
+    <span class="stat-icon tone-red"><i class="fa-solid fa-trash"></i></span>
     <h3>Disposal</h3>
     <div class="value"><?= esc((string) ((int) ($disposal_tools ?? 0))) ?></div>
   </div>
@@ -51,7 +56,7 @@ $showCategoryTabs = in_array($title, ['Electronic Devices', 'Accessories', 'Tool
   <div class="table-toolbar">
     <div class="toolbar-left">
       <div class="toolbar-search">
-        <input type="text" id="toolsSearch" class="search-box" placeholder="Search tool, code, category, location" oninput="filterToolsTable()">
+        <input type="text" id="toolsSearch" class="search-box" placeholder="Search tools…" title="Search by tool name, code, category, or location" oninput="filterToolsTable()">
         <i class="bi bi-search search-icon"></i>
       </div>
     </div>
@@ -68,7 +73,6 @@ $showCategoryTabs = in_array($title, ['Electronic Devices', 'Accessories', 'Tool
               <option value="">All Categories</option>
               <option value="Tools Equipment">Tools Equipment</option>
               <option value="Electronic Devices">Electronic Devices</option>
-              <option value="Accessories">Accessories</option>
               <option value="Consumable">Consumable</option>
             </select>
           </div>
@@ -132,13 +136,13 @@ $showCategoryTabs = in_array($title, ['Electronic Devices', 'Accessories', 'Tool
           <?php endif; ?>
           <td>
             <div class="action-buttons">
-              <button type="button" class="icon-btn" onclick="document.getElementById('editModal<?= $t['id'] ?>').style.display='flex'" title="Edit"><i class="fa-solid fa-pen"></i></button>
+              <button type="button" class="icon-btn" onclick="document.getElementById('editModal<?= $t['id'] ?>').style.display='flex'" title="Edit" aria-label="Edit <?= esc($t['asset_name']) ?>"><i class="fa-solid fa-pen"></i></button>
               <?php if ($isConsumablePage): ?>
-                <button type="button" class="icon-btn" title="Refill" onclick="refillToolStock(<?= (int) $t['id'] ?>, '<?= esc($t['asset_name'], 'js') ?>')"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>
+                <button type="button" class="icon-btn" title="Refill" aria-label="Refill <?= esc($t['asset_name']) ?>" onclick="refillToolStock(<?= (int) $t['id'] ?>, '<?= esc($t['asset_name'], 'js') ?>')"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>
               <?php else: ?>
                 <form method="post" action="<?= base_url('tools/delete/'.$t['id']) ?>" onsubmit="return confirm('Archive this tool?')" style="display:contents;">
                   <?= csrf_field() ?>
-                  <button type="submit" class="icon-btn delete" title="Archive"><i class="fa-solid fa-archive"></i></button>
+                  <button type="submit" class="icon-btn delete" title="Archive" aria-label="Archive <?= esc($t['asset_name']) ?>"><i class="fa-solid fa-archive"></i></button>
                 </form>
               <?php endif; ?>
             </div>
@@ -160,14 +164,14 @@ $showCategoryTabs = in_array($title, ['Electronic Devices', 'Accessories', 'Tool
         <h3>Edit Tool</h3>
         <form action="<?= base_url('tools/edit/'.$t['id']) ?>" method="post">
           <?= csrf_field() ?>
-          <label>Tool Name</label>
+          <label>Tool Name <span class="required-mark">*</span></label>
           <input type="text" name="asset_name" value="<?= esc($t['asset_name']) ?>" required>
           <label>Tool Code</label>
           <input type="text" name="asset_code" value="<?= esc($t['asset_code']) ?>">
           <label>Category</label>
           <select name="category">
             <option value="">— Select Category —</option>
-            <?php foreach (['Tools Equipment', 'Electronic Devices', 'Accessories', 'Consumable'] as $cat): ?>
+            <?php foreach (['Tools Equipment', 'Electronic Devices', 'Consumable'] as $cat): ?>
               <option value="<?= esc($cat) ?>" <?= $t['category'] === $cat ? 'selected' : '' ?>><?= esc($cat) ?></option>
             <?php endforeach; ?>
           </select>
@@ -299,7 +303,8 @@ if (toolsUrlFilter) filterToolsByStat(toolsUrlFilter);
     <h3>Add New Tool</h3>
     <form action="<?= base_url('tools/add') ?>" method="post">
       <?= csrf_field() ?>
-      <label>Tool Name</label>
+      <p class="required-note">Fields marked <span class="required-mark">*</span> are required.</p>
+      <label>Tool Name <span class="required-mark">*</span></label>
       <input type="text" name="asset_name" required>
       <label>Tool Code</label>
       <input type="text" name="asset_code">
@@ -308,7 +313,6 @@ if (toolsUrlFilter) filterToolsByStat(toolsUrlFilter);
         <option value="">— Select Category —</option>
         <option value="Tools Equipment">Tools Equipment</option>
         <option value="Electronic Devices">Electronic Devices</option>
-        <option value="Accessories">Accessories</option>
         <option value="Consumable">Consumable</option>
       </select>
       <label>Location</label>

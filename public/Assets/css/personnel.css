@@ -19,11 +19,6 @@
     overflow-y: auto;
 }
 
-.stat-cards .stat-card {
-    align-items: center;
-    text-align: center;
-}
-
 .stat-back-bar {
     display: flex;
     align-items: center;
@@ -91,7 +86,7 @@
 
 .modal-box h3 {
     font-family: var(--heading-font);
-    font-weight: var(--fw-bold);
+    font-weight: 400;
     margin-bottom: 16px;
 }
 
@@ -117,30 +112,6 @@
     gap: 8px;
     align-items: center;
     justify-content: center;
-}
-
-.action-buttons .icon-btn {
-    background: none;
-    border: none;
-    color: #666;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.action-buttons .icon-btn:hover {
-    background: #f0f0f0;
-    color: #333;
-}
-
-.action-buttons .icon-btn.delete:hover {
-    background: #fee;
-    color: #d32f2f;
 }
 
 .modal-actions {

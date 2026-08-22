@@ -195,7 +195,7 @@ class RecordsController extends BaseController
         ];
 
         return view('records/index', [
-            'title'         => 'Records, Archiving & Reports',
+            'title'         => 'Information Hub',
             'pageCss'       => 'records.css',
             'stats'         => $stats,
             'activities'    => $activities,
@@ -296,7 +296,7 @@ class RecordsController extends BaseController
     private function exportPDF($data)
     {
         $lines = [
-            'FU-UBRA Records, Archiving and Reports Summary',
+            'UBRA Information Hub Summary',
             'Generated: ' . date('M j, Y g:i A'),
             '',
             'Total operational records: ' . (count($data['borrow']) + count($data['report'])),

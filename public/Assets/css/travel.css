@@ -5,14 +5,10 @@
 ════════════════════════════════════════════════════════════════ */
 
 :root {
-    --maroon: #800000;
-    --maroon-dark: #5a0909;
     --maroon-light: #9B1B1B;
-    --gold: #6b6b6b;
     --surface: #ffffff;
     --surface-alt: #f8f4f4;
     --border: #e0d5d5;
-    --text: #1a1a1a;
     --text-muted: #6b6b6b;
     --success: #16a34a;
     --warning: #d97706;
@@ -44,7 +40,7 @@
 .page-title {
     font-family: var(--heading-font);
     font-size: 1.6rem;
-    font-weight: var(--fw-bold);
+    font-weight: 400;
     color: var(--maroon);
     margin: 0;
 }
@@ -311,6 +307,9 @@
     padding: .6rem .5rem;
     text-align: left;
     font-weight: var(--fw-medium);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -547,7 +546,7 @@
 .sidebar-card-title {
     font-family: var(--heading-font);
     font-size: .8rem;
-    font-weight: var(--fw-bold);
+    font-weight: 400;
     text-transform: uppercase;
     letter-spacing: .5px;
     color: var(--maroon);
@@ -687,7 +686,7 @@
 
 .ubra-name {
     font-family: var(--heading-font);
-    font-weight: var(--fw-bold);
+    font-weight: 400;
     font-size: .9rem;
     color: #fff;
 }
@@ -702,7 +701,7 @@
 .ubra-title {
     font-family: var(--heading-font);
     font-size: .78rem;
-    font-weight: var(--fw-bold);
+    font-weight: 400;
     text-transform: uppercase;
     letter-spacing: .5px;
     color: #d6d6d6;
@@ -817,7 +816,7 @@
 .modal-header h3 {
     font-family: var(--heading-font);
     font-size: 1rem;
-    font-weight: var(--fw-bold);
+    font-weight: 400;
     color: var(--maroon);
     margin: 0;
     display: flex;
@@ -993,7 +992,7 @@
 .ticket-section-title {
     font-family: var(--heading-font);
     font-size: .75rem;
-    font-weight: var(--fw-bold);
+    font-weight: 400;
     text-transform: uppercase;
     letter-spacing: .5px;
     color: var(--maroon);
@@ -1047,7 +1046,7 @@
 .ts-label {
     font-family: var(--heading-font);
     font-size: .78rem;
-    font-weight: var(--fw-bold);
+    font-weight: 400;
     color: var(--maroon);
     margin-bottom: .5rem;
 }

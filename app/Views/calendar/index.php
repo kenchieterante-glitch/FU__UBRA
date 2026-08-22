@@ -3,6 +3,7 @@
 <?php
   $title = $title ?? 'Operations Calendar';
   $events_json = $events_json ?? '[]';
+  $pending_renewals = $pending_renewals ?? [];
 ?>
 
 <link rel="stylesheet" href="<?= base_url('Assets/css/calendar.css') . '?v=' . @filemtime(FCPATH.'Assets/css/calendar.css') ?>">
@@ -67,13 +68,24 @@
                 </div>
             </div>
 
-            <!-- Pending Approvals -->
+            <!-- Pending Renewals — real vehicles whose inspection is expired
+                 or due soon (inspection_status), not a one-click "authorize"
+                 since that decision belongs in Vehicle Management, not here. -->
             <div class="sidebar-card">
-                <div class="sc-title">Pending Approvals</div>
-                <div class="pending-item">
-                    <div><div class="pi-title">Vehicle Insurance Renewal</div><div class="pi-sub">Scheduled renewal</div></div>
-                    <span class="pi-action">Authorize →</span>
-                </div>
+                <div class="sc-title">Pending Renewals</div>
+                <?php if (empty($pending_renewals)): ?>
+                    <div class="empty-day"><i class="bi bi-check-circle"></i> No vehicle renewals pending.</div>
+                <?php else: ?>
+                    <?php foreach ($pending_renewals as $v): ?>
+                        <div class="pending-item">
+                            <div>
+                                <div class="pi-title"><?= esc($v['vehicle_name']) ?> (<?= esc($v['plate_no']) ?>)</div>
+                                <div class="pi-sub">Inspection: <?= esc($v['inspection_status']) ?></div>
+                            </div>
+                            <a href="<?= base_url('vehicles') ?>" class="pi-action" title="Review in Vehicle Management">Review →</a>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
 

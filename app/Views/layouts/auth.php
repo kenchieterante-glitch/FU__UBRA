@@ -11,7 +11,7 @@
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>FU_UBRA | <?= esc($title ?? 'Login') ?></title>
+    <title>UBRA | <?= esc($title ?? 'Login') ?></title>
     <link rel="stylesheet" href="<?= base_url('fonts/bebas-neue/bebas-neue.css') ?>">
     <style>
         body {

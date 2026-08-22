@@ -5,14 +5,25 @@ namespace App\Controllers;
 use App\Models\VehicleModel;
 use App\Models\PersonnelModel;
 use App\Models\ToolsModel;
+use App\Models\UbraChatLogModel;
 
 class UbraController extends BaseController
 {
     protected $session;
+    protected $chatLogModel;
 
     public function __construct()
     {
-        $this->session = \Config\Services::session();
+        $this->session      = \Config\Services::session();
+        $this->chatLogModel = new UbraChatLogModel();
+    }
+
+    // Chat logs are keyed by employee ID, not the session's numeric user_id
+    // (some seeded accounts share/lack one) — emp_id is what's guaranteed
+    // unique and present for every account.
+    private function currentEmpId(): string
+    {
+        return (string) ($this->session->get('emp_id') ?? '');
     }
 
     public function index()
@@ -45,7 +56,7 @@ class UbraController extends BaseController
 
         if (empty($apiKey)) {
             return $this->response->setJSON([
-                'reply' => "⚠️ No API key configured. Please add your Anthropic API key in **Settings → General → API Integration Keys** to activate Mr. UBRA AI.",
+                'reply' => "⚠️ No API key configured. Please add your AI API key in **Settings → AI Configuration** to activate Mr. UBRA AI.",
                 'role'  => 'assistant',
             ]);
         }
@@ -58,10 +69,86 @@ class UbraController extends BaseController
         }
         $messages[] = ['role' => 'user', 'content' => $userMessage];
 
+        $systemPrompt = $this->buildSystemPrompt($context);
+
+        // Two supported key formats, detected by their distinctive prefix:
+        // Anthropic (sk-ant-...) and Groq (gsk_...) — Groq's API is
+        // OpenAI-compatible, so its request/response shape differs from
+        // Anthropic's Messages API.
+        if (str_starts_with($apiKey, 'sk-ant-')) {
+            [$httpCode, $response] = $this->callAnthropic($apiKey, $systemPrompt, $messages);
+            $reply = null;
+            if ($httpCode === 200 && $response) {
+                $data  = json_decode($response, true);
+                $reply = $data['content'][0]['text'] ?? null;
+            }
+        } elseif (str_starts_with($apiKey, 'gsk_')) {
+            [$httpCode, $response] = $this->callGroq($apiKey, $systemPrompt, $messages);
+            $reply = null;
+            if ($httpCode === 200 && $response) {
+                $data  = json_decode($response, true);
+                $reply = $data['choices'][0]['message']['content'] ?? null;
+            }
+        } else {
+            return $this->response->setJSON([
+                'reply' => "⚠️ That API key doesn't match a supported format (Anthropic keys start with sk-ant-, Groq keys start with gsk_). Please check the key in Settings → AI Configuration.",
+                'role'  => 'assistant',
+            ]);
+        }
+
+        if ($reply === null) {
+            log_message('error', "UbraController::chat — AI request failed, HTTP {$httpCode}: " . substr((string) $response, 0, 500));
+            return $this->response->setJSON([
+                'reply' => "I'm having trouble connecting right now. Please try again.",
+                'role'  => 'assistant',
+            ]);
+        }
+
+        $empId = $this->currentEmpId();
+        if ($empId !== '') {
+            $this->chatLogModel->logTurn($empId, 'user', $userMessage);
+            $this->chatLogModel->logTurn($empId, 'assistant', $reply);
+        }
+
+        return $this->response->setJSON(['reply' => $reply, 'role' => 'assistant']);
+    }
+
+    // Recent history for the logged-in user, oldest first (ready to render
+    // top-to-bottom as-is) — powers both the full /ubra page and the
+    // floating chat widget on every other page.
+    public function history()
+    {
+        if (!$this->session->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $empId = $this->currentEmpId();
+        $rows  = $empId !== '' ? $this->chatLogModel->getForUser($empId, 100) : [];
+        $rows  = array_reverse($rows);
+
+        return $this->response->setJSON(['history' => $rows]);
+    }
+
+    public function clearHistory()
+    {
+        if (!$this->session->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $empId = $this->currentEmpId();
+        if ($empId !== '') {
+            $this->chatLogModel->clearForUser($empId);
+        }
+
+        return $this->response->setJSON(['success' => true]);
+    }
+
+    private function callAnthropic(string $apiKey, string $systemPrompt, array $messages): array
+    {
         $payload = json_encode([
             'model'      => 'claude-sonnet-4-6',
             'max_tokens' => 1000,
-            'system'     => $this->buildSystemPrompt($context),
+            'system'     => $systemPrompt,
             'messages'   => $messages,
         ]);
 
@@ -82,17 +169,37 @@ class UbraController extends BaseController
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($httpCode !== 200 || !$response) {
-            return $this->response->setJSON([
-                'reply' => "I'm having trouble connecting right now. Please try again.",
-                'role'  => 'assistant',
-            ]);
-        }
+        return [$httpCode, $response];
+    }
 
-        $data  = json_decode($response, true);
-        $reply = $data['content'][0]['text'] ?? "I couldn't generate a response.";
+    private function callGroq(string $apiKey, string $systemPrompt, array $messages): array
+    {
+        $payload = json_encode([
+            'model'      => 'openai/gpt-oss-120b',
+            'max_tokens' => 1000,
+            'messages'   => array_merge(
+                [['role' => 'system', 'content' => $systemPrompt]],
+                $messages
+            ),
+        ]);
 
-        return $this->response->setJSON(['reply' => $reply, 'role' => 'assistant']);
+        $ch = curl_init('https://api.groq.com/openai/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_TIMEOUT => 30,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return [$httpCode, $response];
     }
 
     public function quickAction()
@@ -136,20 +243,32 @@ class UbraController extends BaseController
 
     private function buildSystemPrompt(array $ctx): string
     {
-        return "You are Mr. UBRA, the Intelligent Operations Assistant for FU-UBRA — Foundation University's Buildings and Grounds Integrated Management System.\n\n"
+        return "You are Mr. UBRA, the Intelligent Operations Assistant for UBRA — Foundation University's Buildings and Grounds Integrated Management System.\n\n"
             . "CURRENT SYSTEM SNAPSHOT ({$ctx['current_date']} {$ctx['current_time']}):\n"
             . "- Vehicles: " . ($ctx['total_vehicles'] ?? 0) . " total | " . ($ctx['available_vehicles'] ?? 0) . " available\n"
             . "- Personnel: " . ($ctx['total_personnel'] ?? 0) . " total | " . ($ctx['on_duty'] ?? 0) . " on duty\n"
             . "- Assets: " . ($ctx['total_assets'] ?? 0) . "\n\n"
-            . "Be concise, professional, and action-oriented. Use bullet points and bold for key figures. Stay focused on FU-UBRA operations only.";
+            . "Be concise, professional, and action-oriented. Use bullet points and bold for key figures. Stay focused on UBRA operations only.";
     }
 
     private function getApiKey(): string
     {
         try {
-            $db  = \Config\Database::connect();
-            $row = $db->table('system_settings')->where('setting_key', 'api_key')->get()->getRow();
-            return trim($row->setting_value ?? '');
+            $db = \Config\Database::connect();
+
+            // Settings' AI Configuration tab saves here now — this is the
+            // real lookup Mr. UBRA uses. 'api_key' is a different setting
+            // entirely (the Google Calendar key on the General tab); the
+            // other two are kept as fallbacks only because older saves
+            // before this field existed may have landed in one of them.
+            foreach (['ai_api_key', 'anthropic_api_key', 'openai_api_key'] as $key) {
+                $row = $db->table('system_settings')->where('setting_key', $key)->get()->getRow();
+                $value = trim($row->setting_value ?? '');
+                if ($value !== '') {
+                    return $value;
+                }
+            }
+            return '';
         } catch (\Exception $e) {
             return '';
         }

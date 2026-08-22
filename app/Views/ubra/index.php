@@ -127,7 +127,7 @@
                         <div class="msg-text">
                             <strong>Good <?= date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Evening') ?>, Operations Office.</strong><br><br>
                             I'm Mr. UBRA, your Intelligent Operations Assistant. I have live access to your fleet, personnel, and asset data.<br><br>
-                            How can I assist you today? Use the <strong>Quick Actions</strong> on the left for instant summaries, or ask me anything about FU-UBRA operations.
+                            How can I assist you today? Use the <strong>Quick Actions</strong> on the left for instant summaries, or ask me anything about UBRA operations.
                         </div>
                     </div>
                 </div>
@@ -169,7 +169,7 @@
                         ['url'=>'gps',           'icon'=>'bi-broadcast',           'label'=>'GPS Tracker'],
                         ['url'=>'calendar',      'icon'=>'bi-calendar3',           'label'=>'Calendar'],
                         ['url'=>'notifications', 'icon'=>'bi-bell-fill',           'label'=>'Notifications'],
-                        ['url'=>'reports',       'icon'=>'bi-bar-chart-line-fill', 'label'=>'Reports'],
+                        ['url'=>'reports',       'icon'=>'bi-bar-chart-line-fill', 'label'=>'Information Hub'],
                         ['url'=>'settings',      'icon'=>'bi-gear-fill',           'label'=>'Settings'],
                     ];
                     foreach ($navLinks as $l):
@@ -206,8 +206,10 @@
 let chatHistory = [];
 let isLoading   = false;
 
-const CHAT_URL    = '<?= base_url('ubra/chat') ?>';
-const QUICK_URL   = '<?= base_url('ubra/quickAction') ?>';
+const CHAT_URL          = '<?= base_url('ubra/chat') ?>';
+const QUICK_URL         = '<?= base_url('ubra/quickAction') ?>';
+const HISTORY_URL       = '<?= base_url('ubra/history') ?>';
+const CLEAR_HISTORY_URL = '<?= base_url('ubra/clearHistory') ?>';
 
 // ── Send message ───────────────────────────────────────────────
 async function sendMessage(overrideText = null) {
@@ -332,13 +334,39 @@ function setLoading(state) {
     }
 }
 
+// ── Chat history (persisted server-side, so it survives navigating away
+// and coming back — not just kept in this page's own memory) ──────────
+async function loadChatHistory() {
+    try {
+        const res  = await fetch(HISTORY_URL, { headers: csrfHeaders() });
+        const data = await res.json();
+        const rows = data.history || [];
+        if (rows.length === 0) return;
+
+        document.getElementById('chatMessages').innerHTML = '';
+        rows.forEach(row => {
+            appendMessage(row.role, row.message);
+            chatHistory.push({ role: row.role, content: row.message });
+        });
+    } catch (err) {
+        // Leave the default welcome message in place if history can't load.
+    }
+}
+
 // ── Clear chat ─────────────────────────────────────────────────
-function clearChat() {
+async function clearChat() {
     chatHistory = [];
     const container = document.getElementById('chatMessages');
     container.innerHTML = '';
     appendMessage('assistant',
         'Conversation cleared. How can I assist you with operations today?');
+
+    try {
+        await fetch(CLEAR_HISTORY_URL, { method: 'POST', headers: csrfHeaders() });
+    } catch (err) {
+        // The visible chat is already cleared either way; the server-side
+        // log just might not be until the next successful attempt.
+    }
 }
 
 // ── Insert suggestion ──────────────────────────────────────────
@@ -422,6 +450,7 @@ function renderContext(data) {
 
 // Init
 loadContext();
+loadChatHistory();
 document.getElementById('chatInput').focus();
 
 // Flash auto-hide

@@ -21,7 +21,7 @@ class AuthController extends BaseController
         if ($this->isAuthenticated()) {
             $this->setNoStoreHeaders();
 
-            return redirect()->to('/dashboard');
+            return redirect()->to($this->roleLandingUrl());
         }
 
         $employeeId = trim((string) ($this->request->getPost('employee_id') ?? $this->request->getPost('emp_id') ?? $this->request->getPost('username') ?? ''));
@@ -68,7 +68,7 @@ class AuthController extends BaseController
 
             $this->setNoStoreHeaders();
 
-            return redirect()->to('/dashboard');
+            return redirect()->to($this->roleLandingUrl());
         }
 
         return redirect()->back()->with('error', 'Invalid employee ID or password.');
@@ -79,7 +79,7 @@ class AuthController extends BaseController
         if ($this->isAuthenticated()) {
             $this->setNoStoreHeaders();
 
-            return redirect()->to('/dashboard');
+            return redirect()->to($this->roleLandingUrl());
         }
 
         $this->setNoStoreHeaders();

@@ -143,7 +143,7 @@ class Dashboard extends BaseController
         ], array_slice($recentTrips, 0, 6));
 
         $data = [
-            'title' => 'GroundWorks Monitoring Dashboard',
+            'title' => 'UBRA Monitoring Dashboard',
             'pageCss' => 'dashboard.css',
             'showTopbar' => true,
             'last_updated' => date('M j, Y g:i A'),

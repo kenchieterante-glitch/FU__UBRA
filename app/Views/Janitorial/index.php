@@ -16,7 +16,7 @@
   </div>
 </div>
 
-<div class="kpi-row" id="janitorialSummary"></div>
+<div class="stat-cards" id="janitorialSummary"></div>
 
 <div class="sj-wrapper">
   <!-- ── SUB-TABS FOR JANITORIAL ─────────────────────────────────────────── -->
@@ -35,19 +35,36 @@
   <!-- ── JANITORIAL MAP ───────────────────────────────────────── -->
   <div id="janitorial-janmap" class="sub-pane active">
     <div class="map-layout" id="janMapLayout">
-      <div class="map-container">
-        <div class="map-legend">
-          <span class="leg-item leg-clickable" data-status="clean" onclick="filterMapByStatus('clean')" role="button" tabindex="0">✅ Clean</span>
-          <span class="leg-item leg-clickable" data-status="pending" onclick="filterMapByStatus('pending')" role="button" tabindex="0">🕒 Pending</span>
-          <span class="leg-item leg-clickable" data-status="needs" onclick="filterMapByStatus('needs')" role="button" tabindex="0">🧹 Needs to Clean</span>
-          <span class="leg-item leg-clickable" data-status="untracked" onclick="filterMapByStatus('untracked')" role="button" tabindex="0">⚪ Not a Janitorial Zone</span>
+      <div class="map-container" id="janMapContainer">
+        <div class="map-search-row">
+          <div class="map-search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" id="janMapSearchInput" placeholder="Search building…" oninput="onJanMapSearch(this.value)" autocomplete="off">
+            <button type="button" class="map-search-clear" id="janMapSearchClearBtn" onclick="clearJanMapSearch()" style="display:none" aria-label="Clear search"><i class="bi bi-x"></i></button>
+          </div>
+          <div class="map-search-results" id="janMapSearchResults" style="display:none"></div>
+        </div>
+        <div class="map-legend-toggle-wrap">
+          <button type="button" class="map-legend-btn" id="janMapLegendBtn" onclick="toggleJanMapLegend()" aria-label="Toggle legend">
+            <i class="bi bi-funnel"></i> Legend
+          </button>
+          <div class="map-legend-popup" id="janMapLegendPopup">
+            <div class="map-legend">
+              <span class="leg-title">Zone Status</span>
+              <span class="leg-item leg-clickable" data-status="clean" onclick="filterMapByStatus('clean')" role="button" tabindex="0"><span class="leg-dot leg-dot-green"></span> Clean</span>
+              <span class="leg-item leg-clickable" data-status="pending" onclick="filterMapByStatus('pending')" role="button" tabindex="0"><span class="leg-dot leg-dot-amber"></span> Pending</span>
+              <span class="leg-item leg-clickable" data-status="needs" onclick="filterMapByStatus('needs')" role="button" tabindex="0"><span class="leg-dot leg-dot-red"></span> Needs to Clean</span>
+              <span class="leg-item leg-clickable" data-status="untracked" onclick="filterMapByStatus('untracked')" role="button" tabindex="0"><span class="leg-dot leg-dot-gray"></span> Not a Janitorial Zone</span>
+            </div>
+          </div>
         </div>
 
-        <svg id="janSVG" viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg">
-          <path d="M55,40 C15,300 15,600 60,760" fill="none" stroke="#aaa" stroke-width="1" stroke-dasharray="3 3"/>
-          <rect id="z-main" class="campus-area jan-area" x="278" y="134" width="205" height="431" rx="4" fill="transparent" stroke="#2a2a2a" stroke-width="1.4" data-name="Main evacuation open space" data-cat="Assembly zone — no building number" onclick="selectJanMapBuilding(this)"/>
-          <text x="380" y="345" class="num" style="font-size:12px;">MAIN EVACUATION</text>
-          <text x="380" y="360" class="num" style="font-size:12px;">OPEN SPACE</text>
+        <svg id="janSVG" viewBox="0 0 950 900" xmlns="http://www.w3.org/2000/svg">
+          <rect id="z-main" class="campus-area jan-area" x="280" y="175" width="205" height="430" rx="4" fill="transparent" stroke="#2a2a2a" stroke-width="1.4" data-name="Main evacuation open space" data-cat="Assembly zone — no building number" onclick="selectJanMapBuilding(this)"/>
+          <line x1="382" y1="175" x2="382" y2="605" stroke="#2a2a2a" stroke-width="1" opacity=".6" />
+          <line x1="280" y1="390" x2="485" y2="390" stroke="#2a2a2a" stroke-width="1" opacity=".6" />
+          <text x="382" y="385" class="num" style="font-size:12px;">MAIN EVACUATION</text>
+          <text x="382" y="398" class="num" style="font-size:12px;">OPEN SPACE</text>
           <g id="flows"></g>
           <g id="buildings"></g>
           <g id="extinguishers"></g>
@@ -91,7 +108,7 @@
     <div class="table-wrap">
       <table class="sj-table">
         <thead>
-          <tr><th>Item</th><th>Category</th><th>Unit</th><th>Current Stock</th><th>Reorder At</th><th>Last Refill</th><th>Status</th><th>Action</th></tr>
+          <tr><th>Item</th><th>Category</th><th>Unit</th><th>Current Stock</th><th>Last Refill</th><th>Status</th><th>Action</th></tr>
         </thead>
         <tbody id="inventoryBody"></tbody>
       </table>
@@ -263,59 +280,79 @@ function selectJanMapBuilding(el) {
   drillPanel.style.display = 'block';
 }
 
-const janMapBuildings = [
-  {n:1, name:'Main entrance gate', cat:'NA', x:745, y:802, w:144, h:31, hasExt:false, circle:false},
-  {n:2, name:'University cafeteria / bookstore / sewing', cat:'Blue', x:321, y:720, w:142, h:82, hasExt:true, circle:false, areaKey:'canteen'},
-  {n:3, name:'College of Law building', cat:'Blue', x:314, y:591, w:149, h:72, hasExt:true, circle:false},
-  {n:4, name:'College of Agriculture and SIE', cat:'Blue', x:262, y:591, w:57, h:211, hasExt:true, circle:false},
-  {n:5, name:'Museo de Vicente', cat:'Green', x:129, y:529, w:82, h:78, hasExt:true, circle:false},
-  {n:6, name:'Bunk house', cat:'Green', x:57, y:529, w:61, h:103, hasExt:false, circle:false},
-  {n:7, name:'Service / exit gate', cat:'NA', x:67, y:488, w:51, h:41, hasExt:true, circle:false},
-  {n:8, name:'University library', cat:'Green', x:90, y:406, w:131, h:72, hasExt:true, circle:false, areaKey:'library'},
-  {n:9, name:'Electric pump house', cat:'Green', x:206, y:380, w:41, h:31, hasExt:false, circle:false},
-  {n:10, name:'Executive house', cat:'Violet', x:129, y:272, w:108, h:62, hasExt:true, circle:false},
-  {n:11, name:'Water pump', cat:'NA', x:167, y:216, w:20, h:20, hasExt:false, circle:true},
-  {n:12, name:'Guest house', cat:'Violet', x:170, y:62, w:67, h:87, hasExt:true, circle:false},
-  {n:13, name:'HRM kitchen', cat:'Violet', x:221, y:15, w:67, h:62, hasExt:true, circle:false},
-  {n:14, name:'College of Education building', cat:'Violet', x:278, y:62, w:185, h:72, hasExt:true, circle:false},
-  {n:16, name:'Animation Lab / ROTC office', cat:'Pink', x:514, y:98, w:180, h:123, hasExt:false, circle:false},
-  {n:17, name:'LG Sinco Computer Center building', cat:'Pink', x:553, y:221, w:141, h:98, hasExt:true, circle:false, areaKey:'ccs'},
-  {n:18, name:'Sofia Soller Sinco Hall', cat:'Pink', x:512, y:288, w:192, h:123, hasExt:true, circle:false, areaKey:'gym'},
-  {n:19, name:'College of Art & Sciences building', cat:'Yellow', x:519, y:406, w:67, h:185, hasExt:true, circle:false},
-  {n:20, name:'Art & Science laboratories / audio visual rooms', cat:'Yellow', x:586, y:411, w:226, h:149, hasExt:true, circle:false, areaKey:'science'},
-  {n:21, name:'College of Business Economics and Accountancy', cat:'Pink', x:704, y:237, w:185, h:92, hasExt:true, circle:false},
-  {n:22, name:'College of Nursing', cat:'Yellow', x:812, y:360, w:77, h:236, hasExt:true, circle:false},
-  {n:23, name:'Administration building', cat:'Yellow', x:745, y:555, w:144, h:103, hasExt:true, circle:false, areaKey:'admin'},
-  {n:24, name:'Rizal monument / social garden', cat:'NA', x:596, y:591, w:149, h:93, hasExt:false, circle:false},
-  {n:25, name:'Registrar\'s office', cat:'Orange', x:694, y:720, w:195, h:36, hasExt:true, circle:false, areaKey:'clinic'},
-  {n:26, name:'Business and Finance office', cat:'Orange', x:694, y:756, w:195, h:46, hasExt:false, circle:false},
-  {n:27, name:'Old College of Industrial Engineering and Technology', cat:'Orange', x:496, y:746, w:234, h:56, hasExt:true, circle:false, areaKey:'engr'},
-  {n:28, name:'Overhead water supply tank', cat:'NA', x:894, y:722, w:16, h:16, hasExt:false, circle:true},
-  {n:29, name:'Flag pole', cat:'NA', x:508, y:611, w:12, h:12, hasExt:false, circle:true}
+// Coordinates copied straight from Safety's corrected/hand-traced campus
+// map (fu_evacuation_map.html) so both pages show the exact same building
+// layout — Janitorial's own cat/hasExt/areaKey metadata is kept per building.
+const janMapBuildingsRaw = [
+  {n:1, name:'Main Entrance Gate', cat:'NA', x:836, y:784, w:46, h:24, hasExt:false},
+  {n:2, name:'University Cafeteria, Bookstore, Sewing', cat:'Blue', x:320, y:782, w:148, h:66, hasExt:true, areaKey:'canteen'},
+  {n:3, name:'College of Law Building', cat:'Blue', x:320, y:612, w:155, h:112, hasExt:true},
+  {n:4, name:'College of Agriculture and SIE', cat:'Blue', x:224, y:578, w:54, h:255, hasExt:true},
+  {n:5, name:'Museo de Vicente', cat:'Green', x:78, y:580, w:135, h:62, hasExt:true},
+  {n:6, name:'Bunk House', cat:'Green', points:'42,650 110,650 85,715 42,710', hasExt:false},
+  {n:7, name:'Service / Exit Gate', cat:'NA', points:'78,560 145,521 208,521 208,548 90,572', hasExt:true},
+  {n:8, name:'University Library', cat:'Green', x:95, y:466, w:126, h:50, hasExt:true, areaKey:'library'},
+  {n:9, name:'Electric Pump House', cat:'Green', x:212, y:432, w:38, h:32, hasExt:false},
+  {n:10, name:'Executive House', cat:'Violet', x:130, y:346, w:100, h:48, hasExt:true},
+  {n:11, name:'Water Pump', cat:'NA', cx:173, cy:289, r:9, hasExt:false},
+  {n:12, name:'Guest House', cat:'Violet', x:165, y:110, w:55, h:90, hasExt:true},
+  {n:13, name:'HRM Kitchen', cat:'Violet', x:222, y:60, w:55, h:48, hasExt:true},
+  {n:14, name:'College of Education Building', cat:'Violet', x:280, y:114, w:178, h:46, hasExt:true},
+  {n:15, name:'Parade Ground', cat:'NA', x:458, y:60, w:57, h:115, hasExt:false},
+  {n:16, name:'Animation Lab / ROTC Office', cat:'Pink', points:'515,150 700,150 700,218 590,218 515,180', hasExt:false},
+  {n:17, name:'LG Sinco Computer Center Building', cat:'Pink', x:556, y:222, w:145, h:100, hasExt:true, areaKey:'ccs'},
+  {n:18, name:'Sofia Soller Sinco Hall', cat:'Pink', x:505, y:328, w:198, h:118, hasExt:true, areaKey:'gym'},
+  {n:19, name:'College of Art & Sciences Building', cat:'Yellow', x:527, y:472, w:48, h:142, hasExt:true},
+  {n:20, name:'Art & Science Laboratories / Audio Visual Rooms', cat:'Yellow', x:577, y:472, w:248, h:143, hasExt:true, areaKey:'science'},
+  {n:21, name:'College of Business Economics and Accountancy', cat:'Pink', x:712, y:300, w:192, h:55, hasExt:true},
+  {n:22, name:'College of Nursing', cat:'Yellow', x:830, y:362, w:52, h:254, hasExt:true},
+  {n:23, name:'Administration Building', cat:'Yellow', x:782, y:625, w:100, h:48, hasExt:true, areaKey:'admin'},
+  {n:24, name:'Rizal Monument / Social Garden', cat:'NA', x:588, y:648, w:132, h:92, hasExt:false},
+  {n:25, name:'Registrar\'s Office', cat:'Orange', x:702, y:760, w:130, h:22, hasExt:true, areaKey:'clinic'},
+  {n:26, name:'Business and Finance Office', cat:'Orange', x:702, y:784, w:130, h:24, hasExt:false},
+  {n:27, name:'Old College of Industrial Engineering and Technology', cat:'Orange', x:480, y:795, w:210, h:34, hasExt:true, areaKey:'engr'},
+  {n:28, name:'Overhead Water Supply Tank', cat:'NA', cx:850, cy:745, r:7, hasExt:false},
+  {n:29, name:'Flag Pole', cat:'NA', cx:542, cy:720, r:6, hasExt:false},
 ];
 
+function janPolyBounds(points) {
+  const pts = points.split(' ').map(p => p.split(',').map(Number));
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  const minX = Math.min(...xs), minY = Math.min(...ys);
+  return { x: minX, y: minY, w: Math.max(...xs) - minX, h: Math.max(...ys) - minY };
+}
+
+// Every entry ends up with a uniform {x,y,w,h} bounding box (plus its raw
+// points/cx/cy/r when relevant) regardless of shape, so label placement and
+// status badges work the same way for rects, polygons, and circles.
+const janMapBuildings = janMapBuildingsRaw.map(b => {
+  if (b.points) return { ...b, poly: true, circle: false, ...janPolyBounds(b.points) };
+  if (b.r !== undefined) return { ...b, poly: false, circle: true, x: b.cx - b.r, y: b.cy - b.r, w: b.r * 2, h: b.r * 2 };
+  return { ...b, poly: false, circle: false };
+});
+
 const janFlowPaths = [
-  "M255,77 C240,110 230,140 225,170",
-  "M370,90 C350,120 330,150 300,180",
-  "M460,110 C500,140 520,170 540,210",
-  "M694,170 C670,190 640,210 610,225",
-  "M553,270 C540,290 520,300 500,300",
-  "M694,280 C720,300 730,320 730,340",
-  "M596,320 C570,340 540,350 510,355",
-  "M596,400 C570,410 540,420 510,420",
-  "M745,410 C720,430 700,450 690,470",
-  "M519,500 C500,510 480,515 483,520",
-  "M745,600 C720,610 690,615 660,615",
-  "M280,300 C260,330 240,360 237,380",
-  "M129,300 C160,330 190,350 220,400",
-  "M221,442 C250,470 270,500 280,520",
-  "M90,442 C130,460 160,480 200,510",
-  "M67,508 C110,530 150,550 200,570",
-  "M129,568 C160,590 200,610 250,640",
-  "M262,700 C280,730 290,760 300,780",
-  "M463,650 C480,670 490,690 490,710",
-  "M745,660 C700,680 640,700 590,720",
-  "M596,650 C580,680 560,710 520,740"
+  "M255,90 C240,120 230,150 225,175",
+  "M370,100 C350,125 330,150 305,178",
+  "M455,120 C495,150 515,175 530,205",
+  "M700,180 C670,195 640,215 610,235",
+  "M556,265 C540,285 520,295 500,300",
+  "M700,290 C725,310 730,330 730,350",
+  "M600,330 C570,350 540,360 505,365",
+  "M600,410 C570,420 540,430 505,430",
+  "M782,420 C755,440 730,455 710,475",
+  "M527,520 C505,530 490,535 486,540",
+  "M782,635 C750,645 715,650 690,650",
+  "M285,300 C265,330 245,360 240,390",
+  "M130,300 C165,330 195,355 225,405",
+  "M221,466 C250,490 270,510 280,525",
+  "M95,466 C135,485 165,505 205,530",
+  "M78,548 C120,565 155,580 205,600",
+  "M130,588 C165,600 205,615 255,645",
+  "M250,700 C265,730 275,760 288,782",
+  "M480,650 C495,675 495,700 490,720",
+  "M782,660 C730,680 660,700 600,725",
+  "M600,660 C580,690 560,715 520,745"
 ];
 
 const janBuildingsGroup = document.getElementById('buildings');
@@ -328,6 +365,9 @@ janMapBuildings.forEach(b => {
     shape.setAttribute('cx', b.x + b.w / 2);
     shape.setAttribute('cy', b.y + b.h / 2);
     shape.setAttribute('r', b.w / 2);
+  } else if (b.poly) {
+    shape = document.createElementNS(ns, 'polygon');
+    shape.setAttribute('points', b.points);
   } else {
     shape = document.createElementNS(ns, 'rect');
     shape.setAttribute('x', b.x);
@@ -370,6 +410,9 @@ janMapBuildings.forEach(b => {
   });
   if (currentLine) lines.push(currentLine);
   const visibleLines = lines.slice(0, 2);
+  if (lines.length > visibleLines.length) {
+    visibleLines[visibleLines.length - 1] += '…';
+  }
   const boxWidth = Math.min(Math.max(b.w - 8, 24), 90);
   const boxHeight = Math.max(visibleLines.length * 10 + 6, 16);
   const boxX = b.x + (b.w - boxWidth) / 2;
@@ -440,6 +483,73 @@ function closeJanDrill() {
   document.getElementById('janMapLayout').classList.remove('drilled');
   document.getElementById('janDrillPanel').style.display = 'none';
   document.querySelectorAll('.jan-area').forEach(g => g.classList.remove('area-selected'));
+  resetJanMapZoom();
+}
+
+// ── Search-to-zoom: typing a building name pans/zooms the SVG to it and
+// opens the same full-detail drill panel a click on the shape would. ──
+const JAN_CAMPUS_VIEWBOX = '0 0 950 900';
+
+function escapeHtmlAttr(str) {
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function onJanMapSearch(query) {
+  query = query.trim().toLowerCase();
+  const resultsEl = document.getElementById('janMapSearchResults');
+  document.getElementById('janMapSearchClearBtn').style.display = query ? 'inline-flex' : 'none';
+
+  if (!query) {
+    resultsEl.style.display = 'none';
+    resultsEl.innerHTML = '';
+    return;
+  }
+
+  const matches = janMapBuildings.filter(b => b.name.toLowerCase().includes(query)).slice(0, 8);
+  resultsEl.style.display = 'block';
+  resultsEl.innerHTML = matches.length
+    ? matches.map(b => `<div class="map-search-item" data-building="${escapeHtmlAttr(b.name)}">${escapeHtmlAttr(b.name)}</div>`).join('')
+    : '<div class="map-search-empty">No matching building.</div>';
+}
+
+document.getElementById('janMapSearchResults').addEventListener('click', (e) => {
+  const item = e.target.closest('.map-search-item');
+  if (item) zoomToJanBuilding(item.dataset.building);
+});
+
+function zoomToJanBuilding(name) {
+  const b = janMapBuildings.find(x => x.name === name);
+  if (!b) return;
+
+  const pad = 50;
+  const vx = Math.max(0, b.x - pad);
+  const vy = Math.max(0, b.y - pad);
+  const vw = b.w + pad * 2;
+  const vh = b.h + pad * 2;
+  document.getElementById('janSVG').setAttribute('viewBox', `${vx} ${vy} ${vw} ${vh}`);
+  document.getElementById('janMapContainer').classList.add('map-zoomed');
+
+  const shape = Array.from(document.querySelectorAll('#janSVG .jan-area'))
+    .find(el => el.getAttribute('data-name') === name);
+  if (shape) selectJanMapBuilding(shape);
+
+  document.getElementById('janMapSearchInput').value = name;
+  document.getElementById('janMapSearchResults').style.display = 'none';
+}
+
+function resetJanMapZoom() {
+  document.getElementById('janSVG').setAttribute('viewBox', JAN_CAMPUS_VIEWBOX);
+  document.getElementById('janMapContainer').classList.remove('map-zoomed');
+}
+
+function clearJanMapSearch() {
+  document.getElementById('janMapSearchInput').value = '';
+  document.getElementById('janMapSearchClearBtn').style.display = 'none';
+  document.getElementById('janMapSearchResults').style.display = 'none';
+  document.getElementById('janMapSearchResults').innerHTML = '';
+  resetJanMapZoom();
 }
 
 // Legend items act as a toggle filter on the map itself — click a status to
@@ -532,7 +642,7 @@ function renderInventory() {
   const list = inventoryFilter ? indexed.filter(({ item }) => inventoryStatus(item) === inventoryFilter) : indexed;
 
   if (!list.length) {
-    document.getElementById('inventoryBody').innerHTML = `<tr><td colspan="8"><div class="no-data">No items match this filter.</div></td></tr>`;
+    document.getElementById('inventoryBody').innerHTML = `<tr><td colspan="7"><div class="no-data">No items match this filter.</div></td></tr>`;
     return;
   }
 
@@ -548,7 +658,6 @@ function renderInventory() {
       <td>${item.cat}</td>
       <td>${item.unit}</td>
       <td class="${col}"><strong>${item.stock}</strong></td>
-      <td>${item.reorder}</td>
       <td>${item.lastRefill}</td>
       <td>${st}</td>
       <td>
@@ -566,34 +675,34 @@ function renderJanitorialSummary() {
   const pendingZones = zoneTotal - zoneCleaned;
 
   document.getElementById('janitorialSummary').innerHTML = `
-    <div class="kpi-card kpi-card-clickable" onclick="clearMapFilter();switchJanTab('janmap')" role="button" tabindex="0">
-      <div class="card-title"><i class="bi bi-shield-check"></i> Janitorial Zones</div>
-      <div class="card-value">${totalZones}</div>
-      <div class="card-note">Monitored campus areas</div>
+    <div class="stat-card stat-card-clickable" onclick="clearMapFilter();switchJanTab('janmap')" role="button" tabindex="0">
+      <span class="stat-icon tone-maroon"><i class="fa-solid fa-map-location-dot"></i></span>
+      <h3>Janitorial Zones</h3>
+      <div class="value">${totalZones}</div>
     </div>
-    <div class="kpi-card kpi-card-clickable" onclick="filterShiftsByStat('')" role="button" tabindex="0">
-      <div class="card-title"><i class="bi bi-people-fill"></i> Active Shifts</div>
-      <div class="card-value">${activeShifts}</div>
-      <div class="card-note">Staff currently on duty</div>
+    <div class="stat-card stat-card-clickable" onclick="filterShiftsByStat('')" role="button" tabindex="0">
+      <span class="stat-icon tone-neutral"><i class="fa-solid fa-broom"></i></span>
+      <h3>Active Shifts</h3>
+      <div class="value">${activeShifts}</div>
     </div>
-    <div class="kpi-card kpi-card-clickable" onclick="filterShiftsByStat('pending')" role="button" tabindex="0">
-      <div class="card-title"><i class="bi bi-broom"></i> Janitorial Completion</div>
-      <div class="card-value">${zoneCleaned}/${zoneTotal} cleaned</div>
-      <div class="card-note">${pendingZones} pending follow-up</div>
+    <div class="stat-card stat-card-clickable" onclick="filterShiftsByStat('pending')" role="button" tabindex="0">
+      <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
+      <h3>Janitorial Completion</h3>
+      <div class="value">${zoneCleaned}/${zoneTotal}</div>
     </div>
-    <div class="kpi-card kpi-card-clickable" onclick="filterInventoryByStat('low')" role="button" tabindex="0">
-      <div class="card-title"><i class="bi bi-box-seam"></i> Low Stock Items</div>
-      <div class="card-value">${lowStock}</div>
-      <div class="card-note">Need restock soon</div>
+    <div class="stat-card stat-card-clickable" onclick="filterInventoryByStat('low')" role="button" tabindex="0">
+      <span class="stat-icon tone-gold"><i class="fa-solid fa-box"></i></span>
+      <h3>Low Stock Items</h3>
+      <div class="value">${lowStock}</div>
     </div>
-    <div class="kpi-card kpi-card-clickable" onclick="filterInventoryByStat('out')" role="button" tabindex="0">
-      <div class="card-title"><i class="bi bi-exclamation-circle"></i> Out of Stock</div>
-      <div class="card-value">${outOfStock}</div>
-      <div class="card-note">Immediate replenishment</div>
+    <div class="stat-card stat-card-clickable" onclick="filterInventoryByStat('out')" role="button" tabindex="0">
+      <span class="stat-icon tone-red"><i class="fa-solid fa-triangle-exclamation"></i></span>
+      <h3>Out of Stock</h3>
+      <div class="value">${outOfStock}</div>
     </div>
   `;
 
-  document.querySelectorAll('#janitorialSummary .kpi-card-clickable').forEach(card => {
+  document.querySelectorAll('#janitorialSummary .stat-card-clickable').forEach(card => {
     card.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
@@ -641,6 +750,21 @@ function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 document.querySelectorAll('.sj-modal-overlay').forEach(o => {
   o.addEventListener('click', e => { if (e.target === o) o.style.display = 'none'; });
 });
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.map-search-row')) {
+    document.getElementById('janMapSearchResults').style.display = 'none';
+  }
+  if (!e.target.closest('.map-legend-toggle-wrap')) {
+    document.getElementById('janMapLegendPopup').classList.remove('visible');
+    document.getElementById('janMapLegendBtn').classList.remove('active');
+  }
+});
+
+function toggleJanMapLegend() {
+  document.getElementById('janMapLegendPopup').classList.toggle('visible');
+  document.getElementById('janMapLegendBtn').classList.toggle('active');
+}
 
 function showToast(msg, isError=false) {
   const t = document.createElement('div');

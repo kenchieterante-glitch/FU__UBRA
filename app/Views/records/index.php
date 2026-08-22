@@ -10,49 +10,34 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
 <div class="rec-wrapper">
 
     <!-- ── PAGE HEADER ──────────────────────────────────────────── -->
-    <div class="rec-header">
+    <div class="page-header">
         <div>
-            <h1 class="rec-title">Records, Archiving &amp; Reports</h1>
-            <p class="rec-subtitle">View, manage and generate reports for all modules in one place.</p>
-        </div>
-        <div class="rec-breadcrumb">
-            <a href="<?= base_url('dashboard') ?>">Home</a> / <span>Records, Archiving &amp; Reports</span>
+            <h1>Information Hub</h1>
+            <p class="page-subtitle">View, manage and generate reports for all modules in one place.</p>
         </div>
     </div>
 
     <!-- ── STATS CARDS ──────────────────────────────────────────── -->
-    <div class="rec-stats-grid">
-        <div class="rec-stat-card accent-blue">
-            <div class="rec-stat-icon"><i class="bi bi-clipboard-data-fill"></i></div>
-            <div class="rec-stat-body">
-                <div class="rec-stat-value"><?= (int) $stats['total_records'] ?></div>
-                <div class="rec-stat-label">Total Records</div>
-                <div class="rec-stat-sub">All modules</div>
-            </div>
+    <div class="stat-cards">
+        <div class="stat-card">
+            <span class="stat-icon tone-maroon"><i class="fa-solid fa-folder-open"></i></span>
+            <h3>Total Records</h3>
+            <div class="value"><?= (int) $stats['total_records'] ?></div>
         </div>
-        <div class="rec-stat-card accent-green">
-            <div class="rec-stat-icon"><i class="bi bi-archive-fill"></i></div>
-            <div class="rec-stat-body">
-                <div class="rec-stat-value"><?= (int) $stats['archived_records'] ?></div>
-                <div class="rec-stat-label">Archived Records</div>
-                <div class="rec-stat-sub">All modules</div>
-            </div>
+        <div class="stat-card">
+            <span class="stat-icon tone-neutral"><i class="fa-solid fa-box-archive"></i></span>
+            <h3>Archived Records</h3>
+            <div class="value"><?= (int) $stats['archived_records'] ?></div>
         </div>
-        <div class="rec-stat-card accent-amber">
-            <div class="rec-stat-icon"><i class="bi bi-file-earmark-bar-graph-fill"></i></div>
-            <div class="rec-stat-body">
-                <div class="rec-stat-value"><?= (int) $stats['reports_generated'] ?></div>
-                <div class="rec-stat-label">Reports Generated</div>
-                <div class="rec-stat-sub">All modules</div>
-            </div>
+        <div class="stat-card">
+            <span class="stat-icon tone-gold"><i class="fa-solid fa-file-lines"></i></span>
+            <h3>Reports Generated</h3>
+            <div class="value"><?= (int) $stats['reports_generated'] ?></div>
         </div>
-        <div class="rec-stat-card accent-purple">
-            <div class="rec-stat-icon"><i class="bi bi-clock-history"></i></div>
-            <div class="rec-stat-body">
-                <div class="rec-stat-value"><?= (int) $stats['today_activities'] ?></div>
-                <div class="rec-stat-label">Today's Activities</div>
-                <div class="rec-stat-sub">All modules</div>
-            </div>
+        <div class="stat-card">
+            <span class="stat-icon tone-green"><i class="fa-solid fa-calendar-day"></i></span>
+            <h3>Today's Activities</h3>
+            <div class="value"><?= (int) $stats['today_activities'] ?></div>
         </div>
     </div>
 

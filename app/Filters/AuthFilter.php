@@ -8,6 +8,29 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class AuthFilter implements FilterInterface
 {
+    // Head of Security, Head of Tools Equipment, and the Facilities
+    // Administration & General Services Supervisor each get their own
+    // sub-system: their own landing dashboard, and every other route
+    // blocked outside their own scope. Every other role (Administrator,
+    // and any legacy role) is unrestricted, same as before these roles
+    // existed — this map only ever narrows access, never widens it.
+    private const ROLE_LANDING = [
+        'security'   => 'security-dashboard',
+        'tools'      => 'tools-dashboard',
+        'facilities' => 'facilities-dashboard',
+    ];
+
+    private const ROLE_ALLOWED_PREFIXES = [
+        'security'   => ['security-dashboard', 'safety', 'vehicles', 'gps', 'travel', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
+        'tools'      => ['tools-dashboard', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile'],
+        'facilities' => ['facilities-dashboard', 'personnel', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
+    ];
+
+    private function roleLanding(string $role): string
+    {
+        return self::ROLE_LANDING[strtolower($role)] ?? 'dashboard';
+    }
+
     /**
      * Do whatever processing this filter needs to do.
      * By default it should not alter the request or response.
@@ -21,10 +44,12 @@ class AuthFilter implements FilterInterface
     {
         $session = session();
         $currentPath = trim($request->getPath(), '/');
+        $role = (string) $session->get('role');
+        $landing = $this->roleLanding($role);
 
         if ($currentPath === '' || $currentPath === 'login') {
             if ($session->get('isLoggedIn')) {
-                return redirect()->to('/dashboard');
+                return redirect()->to('/' . $landing);
             }
 
             return;
@@ -52,6 +77,20 @@ class AuthFilter implements FilterInterface
 
         if (!$session->get('isLoggedIn')) {
             return redirect()->to('/login');
+        }
+
+        $roleKey = strtolower($role);
+        if (isset(self::ROLE_ALLOWED_PREFIXES[$roleKey])) {
+            $isAllowed = false;
+            foreach (self::ROLE_ALLOWED_PREFIXES[$roleKey] as $prefix) {
+                if ($currentPath === $prefix || str_starts_with($currentPath, $prefix . '/')) {
+                    $isAllowed = true;
+                    break;
+                }
+            }
+            if (!$isAllowed) {
+                return redirect()->to('/' . $landing);
+            }
         }
 
         return;

@@ -15,7 +15,8 @@ if (!empty($personnel)) {
   }
 }
 $positionOptions = array_values(array_unique(array_filter($positionOptions)));
-$showStatusTabs = in_array($title, ['Drivers', 'Janitors', 'Carpentries Shop', 'Maintenance', 'Construction Workers'], true);
+$showStatusTabs = in_array($title, ['Drivers', 'Janitors', 'Carpentries Shop', 'Maintenance', 'Construction Workers', 'Job Order Personnel'], true);
+$jobOrders = $jobOrders ?? [];
 $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
 ?>
 
@@ -28,38 +29,41 @@ $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
 </div>
 
 <?php if (!$showStatusTabs): ?>
-<div class="stat-cards" id="personnelStatCards">
-  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel') ?>'" role="button" tabindex="0">
-    <h3>Total Personnel</h3>
-    <div class="value"><?= esc((string) ((int) ($total_personnel_count ?? 0))) ?></div>
-  </div>
-  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel/drivers') ?>'" role="button" tabindex="0">
-    <h3>Drivers</h3>
-    <div class="value"><?= esc((string) ((int) ($drivers_count ?? 0))) ?></div>
-  </div>
-  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel/janitors') ?>'" role="button" tabindex="0">
-    <h3>Janitors</h3>
-    <div class="value"><?= esc((string) ((int) ($janitors_count ?? 0))) ?></div>
-  </div>
-  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel/carpentries') ?>'" role="button" tabindex="0">
-    <h3>Carpentries Shop</h3>
-    <div class="value"><?= esc((string) ((int) ($carpentries_count ?? 0))) ?></div>
-  </div>
-  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel/maintenance') ?>'" role="button" tabindex="0">
-    <h3>Maintenance</h3>
-    <div class="value"><?= esc((string) ((int) ($maintenance_count ?? 0))) ?></div>
-  </div>
-  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('personnel/construction-workers') ?>'" role="button" tabindex="0">
-    <h3>Construction Workers</h3>
-    <div class="value"><?= esc((string) ((int) ($construction_count ?? 0))) ?></div>
-  </div>
-  <div class="stat-card stat-card-clickable" onclick="filterPersonnelByStat('Active')" role="button" tabindex="0">
-    <h3>Active</h3>
-    <div class="value"><?= esc((string) ((int) ($active_count ?? 0))) ?></div>
-  </div>
-  <div class="stat-card stat-card-clickable" onclick="filterPersonnelByStat('On Leave')" role="button" tabindex="0">
-    <h3>On Leave</h3>
-    <div class="value"><?= esc((string) ((int) ($on_leave_count ?? 0))) ?></div>
+<?php
+$personnelStatCards = [
+  ['tone' => 'tone-maroon',  'icon' => 'fa-users',         'label' => 'Total Personnel',   'value' => (int) ($total_personnel_count ?? 0), 'onclick' => "window.location.href='" . base_url('personnel') . "'"],
+  ['tone' => 'tone-neutral', 'icon' => 'fa-id-badge',      'label' => 'Drivers',            'value' => (int) ($drivers_count ?? 0),         'onclick' => "window.location.href='" . base_url('personnel/drivers') . "'"],
+  ['tone' => 'tone-green',   'icon' => 'fa-broom',         'label' => 'Janitors',           'value' => (int) ($janitors_count ?? 0),        'onclick' => "window.location.href='" . base_url('personnel/janitors') . "'"],
+  ['tone' => 'tone-gold',    'icon' => 'fa-hammer',        'label' => 'Carpentries Shop',   'value' => (int) ($carpentries_count ?? 0),     'onclick' => "window.location.href='" . base_url('personnel/carpentries') . "'"],
+  ['tone' => 'tone-neutral', 'icon' => 'fa-wrench',        'label' => 'Maintenance',        'value' => (int) ($maintenance_count ?? 0),     'onclick' => "window.location.href='" . base_url('personnel/maintenance') . "'"],
+  ['tone' => 'tone-gold',    'icon' => 'fa-helmet-safety', 'label' => 'Construction Workers', 'value' => (int) ($construction_count ?? 0),  'onclick' => "window.location.href='" . base_url('personnel/construction-workers') . "'"],
+  ['tone' => 'tone-neutral', 'icon' => 'fa-file-contract', 'label' => 'Job Order Personnel', 'value' => (int) ($job_order_count ?? 0),      'onclick' => "window.location.href='" . base_url('personnel/on-job-order') . "'"],
+  ['tone' => 'tone-green',   'icon' => 'fa-circle-check',  'label' => 'Active',             'value' => (int) ($active_count ?? 0),          'onclick' => "filterPersonnelByStat('Active')"],
+  ['tone' => 'tone-gold',    'icon' => 'fa-calendar-day',  'label' => 'On Leave',           'value' => (int) ($on_leave_count ?? 0),        'onclick' => "filterPersonnelByStat('On Leave')"],
+];
+?>
+<!-- Continuous horizontal auto-scroll ("marquee") of the status boxes —
+     the card set is rendered twice back-to-back and the track animates
+     exactly one set-width (-50%) on a loop, so the seam is invisible.
+     Hovering pauses via animation-play-state (native browser behavior
+     resumes from the same position, not a restart). The second copy is
+     aria-hidden/untabbable since it's a purely visual duplicate. -->
+<div class="stat-marquee" id="personnelStatCards">
+  <div class="stat-marquee-track">
+    <?php foreach ($personnelStatCards as $card): ?>
+      <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" role="button" tabindex="0">
+        <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="fa-solid <?= esc($card['icon'], 'attr') ?>"></i></span>
+        <h3><?= esc($card['label']) ?></h3>
+        <div class="value"><?= esc((string) $card['value']) ?></div>
+      </div>
+    <?php endforeach; ?>
+    <?php foreach ($personnelStatCards as $card): ?>
+      <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" aria-hidden="true" tabindex="-1">
+        <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="fa-solid <?= esc($card['icon'], 'attr') ?>"></i></span>
+        <h3><?= esc($card['label']) ?></h3>
+        <div class="value"><?= esc((string) $card['value']) ?></div>
+      </div>
+    <?php endforeach; ?>
   </div>
 </div>
 
@@ -118,6 +122,7 @@ $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
       <th>Personnel Detail</th>
       <th>Employee ID</th>
       <th>Department</th>
+      <th>Type</th>
       <th><?= esc($taskLabel) ?></th>
       <th>Status</th>
       <th>Actions</th>
@@ -136,6 +141,7 @@ $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
           }
           $statusValue = $p['status'] ?? 'Active';
           $statusClass = (strtolower((string) $statusValue) === 'active') ? 'active' : 'pending';
+          $isJobOrder = ($p['employment_type'] ?? 'Regular') === 'JobOrder';
         ?>
         <tr data-search="<?= esc(strtolower((string) ($p['full_name'] ?? '') . ' ' . ($p['emp_id'] ?? '') . ' ' . ($p['email'] ?? '') . ' ' . ($p['assigned_task'] ?? '') . ' ' . $departmentName)) ?>"
             data-department="<?= esc(strtolower($departmentName)) ?>"
@@ -143,14 +149,19 @@ $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
           <td><?= esc($p['full_name']) ?><br><small><?= esc($p['email']) ?></small></td>
           <td><?= esc($p['emp_id']) ?></td>
           <td><?= esc($departmentName) ?></td>
+          <td><span class="status-badge <?= $isJobOrder ? 'status-pending' : 'status-active' ?>"><?= $isJobOrder ? 'Job Order' : 'Regular' ?></span></td>
           <td><?= esc($p['assigned_task'] ?? 'No current assignment') ?></td>
           <td><span class="status-badge status-<?= esc($statusClass) ?>"><?= esc($statusValue) ?></span></td>
           <td>
             <div class="action-buttons">
-              <button class="icon-btn" onclick="document.getElementById('editModal<?= $p['id'] ?>')  .style.display='flex'" title="Edit"><i class="fa-solid fa-pen"></i></button>
+              <a class="icon-btn" href="<?= base_url('personnel/view/' . $p['id']) ?>" title="View Profile" aria-label="View <?= esc($p['full_name']) ?>"><i class="fa-solid fa-eye"></i></a>
+              <button class="icon-btn" onclick="document.getElementById('editModal<?= $p['id'] ?>')  .style.display='flex'" title="Edit" aria-label="Edit <?= esc($p['full_name']) ?>"><i class="fa-solid fa-pen"></i></button>
+              <?php if (!$isJobOrder): ?>
+                <button class="icon-btn" onclick="document.getElementById('assignJoModal<?= $p['id'] ?>').style.display='flex'" title="Assign to Job Order" aria-label="Assign <?= esc($p['full_name']) ?> to a Job Order"><i class="fa-solid fa-file-contract"></i></button>
+              <?php endif; ?>
               <form method="post" action="<?= base_url('personnel/delete/'.$p['id']) ?>" onsubmit="return confirm('Archive this personnel record?')" style="display:contents;">
                 <?= csrf_field() ?>
-                <button type="submit" class="icon-btn delete" title="Archive"><i class="fa-solid fa-archive"></i></button>
+                <button type="submit" class="icon-btn delete" title="Archive" aria-label="Archive <?= esc($p['full_name']) ?>"><i class="fa-solid fa-archive"></i></button>
               </form>
             </div>
           </td>
@@ -162,9 +173,9 @@ $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
             <h3>Edit Personnel</h3>
             <form action="<?= site_url('personnel/edit/'.$p['id']) ?>" method="post">
               <?= csrf_field() ?>
-              <label>Employee ID</label>
+              <label>Employee ID <span class="required-mark">*</span></label>
               <input type="text" name="emp_id" value="<?= esc($p['emp_id']) ?>" required>
-              <label>Full Name</label>
+              <label>Full Name <span class="required-mark">*</span></label>
               <input type="text" name="full_name" value="<?= esc($p['full_name']) ?>" required>
               <label>Email</label>
               <input type="email" name="email" value="<?= esc($p['email']) ?>">
@@ -197,9 +208,52 @@ $taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
           </div>
         </div>
 
+        <?php if (!$isJobOrder): ?>
+        <!-- ASSIGN TO JOB ORDER MODAL -->
+        <div class="modal" id="assignJoModal<?= $p['id'] ?>">
+          <div class="modal-box">
+            <h3>Assign <?= esc($p['full_name']) ?> to a Job Order</h3>
+            <?php if (empty($jobOrders)): ?>
+              <p>No Job Orders exist yet. <a href="<?= base_url('personnel/job-orders') ?>">Create one first</a>.</p>
+              <div class="modal-actions">
+                <button type="button" onclick="document.getElementById('assignJoModal<?= $p['id'] ?>').style.display='none'">Close</button>
+              </div>
+            <?php else: ?>
+            <form action="<?= site_url('personnel/assign-job-order/' . $p['id']) ?>" method="post">
+              <?= csrf_field() ?>
+              <label>Job Order <span class="required-mark">*</span></label>
+              <select name="job_order_id" required>
+                <option value="">Select Job Order</option>
+                <?php foreach ($jobOrders as $jo): ?>
+                  <option value="<?= $jo['id'] ?>"><?= esc($jo['job_order_number']) ?> &mdash; <?= esc($jo['job_order_title']) ?></option>
+                <?php endforeach; ?>
+              </select>
+              <label>Position</label>
+              <input type="text" name="position" placeholder="Leave blank to use the Job Order's position">
+              <label>Assignment Location</label>
+              <input type="text" name="assignment_location" placeholder="Leave blank to use the Job Order's location">
+              <label>Assignment Start Date</label>
+              <input type="date" name="assignment_start_date" value="<?= date('Y-m-d') ?>">
+              <label>Assignment End Date</label>
+              <input type="date" name="assignment_end_date">
+              <label>Contract Number</label>
+              <input type="text" name="contract_number" placeholder="Optional">
+              <label style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                <input type="checkbox" name="override_expired" value="1" style="width:auto;"> Assign even if the Job Order has expired
+              </label>
+              <div class="modal-actions">
+                <button type="button" onclick="document.getElementById('assignJoModal<?= $p['id'] ?>').style.display='none'">Cancel</button>
+                <button type="submit" class="btn-maroon">Assign</button>
+              </div>
+            </form>
+            <?php endif; ?>
+          </div>
+        </div>
+        <?php endif; ?>
+
       <?php endforeach; ?>
     <?php else: ?>
-      <tr><td colspan="6">No personnel records yet.</td></tr>
+      <tr><td colspan="7">No personnel records yet.</td></tr>
     <?php endif; ?>
   </tbody>
 </table>
@@ -312,9 +366,10 @@ document.addEventListener('DOMContentLoaded', function () {
     <h3>Add Personnel</h3>
     <form id="addPersonnelForm" action="<?= site_url('personnel/add') ?>" method="post">
       <?= csrf_field() ?>
-      <label>Employee ID</label>
+      <p class="required-note">Fields marked <span class="required-mark">*</span> are required.</p>
+      <label>Employee ID <span class="required-mark">*</span></label>
       <input type="text" name="emp_id" required>
-      <label>Full Name</label>
+      <label>Full Name <span class="required-mark">*</span></label>
       <input type="text" name="full_name" required>
       <label>Email</label>
       <input type="email" name="email">

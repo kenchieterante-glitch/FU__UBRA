@@ -4,7 +4,7 @@
 
 <div style="max-width:400px; margin:0 auto; padding:0;">
     <div style="text-align:center; margin-bottom:30px;">
-        <h1>FU-UBRA</h1>
+        <h1>UBRA</h1>
         <p>Sign in to your account</p>
     </div>
 
