@@ -63,6 +63,27 @@ abstract class BaseController extends Controller
         return strtolower($this->userRole()) === 'facilities';
     }
 
+    /**
+     * Gate check-in/check-out at the gate (Guard Dashboard) to the Head of
+     * Security role — the only login this system has for guard duty — plus
+     * Administrator as the usual superuser override. Previously these
+     * actions had no restriction at all: any logged-in role could scan a
+     * trip in/out.
+     */
+    protected function isGuard(): bool
+    {
+        return $this->isAdmin() || $this->isSecurityHead();
+    }
+
+    protected function requireGuard()
+    {
+        if (!$this->isGuard()) {
+            return redirect()->back()->with('error', 'Only the guard can check trip tickets in or out.');
+        }
+
+        return null;
+    }
+
     protected function roleLandingUrl(): string
     {
         return match (strtolower($this->userRole())) {

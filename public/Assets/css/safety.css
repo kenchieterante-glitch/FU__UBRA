@@ -493,7 +493,9 @@
     position: relative;
 }
 
-/* ── Map search-to-zoom (shared by Safety and Janitorial maps) ─── */
+/* ── Map building-jump dropdown (shared by Safety and Janitorial maps) ───
+   Picking a building pans/zooms the SVG to it and opens the same
+   full-detail drill panel (info + floor tabs) a click on the shape would. */
 .map-search-row {
     position: relative;
     margin-bottom: .6rem;
@@ -508,11 +510,12 @@
     padding: 8px 12px;
     max-width: 320px;
 }
-.map-search-box i.bi-search {
+.map-search-box i {
     color: var(--muted);
     font-size: 13px;
+    flex-shrink: 0;
 }
-.map-search-box input {
+.map-search-dropdown select {
     flex: 1;
     min-width: 0;
     border: none;
@@ -520,57 +523,7 @@
     font-size: 12.5px;
     background: transparent;
     color: var(--txt);
-}
-.map-search-clear {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    border: none;
-    background: var(--bg);
-    border-radius: 50%;
-    color: var(--muted);
     cursor: pointer;
-    font-size: 11px;
-    flex-shrink: 0;
-}
-.map-search-clear:hover {
-    background: var(--bdr);
-    color: var(--txt);
-}
-.map-search-results {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    width: 100%;
-    max-width: 320px;
-    background: var(--surf);
-    border: 1px solid var(--bdr);
-    border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
-    z-index: 5;
-    max-height: 240px;
-    overflow-y: auto;
-}
-.map-search-item {
-    padding: 9px 14px;
-    font-size: 12.5px;
-    color: var(--txt);
-    cursor: pointer;
-    border-bottom: 1px solid var(--bg);
-}
-.map-search-item:last-child {
-    border-bottom: none;
-}
-.map-search-item:hover {
-    background: var(--bg);
-    color: var(--m);
-}
-.map-search-empty {
-    padding: 12px 14px;
-    font-size: 12.5px;
-    color: var(--muted);
 }
 
 .map-legend-toggle-wrap {

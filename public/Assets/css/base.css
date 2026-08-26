@@ -28,15 +28,16 @@
   --radius: 12px;
   --shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
   --shadow-lg: 0 12px 24px -6px rgba(16, 24, 40, 0.12), 0 4px 8px -4px rgba(16, 24, 40, 0.08);
-  /* Times New Roman: the "FOUNDATION UNIVERSITY" wordmark, and (per the
-     sidebar redesign) the sidebar's own nav/logo/footer text. */
+  /* Times New Roman everywhere, per the client's consistency note — one
+     serif typeface across brand, headings, and body instead of mixing in
+     a condensed display face and a sans body face. */
   --brand-font: "Times New Roman", Times, serif;
   /* Headlines, titles, event names */
-  --heading-font: "Bebas Neue Pro", "Bebas Neue", "Arial Narrow", sans-serif;
+  --heading-font: "Times New Roman", Times, serif;
   /* Body copy */
-  --body-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  /* Subheadlines / secondary text (same family as body, Medium weight) */
-  --subhead-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --body-font: "Times New Roman", Times, serif;
+  /* Subheadlines / secondary text */
+  --subhead-font: "Times New Roman", Times, serif;
   --fw-regular: 400;
   --fw-medium: 500;
   --fw-bold: 700;
@@ -266,8 +267,8 @@ img {
   flex-shrink: 0;
 }
 .sidebar-logo .sidebar-logo-image {
-  width: 54px;
-  height: 54px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
 }
 .sidebar-logo .txt b {
@@ -568,6 +569,9 @@ img {
   font-weight: 600;
   flex-shrink: 0;
 }
+.sidebar-footer img.av {
+  object-fit: cover;
+}
 .sidebar-footer .nav-label {
   color: #ffffff;
   font-weight: 700;
@@ -671,11 +675,6 @@ img {
   gap: 18px;
   font-size: 12.5px;
   color: #666;
-}
-.topbar-logo {
-  height: 36px;
-  width: auto;
-  object-fit: contain;
 }
 .topbar-right .date {
   display: flex;
@@ -942,7 +941,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   display: flex;
   gap: 14px;
   width: max-content;
-  animation: statMarqueeScroll 26s linear infinite;
+  animation: statMarqueeScroll 50s linear infinite;
   will-change: transform;
 }
 .stat-marquee:hover .stat-marquee-track {
@@ -960,7 +959,14 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   to   { transform: translateX(calc(-50% - 7px)); }
 }
 .stat-card {
-  flex: 0 1 165px;
+  /* shrink:0 — cards must stay exactly 165px on every page at every
+     viewport width. Each page's wrapping container has slightly different
+     padding, so allowing shrink (the old flex-shrink:1) made the same card
+     render at a different width per page once the row ran out of room —
+     165 on one page, 147 on another, 192 on a third, all at the same
+     screen size. Locking the size means a row that doesn't fit just wraps
+     instead of resizing. */
+  flex: 0 0 165px;
   min-width: 0;
   background: #ffffff;
   border-radius: 12px;
@@ -995,7 +1001,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 /* Cards with an icon badge stack icon → label → value, all centered,
    in normal flow — instead of a corner sticker fighting the centered
    text. Scoped with :has() so icon-less stat-cards (Notifications,
-   Safety, Janitorial) keep the original layout untouched. */
+   Janitorial) keep the original layout untouched. */
 .stat-card:has(.stat-icon) {
   align-items: center;
   text-align: center;
@@ -1544,6 +1550,21 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 }
 
 /*BADGES*/
+/* Fallback pill shape for `.status-badge` — several pages (vehicle.css,
+   travel.css, reports.css) already define their own, but pages that don't
+   (e.g. personnel.css) previously fell through with zero padding/radius, so
+   the pale status colors below rendered as near-invisible flat text
+   instead of a visible chip. This gives every page a sane default. */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
 .badge {
   padding: 4px 11px;
   border-radius: 20px;
@@ -2077,12 +2098,11 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
     padding: 15px;
   }
 
-  .stat-cards {
-    flex-wrap: wrap;
-  }
-  .stat-card {
-    flex-basis: calc(50% - 7px);
-  }
+  /* Cards stay locked at 165px (see the base .stat-card rule) and simply
+     wrap onto more rows at this width — no percentage-based override here
+     anymore, since that was the actual source of per-page inconsistency
+     (each page's slightly different container width turned "50% of
+     container" into a different pixel value per page). */
 }
 
 /* ── Floating AI assistant (Mr. UBRA) ─────────────────────────── */

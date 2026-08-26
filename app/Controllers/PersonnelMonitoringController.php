@@ -55,18 +55,53 @@ class PersonnelMonitoringController extends BaseController
             }
         }
 
+        // Most recent contract per personnel (contracts already come back
+        // newest-first from getAllWithDetails), used to attach a contract
+        // status/days-remaining to each personnel row below.
+        $contractByPersonnel = [];
+        foreach ($contracts as $c) {
+            if (!isset($contractByPersonnel[$c['personnel_id']])) {
+                $contractByPersonnel[$c['personnel_id']] = $c;
+            }
+        }
+
         $completeDocs = 0;
         $incompleteDocs = 0;
         $expiredDocsCount = 0;
+        // One row per Job Order personnel carrying every facet a stat card
+        // might filter by (assignment status, contract status, document
+        // completeness) — this single table is what every clickable card on
+        // the dashboard actually filters into, so "click a number, see the
+        // records behind it" works for the whole Personnel + Document side.
+        $personnelDetail = [];
         foreach ($jobOrderPersonnel as $p) {
+            $activeAssignment = $assignmentModel->getActiveForPersonnel((int) $p['id']);
+            $contract = $contractByPersonnel[$p['id']] ?? null;
             $completeness = $documentModel->completenessForPersonnel((int) $p['id'], $requiredDocTypes);
             $completeness['complete'] ? $completeDocs++ : $incompleteDocs++;
-        }
-        foreach ($documentModel->orderBy('id', 'DESC')->findAll() as $d) {
-            $derived = $documentModel->withDerivedStatus($d);
-            if ($derived['verification_status'] === 'EXPIRED') {
-                $expiredDocsCount++;
+
+            $hasExpiredDoc = false;
+            foreach ($documentModel->getForPersonnel((int) $p['id']) as $d) {
+                if ($d['verification_status'] === 'EXPIRED') {
+                    $hasExpiredDoc = true;
+                    $expiredDocsCount++;
+                }
             }
+
+            $personnelDetail[] = [
+                'id'                    => $p['id'],
+                'full_name'             => $p['full_name'],
+                'emp_id'                => $p['emp_id'],
+                'job_order_number'      => $activeAssignment['job_order_number'] ?? null,
+                'job_order_title'       => $activeAssignment['job_order_title'] ?? null,
+                'assignment_status'     => $activeAssignment['status'] ?? 'INACTIVE',
+                'contract_status'       => $contract['contract_status'] ?? null,
+                'contract_days_remaining' => $contract['days_remaining'] ?? null,
+                'doc_verified'          => $completeness['verified'],
+                'doc_required'          => $completeness['required'],
+                'doc_complete'          => $completeness['complete'],
+                'has_expired_doc'       => $hasExpiredDoc,
+            ];
         }
 
         return view('personnel/monitoring', [
@@ -85,10 +120,8 @@ class PersonnelMonitoringController extends BaseController
             'incomplete_docs'      => $incompleteDocs,
             'expired_docs'         => $expiredDocsCount,
 
-            'expiringContracts' => array_slice(array_filter($contracts, fn($c) => $c['contract_status'] === 'EXPIRING_SOON'), 0, 10),
-            'expiredContracts'  => array_slice(array_filter($contracts, fn($c) => $c['contract_status'] === 'EXPIRED'), 0, 10),
-            'expiringJobOrders' => array_filter($jobOrders, fn($jo) => $jo['status'] === 'EXPIRING_SOON'),
-            'understaffedJobOrders' => array_filter($jobOrders, fn($jo) => $jo['status'] !== 'EXPIRED' && $jo['assigned_count'] < $jo['personnel_required']),
+            'personnelDetail' => $personnelDetail,
+            'jobOrders'       => $jobOrders,
         ]);
     }
 

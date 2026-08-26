@@ -37,12 +37,12 @@
     <div class="map-layout" id="janMapLayout">
       <div class="map-container" id="janMapContainer">
         <div class="map-search-row">
-          <div class="map-search-box">
-            <i class="bi bi-search"></i>
-            <input type="text" id="janMapSearchInput" placeholder="Search building…" oninput="onJanMapSearch(this.value)" autocomplete="off">
-            <button type="button" class="map-search-clear" id="janMapSearchClearBtn" onclick="clearJanMapSearch()" style="display:none" aria-label="Clear search"><i class="bi bi-x"></i></button>
+          <div class="map-search-box map-search-dropdown">
+            <i class="bi bi-building"></i>
+            <select id="janMapBuildingSelect" onchange="onJanMapBuildingSelect(this.value)">
+              <option value="">Jump to a building…</option>
+            </select>
           </div>
-          <div class="map-search-results" id="janMapSearchResults" style="display:none"></div>
         </div>
         <div class="map-legend-toggle-wrap">
           <button type="button" class="map-legend-btn" id="janMapLegendBtn" onclick="toggleJanMapLegend()" aria-label="Toggle legend">
@@ -247,6 +247,10 @@ function selectJanMapBuilding(el) {
   document.querySelectorAll('#janSVG .jan-area').forEach(g => g.classList.remove('area-selected'));
   el.classList.add('area-selected');
   document.getElementById('janMapLayout').classList.add('drilled');
+
+  const buildingSelect = document.getElementById('janMapBuildingSelect');
+  const elName = el.getAttribute('data-name') || el.id;
+  if (buildingSelect && elName) buildingSelect.value = elName;
 
   const areaKey = el.getAttribute('data-area-key');
   if (areaKey && janAreaChecklists[areaKey]) {
@@ -486,38 +490,31 @@ function closeJanDrill() {
   resetJanMapZoom();
 }
 
-// ── Search-to-zoom: typing a building name pans/zooms the SVG to it and
-// opens the same full-detail drill panel a click on the shape would. ──
+// ── Dropdown-to-zoom: picking a building from the dropdown pans/zooms the
+// SVG to it and opens the same full-detail drill panel a click on the
+// shape would (zoomToJanBuilding() -> selectJanMapBuilding() below). ──
 const JAN_CAMPUS_VIEWBOX = '0 0 950 900';
 
-function escapeHtmlAttr(str) {
-  return String(str)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
+// Populate the dropdown once, alphabetically, from the same building data
+// the map shapes themselves use.
+(function populateJanMapBuildingSelect() {
+  const select = document.getElementById('janMapBuildingSelect');
+  const sorted = [...janMapBuildings].sort((a, b) => a.name.localeCompare(b.name));
+  for (const b of sorted) {
+    const opt = document.createElement('option');
+    opt.value = b.name;
+    opt.textContent = b.name;
+    select.appendChild(opt);
+  }
+})();
 
-function onJanMapSearch(query) {
-  query = query.trim().toLowerCase();
-  const resultsEl = document.getElementById('janMapSearchResults');
-  document.getElementById('janMapSearchClearBtn').style.display = query ? 'inline-flex' : 'none';
-
-  if (!query) {
-    resultsEl.style.display = 'none';
-    resultsEl.innerHTML = '';
+function onJanMapBuildingSelect(name) {
+  if (!name) {
+    closeJanDrill();
     return;
   }
-
-  const matches = janMapBuildings.filter(b => b.name.toLowerCase().includes(query)).slice(0, 8);
-  resultsEl.style.display = 'block';
-  resultsEl.innerHTML = matches.length
-    ? matches.map(b => `<div class="map-search-item" data-building="${escapeHtmlAttr(b.name)}">${escapeHtmlAttr(b.name)}</div>`).join('')
-    : '<div class="map-search-empty">No matching building.</div>';
+  zoomToJanBuilding(name);
 }
-
-document.getElementById('janMapSearchResults').addEventListener('click', (e) => {
-  const item = e.target.closest('.map-search-item');
-  if (item) zoomToJanBuilding(item.dataset.building);
-});
 
 function zoomToJanBuilding(name) {
   const b = janMapBuildings.find(x => x.name === name);
@@ -534,22 +531,12 @@ function zoomToJanBuilding(name) {
   const shape = Array.from(document.querySelectorAll('#janSVG .jan-area'))
     .find(el => el.getAttribute('data-name') === name);
   if (shape) selectJanMapBuilding(shape);
-
-  document.getElementById('janMapSearchInput').value = name;
-  document.getElementById('janMapSearchResults').style.display = 'none';
 }
 
 function resetJanMapZoom() {
   document.getElementById('janSVG').setAttribute('viewBox', JAN_CAMPUS_VIEWBOX);
   document.getElementById('janMapContainer').classList.remove('map-zoomed');
-}
-
-function clearJanMapSearch() {
-  document.getElementById('janMapSearchInput').value = '';
-  document.getElementById('janMapSearchClearBtn').style.display = 'none';
-  document.getElementById('janMapSearchResults').style.display = 'none';
-  document.getElementById('janMapSearchResults').innerHTML = '';
-  resetJanMapZoom();
+  document.getElementById('janMapBuildingSelect').value = '';
 }
 
 // Legend items act as a toggle filter on the map itself — click a status to
@@ -752,9 +739,6 @@ document.querySelectorAll('.sj-modal-overlay').forEach(o => {
 });
 
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.map-search-row')) {
-    document.getElementById('janMapSearchResults').style.display = 'none';
-  }
   if (!e.target.closest('.map-legend-toggle-wrap')) {
     document.getElementById('janMapLegendPopup').classList.remove('visible');
     document.getElementById('janMapLegendBtn').classList.remove('active');

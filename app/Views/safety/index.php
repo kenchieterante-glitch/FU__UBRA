@@ -26,22 +26,27 @@ $work_order_total = $work_order_total ?? 0;
 
   <div class="stat-cards" id="overviewGrid">
     <div class="stat-card stat-card-clickable" onclick="showStatusList('coverage')" role="button" tabindex="0">
+      <span class="stat-icon tone-maroon"><i class="fa-solid fa-fire-extinguisher"></i></span>
       <h3>Fire Safety Coverage</h3>
       <div class="value"><?= (int) $coverage_total ?> units</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="showStatusList('readiness')" role="button" tabindex="0">
+      <span class="stat-icon tone-green"><i class="fa-solid fa-clipboard-check"></i></span>
       <h3>Inspection Readiness</h3>
       <div class="value"><?= (int) $inspection_readiness ?>%</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="showStatusList('critical')" role="button" tabindex="0">
+      <span class="stat-icon tone-red"><i class="fa-solid fa-triangle-exclamation"></i></span>
       <h3>Critical Alerts</h3>
       <div class="value" id="criticalAlertsValue">0 active</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="showStatusList('aircon')" role="button" tabindex="0">
+      <span class="stat-icon tone-neutral"><i class="fa-solid fa-snowflake"></i></span>
       <h3>Aircon</h3>
       <div class="value"><?= (int) $aircon_total ?> units</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="scrollToMaintenance()" role="button" tabindex="0" style="display:none">
+      <span class="stat-icon tone-gold"><i class="fa-solid fa-clipboard-list"></i></span>
       <h3>Work Orders</h3>
       <div class="value" id="workOrderCount"><?= (int) $work_order_total ?> open</div>
     </div>
@@ -81,12 +86,12 @@ $work_order_total = $work_order_total ?? 0;
     <div class="map-layout" id="mapLayout">
       <div class="map-container" id="mapContainer">
         <div class="map-search-row">
-          <div class="map-search-box">
-            <i class="bi bi-search"></i>
-            <input type="text" id="mapSearchInput" placeholder="Search building…" oninput="onMapSearch(this.value)" autocomplete="off">
-            <button type="button" class="map-search-clear" id="mapSearchClearBtn" onclick="clearMapSearch()" style="display:none" aria-label="Clear search"><i class="bi bi-x"></i></button>
+          <div class="map-search-box map-search-dropdown">
+            <i class="bi bi-building"></i>
+            <select id="mapBuildingSelect" onchange="onMapBuildingSelect(this.value)">
+              <option value="">Jump to a building…</option>
+            </select>
           </div>
-          <div class="map-search-results" id="mapSearchResults" style="display:none"></div>
         </div>
         <div class="map-legend-toggle-wrap">
           <button type="button" class="map-legend-btn" id="mapLegendBtn" onclick="toggleMapLegend()" aria-label="Toggle legend">
@@ -172,7 +177,26 @@ $work_order_total = $work_order_total ?? 0;
   let activeSafetyTab = 'fe';
   let currentBuildingName = null;
   let currentFloor = 'Ground Floor';
-  const FLOORS = ['Ground Floor', '2nd Floor', '3rd Floor'];
+
+  // Buildings don't all have the same number of floors — this maps a
+  // building name to its actual floor list. Any building not listed here
+  // falls back to DEFAULT_FLOORS (unchanged from before this was per-building).
+  const DEFAULT_FLOORS = ['Ground Floor', '2nd Floor', '3rd Floor'];
+  const BUILDING_FLOORS = {
+    "Registrar's Office": ['Ground Floor'],
+    'Business and Finance Office': ['Ground Floor'],
+    'College of Art & Sciences Building': ['Ground Floor', '2nd Floor', '3rd Floor', '4th Floor'],
+    'College of Education Building': ['Ground Floor', '2nd Floor', '3rd Floor', '4th Floor'],
+    'College of Nursing': ['Ground Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor', '6th Floor', '7th Floor'],
+    'LG Sinco Computer Center Building': ['Ground Floor', '2nd Floor'],
+    'College of Agriculture and SIE': ['Ground Floor', '2nd Floor', '3rd Floor'],
+    'College of Law Building': ['Ground Floor', '1st Floor'],
+    'University Library': ['Ground Floor', '2nd Floor', '3rd Floor'],
+    'College of Business Economics and Accountancy': ['Ground Floor', '2nd Floor', '3rd Floor', '4th Floor'],
+  };
+  function floorsForBuilding(name) {
+    return BUILDING_FLOORS[name] || DEFAULT_FLOORS;
+  }
 
   function switchSafetyTab(tab) {
     activeSafetyTab = tab;
@@ -237,9 +261,12 @@ $work_order_total = $work_order_total ?? 0;
 
     const name = el.getAttribute('data-name') || el.id || 'Campus area';
     currentBuildingName = name;
+    const buildingSelect = document.getElementById('mapBuildingSelect');
+    if (buildingSelect) buildingSelect.value = name;
 
     const units = getUnitsForCurrentBuilding();
-    currentFloor = FLOORS.find(f => units.some(u => (u.floor || 'Ground Floor') === f)) || 'Ground Floor';
+    const floors = floorsForBuilding(name);
+    currentFloor = floors.find(f => units.some(u => (u.floor || 'Ground Floor') === f)) || floors[0];
 
     document.getElementById('mapLayout').classList.add('drilled');
     document.getElementById('dpTitle').textContent = name;
@@ -293,7 +320,7 @@ $work_order_total = $work_order_total ?? 0;
 
   function renderFloorTabs() {
     const units = getUnitsForCurrentBuilding();
-    document.getElementById('floorTabs').innerHTML = FLOORS.map(f => {
+    document.getElementById('floorTabs').innerHTML = floorsForBuilding(currentBuildingName).map(f => {
       const count = units.filter(u => (u.floor || 'Ground Floor') === f).length;
       return `<button type="button" class="floor-tab ${f === currentFloor ? 'active' : ''}" onclick="selectFloor('${f}')">${f} <span class="floor-count">${count}</span></button>`;
     }).join('');
@@ -820,38 +847,31 @@ $work_order_total = $work_order_total ?? 0;
     resetMapZoom();
   }
 
-  // ── Search-to-zoom: typing a building name pans/zooms the SVG to it and
-  // opens the same full-detail drill panel a click on the shape would. ──
+  // ── Dropdown-to-zoom: picking a building from the dropdown pans/zooms the
+  // SVG to it and opens the same full-detail drill panel a click on the
+  // shape would (zoomToBuilding() -> selectMapBuilding() below). ──
   const CAMPUS_VIEWBOX = '0 0 950 900';
 
-  function escapeHtmlAttr(str) {
-    return String(str)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
+  // Populate the dropdown once, alphabetically, from the same building data
+  // the map shapes themselves use.
+  (function populateMapBuildingSelect() {
+    const select = document.getElementById('mapBuildingSelect');
+    const sorted = [...mapBuildings].sort((a, b) => a.name.localeCompare(b.name));
+    for (const b of sorted) {
+      const opt = document.createElement('option');
+      opt.value = b.name;
+      opt.textContent = b.name;
+      select.appendChild(opt);
+    }
+  })();
 
-  function onMapSearch(query) {
-    query = query.trim().toLowerCase();
-    const resultsEl = document.getElementById('mapSearchResults');
-    document.getElementById('mapSearchClearBtn').style.display = query ? 'inline-flex' : 'none';
-
-    if (!query) {
-      resultsEl.style.display = 'none';
-      resultsEl.innerHTML = '';
+  function onMapBuildingSelect(name) {
+    if (!name) {
+      closeDrill();
       return;
     }
-
-    const matches = mapBuildings.filter(b => b.name.toLowerCase().includes(query)).slice(0, 8);
-    resultsEl.style.display = 'block';
-    resultsEl.innerHTML = matches.length
-      ? matches.map(b => `<div class="map-search-item" data-building="${escapeHtmlAttr(b.name)}">${escapeHtmlAttr(b.name)}</div>`).join('')
-      : '<div class="map-search-empty">No matching building.</div>';
+    zoomToBuilding(name);
   }
-
-  document.getElementById('mapSearchResults').addEventListener('click', (e) => {
-    const item = e.target.closest('.map-search-item');
-    if (item) zoomToBuilding(item.dataset.building);
-  });
 
   function zoomToBuilding(name) {
     const b = mapBuildings.find(x => x.name === name);
@@ -868,22 +888,12 @@ $work_order_total = $work_order_total ?? 0;
     const shape = Array.from(document.querySelectorAll('#campusSVG .campus-area'))
       .find(el => el.getAttribute('data-name') === name);
     if (shape) selectMapBuilding(shape);
-
-    document.getElementById('mapSearchInput').value = name;
-    document.getElementById('mapSearchResults').style.display = 'none';
   }
 
   function resetMapZoom() {
     document.getElementById('campusSVG').setAttribute('viewBox', CAMPUS_VIEWBOX);
     document.getElementById('mapContainer').classList.remove('map-zoomed');
-  }
-
-  function clearMapSearch() {
-    document.getElementById('mapSearchInput').value = '';
-    document.getElementById('mapSearchClearBtn').style.display = 'none';
-    document.getElementById('mapSearchResults').style.display = 'none';
-    document.getElementById('mapSearchResults').innerHTML = '';
-    resetMapZoom();
+    document.getElementById('mapBuildingSelect').value = '';
   }
 
 
@@ -891,9 +901,6 @@ $work_order_total = $work_order_total ?? 0;
   // Report generation removed; reporting now lives in Records, Archiving & Reports
 
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.map-search-row')) {
-      document.getElementById('mapSearchResults').style.display = 'none';
-    }
     if (!e.target.closest('.map-legend-toggle-wrap')) {
       document.getElementById('mapLegendPopup').classList.remove('visible');
       document.getElementById('mapLegendBtn').classList.remove('active');

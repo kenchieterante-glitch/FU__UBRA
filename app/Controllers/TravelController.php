@@ -253,6 +253,8 @@ class TravelController extends BaseController
     // Guard-side: driver departs campus with an approved trip ticket.
     public function checkIn($id)
     {
+        if ($resp = $this->requireGuard()) return $resp;
+
         $trip = $this->travelModel->find($id);
         if (!$trip) {
             return redirect()->back()->with('error', 'Trip ticket not found.');
@@ -269,6 +271,8 @@ class TravelController extends BaseController
     // Guard-side: driver returns to campus — trip is now complete.
     public function checkOut($id)
     {
+        if ($resp = $this->requireGuard()) return $resp;
+
         $trip = $this->travelModel->find($id);
         if (!$trip) {
             return redirect()->back()->with('error', 'Trip ticket not found.');

@@ -17,13 +17,6 @@
     </div>
 </div>
 
-<?php if (!empty($flash_success)): ?>
-    <div class="alert-success"><i class="fa-solid fa-circle-check"></i> <?= esc($flash_success) ?></div>
-<?php endif; ?>
-<?php if (!empty($flash_error)): ?>
-    <div class="alert-error"><i class="fa-solid fa-circle-exclamation"></i> <?= esc($flash_error) ?></div>
-<?php endif; ?>
-
 <div class="profile-hero">
     <div class="profile-hero-banner"></div>
     <div class="profile-hero-body">
@@ -54,9 +47,14 @@
         <div class="card-head">
             <h3><i class="fa-solid fa-user-pen"></i> Profile Information</h3>
         </div>
-        <form method="post" action="<?= base_url('profile/updateProfile') ?>">
+        <form method="post" action="<?= base_url('profile/updateProfile') ?>" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <div class="form-grid">
+                <div class="form-group">
+                    <label>Profile Picture</label>
+                    <input type="file" name="photo" accept="image/png,image/jpeg,image/webp">
+                    <small style="color:var(--text-muted,#888);">JPG, PNG, or WEBP, up to 2MB.</small>
+                </div>
                 <div class="form-group">
                     <label>Full Name</label>
                     <input type="text" name="name" value="<?= esc($user['full_name'] ?? '') ?>" required>

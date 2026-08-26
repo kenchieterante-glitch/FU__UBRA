@@ -27,9 +27,13 @@
   $fullName = session()->get('full_name') ?? 'System Admin';
   $role     = session()->get('role') ?? 'Operations';
   $initials = strtoupper(substr($fullName,0,1) . (strpos($fullName,' ') !== false ? substr($fullName, strpos($fullName,' ')+1,1) : ''));
+  $userPhoto = session()->get('photo');
+  $userPhotoUrl = $userPhoto ? base_url('uploads/' . $userPhoto) : null;
   $topbarUnreadCount = session()->get('isLoggedIn') ? (new \App\Models\NotificationModel())->getUnreadCountForRole((string) $role) : 0;
   $logoAsset = null;
   $logoCandidates = [
+      // Temporary/unofficial logo — takes priority until a real one replaces it.
+      FCPATH . 'images/UBRA LOGO (no background).png',
       FCPATH . 'uploads/logo.png',
       FCPATH . 'uploads/logo.jpg',
       FCPATH . 'uploads/logo.jpeg',
@@ -202,7 +206,11 @@
 
     <div class="sidebar-footer">
       <a href="<?= base_url('profile') ?>" data-tooltip="View Profile">
-        <span class="av"><?= esc($initials) ?></span>
+        <?php if ($userPhotoUrl): ?>
+          <img class="av" src="<?= esc($userPhotoUrl) ?>" alt="<?= esc($fullName) ?>">
+        <?php else: ?>
+          <span class="av"><?= esc($initials) ?></span>
+        <?php endif; ?>
         <span class="nav-label"><?= esc($fullName) ?><small>View Profile</small></span>
       </a>
     </div>
@@ -228,9 +236,6 @@
             <span class="badge-dot" id="topbarBellBadge"><?= $topbarUnreadCount > 99 ? '99+' : (int) $topbarUnreadCount ?></span>
           <?php endif; ?>
         </a>
-        <?php if (!empty($logoAsset)): ?>
-          <img class="topbar-logo" src="<?= esc($logoAsset) ?>" alt="System logo">
-        <?php endif; ?>
       </div>
     </header>
     <?php endif; ?>
