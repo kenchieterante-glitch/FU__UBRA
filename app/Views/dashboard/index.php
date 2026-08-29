@@ -13,7 +13,6 @@
   <div class="groundworks-header">
     <h1>Facilities Administration and General Services</h1>
     <p class="subtle">Monitoring dashboard for the Head of the Department — status at a glance, no data entry.</p>
-    <p class="subtle" style="font-size:.75rem;opacity:.7;">Last updated: <?= esc($last_updated ?? date('M j, Y g:i A')) ?></p>
   </div>
 
   <section class="stat-cards" aria-label="Key performance indicators">

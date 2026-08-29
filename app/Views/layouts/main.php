@@ -248,7 +248,12 @@
         </button>
       </div>
       <div class="topbar-right">
-        <span class="date"><i class="fa-regular fa-calendar"></i> <?= date('l, F d, Y') ?></span>
+        <div class="topbar-date-group">
+          <span class="date"><i class="fa-regular fa-calendar"></i> <?= date('l, F d, Y') ?></span>
+          <?php if (isset($last_updated)): ?>
+            <span class="topbar-last-updated">Last updated: <?= esc($last_updated) ?></span>
+          <?php endif; ?>
+        </div>
         <a href="<?= base_url('notifications') ?>" class="icon-btn" title="Notifications">
           <i class="fa-regular fa-bell"></i>
           <?php if ($topbarUnreadCount > 0): ?>

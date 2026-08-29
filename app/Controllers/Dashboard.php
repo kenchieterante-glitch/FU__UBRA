@@ -146,7 +146,9 @@ class Dashboard extends BaseController
             'title' => 'UBRA Monitoring Dashboard',
             'pageCss' => 'dashboard.css',
             'showTopbar' => true,
-            'last_updated' => date('M j, Y g:i A'),
+            // Time only — the date directly above it in the topbar already
+            // shows the full date, so repeating it here was redundant.
+            'last_updated' => date('g:i A'),
             'kpis' => [
                 [
                     'label' => 'Pending Requests',
