@@ -157,6 +157,21 @@ $work_order_total = $work_order_total ?? 0;
 
 </div>
 
+<!-- Set Installer modal — shared by fire extinguisher and aircon unit cards -->
+<div class="modal" id="installerModal">
+  <div class="modal-box">
+    <h3>Set Installer</h3>
+    <label>Installed By</label>
+    <select id="installerSelect">
+      <option value="">— Unassigned —</option>
+    </select>
+    <div class="modal-actions">
+      <button type="button" onclick="document.getElementById('installerModal').style.display='none'">Cancel</button>
+      <button type="button" class="btn-maroon" onclick="saveInstaller()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Report modal removed; reporting now lives in Records, Archiving & Reports -->
 <!-- Keyscan modal removed; Keylogs moved to Safety -> Keylogs page -->
 
@@ -167,6 +182,7 @@ $work_order_total = $work_order_total ?? 0;
   let feRegistry = <?= $fe_registry_json ?>;
   let airconRegistry = <?= $aircon_registry_json ?>;
   let workOrderRegistry = <?= $work_order_registry_json ?>;
+  const personnelOptions = <?= $personnel_options_json ?>;
 
   // Keylogs and Guard data moved to separate Safety pages (sidebar)
 
@@ -381,7 +397,7 @@ $work_order_total = $work_order_total ?? 0;
           <div class="fec-row"><span>Floor</span><strong>${esc(u.floor || 'Ground Floor')}</strong></div>
           <div class="fec-row"><span>Weight</span><strong>${u.kg} kg</strong></div>
           <div class="fec-row"><span>Installed</span><strong>${esc(u.year)}</strong></div>
-          <div class="fec-row"><span>Installed by</span><strong>${esc(u.inspector)}</strong></div>
+          <div class="fec-row"><span>Installed by</span><strong>${esc(u.inspector)} <button type="button" class="fec-edit-btn" title="Change installer" onclick="openInstallerModal('fe', ${u.dbId}, '${esc(u.inspector).replace(/'/g, "\\'")}')"><i class="bi bi-pencil"></i></button></strong></div>
           <div class="fec-row"><span>Assigned Guard</span><strong>${esc(u.assigned)}</strong></div>
           <div class="fec-row"><span>Last Insp.</span><strong>${esc(u.lastInsp)}</strong></div>
           <div class="fec-row"><span>Next Due</span><strong class="${daysLeft < 0 ? 'text-danger' : daysLeft < 30 ? 'text-warn' : ''}">${esc(u.nextDue)} (${daysLeft < 0 ? 'OVERDUE' : daysLeft + 'd'})</strong></div>
@@ -397,6 +413,7 @@ $work_order_total = $work_order_total ?? 0;
           <div class="fec-row"><span>Last Cleaning</span><strong>${esc(u.lastClean) || '—'}</strong></div>
           <div class="fec-row"><span>Next Schedule</span><strong>${esc(u.nextDue) || '—'}</strong></div>
           <div class="fec-row"><span>Assigned Tech</span><strong>${esc(u.tech)}</strong></div>
+          <div class="fec-row"><span>Installed By</span><strong>${esc(u.installedBy)} <button type="button" class="fec-edit-btn" title="Change installer" onclick="openInstallerModal('aircon', ${u.id}, '${esc(u.installedBy).replace(/'/g, "\\'")}')"><i class="bi bi-pencil"></i></button></strong></div>
           <div class="fec-row"><span>Checklist</span><strong>${done}/${total} done</strong></div>
         </div>`;
     }
@@ -430,6 +447,50 @@ $work_order_total = $work_order_total ?? 0;
     const d = document.createElement('div');
     d.textContent = String(s ?? '');
     return d.innerHTML;
+  }
+
+  // Set Installer modal — shared by fire extinguisher ('fe') and aircon
+  // ('aircon') unit cards. Saving updates the record's installer/inspector
+  // (matched by full name against Personnel) so it shows up on that
+  // person's profile page too.
+  let installerTarget = null;
+
+  function openInstallerModal(kind, dbId, currentName) {
+    installerTarget = { kind, dbId };
+    const select = document.getElementById('installerSelect');
+    select.innerHTML = '<option value="">— Unassigned —</option>'
+      + personnelOptions.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
+    if (currentName && currentName !== '—') select.value = currentName;
+    document.getElementById('installerModal').style.display = 'flex';
+  }
+
+  function saveInstaller() {
+    if (!installerTarget) return;
+    const name = document.getElementById('installerSelect').value;
+    const url = installerTarget.kind === 'fe'
+      ? `<?= base_url('safety/setInstaller/') ?>${installerTarget.dbId}`
+      : `<?= base_url('safety/setAirconInstaller/') ?>${installerTarget.dbId}`;
+
+    const fd = new FormData();
+    fd.append('installed_by', name);
+
+    fetch(url, { method: 'POST', headers: csrfHeaders(), body: fd })
+      .then(r => r.json())
+      .then(res => {
+        if (!res.success) throw new Error('Could not save installer.');
+        const registry = installerTarget.kind === 'fe' ? feRegistry : airconRegistry;
+        const idKey = installerTarget.kind === 'fe' ? 'dbId' : 'id';
+        const field = installerTarget.kind === 'fe' ? 'inspector' : 'installedBy';
+        const unit = registry.find(u => u[idKey] === installerTarget.dbId);
+        if (unit) unit[field] = name || '—';
+
+        document.getElementById('installerModal').style.display = 'none';
+        const selectedIcons = [...document.querySelectorAll('.floor-plan-icon')];
+        const selectedIdx = selectedIcons.findIndex(el => el.classList.contains('selected'));
+        if (selectedIdx !== -1) selectFloorUnit(selectedIdx);
+        showToast('Installer updated.');
+      })
+      .catch(() => showToast('Could not save installer. Please try again.', true));
   }
 
   const priorityUrgency = { Critical: 'fe-urgent', High: 'fe-warn', Medium: 'fe-ok' };

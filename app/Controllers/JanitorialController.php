@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\JanitorialAssignmentModel;
 use App\Models\JanitorialTaskModel;
 use App\Models\ConsumableInventoryModel;
+use App\Models\RefillLogModel;
 
 class JanitorialController extends BaseController
 {
@@ -12,6 +13,7 @@ class JanitorialController extends BaseController
     protected $assignmentModel;
     protected $taskModel;
     protected $inventoryModel;
+    protected $refillLogModel;
 
     // Maps each real assigned_zone value onto the fixed slug used by the campus map SVG.
     private const ZONE_SLUGS = [
@@ -31,6 +33,7 @@ class JanitorialController extends BaseController
         $this->assignmentModel = new JanitorialAssignmentModel();
         $this->taskModel = new JanitorialTaskModel();
         $this->inventoryModel = new ConsumableInventoryModel();
+        $this->refillLogModel = new RefillLogModel();
     }
 
     public function index()
@@ -138,6 +141,13 @@ class JanitorialController extends BaseController
                 'reorder'    => (float) $i['reorder_threshold'],
                 'lastRefill' => $i['last_refill'],
             ], $inventory)),
+            'refill_log_json' => $this->jsonForScript(array_map(fn($l) => [
+                'item'      => $l['item_name'],
+                'qty'       => (float) $l['quantity_added'],
+                'unit'      => $l['unit'],
+                'by'        => $l['performed_by'],
+                'at'        => $l['performed_at'],
+            ], $this->refillLogModel->getRecent(50))),
             'zone_total'   => $totalZones,
             'zone_cleaned' => $cleanedZones,
             'summary' => [
@@ -173,6 +183,15 @@ class JanitorialController extends BaseController
         $this->inventoryModel->update($id, [
             'current_stock' => (float) $item['current_stock'] + $qty,
             'last_refill'   => date('Y-m-d'),
+        ]);
+
+        $this->refillLogModel->insert([
+            'inventory_item_id' => $id,
+            'item_name'         => $item['item_name'],
+            'quantity_added'    => $qty,
+            'unit'              => $item['unit'],
+            'performed_by'      => (string) ($this->session->get('full_name') ?? $this->session->get('emp_id') ?? 'Unknown'),
+            'performed_at'      => date('Y-m-d H:i:s'),
         ]);
 
         return redirect()->to('/janitorial')->with('success', $item['item_name'] . ' refilled by ' . $qty . ' ' . $item['unit'] . '.');

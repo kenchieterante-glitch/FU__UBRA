@@ -310,7 +310,23 @@ $draft_count = $draft_count ?? 0;
       <label>Message <span class="required-mark">*</span></label>
       <textarea id="cmDescription" rows="4" required></textarea>
       <label>Recipient</label>
-      <input type="text" id="cmRecipient" placeholder="Operations Team" maxlength="120">
+      <select id="cmRecipient">
+        <option value="Operations Team">Operations Team</option>
+        <?php if (!empty($supervisors)): ?>
+          <optgroup label="Co-Supervisors">
+            <?php foreach ($supervisors as $s): ?>
+              <option value="<?= esc($s['name'], 'attr') ?>"><?= esc($s['name']) ?> — <?= esc($s['position']) ?></option>
+            <?php endforeach; ?>
+          </optgroup>
+        <?php endif; ?>
+        <?php if (!empty($fireInspectors)): ?>
+          <optgroup label="Fire Extinguisher Inspectors">
+            <?php foreach ($fireInspectors as $f): ?>
+              <option value="<?= esc($f['name'], 'attr') ?>"><?= esc($f['name']) ?> — <?= esc($f['unit_id']) ?> (<?= esc($f['location']) ?>)</option>
+            <?php endforeach; ?>
+          </optgroup>
+        <?php endif; ?>
+      </select>
       <label>Priority</label>
       <select id="cmPriority">
         <option value="ROUTINE">Routine</option>

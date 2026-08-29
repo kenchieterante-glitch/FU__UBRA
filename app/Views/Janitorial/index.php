@@ -5,6 +5,7 @@
   $staff_json = $staff_json ?? '[]';
   $checklists_json = $checklists_json ?? '{}';
   $inventory_json = $inventory_json ?? '[]';
+  $refill_log_json = $refill_log_json ?? '[]';
   $zone_total = $zone_total ?? 0;
   $zone_cleaned = $zone_cleaned ?? 0;
 ?>
@@ -113,6 +114,18 @@
         <tbody id="inventoryBody"></tbody>
       </table>
     </div>
+
+    <div class="pane-header" style="margin-top:28px;">
+      <h2 class="pane-title"><i class="bi bi-clock-history"></i> Refill Log</h2>
+    </div>
+    <div class="table-wrap">
+      <table class="sj-table">
+        <thead>
+          <tr><th>Item</th><th>Quantity Added</th><th>Date &amp; Time</th><th>Performed By</th></tr>
+        </thead>
+        <tbody id="refillLogBody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -121,7 +134,6 @@
   <div class="sj-modal">
     <div class="sj-modal-header">
       <h3><i class="bi bi-box-seam-fill"></i> Add Inventory Item</h3>
-      <button onclick="closeModal('addInventoryModal')"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="sj-modal-body">
       <div class="form-grid2">
@@ -135,8 +147,27 @@
       </div>
     </div>
     <div class="sj-modal-footer">
-      <button class="btn-cancel" onclick="closeModal('addInventoryModal')">Cancel</button>
+      <button class="btn-cancel" onclick="closeInventoryModal('addInventoryModal')">Cancel</button>
       <button class="btn-maroon-sm" onclick="saveInventoryItem()"><i class="bi bi-floppy-fill"></i> Add Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Restock modal — same look as Tools Management's Restock modal, for consistency -->
+<div class="modal" id="restockModal">
+  <div class="modal-box">
+    <div class="refill-header">
+      <h3>Restock</h3>
+    </div>
+    <p class="refill-subtitle">Refill "<span id="restockItemName"></span>"</p>
+    <div class="refill-stepper">
+      <button type="button" onclick="stepRestockQty(-1)" aria-label="Decrease quantity">&minus;</button>
+      <input type="number" id="restockQtyInput" value="1" min="1">
+      <button type="button" onclick="stepRestockQty(1)" aria-label="Increase quantity">+</button>
+    </div>
+    <div class="modal-actions">
+      <button type="button" onclick="document.getElementById('restockModal').style.display='none'">Cancel</button>
+      <button type="button" class="btn-approve" onclick="confirmRestock()">Confirm Refill</button>
     </div>
   </div>
 </div>
@@ -150,6 +181,7 @@ const janAreaStatuses = {};
 const janStaff = <?= $staff_json ?>;
 const janAreaChecklists = <?= $checklists_json ?>;
 let inventoryItems = <?= $inventory_json ?>;
+const refillLogEntries = <?= $refill_log_json ?>;
 // Zone counts (not per-shift) — a zone with two staff assigned only counts
 // as "cleaned" once every assignment mapped to it is done. See
 // JanitorialController::index() for the aggregation.
@@ -191,7 +223,7 @@ function switchJanTab(id) {
   document.querySelectorAll('.sub-tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick').includes("'"+id+"'")));
   document.querySelectorAll('.sub-pane').forEach(p => p.classList.toggle('active', p.id === 'janitorial-'+id));
   if (id==='shifts') renderShiftCards();
-  if (id==='inventory') renderInventory();
+  if (id==='inventory') { renderInventory(); renderRefillLog(); }
 }
 
 function janDrillDown(area) {
@@ -648,8 +680,29 @@ function renderInventory() {
       <td>${item.lastRefill}</td>
       <td>${st}</td>
       <td>
-        <button class="tbl-btn" onclick="refillItem(${i})"><i class="bi bi-arrow-up-circle"></i> Refill</button>
+        <div class="action-buttons">
+          <button type="button" class="icon-btn" onclick="refillItem(${i})" title="Refill" aria-label="Refill ${item.name}"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>
+        </div>
       </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderRefillLog() {
+  const body = document.getElementById('refillLogBody');
+  if (!refillLogEntries.length) {
+    body.innerHTML = `<tr><td colspan="4"><div class="no-data">No refills recorded yet.</div></td></tr>`;
+    return;
+  }
+
+  body.innerHTML = refillLogEntries.map(entry => {
+    const dt = new Date(entry.at.replace(' ', 'T'));
+    const dateStr = isNaN(dt) ? entry.at : dt.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+    return `<tr>
+      <td><strong>${entry.item}</strong></td>
+      <td>+${entry.qty} ${entry.unit}</td>
+      <td>${dateStr}</td>
+      <td>${entry.by}</td>
     </tr>`;
   }).join('');
 }
@@ -699,9 +752,26 @@ function renderJanitorialSummary() {
   });
 }
 
+let restockItemIndex = null;
+
 function refillItem(i) {
+  restockItemIndex = i;
   const item = inventoryItems[i];
-  const qty = prompt(`Refill "${item.name}" — enter quantity to add:`);
+  document.getElementById('restockItemName').textContent = item.name;
+  document.getElementById('restockQtyInput').value = 1;
+  document.getElementById('restockModal').style.display = 'flex';
+}
+
+function stepRestockQty(delta) {
+  const input = document.getElementById('restockQtyInput');
+  const next = (parseInt(input.value, 10) || 0) + delta;
+  input.value = Math.max(1, next);
+}
+
+function confirmRestock() {
+  if (restockItemIndex === null) return;
+  const item = inventoryItems[restockItemIndex];
+  const qty = document.getElementById('restockQtyInput').value;
   if (!qty || isNaN(qty) || Number(qty) <= 0) return;
 
   const fd = new FormData();
@@ -709,6 +779,7 @@ function refillItem(i) {
   fetch(`<?= base_url('janitorial/refillInventory/') ?>${item.id}`, { method: 'POST', headers: csrfHeaders(), body: fd })
     .then(r => {
       if (!r.ok) throw new Error('Refill failed');
+      document.getElementById('restockModal').style.display = 'none';
       showToast(`"${item.name}" refilled successfully — added ${qty} ${item.unit || ''}.`);
       setTimeout(() => window.location.reload(), 900);
     })
@@ -733,7 +804,11 @@ function saveInventoryItem() {
 function openAddShiftModal()     { showToast('Staff assignment form — connect to PersonnelController.'); }
 function openAddInventoryModal() { document.getElementById('addInventoryModal').style.display = 'flex'; }
 
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+// Named distinctly from layouts/main.php's own closeModal(id) (which
+// toggles an 'open' class) — this modal is shown/hidden via inline
+// style.display instead, and since the layout's script loads after this
+// page's, a same-named function here would get silently overwritten.
+function closeInventoryModal(id) { document.getElementById(id).style.display = 'none'; }
 document.querySelectorAll('.sj-modal-overlay').forEach(o => {
   o.addEventListener('click', e => { if (e.target === o) o.style.display = 'none'; });
 });
@@ -762,6 +837,7 @@ function showToast(msg, isError=false) {
 renderJanitorialSummary();
 renderShiftCards();
 renderInventory();
+renderRefillLog();
 document.querySelector('#shiftFilterRow .shift-filter-chip[data-kind=""]')?.classList.add('active');
 
 // Arriving from the Dashboard's "Cleaning Completion" box.

@@ -129,9 +129,9 @@ function joStatusClass($status) {
       <label>Job Order # <small>(auto-generated if left blank)</small></label>
       <input type="text" name="job_order_number" placeholder="JO-2026-001">
       <label>Job Order Title <span class="required-mark">*</span></label>
-      <input type="text" name="job_order_title" required>
+      <input type="text" name="job_order_title" placeholder="e.g. Campus Landscaping Improvement" required>
       <label>Project Name</label>
-      <input type="text" name="project_name">
+      <input type="text" name="project_name" placeholder="e.g. Grounds Beautification Phase 2">
       <label>Position</label>
       <input type="text" name="position" placeholder="Utility Worker">
       <label>Assignment Location</label>
@@ -139,7 +139,7 @@ function joStatusClass($status) {
       <label>Personnel Required</label>
       <input type="number" min="1" name="personnel_required" value="1">
       <label>Supervisor</label>
-      <input type="text" name="supervisor">
+      <input type="text" name="supervisor" placeholder="e.g. Remedios Ocampo">
       <label>Start Date</label>
       <input type="date" name="start_date">
       <label>End Date</label>
@@ -151,9 +151,9 @@ function joStatusClass($status) {
         <option value="PENDING">PENDING</option>
       </select>
       <label>Description</label>
-      <input type="text" name="description">
+      <input type="text" name="description" placeholder="e.g. Ongoing landscaping and grounds improvement">
       <label>Remarks</label>
-      <input type="text" name="remarks">
+      <input type="text" name="remarks" placeholder="Optional notes">
       <div class="modal-actions">
         <button type="button" onclick="document.getElementById('addJobOrderModal').style.display='none'">Cancel</button>
         <button type="submit" class="btn-maroon">Save</button>

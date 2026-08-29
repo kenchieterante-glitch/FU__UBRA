@@ -16,11 +16,16 @@
       if ($seg === 'safety/guard-dashboard') {
           return $uri === 'safety/guard-dashboard' ? 'active' : '';
       }
-      if ($seg === 'personnel') {
-          return $uri === 'personnel' || strpos($uri, 'personnel/') === 0 ? 'active' : '';
+      // "All Personnel" / "All Tools" are the base/index link sitting
+      // alongside their own sub-routes (personnel/drivers, tools/consumable,
+      // etc.) in the same submenu — prefix-matching here made the base link
+      // stay highlighted even when a specific sub-route was selected, so
+      // both looked active at once. These need an exact match only.
+      if ($seg === 'personnel' || $seg === 'tools') {
+          return $uri === $seg ? 'active' : '';
       }
       if ($seg === 'vehicles') {
-          return $uri === 'vehicles' || $uri === 'gps' ? 'active' : '';
+          return $uri === 'vehicles' ? 'active' : '';
       }
       return $uri === $seg || strpos($uri, $seg . '/') === 0 ? 'active' : '';
   }

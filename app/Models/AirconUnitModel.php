@@ -9,7 +9,7 @@ class AirconUnitModel extends Model
     protected $useTimestamps = true;
     protected $allowedFields = [
         'location', 'floor', 'unit_name', 'last_cleaning', 'next_schedule',
-        'condition_status', 'assigned_tech',
+        'condition_status', 'assigned_tech', 'installed_by',
     ];
 
     public function getByLocation(string $location)

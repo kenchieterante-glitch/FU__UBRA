@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\ToolsModel;
 use App\Models\BorrowModel;
 use App\Models\PersonnelModel;
+use App\Models\ToolsRefillLogModel;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -14,6 +15,7 @@ class ToolsController extends BaseController
     protected $toolsModel;
     protected $borrowModel;
     protected $personnelModel;
+    protected $refillLogModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
@@ -21,6 +23,7 @@ class ToolsController extends BaseController
         $this->toolsModel = new ToolsModel();
         $this->borrowModel = new BorrowModel();
         $this->personnelModel = new PersonnelModel();
+        $this->refillLogModel = new ToolsRefillLogModel();
     }
 
     public function index()
@@ -67,6 +70,15 @@ class ToolsController extends BaseController
             'personnel' => $this->personnelModel->findAll(),
         ], $this->getStatCounts());
 
+        if ($category === 'Consumable') {
+            $data['refill_log_json'] = $this->jsonForScript(array_map(fn($l) => [
+                'item' => $l['asset_name'],
+                'qty'  => (float) $l['quantity_added'],
+                'by'   => $l['performed_by'],
+                'at'   => $l['performed_at'],
+            ], $this->refillLogModel->getRecent(50)));
+        }
+
         return view('tools/index', $data);
     }
 
@@ -78,6 +90,7 @@ class ToolsController extends BaseController
             'borrowed_tools'    => $this->toolsModel->where('availability', 'Borrowed')->where('is_archived', 0)->countAllResults(),
             'maintenance_tools' => $this->toolsModel->where('availability', 'Maintenance')->where('is_archived', 0)->countAllResults(),
             'disposal_tools'    => $this->toolsModel->where('availability', 'Disposal')->where('is_archived', 0)->countAllResults(),
+            'consumable_tools'  => $this->toolsModel->where('category', 'Consumable')->where('is_archived', 0)->countAllResults(),
         ];
     }
 
@@ -139,6 +152,14 @@ class ToolsController extends BaseController
         $this->toolsModel->update($id, [
             'current_stock'     => (float) ($item['current_stock'] ?? 0) + $qty,
             'last_activity_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->refillLogModel->insert([
+            'tool_id'        => $id,
+            'asset_name'     => $item['asset_name'],
+            'quantity_added' => $qty,
+            'performed_by'   => (string) (session()->get('full_name') ?? session()->get('emp_id') ?? 'Unknown'),
+            'performed_at'   => date('Y-m-d H:i:s'),
         ]);
 
         return redirect()->to('/tools/consumable')->with('success', $item['asset_name'] . ' refilled by ' . $qty . '.');

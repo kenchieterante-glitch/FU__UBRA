@@ -30,35 +30,96 @@
 
     <!-- ── SUMMARY CARDS ───────────────────────────────────────── -->
     <div class="stat-cards">
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterTripsByStat('Submitted')" role="button" tabindex="0">
             <span class="stat-icon tone-gold"><i class="fa-solid fa-hourglass-half"></i></span>
-            <h3>Pending Requests</h3>
-            <div class="value"><?= $pending_count ?? 0 ?></div>
+            <h3>Submitted Requests</h3>
+            <div class="value"><?= $submitted_count ?? 0 ?></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterTripsByStat('Approved')" role="button" tabindex="0">
             <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
             <h3>Approved Trips</h3>
             <div class="value"><?= $approved_count ?? 0 ?></div>
+        </div>
+        <div class="stat-card stat-card-clickable" onclick="toggleTripsInProgress()" role="button" tabindex="0">
+            <span class="stat-icon tone-blue"><i class="fa-solid fa-truck-fast"></i></span>
+            <h3>Trips In Progress</h3>
+            <div class="value"><?= $in_transit_count ?? 0 ?></div>
         </div>
         <div class="stat-card">
             <span class="stat-icon tone-maroon"><i class="fa-solid fa-calendar-day"></i></span>
             <h3>Today's Trips</h3>
             <div class="value"><?= $today_count ?? 0 ?></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterTripsByStat('Completed')" role="button" tabindex="0">
             <span class="stat-icon tone-neutral"><i class="fa-solid fa-flag-checkered"></i></span>
             <h3>Completed Trips</h3>
             <div class="value"><?= $completed_count ?? 0 ?></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterTripsByStat('Rejected')" role="button" tabindex="0">
             <span class="stat-icon tone-red"><i class="fa-solid fa-circle-xmark"></i></span>
             <h3>Rejected / Cancelled</h3>
             <div class="value"><?= $cancelled_count ?? 0 ?></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="toggleVehicleMonitoring()" role="button" tabindex="0">
             <span class="stat-icon tone-neutral"><i class="fa-solid fa-truck"></i></span>
             <h3>Available Vehicles</h3>
             <div class="value"><?= $available_vehicles ?? 0 ?>/<?= $total_vehicles ?? count($vehicles ?? []) ?></div>
+        </div>
+    </div>
+
+    <!-- ── TRIPS IN PROGRESS ("Active Monitoring") ─────────────── -->
+    <div class="table-panel" id="tripsInProgressPanel" style="display:none;">
+        <div class="table-toolbar"><h3 style="margin:0;"><i class="bi bi-truck"></i> Trips In Progress</h3></div>
+        <div class="table-scroll">
+            <table class="travel-table">
+                <thead>
+                    <tr><th>Trip ID</th><th>Destination</th><th>Driver</th><th>Vehicle</th><th>Expected Return</th></tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($trips_in_progress)): ?>
+                        <tr><td colspan="5" class="empty-row">No trips currently in progress.</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($trips_in_progress as $tip): ?>
+                            <tr class="<?= $tip['overdue'] ? 'trip-overdue-row' : '' ?>">
+                                <td class="trip-id"><?= esc($tip['trip_id']) ?></td>
+                                <td><?= esc($tip['destination']) ?></td>
+                                <td><?= esc($tip['driver']) ?></td>
+                                <td><?= esc($tip['vehicle']) ?></td>
+                                <td>
+                                    <?= esc($tip['expected_return']) ?>
+                                    <?php if ($tip['overdue']): ?><span class="status-badge badge-cancelled">Overdue</span><?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── VEHICLE & DRIVER MONITORING ─────────────────────────── -->
+    <div class="table-panel" id="vehicleMonitoringPanel" style="display:none;">
+        <div class="table-toolbar"><h3 style="margin:0;"><i class="bi bi-truck"></i> Vehicle & Driver Monitoring</h3></div>
+        <div class="table-scroll">
+            <table class="travel-table">
+                <thead>
+                    <tr><th>Vehicle</th><th>Status</th><th>Assigned Driver</th><th>Current Trip</th></tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($vehicle_monitoring)): ?>
+                        <tr><td colspan="4" class="empty-row">No vehicles on record.</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($vehicle_monitoring as $vm): ?>
+                            <tr>
+                                <td><?= esc($vm['vehicle']) ?></td>
+                                <td><span class="status-badge <?= $vm['status'] === 'Active' ? 'badge-in-transit' : 'badge-approved' ?>"><?= esc($vm['status']) ?></span></td>
+                                <td><?= esc($vm['driver']) ?></td>
+                                <td><?= esc($vm['trip']) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -84,8 +145,10 @@
                           <label for="statusFilter">Status</label>
                           <select id="statusFilter" onchange="filterTable()">
                             <option value="">All Statuses</option>
-                            <option value="Pending">Pending</option>
+                            <option value="Submitted">Submitted</option>
+                            <option value="Reviewed">Reviewed</option>
                             <option value="Approved">Approved</option>
+                            <option value="In Transit">In Transit</option>
                             <option value="Completed">Completed</option>
                             <option value="Rejected">Rejected</option>
                             <option value="Cancelled">Cancelled</option>
@@ -148,10 +211,12 @@
                                 <td>
                                     <?php
                                     $statusClass = match($trip['status']) {
-                                        'Approved'  => 'badge-approved',
-                                        'Completed' => 'badge-completed',
+                                        'Reviewed'   => 'badge-reviewed',
+                                        'Approved'   => 'badge-approved',
+                                        'In Transit' => 'badge-in-transit',
+                                        'Completed'  => 'badge-completed',
                                         'Cancelled', 'Rejected' => 'badge-cancelled',
-                                        default     => 'badge-pending',
+                                        default      => 'badge-pending',
                                     };
                                     ?>
                                     <span class="status-badge <?= $statusClass ?>"><?= esc($trip['status']) ?></span>
@@ -162,6 +227,38 @@
                                             onclick="viewTicket(<?= $trip['id'] ?>)">
                                             <i class="bi bi-eye-fill"></i>
                                         </button>
+
+                                        <?php if ($trip['status'] === 'Submitted'): ?>
+                                            <form method="post" action="<?= base_url('travel/review/'.$trip['id']) ?>" style="display:contents;">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="icon-btn" style="background:#e5f0fc;color:#1d64c9;" title="Mark Reviewed"><i class="bi bi-eyeglasses"></i></button>
+                                            </form>
+                                        <?php endif; ?>
+
+                                        <?php if (in_array($trip['status'], ['Submitted', 'Reviewed'], true)): ?>
+                                            <form method="post" action="<?= base_url('travel/approve/'.$trip['id']) ?>" style="display:contents;">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="icon-btn" style="background:#dcfce7;color:#166534;" title="Approve"><i class="bi bi-check-lg"></i></button>
+                                            </form>
+                                            <form method="post" action="<?= base_url('travel/reject/'.$trip['id']) ?>" onsubmit="return confirm('Reject this trip ticket?')" style="display:contents;">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="icon-btn" style="background:#fee2e2;color:#991b1b;" title="Reject"><i class="bi bi-x-lg"></i></button>
+                                            </form>
+                                        <?php endif; ?>
+
+                                        <?php if (in_array($trip['status'], ['Submitted', 'Reviewed', 'Approved'], true)): ?>
+                                            <form method="post" action="<?= base_url('travel/cancel/'.$trip['id']) ?>" onsubmit="return confirm('Cancel this trip ticket?')" style="display:contents;">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="icon-btn" style="background:#f3f4f6;color:#6b7280;" title="Cancel Trip"><i class="bi bi-slash-circle"></i></button>
+                                            </form>
+                                        <?php endif; ?>
+
+                                        <?php if (in_array($trip['status'], ['Approved', 'In Transit'], true)): ?>
+                                            <form method="post" action="<?= base_url('travel/complete/'.$trip['id']) ?>" onsubmit="return confirm('Mark this trip as completed?')" style="display:contents;">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="icon-btn" style="background:#e0e7ff;color:#3730a3;" title="Mark Completed"><i class="bi bi-flag-fill"></i></button>
+                                            </form>
+                                        <?php endif; ?>
 
                                         <form method="post" action="<?= base_url('travel/delete/'.$trip['id']) ?>" onsubmit="return confirm('Archive this trip ticket?')" style="display:contents;">
                                             <?= csrf_field() ?>
@@ -315,9 +412,22 @@ function viewTicket(id) {
         .then(r => r.json())
         .then(t => {
             const statusClass = {
-                Approved: 'badge-approved', Completed: 'badge-completed',
-                Cancelled: 'badge-cancelled', Rejected: 'badge-cancelled', Pending: 'badge-pending'
+                Submitted: 'badge-pending', Reviewed: 'badge-reviewed', Approved: 'badge-approved',
+                'In Transit': 'badge-in-transit', Completed: 'badge-completed',
+                Cancelled: 'badge-cancelled', Rejected: 'badge-cancelled'
             }[t.status] || 'badge-pending';
+
+            const statusHistoryHtml = (t.status_log || []).length
+                ? t.status_log.map(entry => `
+                    <div class="status-timeline-item">
+                        <div class="status-timeline-dot"></div>
+                        <div class="status-timeline-content">
+                            <div class="status-timeline-top"><strong>${entry.status}</strong><span>${formatDateTime(entry.changed_at)}</span></div>
+                            <div class="status-timeline-by">by ${entry.changed_by}</div>
+                            ${entry.notes ? `<div class="status-timeline-notes">${entry.notes}</div>` : ''}
+                        </div>
+                    </div>`).join('')
+                : '<div class="status-timeline-empty">No status history recorded.</div>';
 
             // The gate status only turns green once the guard has actually
             // scanned the driver back in (check_out_time set) — dispatched-
@@ -356,6 +466,13 @@ function viewTicket(id) {
                         <div class="ts-sub">Trip ID: ${t.trip_id || '—'}</div>
                         <div class="ts-verify ${verifyTone}"><i class="bi ${verifyIcon}"></i> ${verifyText}</div>
                     </div>
+                    <div class="status-history-panel">
+                        <button type="button" class="status-history-toggle" onclick="this.parentElement.classList.toggle('open')">
+                            <span><i class="bi bi-clock-history"></i> Status History</span>
+                            <i class="bi bi-chevron-down status-history-caret"></i>
+                        </button>
+                        <div class="status-timeline">${statusHistoryHtml}</div>
+                    </div>
                     <div class="ticket-action-row" style="margin-top:1rem;">
                         <button class="btn-submit" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
                         <button class="btn-cancel" onclick="closeTicketModal()"><i class="bi bi-x"></i> Close</button>
@@ -367,6 +484,25 @@ function viewTicket(id) {
             document.getElementById('ticketBody').innerHTML =
                 '<div class="ticket-loading error"><i class="bi bi-exclamation-triangle"></i> Failed to load trip details.</div>';
         });
+}
+
+// ── Stat card actions ────────────────────────────────────────────
+function filterTripsByStat(status) {
+    document.getElementById('statusFilter').value = status;
+    filterTable();
+    document.querySelector('.table-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleTripsInProgress() {
+    const panel = document.getElementById('tripsInProgressPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    if (panel.style.display === 'block') panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleVehicleMonitoring() {
+    const panel = document.getElementById('vehicleMonitoringPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    if (panel.style.display === 'block') panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ── Table filter ───────────────────────────────────────────────
@@ -408,6 +544,11 @@ function formatTime(t) {
     const [h, m] = t.split(':');
     const hour = parseInt(h);
     return (hour % 12 || 12) + ':' + m + ' ' + (hour >= 12 ? 'PM' : 'AM');
+}
+function formatDateTime(d) {
+    if (!d) return '—';
+    const dt = new Date(d.replace(' ', 'T'));
+    return isNaN(dt) ? d : dt.toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
 // ── Close modals on overlay click ─────────────────────────────

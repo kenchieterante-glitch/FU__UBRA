@@ -215,6 +215,19 @@ class PersonnelController extends BaseController
             fn($h) => $h['status'] !== 'ACTIVE'
         )));
 
+        // Equipment this person is credited with installing — matched by
+        // full name against fire_extinguishers.inspector and
+        // aircon_units.installed_by, set from the Safety page's "Set
+        // Installer" action.
+        $installedExtinguishers = [];
+        $installedAircon        = [];
+        if (!empty($person['full_name'])) {
+            $installedExtinguishers = (new \App\Models\FireExtinguisherModel())
+                ->where('inspector', $person['full_name'])->orderBy('location', 'ASC')->findAll();
+            $installedAircon = (new \App\Models\AirconUnitModel())
+                ->where('installed_by', $person['full_name'])->orderBy('location', 'ASC')->findAll();
+        }
+
         return view('personnel/view', [
             'title'             => $person['full_name'],
             'pageCss'           => 'personnel.css',
@@ -225,6 +238,8 @@ class PersonnelController extends BaseController
             'documents'         => $documents,
             'documentTypes'     => $docTypeModel->getAllOrdered(),
             'completeness'      => $completeness,
+            'installedExtinguishers' => $installedExtinguishers,
+            'installedAircon'        => $installedAircon,
         ]);
     }
 

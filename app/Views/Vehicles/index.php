@@ -271,11 +271,11 @@ if (vehiclesUrlFilter) filterVehiclesByStat(vehiclesUrlFilter);
       <?= csrf_field() ?>
       <p class="required-note">Fields marked <span class="required-mark">*</span> are required.</p>
       <label>Vehicle Name / Model <span class="required-mark">*</span></label>
-      <input type="text" name="vehicle_name" required>
+      <input type="text" name="vehicle_name" placeholder="e.g. Toyota Hiace" required>
       <label>Plate Number <span class="required-mark">*</span></label>
-      <input type="text" name="plate_no" required>
+      <input type="text" name="plate_no" placeholder="e.g. ABC-1234" required>
       <label>Type</label>
-      <input type="text" name="type">
+      <input type="text" name="type" placeholder="e.g. Van">
       <label>Driver</label>
       <select name="driver_id">
         <option value="">— Unassigned —</option>

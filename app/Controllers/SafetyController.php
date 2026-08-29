@@ -47,6 +47,7 @@ class SafetyController extends BaseController
         $readiness      = count($units) > 0 ? round((count($units) - $overdue) / count($units) * 100) : 100;
 
         $feRegistry = array_map(fn($u) => [
+            'dbId'      => (int) $u['id'],
             'id'        => $u['unit_id'],
             'type'      => $u['type'],
             'loc'       => $u['location'],
@@ -80,6 +81,7 @@ class SafetyController extends BaseController
                 'lastClean' => $u['last_cleaning'],
                 'nextDue'   => $u['next_schedule'],
                 'tech'      => $u['assigned_tech'] ?? '—',
+                'installedBy' => $u['installed_by'] ?? '—',
                 'checklist' => array_map(fn($t) => [
                     'id'   => $t['id'],
                     'task' => $t['task_name'],
@@ -122,7 +124,34 @@ class SafetyController extends BaseController
             'aircon_attention'     => $airconNeedsAttention,
             'work_order_registry_json' => $this->jsonForScript($workOrderRegistry),
             'work_order_total'         => count($openWorkOrders),
+            'personnel_options_json'   => $this->jsonForScript(
+                array_map(fn($p) => $p['full_name'], $this->personnelModel->where('is_archived', 0)->orderBy('full_name', 'ASC')->findAll())
+            ),
         ]);
+    }
+
+    // Sets who installed a specific fire extinguisher unit — picked from
+    // Personnel so it can be cross-referenced on that person's profile,
+    // instead of the free-text field this used to be.
+    public function setInstaller($id)
+    {
+        if (!$this->session->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+        $name = trim((string) $this->request->getPost('installed_by'));
+        $this->fireExtinguisherModel->update($id, ['inspector' => $name !== '' ? $name : null]);
+        return $this->response->setJSON(['success' => true]);
+    }
+
+    // Same, for aircon units.
+    public function setAirconInstaller($id)
+    {
+        if (!$this->session->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+        $name = trim((string) $this->request->getPost('installed_by'));
+        $this->airconUnitModel->update($id, ['installed_by' => $name !== '' ? $name : null]);
+        return $this->response->setJSON(['success' => true]);
     }
 
     // Fire extinguishers due within 30 days (or already Refillable) and
@@ -197,9 +226,13 @@ class SafetyController extends BaseController
         usort($activity, fn($a, $b) => strtotime($b['time']) <=> strtotime($a['time']));
 
         // Trip tickets the guard needs to act on: approved trips awaiting
-        // dispatch (check-in) or already dispatched and awaiting return (check-out).
+        // dispatch (check-in), or already In Transit and awaiting return
+        // (check-out). Checking in now moves a trip from Approved to In
+        // Transit, so both statuses have to stay in this list — otherwise
+        // a dispatched trip would vanish from the guard's view before it
+        // could ever be checked back out.
         $trips = $this->travelModel->getAllWithDetails();
-        $guardTrips = array_values(array_filter($trips, fn($t) => $t['status'] === 'Approved'));
+        $guardTrips = array_values(array_filter($trips, fn($t) => in_array($t['status'], ['Approved', 'In Transit'], true)));
         usort($guardTrips, fn($a, $b) => strtotime($a['travel_date'] . ' ' . $a['departure_time']) <=> strtotime($b['travel_date'] . ' ' . $b['departure_time']));
 
         return view('safety/guard_dashboard', [

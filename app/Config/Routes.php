@@ -109,8 +109,10 @@ $routes->post('vehicles/delete/(:num)','VehicleController::delete/$1');
 $routes->get ('travel',                 'TravelController::index');
 $routes->get ('travel/getTrip/(:num)',  'TravelController::getTrip/$1');
 $routes->post('travel/add',             'TravelController::add');
+$routes->post('travel/review/(:num)',   'TravelController::review/$1');
 $routes->post('travel/approve/(:num)',  'TravelController::approve/$1');
 $routes->post('travel/reject/(:num)',   'TravelController::reject/$1');
+$routes->post('travel/cancel/(:num)',   'TravelController::cancel/$1');
 $routes->post('travel/complete/(:num)', 'TravelController::complete/$1');
 $routes->post('travel/delete/(:num)',   'TravelController::delete/$1');
 $routes->post('travel/checkin/(:num)',  'TravelController::checkIn/$1');
@@ -134,6 +136,8 @@ $routes->get ('safety/keylogs',                'SafetyController::keylogs');
 $routes->get ('safety/keylogs/lookup/(:any)',  'SafetyController::lookupBorrower/$1');
 $routes->post('safety/keylogs/scan-borrow',    'SafetyController::scanBorrow');
 $routes->post('safety/keylogs/scan-return',    'SafetyController::scanReturn');
+$routes->post('safety/setInstaller/(:num)',       'SafetyController::setInstaller/$1');
+$routes->post('safety/setAirconInstaller/(:num)', 'SafetyController::setAirconInstaller/$1');
 
 // ============================================================
 // JANITORIAL MONITORING (Separated from Safety)

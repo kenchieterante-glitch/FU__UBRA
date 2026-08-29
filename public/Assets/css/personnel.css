@@ -19,6 +19,43 @@
     overflow-y: auto;
 }
 
+/* Scoped to just the main personnel listing table. Fixed (not max-) height
+   and fixed column widths so the header/table footprint is pixel-identical
+   every time you navigate to a different Personnel Management sub-tab
+   (Drivers, Janitors, Carpentries, etc.) — a category with few rows no
+   longer collapses, and one with many rows still scrolls inside the same
+   box instead of resizing it. */
+.personnel-list-scroll {
+    height: 520px;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+.personnel-list-scroll #personnelTable {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.personnel-list-scroll #personnelTable th:nth-child(1),
+.personnel-list-scroll #personnelTable td:nth-child(1) { width: 24%; }
+.personnel-list-scroll #personnelTable th:nth-child(2),
+.personnel-list-scroll #personnelTable td:nth-child(2) { width: 13%; }
+.personnel-list-scroll #personnelTable th:nth-child(3),
+.personnel-list-scroll #personnelTable td:nth-child(3) { width: 14%; }
+.personnel-list-scroll #personnelTable th:nth-child(4),
+.personnel-list-scroll #personnelTable td:nth-child(4) { width: 9%; }
+.personnel-list-scroll #personnelTable th:nth-child(5),
+.personnel-list-scroll #personnelTable td:nth-child(5) { width: 18%; }
+.personnel-list-scroll #personnelTable th:nth-child(6),
+.personnel-list-scroll #personnelTable td:nth-child(6) { width: 10%; }
+.personnel-list-scroll #personnelTable th:nth-child(7),
+.personnel-list-scroll #personnelTable td:nth-child(7) { width: 12%; }
+
+.personnel-list-scroll #personnelTable td {
+    white-space: normal;
+    overflow-wrap: break-word;
+}
+
 .stat-back-bar {
     display: flex;
     align-items: center;
@@ -119,4 +156,19 @@
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+}
+
+/* Add Personnel / Add Job Order modals — same treatment as Add Tool: bold
+   heading, and the Save button sized to fit next to Cancel instead of the
+   default full-width .btn-maroon. */
+#addModal .modal-box h3,
+#addJobOrderModal .modal-box h3 {
+    font-weight: 700;
+    font-size: 19px;
+}
+
+#addModal .modal-actions .btn-maroon,
+#addJobOrderModal .modal-actions .btn-maroon {
+    width: auto;
+    margin-top: 0;
 }

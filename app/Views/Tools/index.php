@@ -44,6 +44,11 @@ $showCategoryTabs = in_array($title, ['Electronic Devices', 'Tools Equipment', '
     <h3>Disposal</h3>
     <div class="value"><?= esc((string) ((int) ($disposal_tools ?? 0))) ?></div>
   </div>
+  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('tools/consumable') ?>'" role="button" tabindex="0">
+    <span class="stat-icon tone-blue"><i class="fa-solid fa-box-open"></i></span>
+    <h3>Consumable</h3>
+    <div class="value"><?= esc((string) ((int) ($consumable_tools ?? 0))) ?></div>
+  </div>
 </div>
 <?php endif; ?>
 
@@ -157,6 +162,20 @@ $showCategoryTabs = in_array($title, ['Electronic Devices', 'Tools Equipment', '
   </div>
 </div>
 
+<?php if ($isConsumablePage): ?>
+<div class="table-card" style="margin-top:20px;">
+  <div class="table-toolbar"><div class="toolbar-left"><h3 style="margin:0;"><i class="fa-solid fa-clock-rotate-left"></i> Refill Log</h3></div></div>
+  <div class="tools-table-scroll">
+  <table class="data-table">
+    <thead>
+      <tr><th>Item</th><th>Quantity Added</th><th>Date &amp; Time</th><th>Performed By</th></tr>
+    </thead>
+    <tbody id="toolsRefillLogBody"></tbody>
+  </table>
+  </div>
+</div>
+<?php endif; ?>
+
 <?php if (!empty($toolList)): ?>
   <?php foreach ($toolList as $t): ?>
     <div class="modal" id="editModal<?= $t['id'] ?>">
@@ -201,6 +220,30 @@ $showCategoryTabs = in_array($title, ['Electronic Devices', 'Tools Equipment', '
 <?php endif; ?>
 
 <script>
+const toolsRefillLogEntries = <?= $refill_log_json ?? '[]' ?>;
+
+function renderToolsRefillLog() {
+  const body = document.getElementById('toolsRefillLogBody');
+  if (!body) return;
+
+  if (!toolsRefillLogEntries.length) {
+    body.innerHTML = `<tr><td colspan="4">No refills recorded yet.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = toolsRefillLogEntries.map(entry => {
+    const dt = new Date(entry.at.replace(' ', 'T'));
+    const dateStr = isNaN(dt) ? entry.at : dt.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+    return `<tr>
+      <td><strong>${entry.item}</strong></td>
+      <td>+${entry.qty}</td>
+      <td>${dateStr}</td>
+      <td>${entry.by}</td>
+    </tr>`;
+  }).join('');
+}
+renderToolsRefillLog();
+
 function filterToolsTable() {
   const search = document.getElementById('toolsSearch').value.toLowerCase();
   const category = document.getElementById('toolsCategory').value.toLowerCase();
@@ -276,13 +319,28 @@ function toggleToolsFilterMenu() {
 }
 
 // Consumables don't get archived when they run low — they get refilled.
+let refillToolId = null;
+
 function refillToolStock(id, name) {
-  const qty = prompt(`Refill "${name}" — enter quantity to add:`);
-  if (!qty || isNaN(qty) || Number(qty) <= 0) return;
+  refillToolId = id;
+  document.getElementById('refillItemName').textContent = name;
+  document.getElementById('refillQtyInput').value = 1;
+  document.getElementById('refillModal').style.display = 'flex';
+}
+
+function stepRefillQty(delta) {
+  const input = document.getElementById('refillQtyInput');
+  const next = (parseInt(input.value, 10) || 0) + delta;
+  input.value = Math.max(1, next);
+}
+
+function confirmRefill() {
+  const qty = document.getElementById('refillQtyInput').value;
+  if (!qty || isNaN(qty) || Number(qty) <= 0 || refillToolId === null) return;
 
   const fd = new FormData();
   fd.append('quantity', qty);
-  fetch(`<?= base_url('tools/refillStock/') ?>${id}`, { method: 'POST', headers: csrfHeaders(), body: fd })
+  fetch(`<?= base_url('tools/refillStock/') ?>${refillToolId}`, { method: 'POST', headers: csrfHeaders(), body: fd })
     .then(() => window.location.reload());
 }
 
@@ -305,9 +363,9 @@ if (toolsUrlFilter) filterToolsByStat(toolsUrlFilter);
       <?= csrf_field() ?>
       <p class="required-note">Fields marked <span class="required-mark">*</span> are required.</p>
       <label>Tool Name <span class="required-mark">*</span></label>
-      <input type="text" name="asset_name" required>
+      <input type="text" name="asset_name" placeholder="e.g. Cordless drill" required>
       <label>Tool Code</label>
-      <input type="text" name="asset_code">
+      <input type="text" name="asset_code" placeholder="e.g. TL-0042">
       <label>Category</label>
       <select name="category">
         <option value="">— Select Category —</option>
@@ -316,7 +374,7 @@ if (toolsUrlFilter) filterToolsByStat(toolsUrlFilter);
         <option value="Consumable">Consumable</option>
       </select>
       <label>Location</label>
-      <input type="text" name="location">
+      <input type="text" name="location" placeholder="e.g. Shelf B-3">
       <label>Custodian</label>
       <select name="custodian">
         <option value="">— Unassigned —</option>
@@ -336,6 +394,25 @@ if (toolsUrlFilter) filterToolsByStat(toolsUrlFilter);
         <button type="submit" class="btn-maroon">Save</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- REFILL MODAL -->
+<div class="modal" id="refillModal">
+  <div class="modal-box">
+    <div class="refill-header">
+      <h3>Restock</h3>
+    </div>
+    <p class="refill-subtitle">Refill "<span id="refillItemName"></span>"</p>
+    <div class="refill-stepper">
+      <button type="button" onclick="stepRefillQty(-1)" aria-label="Decrease quantity">&minus;</button>
+      <input type="number" id="refillQtyInput" value="1" min="1">
+      <button type="button" onclick="stepRefillQty(1)" aria-label="Increase quantity">+</button>
+    </div>
+    <div class="modal-actions">
+      <button type="button" onclick="document.getElementById('refillModal').style.display='none'">Cancel</button>
+      <button type="button" class="btn-approve" onclick="confirmRefill()">Confirm Refill</button>
+    </div>
   </div>
 </div>
 

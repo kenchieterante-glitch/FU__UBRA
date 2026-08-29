@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Models\NotificationModel;
+use App\Models\PersonnelModel;
+use App\Models\FireExtinguisherModel;
 
 class NotificationController extends BaseController
 {
@@ -40,9 +42,51 @@ class NotificationController extends BaseController
             'today_done_count' => count(array_filter($todaysAlerts, fn($n) => ($n['status'] ?? 'Pending') !== 'Pending')),
             'upcoming_count' => count(array_filter($all, fn($n) => strtolower($n['priority'] ?? '') === 'routine')),
             'draft_count'    => count($drafts),
+            'supervisors'    => $this->getCoSupervisors(),
+            'fireInspectors' => $this->getFireExtinguisherInspectors(),
         ];
 
         return view('notifications/index', $data);
+    }
+
+    // "Co-supervisors" — anyone holding a supervisory-level position (chiefs,
+    // heads, and the physical plant supervisors), for the Recipient dropdown.
+    private function getCoSupervisors(): array
+    {
+        $personnel = new PersonnelModel();
+        $rows = $personnel->where('is_archived', 0)
+            ->groupStart()
+                ->like('position', 'Supr')
+                ->orLike('position', 'Chief')
+                ->orLike('position', 'Head')
+            ->groupEnd()
+            ->orderBy('full_name', 'ASC')
+            ->findAll();
+
+        return array_map(fn($p) => ['name' => $p['full_name'], 'position' => $p['position']], $rows);
+    }
+
+    // The specific person assigned to check each fire extinguisher unit —
+    // pulled from fire_extinguishers.assigned_guard so the recipient is tied
+    // to an actual unit/location, not just a generic "guard" pick.
+    private function getFireExtinguisherInspectors(): array
+    {
+        $rows = (new FireExtinguisherModel())
+            ->select('assigned_guard, unit_id, location')
+            ->where('assigned_guard IS NOT NULL')
+            ->where('assigned_guard !=', '')
+            ->orderBy('assigned_guard', 'ASC')
+            ->findAll();
+
+        $seen = [];
+        $out  = [];
+        foreach ($rows as $r) {
+            $key = $r['assigned_guard'] . '|' . $r['unit_id'];
+            if (isset($seen[$key])) continue;
+            $seen[$key] = true;
+            $out[] = ['name' => $r['assigned_guard'], 'unit_id' => $r['unit_id'], 'location' => $r['location']];
+        }
+        return $out;
     }
 
     public function markRead($id)

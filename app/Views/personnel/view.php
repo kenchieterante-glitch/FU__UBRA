@@ -10,6 +10,8 @@ $assignmentHistory = $assignmentHistory ?? [];
 $documents = $documents ?? [];
 $documentTypes = $documentTypes ?? [];
 $completeness = $completeness ?? ['required' => 0, 'verified' => 0, 'complete' => false];
+$installedExtinguishers = $installedExtinguishers ?? [];
+$installedAircon = $installedAircon ?? [];
 function pvStatusClass($status) {
   return match(strtoupper((string) $status)) {
     'ACTIVE','VERIFIED','COMPLETED' => 'status-active',
@@ -132,6 +134,35 @@ function pvStatusClass($status) {
   </table>
   </div>
 </div>
+
+<?php if (!empty($installedExtinguishers) || !empty($installedAircon)): ?>
+<div class="table-card">
+  <div class="table-toolbar"><div class="toolbar-left"><h3 style="margin:0;">Equipment Installed</h3></div></div>
+  <div class="personnel-table-scroll">
+  <table class="data-table">
+    <thead><tr><th>Type</th><th>Unit</th><th>Location</th><th>Floor</th></tr></thead>
+    <tbody>
+      <?php foreach ($installedExtinguishers as $fe): ?>
+        <tr>
+          <td>Fire Extinguisher</td>
+          <td><?= esc($fe['unit_id']) ?></td>
+          <td><?= esc($fe['location']) ?></td>
+          <td><?= esc($fe['floor'] ?: 'Ground Floor') ?></td>
+        </tr>
+      <?php endforeach; ?>
+      <?php foreach ($installedAircon as $ac): ?>
+        <tr>
+          <td>Aircon Unit</td>
+          <td><?= esc($ac['unit_name']) ?></td>
+          <td><?= esc($ac['location']) ?></td>
+          <td><?= esc($ac['floor'] ?: 'Ground Floor') ?></td>
+        </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+  </div>
+</div>
+<?php endif; ?>
 
 <div class="modal" id="addDocumentModal">
   <div class="modal-box">

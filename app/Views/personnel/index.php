@@ -17,7 +17,11 @@ if (!empty($personnel)) {
 $positionOptions = array_values(array_unique(array_filter($positionOptions)));
 $showStatusTabs = in_array($title, ['Drivers', 'Janitors', 'Carpentries Shop', 'Maintenance', 'Construction Workers', 'Job Order Personnel'], true);
 $jobOrders = $jobOrders ?? [];
-$taskLabel = $showStatusTabs ? 'Vehicle In Use' : 'Assigned Task';
+// Only Drivers actually have a vehicle — every other category (Janitors,
+// Carpentries Shop, Maintenance, Construction Workers, Job Order Personnel)
+// shares $showStatusTabs for its status-tab UI, but should still say
+// "Assigned Task" like the main Personnel list does.
+$taskLabel = ($title === 'Drivers') ? 'Vehicle In Use' : 'Assigned Task';
 ?>
 
 <div class="page-header">
@@ -115,7 +119,7 @@ $personnelStatCards = [
   </div>
 </div>
 
-<div class="personnel-table-scroll">
+<div class="personnel-table-scroll personnel-list-scroll">
 <table id="personnelTable" class="data-table">
   <thead>
     <tr>
@@ -368,11 +372,11 @@ document.addEventListener('DOMContentLoaded', function () {
       <?= csrf_field() ?>
       <p class="required-note">Fields marked <span class="required-mark">*</span> are required.</p>
       <label>Employee ID <span class="required-mark">*</span></label>
-      <input type="text" name="emp_id" required>
+      <input type="text" name="emp_id" placeholder="e.g. EMP-2026-001" required>
       <label>Full Name <span class="required-mark">*</span></label>
-      <input type="text" name="full_name" required>
+      <input type="text" name="full_name" placeholder="e.g. Juan Dela Cruz" required>
       <label>Email</label>
-      <input type="email" name="email">
+      <input type="email" name="email" placeholder="e.g. juan.delacruz@foundation.edu.ph">
       <label>Department</label>
       <select name="department_id">
         <?php foreach ($departments as $d): ?>

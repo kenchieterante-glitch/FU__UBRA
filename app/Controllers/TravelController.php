@@ -7,6 +7,7 @@ use App\Models\PersonnelModel;
 use App\Models\VehicleModel;
 use App\Models\DepartmentModel;
 use App\Models\NotificationModel;
+use App\Models\TripStatusLogModel;
 
 class TravelController extends BaseController
 {
@@ -15,6 +16,7 @@ class TravelController extends BaseController
     protected $vehicleModel;
     protected $departmentModel;
     protected $notificationModel;
+    protected $statusLogModel;
 
     public function __construct()
     {
@@ -23,6 +25,23 @@ class TravelController extends BaseController
         $this->vehicleModel     = new VehicleModel();
         $this->departmentModel  = new DepartmentModel();
         $this->notificationModel = new NotificationModel();
+        $this->statusLogModel   = new TripStatusLogModel();
+    }
+
+    // Every status transition — Submitted, Reviewed, Approved, In Transit,
+    // Completed, Rejected, Cancelled — writes one permanent row here. This
+    // is the only place that ever inserts into trip_status_log, and nothing
+    // in the app ever updates or deletes from it, so a ticket's history
+    // can't be edited or backdated after the fact.
+    private function logStatus($tripId, string $status, ?string $notes = null): void
+    {
+        $this->statusLogModel->insert([
+            'travel_request_id' => $tripId,
+            'status'            => $status,
+            'changed_by'        => (string) (session()->get('full_name') ?? session()->get('emp_id') ?? 'System'),
+            'changed_at'        => date('Y-m-d H:i:s'),
+            'notes'             => $notes,
+        ]);
     }
 
     public function index()
@@ -33,22 +52,60 @@ class TravelController extends BaseController
 
         $trips = $this->travelModel->getAllWithDetails();
         $today = date('Y-m-d');
+        $now   = date('Y-m-d H:i:s');
 
-        $pendingCount = $approvedCount = $todayCount = $completedCount = $cancelledCount = 0;
+        $submittedCount = $reviewedCount = $approvedCount = $inTransitCount = $todayCount = $completedCount = $cancelledCount = 0;
+        $tripsInProgress = [];
         foreach ($trips as $t) {
             switch ($t['status']) {
-                case 'Pending':   $pendingCount++;   break;
-                case 'Approved':  $approvedCount++;  break;
-                case 'Completed': $completedCount++; break;
+                case 'Submitted':  $submittedCount++;  break;
+                case 'Reviewed':   $reviewedCount++;   break;
+                case 'Approved':   $approvedCount++;   break;
+                case 'In Transit': $inTransitCount++;  break;
+                case 'Completed':  $completedCount++;  break;
                 case 'Cancelled':
-                case 'Rejected':  $cancelledCount++; break;
+                case 'Rejected':   $cancelledCount++;  break;
             }
             if ($t['travel_date'] === $today) {
                 $todayCount++;
             }
+            if ($t['status'] === 'In Transit') {
+                $expectedReturn = $t['travel_date'] . ' ' . $t['return_time'];
+                $tripsInProgress[] = [
+                    'trip_id'         => $t['trip_id'],
+                    'destination'     => $t['destination'],
+                    'driver'          => $t['driver_name'] ?? 'Unassigned',
+                    'vehicle'         => $t['vehicle_name'] ? "{$t['vehicle_name']} ({$t['plate_no']})" : 'Unassigned',
+                    'expected_return' => date('M j, g:i A', strtotime($expectedReturn)),
+                    'overdue'         => $expectedReturn < $now,
+                ];
+            }
         }
+        usort($tripsInProgress, fn($a, $b) => $b['overdue'] <=> $a['overdue']);
 
         $fleetStats = $this->vehicleModel->getFleetStats();
+
+        // Vehicle & Driver Monitoring — every active (non-archived) vehicle's
+        // live status, its permanently assigned driver, and (when it's
+        // currently In Use) whichever trip it's actually out on right now.
+        $vehicleFleet = $this->vehicleModel->getAllWithDetails();
+        $vehicleMonitoring = array_map(function ($v) use ($trips) {
+            $currentTrip = null;
+            if ($v['availability'] === 'In Use') {
+                foreach ($trips as $t) {
+                    if ($t['status'] === 'In Transit' && (int) $t['assigned_vehicle_id'] === (int) $v['id']) {
+                        $currentTrip = $t;
+                        break;
+                    }
+                }
+            }
+            return [
+                'vehicle'  => $v['vehicle_name'] . ' (' . $v['plate_no'] . ')',
+                'status'   => $v['availability'] === 'In Use' ? 'Active' : 'Idle',
+                'driver'   => $currentTrip['driver_name'] ?? $v['driver_name'] ?? 'Unassigned',
+                'trip'     => $currentTrip['trip_id'] ?? '—',
+            ];
+        }, $vehicleFleet);
 
         return view('travel/index', [
             'title'              => "Driver's Trip Ticket",
@@ -59,13 +116,17 @@ class TravelController extends BaseController
             'drivers'            => $this->personnelModel->getDrivers(),
             'vehicles'           => $this->vehicleModel->where('is_archived', 0)->findAll(),
             'departments'        => $this->departmentModel->findAll(),
-            'pending_count'      => $pendingCount,
+            'submitted_count'    => $submittedCount,
+            'reviewed_count'     => $reviewedCount,
             'approved_count'     => $approvedCount,
+            'in_transit_count'   => $inTransitCount,
             'today_count'        => $todayCount,
             'completed_count'    => $completedCount,
             'cancelled_count'    => $cancelledCount,
             'available_vehicles' => $fleetStats['available'],
             'total_vehicles'     => $fleetStats['total'],
+            'trips_in_progress'  => $tripsInProgress,
+            'vehicle_monitoring' => $vehicleMonitoring,
         ]);
     }
 
@@ -79,6 +140,8 @@ class TravelController extends BaseController
         if (!$trip) {
             return $this->response->setStatusCode(404);
         }
+
+        $trip['status_log'] = $this->statusLogModel->getForTrip((int) $id);
 
         return $this->response->setJSON($trip);
     }
@@ -99,7 +162,7 @@ class TravelController extends BaseController
         $requester = $this->personnelModel->find($requesterId);
         $tripId    = $this->travelModel->generateTripId();
 
-        $this->travelModel->insert([
+        $newId = $this->travelModel->insert([
             'trip_id'             => $tripId,
             'requester_id'        => $requesterId,
             'destination'         => $destination,
@@ -110,9 +173,11 @@ class TravelController extends BaseController
             'department_id'       => $requester['department_id'] ?? null,
             'assigned_driver_id'  => $this->request->getPost('assigned_driver_id') ?: null,
             'assigned_vehicle_id' => $this->request->getPost('assigned_vehicle_id') ?: null,
-            'status'              => 'Pending',
+            'status'              => 'Submitted',
             'last_activity_at'    => date('Y-m-d H:i:s'),
-        ]);
+        ], true);
+
+        $this->logStatus($newId, 'Submitted', 'Trip ticket requested by ' . ($requester['full_name'] ?? 'requester'));
 
         $this->notificationModel->insert([
             'category'    => 'Trip Ticket Request',
@@ -137,6 +202,53 @@ class TravelController extends BaseController
             ->like('description', $tripId)
             ->orderBy('id', 'DESC')
             ->first();
+    }
+
+    // Operations marks a submitted ticket as reviewed — a distinct step
+    // before Approve, so the log shows someone actually looked at it rather
+    // than jumping straight from Submitted to a decision.
+    public function review($id)
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $trip = $this->travelModel->find($id);
+        if (!$trip || $trip['status'] !== 'Submitted') {
+            return redirect()->to('/travel')->with('error', 'Only a submitted trip ticket can be marked reviewed.');
+        }
+
+        $this->travelModel->update($id, [
+            'status'           => 'Reviewed',
+            'last_activity_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->logStatus($id, 'Reviewed', 'Marked reviewed, pending approval decision.');
+
+        return redirect()->to('/travel')->with('success', 'Trip ticket marked as reviewed.');
+    }
+
+    // Cancels a ticket any time before it's dispatched (Submitted, Reviewed,
+    // or Approved but not yet checked in at the gate) — distinct from
+    // Reject, which is specifically Operations declining the request.
+    public function cancel($id)
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $trip = $this->travelModel->find($id);
+        if (!$trip || !in_array($trip['status'], ['Submitted', 'Reviewed', 'Approved'], true)) {
+            return redirect()->to('/travel')->with('error', 'Only a trip ticket that has not yet been dispatched can be cancelled.');
+        }
+
+        $this->freeAssignedVehicle($id);
+        $this->travelModel->update($id, [
+            'status'           => 'Cancelled',
+            'last_activity_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->logStatus($id, 'Cancelled', $this->request->getPost('reason') ?: null);
+
+        return redirect()->to('/travel')->with('success', 'Trip ticket cancelled.');
     }
 
     public function approve($id)
@@ -166,6 +278,7 @@ class TravelController extends BaseController
         }
 
         $this->travelModel->update($id, $data);
+        $this->logStatus($id, 'Approved');
 
         if ($vehicleId) {
             $this->vehicleModel->update($vehicleId, ['availability' => 'In Use']);
@@ -218,6 +331,7 @@ class TravelController extends BaseController
             'status'           => 'Rejected',
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->logStatus($id, 'Rejected');
 
         if ($notif = $this->findTripNotification($trip['trip_id'])) {
             $this->notificationModel->update($notif['id'], [
@@ -235,6 +349,7 @@ class TravelController extends BaseController
             'status'           => 'Completed',
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->logStatus($id, 'Completed');
         return redirect()->to('/travel')->with('success', 'Trip marked as completed.');
     }
 
@@ -262,8 +377,10 @@ class TravelController extends BaseController
 
         $this->travelModel->update($id, [
             'check_in_time'    => date('Y-m-d H:i:s'),
+            'status'           => 'In Transit',
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->logStatus($id, 'In Transit', 'Driver checked in at the gate for dispatch.');
 
         return redirect()->back()->with('success', 'Driver checked in at the gate for dispatch.');
     }
@@ -284,6 +401,7 @@ class TravelController extends BaseController
             'status'           => 'Completed',
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->logStatus($id, 'Completed', 'Driver checked out at the gate — trip completed.');
 
         return redirect()->back()->with('success', 'Driver checked out — trip completed.');
     }

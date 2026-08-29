@@ -122,3 +122,16 @@
     justify-content: flex-end;
     gap: 10px;
 }
+
+/* Add Vehicle modal — same treatment as Add Tool: bold heading, and the
+   Save button sized to fit next to Cancel instead of the default
+   full-width .btn-maroon. */
+#addModal .modal-box h3 {
+    font-weight: 700;
+    font-size: 19px;
+}
+
+#addModal .modal-actions .btn-maroon {
+    width: auto;
+    margin-top: 0;
+}
