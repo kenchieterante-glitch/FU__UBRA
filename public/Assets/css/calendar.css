@@ -18,8 +18,8 @@
 }
 
 /* ── Layout ──────────────────────────────────────────────────── */
+/* No padding — .page-content already provides the shared 20px inset. */
 .cal-wrapper {
-    padding: 1rem 1.1rem;
 }
 
 /* ── Page Header ─────────────────────────────────────────────── */
@@ -30,16 +30,6 @@
     flex-wrap: wrap;
     gap: .75rem;
     margin-bottom: 1rem;
-}
-
-.page-title {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--maroon);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: .5rem;
 }
 
 .page-subtitle {

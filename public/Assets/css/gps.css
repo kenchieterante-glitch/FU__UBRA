@@ -18,8 +18,11 @@
 }
 
 /* ── Layout ──────────────────────────────────────────────────── */
+/* No padding here — .page-content already provides the standard 20px
+   inset every page shares. This wrapper adding its own on top is what
+   pushed this page's title out of alignment with pages that have no
+   wrapper at all (e.g. Vehicle Management). */
 .gps-wrapper {
-    padding: 1.5rem 30px;
 }
 
 /* ── Page Header ─────────────────────────────────────────────── */
@@ -30,16 +33,6 @@
     flex-wrap: wrap;
     gap: 1rem;
     margin-bottom: 1.5rem;
-}
-
-.page-title {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--maroon);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: .5rem;
 }
 
 .page-subtitle {

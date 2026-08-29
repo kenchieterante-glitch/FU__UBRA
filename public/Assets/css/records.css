@@ -16,8 +16,8 @@
     --shadow: 0 2px 12px rgba(123, 13, 13, .08);
 }
 
+/* No padding — .page-content already provides the shared 20px inset. */
 .rec-wrapper {
-    padding: 1.5rem 2rem;
 }
 
 /* ── Page header ─────────────────────────────────────────────── */

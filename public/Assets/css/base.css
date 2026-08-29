@@ -28,16 +28,18 @@
   --radius: 12px;
   --shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
   --shadow-lg: 0 12px 24px -6px rgba(16, 24, 40, 0.12), 0 4px 8px -4px rgba(16, 24, 40, 0.08);
-  /* Times New Roman everywhere, per the client's consistency note — one
-     serif typeface across brand, headings, and body instead of mixing in
-     a condensed display face and a sans body face. */
-  --brand-font: "Times New Roman", Times, serif;
-  /* Headlines, titles, event names */
-  --heading-font: "Times New Roman", Times, serif;
-  /* Body copy */
-  --body-font: "Times New Roman", Times, serif;
-  /* Subheadlines / secondary text */
-  --subhead-font: "Times New Roman", Times, serif;
+  /* System-wide typography standard: Bebas Neue for headlines/module names,
+     Helvetica Neue for body copy and subheads (Regular vs Medium via
+     --fw-regular/--fw-medium below). Times New Roman is reserved
+     exclusively for the literal "FOUNDATION UNIVERSITY" wordmark
+     wherever it appears (see .fu-serif) — nowhere else in the system. */
+  --brand-font: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+  /* Headlines, titles, module names, section headers */
+  --heading-font: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+  /* Body copy — form labels, descriptions, table content */
+  --body-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* Subheadlines / card titles / secondary emphasis (paired with --fw-medium) */
+  --subhead-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --fw-regular: 400;
   --fw-medium: 500;
   --fw-bold: 700;
@@ -222,7 +224,7 @@ img {
 .sidebar {
   width: 250px;
   min-width: 250px;
-  background: #2b2b2b;
+  background: var(--sidebar);
   color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -233,10 +235,7 @@ img {
   z-index: 20;
   border-right: 1px solid rgba(255, 255, 255, 0.07);
   transition: width 0.25s ease, min-width 0.25s ease;
-  /* Inspiration reference asked for Times New Roman across the whole
-     sidebar, not just the "FOUNDATION UNIVERSITY" wordmark — icons keep
-     their own icon-font, so this only touches nav/label/logo text. */
-  font-family: "Times New Roman", Times, serif;
+  font-family: var(--body-font);
 }
 .sidebar-logo {
   position: relative;
@@ -273,12 +272,14 @@ img {
 }
 .sidebar-logo .txt b {
   color: #ffffff;
-  font-family: "Times New Roman", Times, serif;
+  font-family: var(--heading-font);
   font-weight: 700;
   font-size: 16px;
   letter-spacing: 0.3px;
   display: block;
 }
+/* The one sanctioned exception in the whole system: the literal
+   "FOUNDATION UNIVERSITY" wordmark text. */
 .sidebar-logo .txt small {
   color: rgba(255, 255, 255, 0.5);
   font-size: 9.5px;
@@ -538,7 +539,7 @@ img {
   padding: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   min-height: 74px;
-  font-family: "Times New Roman", Times, serif;
+  font-family: var(--body-font);
 }
 .sidebar-footer a {
   display: flex;
@@ -792,6 +793,14 @@ img {
   color: #d0d0d6;
 }
 
+/* Typography standard exception: Times New Roman is reserved exclusively
+   for the literal "Foundation University" text, wherever it appears
+   (sidebar wordmark, footer credit, certificates). Apply this class to
+   just that phrase — never to surrounding copy. */
+.fu-serif {
+  font-family: "Times New Roman", Times, serif;
+}
+
 /* SIDEBAR COLLAPSED STATE — icon rail, not fully hidden */
 body.sidebar-collapsed .sidebar {
   width: 72px;
@@ -869,7 +878,14 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   gap: 14px;
   flex-wrap: wrap;
 }
-.page-header h1 {
+/* Single canonical page-title style, whether a page uses a bare <h1>
+   (Vehicle Management) or <h1 class="page-title"> for an icon+text title
+   (GPS Tracker, Calendar, Notifications, Settings). Previously .page-title
+   was redefined separately per page (different weight, color, no shared
+   font) which is exactly what caused titles to drift out of alignment
+   with each other — this is the one place it should ever be defined now. */
+.page-header h1,
+.page-title {
   font-size: 23px;
   /* Match Bebas Neue's only registered weight (400) — see the note on
      .sidebar-card-title above for why this must not be 700. */
@@ -877,6 +893,10 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   color: var(--ink);
   font-family: var(--heading-font);
   letter-spacing: 0.6px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
 }
 .page-subtitle {
   color: var(--muted);
@@ -918,14 +938,6 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   flex-wrap: nowrap;
 }
 
-/* Trip Ticket only: fixed 4-column grid (7 cards: 4 + 3) at the same
-   165px card size every other wrapping page uses, instead of an
-   unpredictable wrap or a shrink-to-fit single line. */
-.travel-wrapper .stat-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 165px);
-  justify-content: center;
-}
 
 /* Personnel only: continuous auto-scrolling marquee instead of a static
    grid — the card set is duplicated in the view and the track animates
@@ -1836,8 +1848,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   display: block;
   margin-top: 12px;
   font-size: 12.5px;
-  font-family: var(--subhead-font);
-  font-weight: var(--fw-medium);
+  font-family: var(--body-font);
+  font-weight: var(--fw-regular);
   color: #555;
 }
 .modal-box .required-mark {

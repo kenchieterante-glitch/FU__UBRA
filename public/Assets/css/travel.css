@@ -19,8 +19,8 @@
 }
 
 /* ── Layout ──────────────────────────────────────────────────── */
+/* No padding — .page-content already provides the shared 20px inset. */
 .travel-wrapper {
-    padding: 1.5rem 2rem;
 }
 
 /* ── Page Header ─────────────────────────────────────────────── */
@@ -37,13 +37,6 @@
     align-items: center;
 }
 
-.page-title {
-    font-family: var(--heading-font);
-    font-size: 1.6rem;
-    font-weight: 400;
-    color: var(--maroon);
-    margin: 0;
-}
 
 .page-subtitle {
     font-family: var(--subhead-font);
@@ -51,6 +44,15 @@
     color: var(--text-muted);
     font-size: .875rem;
     margin: .25rem 0 0;
+}
+
+/* ── Category cards (Requests / Pending / Today's / Completed) ──
+   Reuses the shared .stat-card / .stat-card-clickable look; this just
+   adds the "currently selected" indicator since stat-cards elsewhere
+   in the app are one-shot actions, not a persistent selection. */
+.trip-tab-active {
+    border: 2px solid var(--maroon);
+    box-shadow: 0 4px 14px rgba(128, 0, 0, .15);
 }
 
 .header-actions {
@@ -1104,117 +1106,3 @@
     padding: .4rem;
 }
 
-/* Overdue "Trips In Progress" rows — past their expected return time and
-   still In Transit. */
-.trip-overdue-row {
-    background: #fef2f2;
-}
-.trip-overdue-row td {
-    color: #991b1b;
-}
-
-/* Status History — expandable timeline replacing a single static
-   "Approved By" field, so the ticket shows its full lifecycle instead of
-   just the latest decision. */
-.status-history-panel {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-bottom: 1rem;
-    overflow: hidden;
-}
-
-.status-history-toggle {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--surface-alt);
-    border: none;
-    padding: .6rem .8rem;
-    font-family: var(--heading-font);
-    font-size: .78rem;
-    font-weight: 400;
-    color: var(--maroon);
-    cursor: pointer;
-}
-
-.status-history-caret {
-    transition: transform .15s ease;
-}
-
-.status-history-panel.open .status-history-caret {
-    transform: rotate(180deg);
-}
-
-.status-timeline {
-    display: none;
-    padding: .8rem;
-    max-height: 220px;
-    overflow-y: auto;
-}
-
-.status-history-panel.open .status-timeline {
-    display: block;
-}
-
-.status-timeline-item {
-    display: flex;
-    gap: .6rem;
-    padding-bottom: .8rem;
-    position: relative;
-}
-
-.status-timeline-item:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    left: 4px;
-    top: 14px;
-    bottom: 0;
-    width: 1px;
-    background: var(--border);
-}
-
-.status-timeline-dot {
-    flex-shrink: 0;
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--maroon);
-    margin-top: 4px;
-}
-
-.status-timeline-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.status-timeline-top {
-    display: flex;
-    justify-content: space-between;
-    gap: .5rem;
-    font-size: .75rem;
-}
-
-.status-timeline-top span {
-    color: var(--muted, #888);
-    white-space: nowrap;
-}
-
-.status-timeline-by {
-    font-size: .7rem;
-    color: var(--muted, #888);
-    margin-top: .1rem;
-}
-
-.status-timeline-notes {
-    font-size: .72rem;
-    color: #555;
-    margin-top: .2rem;
-}
-
-.status-timeline-empty {
-    font-size: .78rem;
-    color: var(--muted, #888);
-    text-align: center;
-    padding: .5rem 0;
-}

@@ -52,81 +52,34 @@ class TravelController extends BaseController
 
         $trips = $this->travelModel->getAllWithDetails();
         $today = date('Y-m-d');
-        $now   = date('Y-m-d H:i:s');
 
-        $submittedCount = $reviewedCount = $approvedCount = $inTransitCount = $todayCount = $completedCount = $cancelledCount = 0;
-        $tripsInProgress = [];
+        // Monitoring-only categorization — mirrors the same rule the view
+        // uses per-row: Completed always wins, then today's still-active
+        // trips, then anything not yet reviewed/approved counts as Pending.
+        // (Approved-but-not-today trips only show under the Requests tab.)
+        $pendingCount = $todayCount = $completedCount = 0;
         foreach ($trips as $t) {
-            switch ($t['status']) {
-                case 'Submitted':  $submittedCount++;  break;
-                case 'Reviewed':   $reviewedCount++;   break;
-                case 'Approved':   $approvedCount++;   break;
-                case 'In Transit': $inTransitCount++;  break;
-                case 'Completed':  $completedCount++;  break;
-                case 'Cancelled':
-                case 'Rejected':   $cancelledCount++;  break;
-            }
-            if ($t['travel_date'] === $today) {
+            if ($t['status'] === 'Completed') {
+                $completedCount++;
+            } elseif ($t['travel_date'] === $today && !in_array($t['status'], ['Rejected', 'Cancelled'], true)) {
                 $todayCount++;
-            }
-            if ($t['status'] === 'In Transit') {
-                $expectedReturn = $t['travel_date'] . ' ' . $t['return_time'];
-                $tripsInProgress[] = [
-                    'trip_id'         => $t['trip_id'],
-                    'destination'     => $t['destination'],
-                    'driver'          => $t['driver_name'] ?? 'Unassigned',
-                    'vehicle'         => $t['vehicle_name'] ? "{$t['vehicle_name']} ({$t['plate_no']})" : 'Unassigned',
-                    'expected_return' => date('M j, g:i A', strtotime($expectedReturn)),
-                    'overdue'         => $expectedReturn < $now,
-                ];
+            } elseif (in_array($t['status'], ['Submitted', 'Reviewed'], true)) {
+                $pendingCount++;
             }
         }
-        usort($tripsInProgress, fn($a, $b) => $b['overdue'] <=> $a['overdue']);
-
-        $fleetStats = $this->vehicleModel->getFleetStats();
-
-        // Vehicle & Driver Monitoring — every active (non-archived) vehicle's
-        // live status, its permanently assigned driver, and (when it's
-        // currently In Use) whichever trip it's actually out on right now.
-        $vehicleFleet = $this->vehicleModel->getAllWithDetails();
-        $vehicleMonitoring = array_map(function ($v) use ($trips) {
-            $currentTrip = null;
-            if ($v['availability'] === 'In Use') {
-                foreach ($trips as $t) {
-                    if ($t['status'] === 'In Transit' && (int) $t['assigned_vehicle_id'] === (int) $v['id']) {
-                        $currentTrip = $t;
-                        break;
-                    }
-                }
-            }
-            return [
-                'vehicle'  => $v['vehicle_name'] . ' (' . $v['plate_no'] . ')',
-                'status'   => $v['availability'] === 'In Use' ? 'Active' : 'Idle',
-                'driver'   => $currentTrip['driver_name'] ?? $v['driver_name'] ?? 'Unassigned',
-                'trip'     => $currentTrip['trip_id'] ?? '—',
-            ];
-        }, $vehicleFleet);
 
         return view('travel/index', [
-            'title'              => "Driver's Trip Ticket",
-            'pageCss'            => 'travel.css',
-            'openModule'         => 'vehicles',
-            'trips'              => $trips,
-            'personnel'          => $this->personnelModel->where('is_archived', 0)->findAll(),
-            'drivers'            => $this->personnelModel->getDrivers(),
-            'vehicles'           => $this->vehicleModel->where('is_archived', 0)->findAll(),
-            'departments'        => $this->departmentModel->findAll(),
-            'submitted_count'    => $submittedCount,
-            'reviewed_count'     => $reviewedCount,
-            'approved_count'     => $approvedCount,
-            'in_transit_count'   => $inTransitCount,
-            'today_count'        => $todayCount,
-            'completed_count'    => $completedCount,
-            'cancelled_count'    => $cancelledCount,
-            'available_vehicles' => $fleetStats['available'],
-            'total_vehicles'     => $fleetStats['total'],
-            'trips_in_progress'  => $tripsInProgress,
-            'vehicle_monitoring' => $vehicleMonitoring,
+            'title'           => "Driver's Trip Ticket",
+            'pageCss'         => 'travel.css',
+            'openModule'      => 'vehicles',
+            'trips'           => $trips,
+            'personnel'       => $this->personnelModel->where('is_archived', 0)->findAll(),
+            'drivers'         => $this->personnelModel->getDrivers(),
+            'vehicles'        => $this->vehicleModel->where('is_archived', 0)->findAll(),
+            'departments'     => $this->departmentModel->findAll(),
+            'pending_count'   => $pendingCount,
+            'today_count'     => $todayCount,
+            'completed_count' => $completedCount,
         ]);
     }
 

@@ -18,8 +18,8 @@
 }
 
 /* ── Layout ──────────────────────────────────────────────────── */
+/* No padding — .page-content already provides the shared 20px inset. */
 .rpt-wrapper {
-    padding: 1.5rem 2rem;
 }
 
 /* ── Page Header ─────────────────────────────────────────────── */

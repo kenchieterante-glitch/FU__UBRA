@@ -257,7 +257,7 @@
     </main>
 
     <footer class="app-footer">
-      <span>&copy; <?= date('Y') ?> UBRA — Foundation University Buildings &amp; Grounds</span>
+      <span>&copy; <?= date('Y') ?> UBRA — <span class="fu-serif">Foundation University</span> Buildings &amp; Grounds</span>
       <span class="app-footer-sep">&middot;</span>
       <span>Operational Portal</span>
     </footer>

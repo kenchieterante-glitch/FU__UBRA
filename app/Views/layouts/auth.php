@@ -62,7 +62,7 @@
 
         .auth-card label {
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            font-weight: 500;
+            font-weight: 400;
         }
     </style>
 </head>

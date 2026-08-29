@@ -109,8 +109,8 @@
 }
 
 /* ── Wrapper ─────────────────────────────────────────────────── */
+/* No padding — .page-content already provides the shared 20px inset. */
 .sj-wrapper {
-    padding: 1.2rem 1.6rem;
     display: flex;
     flex-direction: column;
     gap: .9rem;

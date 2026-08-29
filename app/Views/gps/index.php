@@ -18,7 +18,7 @@
     <!-- ── PAGE HEADER ──────────────────────────────────────────── -->
     <div class="page-header">
         <div>
-            <h1 class="page-title"><i class="bi bi-broadcast"></i> GPS Tracker</h1>
+            <h1>GPS Tracker</h1>
             <p class="page-subtitle">Live vehicle locations, GPS status, and fleet movement history.</p>
         </div>
         <div class="header-actions">

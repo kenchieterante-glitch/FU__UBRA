@@ -4,201 +4,65 @@
 <link rel="stylesheet" href="<?= base_url('Assets/css/ubra.css') . '?v=' . @filemtime(FCPATH.'Assets/css/ubra.css') ?>">
 
 <div class="ubra-wrapper">
+  <div class="ubra-panel">
 
-    <!-- ── PAGE HEADER ──────────────────────────────────────────── -->
-    <div class="page-header">
-        <div class="ubra-title-group">
-            <div class="ubra-logo-badge">U</div>
-            <div>
-                <h1 class="page-title">Mr. UBRA</h1>
-                <p class="page-subtitle">Foundation University's Intelligent Operations Assistant</p>
-            </div>
-        </div>
+    <!-- ── HEADER ─────────────────────────────────────────────── -->
+    <div class="ubra-accent-bar"></div>
+    <div class="ubra-panel-header">
+      <div class="ubra-header-text">
+        <div class="ubra-eyebrow">UBRA INTELLIGENCE</div>
+        <h1 class="ubra-title">Mr. UBRA</h1>
+        <p class="ubra-subtext"><span class="pulse-dot"></span> Operations assistant &middot; online</p>
+      </div>
+      <button type="button" class="ubra-clear-btn" onclick="clearChat()">Clear</button>
     </div>
 
-    <!-- ── MAIN LAYOUT ───────────────────────────────────────────── -->
+    <!-- ── BODY: rail + conversation ─────────────────────────── -->
     <div class="ubra-body">
 
-        <!-- ── LEFT: QUICK ACTIONS + CONTEXT PANEL ───────────────── -->
-        <div class="ubra-left">
+      <!-- Left rail: icon-only quick actions -->
+      <div class="ubra-rail">
+        <button type="button" class="ubra-rail-btn" title="Fleet health check" aria-label="Fleet health check" onclick="quickPrompt('Give me a fleet health check — vehicle status, GPS status, and anything needing attention.')">
+          <i class="bi bi-truck"></i>
+        </button>
+        <button type="button" class="ubra-rail-btn" title="Who is on duty today?" aria-label="Who is on duty today?" onclick="quickPrompt('Who is on duty today?')">
+          <i class="bi bi-people"></i>
+        </button>
+        <button type="button" class="ubra-rail-btn" title="Any unassigned personnel?" aria-label="Any unassigned personnel?" onclick="quickPrompt('Are there any unassigned personnel right now?')">
+          <i class="bi bi-person-dash"></i>
+        </button>
+        <button type="button" class="ubra-rail-btn" title="Weekly report" aria-label="Weekly report" onclick="quickPrompt('Generate a brief weekly operations report.')">
+          <i class="bi bi-file-earmark-text"></i>
+        </button>
+      </div>
 
-            <!-- Quick Action Buttons -->
-            <div class="panel-card">
-                <div class="panel-title"><i class="bi bi-lightning-charge-fill"></i> Quick Actions</div>
-                <div class="quick-actions">
-                    <button class="qa-btn" onclick="quickAction('daily_summary')">
-                        <i class="bi bi-sun-fill"></i>
-                        <span>Daily Summary</span>
-                    </button>
-                    <button class="qa-btn" onclick="quickAction('vehicle_health')">
-                        <i class="bi bi-truck-front-fill"></i>
-                        <span>Fleet Health</span>
-                    </button>
-                    <button class="qa-btn" onclick="quickAction('maintenance_due')">
-                        <i class="bi bi-tools"></i>
-                        <span>Maintenance Due</span>
-                    </button>
-                    <button class="qa-btn" onclick="quickAction('weekly_report')">
-                        <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                        <span>Weekly Report</span>
-                    </button>
-                    <button class="qa-btn" onclick="quickAction('staff_summary')">
-                        <i class="bi bi-people-fill"></i>
-                        <span>Staff Summary</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Context Panel -->
-            <div class="panel-card">
-                <div class="panel-title"><i class="bi bi-bar-chart-fill"></i> Today's Overview</div>
-                <div class="ctx-grid" id="contextGrid">
-                    <div class="ctx-item loading">Loading…</div>
-                </div>
-            </div>
-
-            <!-- Suggested Prompts -->
-            <div class="panel-card">
-                <div class="panel-title"><i class="bi bi-chat-quote-fill"></i> Try Asking</div>
-                <div class="suggestions">
-                    <button class="suggest-btn" onclick="insertSuggestion('Which vehicles are currently in transit?')">
-                        Which vehicles are currently in transit?
-                    </button>
-                    <button class="suggest-btn" onclick="insertSuggestion('Who is on duty today and any unassigned personnel?')">
-                        Who is on duty today?
-                    </button>
-                    <button class="suggest-btn" onclick="insertSuggestion('Are there any overdue maintenance tasks?')">
-                        Any overdue maintenance tasks?
-                    </button>
-                    <button class="suggest-btn" onclick="insertSuggestion('What assets are currently borrowed and overdue for return?')">
-                        What assets are overdue for return?
-                    </button>
-                    <button class="suggest-btn" onclick="insertSuggestion('List all pending notifications that need action.')">
-                        Pending notifications needing action
-                    </button>
-                </div>
-            </div>
-
-            <!-- AI Activity Panel -->
-            <div class="panel-card">
-                <div class="panel-title"><i class="bi bi-activity"></i> AI System Activity</div>
-                <div class="activity-section">
-                    <div class="act-label">Recent Recommendations</div>
-                    <ul class="act-list" id="recentRecs">
-                        <li><i class="bi bi-dot"></i> Automated report dispatched 10m ago</li>
-                        <li><i class="bi bi-dot"></i> Personnel reassignment suggested</li>
-                    </ul>
-                </div>
-                <div class="activity-section">
-                    <div class="act-label">Recent Notifications</div>
-                    <ul class="act-list">
-                        <li><i class="bi bi-check-circle-fill text-success"></i> GPS tracker synced successfully</li>
-                        <li><i class="bi bi-check-circle-fill text-success"></i> Maintenance alert acknowledged</li>
-                    </ul>
-                </div>
-            </div>
-
+      <!-- Conversation thread -->
+      <div class="ubra-convo">
+        <div class="ubra-messages" id="chatMessages">
+          <div class="ubra-greeting">Good <?= date('H') < 12 ? 'morning' : (date('H') < 17 ? 'afternoon' : 'evening') ?>, Operations Office.</div>
         </div>
-
-        <!-- ── CENTER: CHAT WINDOW ────────────────────────────────── -->
-        <div class="ubra-chat">
-
-            <!-- Chat header -->
-            <div class="chat-header">
-                <div class="chat-header-left">
-                    <div class="ch-avatar">U</div>
-                    <div>
-                        <div class="ch-name">Mr. UBRA <span class="ch-pro">AI</span></div>
-                        <div class="ch-status"><span class="pulse-dot"></span> Ready to assist</div>
-                    </div>
-                </div>
-                <button class="clear-btn" onclick="clearChat()" title="Clear conversation">
-                    <i class="bi bi-arrow-counterclockwise"></i> Clear
-                </button>
-            </div>
-
-            <!-- Messages area -->
-            <div class="chat-messages" id="chatMessages">
-                <!-- Welcome message -->
-                <div class="msg-row assistant">
-                    <div class="msg-avatar">U</div>
-                    <div class="msg-bubble">
-                        <div class="msg-sender">Mr. UBRA <span class="msg-time"><?= date('h:i A') ?></span></div>
-                        <div class="msg-text">
-                            <strong>Good <?= date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Evening') ?>, Operations Office.</strong><br><br>
-                            I'm Mr. UBRA, your Intelligent Operations Assistant. I have live access to your fleet, personnel, and asset data.<br><br>
-                            How can I assist you today? Use the <strong>Quick Actions</strong> on the left for instant summaries, or ask me anything about UBRA operations.
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Input area -->
-            <div class="chat-input-area">
-                <div class="chat-input-wrap">
-                    <textarea
-                        id="chatInput"
-                        class="chat-input"
-                        placeholder="Ask Mr. UBRA about operations, vehicles, maintenance…"
-                        rows="1"
-                        onkeydown="handleKey(event)"
-                        oninput="autoResize(this)"
-                    ></textarea>
-                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
-                        <i class="bi bi-send-fill"></i>
-                    </button>
-                </div>
-                <div class="input-hint">
-                    Press <kbd>Enter</kbd> to send · <kbd>Shift+Enter</kbd> for new line · Responses powered by Anthropic Claude
-                </div>
-            </div>
-        </div>
-
-        <!-- ── RIGHT: QUICK LINKS + STATUS ───────────────────────── -->
-        <div class="ubra-right">
-
-            <div class="panel-card">
-                <div class="panel-title"><i class="bi bi-grid-fill"></i> Quick Navigation</div>
-                <div class="nav-links">
-                    <?php
-                    $navLinks = [
-                        ['url'=>'dashboard',     'icon'=>'bi-speedometer2',        'label'=>'Dashboard'],
-                        ['url'=>'personnel',     'icon'=>'bi-people-fill',         'label'=>'Personnel'],
-                        ['url'=>'assets',        'icon'=>'bi-box-seam-fill',       'label'=>'Asset Management'],
-                        ['url'=>'vehicles',      'icon'=>'bi-truck-front-fill',    'label'=>'Vehicle Management'],
-                        ['url'=>'gps',           'icon'=>'bi-broadcast',           'label'=>'GPS Tracker'],
-                        ['url'=>'calendar',      'icon'=>'bi-calendar3',           'label'=>'Calendar'],
-                        ['url'=>'notifications', 'icon'=>'bi-bell-fill',           'label'=>'Notifications'],
-                        ['url'=>'reports',       'icon'=>'bi-bar-chart-line-fill', 'label'=>'Information Hub'],
-                        ['url'=>'settings',      'icon'=>'bi-gear-fill',           'label'=>'Settings'],
-                    ];
-                    foreach ($navLinks as $l):
-                    ?>
-                    <a href="<?= base_url($l['url']) ?>" class="nav-link-item">
-                        <i class="bi <?= $l['icon'] ?>"></i>
-                        <span><?= $l['label'] ?></span>
-                        <i class="bi bi-chevron-right nav-arrow"></i>
-                    </a>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
-            <!-- UBRA capabilities -->
-            <div class="panel-card cap-card">
-                <div class="panel-title"><i class="bi bi-stars"></i> What Mr. UBRA Can Do</div>
-                <ul class="cap-list">
-                    <li><i class="bi bi-check-circle-fill"></i> Daily operations intelligence</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Fleet & GPS status summaries</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Maintenance alerts & scheduling</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Asset & borrowing overviews</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Personnel on-duty tracking</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Weekly report generation</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Notification triage</li>
-                </ul>
-            </div>
-
-        </div>
+      </div>
     </div>
+
+    <!-- ── FOOTER: input bar ─────────────────────────────────── -->
+    <div class="ubra-panel-footer">
+      <div class="ubra-input-bar">
+        <input
+          type="text"
+          id="chatInput"
+          class="ubra-input"
+          placeholder="Ask Mr. UBRA anything..."
+          onkeydown="handleKey(event)"
+          oninput="clearInputError()"
+        >
+        <button type="button" class="ubra-send-btn" id="sendBtn" onclick="sendMessage()">
+          Send <i class="bi bi-arrow-right"></i>
+        </button>
+      </div>
+      <div class="ubra-input-error" id="inputError">Type a message before sending.</div>
+    </div>
+
+  </div>
 </div>
 
 <script>
@@ -207,20 +71,25 @@ let chatHistory = [];
 let isLoading   = false;
 
 const CHAT_URL          = '<?= base_url('ubra/chat') ?>';
-const QUICK_URL         = '<?= base_url('ubra/quickAction') ?>';
 const HISTORY_URL       = '<?= base_url('ubra/history') ?>';
 const CLEAR_HISTORY_URL = '<?= base_url('ubra/clearHistory') ?>';
+const CURRENT_USER_INITIAL = '<?= strtoupper(substr(session()->get("full_name") ?? "U", 0, 1)) ?>';
 
 // ── Send message ───────────────────────────────────────────────
 async function sendMessage(overrideText = null) {
     const input   = document.getElementById('chatInput');
     const message = overrideText || input.value.trim();
-    if (!message || isLoading) return;
 
+    if (!message) {
+        if (!overrideText) showInputError();
+        return;
+    }
+    if (isLoading) return;
+
+    clearInputError();
     appendMessage('user', message);
     chatHistory.push({ role: 'user', content: message });
     input.value = '';
-    autoResize(input);
 
     setLoading(true);
 
@@ -236,71 +105,53 @@ async function sendMessage(overrideText = null) {
         appendMessage('assistant', reply);
         chatHistory.push({ role: 'assistant', content: reply });
 
-        // Refresh recent activity
-        addRecentRec('Response generated · ' + new Date().toLocaleTimeString('en-PH', {hour:'2-digit',minute:'2-digit'}));
-
     } catch (err) {
-        appendMessage('assistant', '⚠️ Connection error. Please check your network and try again.');
+        appendMessage('assistant', 'Connection error. Please check your network and try again.');
     } finally {
         setLoading(false);
     }
 }
 
-// ── Quick action ───────────────────────────────────────────────
-async function quickAction(action) {
+// ── Quick prompt (left rail icons) — sends immediately, same as typing
+// and submitting that question. ──────────────────────────────────
+function quickPrompt(text) {
     if (isLoading) return;
+    sendMessage(text);
+}
 
-    const labels = {
-        daily_summary:  '📋 Give me today\'s daily operations summary.',
-        vehicle_health: '🚛 What is the current fleet health and GPS status?',
-        maintenance_due:'🔧 What maintenance tasks are coming up or overdue?',
-        weekly_report:  '📊 Generate a brief weekly operations report.',
-        staff_summary:  '👥 Who is on duty today and are there any unassigned personnel?',
-    };
-
-    const userText = labels[action] || 'Give me an operations overview.';
-    appendMessage('user', userText);
-    chatHistory.push({ role: 'user', content: userText });
-    setLoading(true);
-
-    try {
-        const fd = new FormData();
-        fd.append('action', action);
-
-        const res  = await fetch(QUICK_URL, { method: 'POST', headers: csrfHeaders(), body: fd });
-        const data = await res.json();
-        const reply = data.reply || data.error || 'Sorry, something went wrong.';
-
-        appendMessage('assistant', reply);
-        chatHistory.push({ role: 'assistant', content: reply });
-
-    } catch (err) {
-        appendMessage('assistant', '⚠️ Connection error. Please try again.');
-    } finally {
-        setLoading(false);
-    }
+// ── Input validation ──────────────────────────────────────────
+function showInputError() {
+    document.getElementById('inputError').classList.add('visible');
+    document.getElementById('chatInput').classList.add('input-error');
+}
+function clearInputError() {
+    document.getElementById('inputError').classList.remove('visible');
+    document.getElementById('chatInput').classList.remove('input-error');
 }
 
 // ── DOM: Append message bubble ─────────────────────────────────
-const CURRENT_USER_INITIAL = '<?= strtoupper(substr(session()->get("full_name") ?? "U", 0, 1)) ?>';
-
 function appendMessage(role, text) {
     const container = document.getElementById('chatMessages');
     const time = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
 
     const row = document.createElement('div');
-    row.className = 'msg-row ' + role;
-    row.innerHTML = `
-        ${role === 'assistant' ? '<div class="msg-avatar">U</div>' : ''}
-        <div class="msg-bubble">
-            <div class="msg-sender">
-                ${role === 'assistant' ? 'Mr. UBRA' : 'You'}
-                <span class="msg-time">${time}</span>
-            </div>
-            <div class="msg-text">${renderMarkdown(text)}</div>
-        </div>
-        ${role === 'user' ? `<div class="msg-avatar user-av">${CURRENT_USER_INITIAL}</div>` : ''}
-    `;
+    row.className = 'ubra-msg-row ' + role;
+
+    if (role === 'assistant') {
+        row.innerHTML = `
+            <div class="ubra-avatar">U</div>
+            <div class="ubra-msg-col">
+                <div class="ubra-bubble assistant">${renderMarkdown(text)}</div>
+                <div class="ubra-msg-time">${time}</div>
+            </div>`;
+    } else {
+        row.innerHTML = `
+            <div class="ubra-msg-col">
+                <div class="ubra-bubble user">${renderMarkdown(text)}</div>
+                <div class="ubra-msg-time">${time}</div>
+            </div>`;
+    }
+
     container.appendChild(row);
     container.scrollTop = container.scrollHeight;
 }
@@ -308,12 +159,9 @@ function appendMessage(role, text) {
 // ── Loading state ──────────────────────────────────────────────
 function setLoading(state) {
     isLoading = state;
-    const btn   = document.getElementById('sendBtn');
-    const input = document.getElementById('chatInput');
-    btn.disabled   = state;
-    input.disabled = state;
+    document.getElementById('sendBtn').disabled = state;
+    document.getElementById('chatInput').disabled = state;
 
-    // Remove existing typing indicator
     const existing = document.getElementById('typingIndicator');
     if (existing) existing.remove();
 
@@ -321,11 +169,11 @@ function setLoading(state) {
         const container = document.getElementById('chatMessages');
         const indicator = document.createElement('div');
         indicator.id        = 'typingIndicator';
-        indicator.className = 'msg-row assistant';
+        indicator.className = 'ubra-msg-row assistant';
         indicator.innerHTML = `
-            <div class="msg-avatar">U</div>
-            <div class="msg-bubble typing-bubble">
-                <div class="typing-dots">
+            <div class="ubra-avatar">U</div>
+            <div class="ubra-msg-col">
+                <div class="ubra-bubble assistant ubra-typing">
                     <span></span><span></span><span></span>
                 </div>
             </div>`;
@@ -334,8 +182,7 @@ function setLoading(state) {
     }
 }
 
-// ── Chat history (persisted server-side, so it survives navigating away
-// and coming back — not just kept in this page's own memory) ──────────
+// ── Chat history (persisted server-side) ───────────────────────
 async function loadChatHistory() {
     try {
         const res  = await fetch(HISTORY_URL, { headers: csrfHeaders() });
@@ -343,52 +190,35 @@ async function loadChatHistory() {
         const rows = data.history || [];
         if (rows.length === 0) return;
 
-        document.getElementById('chatMessages').innerHTML = '';
+        document.getElementById('chatMessages').querySelectorAll('.ubra-msg-row').forEach(el => el.remove());
         rows.forEach(row => {
             appendMessage(row.role, row.message);
             chatHistory.push({ role: row.role, content: row.message });
         });
     } catch (err) {
-        // Leave the default welcome message in place if history can't load.
+        // Leave the default greeting in place if history can't load.
     }
 }
 
-// ── Clear chat ─────────────────────────────────────────────────
+// ── Clear chat — resets back to the initial greeting state ─────
 async function clearChat() {
     chatHistory = [];
-    const container = document.getElementById('chatMessages');
-    container.innerHTML = '';
-    appendMessage('assistant',
-        'Conversation cleared. How can I assist you with operations today?');
+    document.getElementById('chatMessages').querySelectorAll('.ubra-msg-row').forEach(el => el.remove());
+    clearInputError();
 
     try {
         await fetch(CLEAR_HISTORY_URL, { method: 'POST', headers: csrfHeaders() });
     } catch (err) {
-        // The visible chat is already cleared either way; the server-side
-        // log just might not be until the next successful attempt.
+        // The visible chat is already cleared either way.
     }
-}
-
-// ── Insert suggestion ──────────────────────────────────────────
-function insertSuggestion(text) {
-    const input = document.getElementById('chatInput');
-    input.value = text;
-    autoResize(input);
-    input.focus();
 }
 
 // ── Keyboard handler ───────────────────────────────────────────
 function handleKey(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter') {
         e.preventDefault();
         sendMessage();
     }
-}
-
-// ── Auto-resize textarea ───────────────────────────────────────
-function autoResize(el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 140) + 'px';
 }
 
 // ── Light markdown renderer ────────────────────────────────────
@@ -405,58 +235,9 @@ function renderMarkdown(text) {
         .replace(/\n/g, '<br>');
 }
 
-// ── Recent activity list ───────────────────────────────────────
-function addRecentRec(text) {
-    const list = document.getElementById('recentRecs');
-    const li   = document.createElement('li');
-    li.innerHTML = `<i class="bi bi-dot"></i> ${text}`;
-    list.insertBefore(li, list.firstChild);
-    if (list.children.length > 4) list.removeChild(list.lastChild);
-}
-
-// ── Load context snapshot ──────────────────────────────────────
-async function loadContext() {
-    // Pull stats from the reports chart endpoint as a lightweight context source
-    try {
-        const res  = await fetch('<?= base_url('reports/chartData') ?>');
-        const data = await res.json();
-        renderContext(data);
-    } catch (e) {
-        document.getElementById('contextGrid').innerHTML =
-            '<div class="ctx-item"><div class="ctx-label">Status</div><div class="ctx-value">Live</div></div>';
-    }
-}
-
-function renderContext(data) {
-    // Fallback static context — real values come from PHP-rendered page
-    document.getElementById('contextGrid').innerHTML = `
-        <div class="ctx-item">
-            <div class="ctx-icon"><i class="bi bi-truck"></i></div>
-            <div class="ctx-label">Vehicles</div>
-            <div class="ctx-value" id="ctxVehicles">—</div>
-        </div>
-        <div class="ctx-item">
-            <div class="ctx-icon"><i class="bi bi-people"></i></div>
-            <div class="ctx-label">On Duty</div>
-            <div class="ctx-value" id="ctxDuty">—</div>
-        </div>
-        <div class="ctx-item">
-            <div class="ctx-icon"><i class="bi bi-bell"></i></div>
-            <div class="ctx-label">Alerts</div>
-            <div class="ctx-value" id="ctxAlerts">—</div>
-        </div>
-    `;
-}
-
 // Init
-loadContext();
 loadChatHistory();
 document.getElementById('chatInput').focus();
-
-// Flash auto-hide
-setTimeout(() => {
-    document.querySelectorAll('.flash').forEach(el => el.style.opacity = '0');
-}, 4000);
 </script>
 
 <?= $this->endSection() ?>
