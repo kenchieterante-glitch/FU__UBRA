@@ -46,14 +46,6 @@
     margin: .25rem 0 0;
 }
 
-/* ── Category cards (Requests / Pending / Today's / Completed) ──
-   Reuses the shared .stat-card / .stat-card-clickable look; this just
-   adds the "currently selected" indicator since stat-cards elsewhere
-   in the app are one-shot actions, not a persistent selection. */
-.trip-tab-active {
-    border: 2px solid var(--maroon);
-    box-shadow: 0 4px 14px rgba(128, 0, 0, .15);
-}
 
 .header-actions {
     display: flex;

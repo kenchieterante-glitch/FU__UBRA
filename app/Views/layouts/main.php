@@ -212,7 +212,8 @@
     <div class="sidebar-footer">
       <a href="<?= base_url('profile') ?>" data-tooltip="View Profile">
         <?php if ($userPhotoUrl): ?>
-          <img class="av" src="<?= esc($userPhotoUrl) ?>" alt="<?= esc($fullName) ?>">
+          <img class="av" src="<?= esc($userPhotoUrl) ?>" alt="<?= esc($fullName) ?>"
+               onclick="event.preventDefault(); event.stopPropagation(); openAvatarPreview(this.src, '<?= esc($fullName, 'js') ?>');">
         <?php else: ?>
           <span class="av"><?= esc($initials) ?></span>
         <?php endif; ?>
@@ -222,6 +223,19 @@
   </aside>
 
   <div class="mobile-nav-backdrop" onclick="toggleMobileNav(false)"></div>
+
+  <!-- Avatar preview lightbox — clicking the sidebar profile photo opens
+       this instead of navigating to /profile; clicking the name still
+       navigates normally. -->
+  <div class="avatar-lightbox" id="avatarLightbox" onclick="if (event.target === this) closeAvatarPreview();">
+    <button type="button" class="avatar-lightbox-close" onclick="closeAvatarPreview()" aria-label="Close">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <figure class="avatar-lightbox-figure">
+      <img id="avatarLightboxImg" src="" alt="">
+      <figcaption id="avatarLightboxCaption"></figcaption>
+    </figure>
+  </div>
 
   <!--MAIN CONTENT  -->
   <div class="main-content">
@@ -337,6 +351,20 @@ function toggleMobileNav(open) {
   const shouldOpen = typeof open === 'boolean' ? open : !document.body.classList.contains('mobile-nav-open');
   document.body.classList.toggle('mobile-nav-open', shouldOpen);
 }
+
+// Avatar preview lightbox — sidebar profile photo click
+function openAvatarPreview(src, name) {
+  document.getElementById('avatarLightboxImg').src = src;
+  document.getElementById('avatarLightboxImg').alt = name;
+  document.getElementById('avatarLightboxCaption').textContent = name;
+  document.getElementById('avatarLightbox').classList.add('open');
+}
+function closeAvatarPreview() {
+  document.getElementById('avatarLightbox').classList.remove('open');
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeAvatarPreview();
+});
 
 // Floating tooltip for the collapsed icon-rail sidebar
 const railTooltip = document.createElement('div');

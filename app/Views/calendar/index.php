@@ -30,6 +30,16 @@
         </div>
     </div>
 
+    <!-- ── MONTH NAVIGATION ─────────────────────────────────────── -->
+    <div class="cal-nav-row">
+        <div class="cal-nav-controls">
+            <button type="button" class="cal-nav-btn" id="calPrevBtn" aria-label="Previous month"><i class="bi bi-chevron-left"></i></button>
+            <div class="cal-nav-label" id="calNavLabel">&nbsp;</div>
+            <button type="button" class="cal-nav-btn" id="calNextBtn" aria-label="Next month"><i class="bi bi-chevron-right"></i></button>
+        </div>
+        <button type="button" class="cal-nav-today" id="calTodayBtn">Today</button>
+    </div>
+
     <!-- ── LEGEND ────────────────────────────────────────────────── -->
     <div class="cal-legend">
         <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Inspection</span>
@@ -37,6 +47,7 @@
         <span class="legend-item"><span class="legend-dot" style="background:#2563eb"></span> Compliance</span>
         <span class="legend-item"><span class="legend-dot" style="background:#16a34a"></span> Cleaning</span>
         <span class="legend-item"><span class="legend-dot" style="background:#dc2626"></span> Urgent Cleaning</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#0891b2"></span> Travel</span>
     </div>
 
     <!-- ── MAIN LAYOUT ───────────────────────────────────────────── -->
@@ -118,7 +129,7 @@
                 <div class="edp-title" id="edpTitle">—</div>
                 <div class="edp-meta-grid" id="edpMeta"></div>
                 <div class="edp-actions">
-                    <button class="btn-outline-sm" id="edpNotifyBtn"><i class="bi bi-bell"></i> Notify Driver</button>
+                    <button class="btn-outline-sm" id="edpNotifyBtn" onclick="notifyAssigned()"><i class="bi bi-bell"></i> <span id="edpNotifyLabel">Notify</span></button>
                     <button class="btn-outline-sm" onclick="document.getElementById('eventDetailPanel').style.display='none'">
                         <i class="bi bi-x"></i> Close
                     </button>
@@ -133,17 +144,30 @@
                         <div class="ubra-name">Mr. UBRA</div>
                         <div class="ubra-sub">Operations Assistant</div>
                     </div>
+                    <span class="ubra-live-badge">Live</span>
                 </div>
-                <div class="ubra-section-title">Daily Operations Summary</div>
+                <div class="ubra-section-title">Today's Summary</div>
                 <ul class="ubra-list">
-                    <li><i class="bi bi-dot"></i> Bldg A AC cleaning starts in 2 days.</li>
-                    <li><i class="bi bi-dot"></i> 1 maintenance schedule due next week.</li>
+                    <li>Bldg A AC cleaning starts in <strong>2 days</strong>.</li>
+                    <li>1 maintenance schedule due <strong>next week</strong>.</li>
                 </ul>
-                <div class="ubra-section-title" style="margin-top:.8rem;">Suggested Actions</div>
+                <div class="ubra-section-title" style="margin-top:.9rem;">Suggested Actions</div>
                 <div class="ubra-btns">
-                    <button class="ubra-btn" onclick="notifyDriver()"><i class="bi bi-person-fill"></i> Notify Driver (Van-03)</button>
-                    <button class="ubra-btn" onclick="notifyCleaning()"><i class="bi bi-brush"></i> Notify Cleaning Personnel</button>
-                    <button class="ubra-btn" onclick="generateSummary()"><i class="bi bi-file-earmark-text"></i> Generate Weekly Summary</button>
+                    <button class="ubra-btn" onclick="notifyDriver()">
+                        <span class="ubra-btn-icon"><i class="bi bi-person-fill"></i></span>
+                        <span class="ubra-btn-label">Notify Driver (Van-03)</span>
+                        <span class="ubra-btn-arrow"><i class="bi bi-chevron-right"></i></span>
+                    </button>
+                    <button class="ubra-btn" onclick="notifyCleaning()">
+                        <span class="ubra-btn-icon"><i class="bi bi-brush"></i></span>
+                        <span class="ubra-btn-label">Notify Cleaning Personnel</span>
+                        <span class="ubra-btn-arrow"><i class="bi bi-chevron-right"></i></span>
+                    </button>
+                    <button class="ubra-btn primary" onclick="generateSummary()">
+                        <span class="ubra-btn-icon"><i class="bi bi-file-earmark-text"></i></span>
+                        <span class="ubra-btn-label">Generate Weekly Summary</span>
+                        <span class="ubra-btn-arrow"><i class="bi bi-chevron-right"></i></span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -261,6 +285,7 @@ const typeColors = {
     Compliance:      '#2563eb',
     Cleaning:        '#16a34a',
     'Urgent Cleaning': '#dc2626',
+    Travel:          '#0891b2',
 };
 
 // ── FullCalendar init ──────────────────────────────────────────
@@ -280,10 +305,21 @@ document.addEventListener('DOMContentLoaded', function () {
             // Tooltip
             info.el.title = info.event.title;
         },
+        // Keeps the "August 2026" label (and Agenda view's date range) in
+        // sync every time the visible range changes — by nav button, view
+        // switch, or the calendar's own internal date click navigation.
+        datesSet:       function (info) {
+            document.getElementById('calNavLabel').textContent = info.view.title;
+        },
     });
 
     cal.render();
     window._cal = cal;   // expose for view switcher
+
+    // ── Month/week navigation ──────────────────────────────────────
+    document.getElementById('calPrevBtn').addEventListener('click', () => cal.prev());
+    document.getElementById('calNextBtn').addEventListener('click', () => cal.next());
+    document.getElementById('calTodayBtn').addEventListener('click', () => cal.today());
 
     // ── View switcher ────────────────────────────────────────────
     document.querySelectorAll('.vsw-btn').forEach(btn => {
@@ -312,7 +348,7 @@ function openEventDetail(event) {
     }[p.status] || 'status-pending';
 
     document.getElementById('edpBadge').textContent   = type;
-    document.getElementById('edpBadge').className     = 'edp-badge edp-' + type.toLowerCase();
+    document.getElementById('edpBadge').className     = 'edp-badge edp-' + type.toLowerCase().replace(/\s+/g, '');
     document.getElementById('edpStatus').textContent  = p.status || 'Active';
     document.getElementById('edpStatus').className    = 'edp-status ' + statusClass;
     document.getElementById('edpTitle').textContent   = event.title;
@@ -331,7 +367,43 @@ function openEventDetail(event) {
         ${p.assignedTo ? `<div class="edp-row"><span>Assigned To</span><strong>${esc(p.assignedTo)}</strong></div>` : ''}
     `;
 
+    // The Notify button always targets whoever this specific event is
+    // actually assigned to — janitorial staff on a cleaning event, the
+    // Maintenance Team on a work order, the driver on a trip — not a
+    // hardcoded "driver" regardless of event type.
+    const notifyBtn = document.getElementById('edpNotifyBtn');
+    if (p.assignedTo) {
+        notifyBtn.style.display = '';
+        document.getElementById('edpNotifyLabel').textContent = 'Notify ' + p.assignedTo;
+        notifyBtn.dataset.recipient = p.assignedTo;
+        notifyBtn.dataset.title     = event.title;
+        notifyBtn.dataset.category  = type;
+    } else {
+        notifyBtn.style.display = 'none';
+    }
+
     document.getElementById('eventDetailPanel').style.display = 'block';
+}
+
+async function notifyAssigned() {
+    const btn = document.getElementById('edpNotifyBtn');
+    const recipient = btn.dataset.recipient;
+    if (!recipient) return;
+
+    btn.disabled = true;
+    try {
+        const res  = await fetch('<?= base_url('calendar/notify') ?>', {
+            method: 'POST',
+            headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ recipient, title: btn.dataset.title, category: btn.dataset.category }),
+        });
+        const data = await res.json();
+        showToast(data.message || (data.success ? 'Notification sent.' : 'Could not send notification.'), !data.success);
+    } catch (err) {
+        showToast('Could not send notification. Please try again.', true);
+    } finally {
+        btn.disabled = false;
+    }
 }
 
 // Cleaning / Urgent Cleaning need a real building/zone (they create a real

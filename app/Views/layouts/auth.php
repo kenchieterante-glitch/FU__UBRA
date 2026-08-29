@@ -13,6 +13,7 @@
     <meta http-equiv="Expires" content="0">
     <title>UBRA | <?= esc($title ?? 'Login') ?></title>
     <link rel="stylesheet" href="<?= base_url('fonts/bebas-neue/bebas-neue.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('icons/bootstrap-icons/bootstrap-icons.css') ?>">
     <style>
         body {
             margin: 0;
@@ -20,14 +21,21 @@
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             font-weight: 400;
             color: #333;
-            background-color: #2a1414;
+            background-color: #181818;
             background-image:
-                linear-gradient(135deg, rgba(40, 10, 10, .55) 0%, rgba(20, 5, 5, .6) 100%),
+                linear-gradient(135deg, rgba(24, 10, 10, .55) 0%, rgba(10, 5, 5, .65) 100%),
                 url('<?= base_url('images/' . rawurlencode('BnG background.jpg')) ?>');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
+            /* The source photo is only 480x360 — a dark overlay (above) plus a
+               small contrast/saturation lift is the most we can do to keep the
+               unavoidable upscale blur from looking flat and washed out. It
+               cannot make the image genuinely sharper; there's no more detail
+               in the file to recover. Swap in a higher-resolution original
+               here if one becomes available. */
+            filter: contrast(1.08) saturate(1.12);
         }
 
         .auth-shell {
@@ -40,11 +48,11 @@
 
         .auth-card {
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             background: #fff;
-            border-radius: 14px;
+            border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
-            padding: 30px;
+            padding: 40px 36px;
         }
 
         .auth-card h1 {

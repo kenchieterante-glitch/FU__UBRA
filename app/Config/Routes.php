@@ -153,6 +153,7 @@ $routes->post('janitorial/addInventoryItem',       'JanitorialController::addInv
 $routes->get ('calendar',                   'CalendarController::index');
 $routes->post('calendar/scheduleCleaning',  'CalendarController::scheduleCleaning');
 $routes->post('calendar/scheduleMaintenance','CalendarController::scheduleMaintenance');
+$routes->post('calendar/notify',            'CalendarController::notify');
 
 // ============================================================
 // NOTIFICATIONS

@@ -8,6 +8,7 @@ use App\Models\JanitorialAssignmentModel;
 use App\Models\JanitorialTaskModel;
 use App\Models\NotificationModel;
 use App\Models\SafetyWorkOrderModel;
+use App\Models\TravelModel;
 
 class CalendarController extends BaseController
 {
@@ -20,6 +21,7 @@ class CalendarController extends BaseController
         'Compliance'      => '#2563eb',
         'Cleaning'        => '#16a34a',
         'Urgent Cleaning' => '#dc2626',
+        'Travel'          => '#0891b2',
     ];
 
     // The only Janitorial-linked account today — cleaning schedules created
@@ -64,6 +66,39 @@ class CalendarController extends BaseController
         // Local calendar events — stored in session for now
         $this->session->setFlashdata('success', 'Event added to calendar.');
         return redirect()->to('/calendar');
+    }
+
+    // Manual "Notify" button on the event detail panel — sends a real
+    // notification to whoever is actually assigned to that event (the
+    // janitorial staff on a cleaning event, the Maintenance Team on a work
+    // order, the driver on a trip), instead of a hardcoded "Notify Driver"
+    // that didn't match the event and didn't do anything.
+    public function notify()
+    {
+        if (!$this->session->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $data      = $this->request->getJSON(true) ?? [];
+        $recipient = trim((string) ($data['recipient'] ?? ''));
+        $title     = trim((string) ($data['title'] ?? ''));
+        $category  = trim((string) ($data['category'] ?? 'Calendar'));
+
+        if ($recipient === '' || $title === '') {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'Missing recipient or event details.']);
+        }
+
+        (new NotificationModel())->insert([
+            'category'    => $category . ' Reminder',
+            'description' => "Reminder: {$title}",
+            'recipient'   => $recipient,
+            'priority'    => 'ROUTINE',
+            'status'      => 'Pending',
+            'is_read'     => 0,
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        return $this->response->setJSON(['success' => true, 'message' => "Notification sent to {$recipient}."]);
     }
 
     public function events()
@@ -204,7 +239,37 @@ class CalendarController extends BaseController
             $w['date_logged']
         ), (new SafetyWorkOrderModel())->findAll());
 
-        return array_merge($cleaning, $maintenance);
+        // Trip tickets — every non-archived request that hasn't been turned
+        // down, so the calendar shows what's actually still scheduled to
+        // happen (Submitted through Completed), not dead requests.
+        $trips = array_filter(
+            (new TravelModel())->getAllWithDetails(),
+            fn($t) => !in_array($t['status'], ['Rejected', 'Cancelled'], true)
+        );
+        $travel = array_map(fn($t) => $this->toTravelEvent($t), $trips);
+
+        return array_merge($cleaning, $maintenance, $travel);
+    }
+
+    private function toTravelEvent(array $trip): array
+    {
+        $color = self::CATEGORY_COLORS['Travel'];
+
+        return [
+            'id'              => 'trip-' . $trip['id'],
+            'title'           => '🚐 Travel — ' . $trip['destination'],
+            'start'           => $trip['travel_date'],
+            'backgroundColor' => $color,
+            'borderColor'     => $color,
+            'extendedProps'   => [
+                'type'       => 'Travel',
+                'zone'       => $trip['destination'],
+                'purpose'    => $trip['purpose'],
+                'requester'  => $trip['requester_name'] ?? null,
+                'assignedTo' => $trip['driver_name'] ?? 'Unassigned driver',
+                'status'     => $trip['status'],
+            ],
+        ];
     }
 
     private function toMaintenanceEvent(int $id, string $issue, string $location, string $date): array

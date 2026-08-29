@@ -30,7 +30,7 @@
 
     <!-- ── CATEGORY TABS ────────────────────────────────────────── -->
     <div class="stat-cards" id="tripTabs">
-        <div class="stat-card stat-card-clickable trip-tab-active" data-tab="requests" onclick="switchTripTab('requests')" role="button" tabindex="0">
+        <div class="stat-card stat-card-clickable" data-tab="requests" onclick="switchTripTab('requests')" role="button" tabindex="0">
             <span class="stat-icon tone-maroon"><i class="fa-solid fa-inbox"></i></span>
             <h3>Trip requests</h3>
             <div class="value"><?= count($trips ?? []) ?></div>
@@ -360,7 +360,6 @@ let activeTripTab = 'requests';
 
 function switchTripTab(tab) {
     activeTripTab = tab;
-    document.querySelectorAll('#tripTabs .stat-card').forEach(c => c.classList.toggle('trip-tab-active', c.dataset.tab === tab));
     filterTable();
 }
 

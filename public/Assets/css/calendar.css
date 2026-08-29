@@ -131,6 +131,66 @@
 }
 
 /* ── Legend ──────────────────────────────────────────────────── */
+/* ── Month navigation ────────────────────────────────────────── */
+.cal-nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .9rem;
+}
+
+.cal-nav-controls {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+
+.cal-nav-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--maroon);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.cal-nav-btn:hover {
+    background: var(--surface-alt);
+    border-color: var(--maroon);
+}
+
+.cal-nav-label {
+    font-family: var(--heading-font);
+    font-size: 1.15rem;
+    font-weight: 400;
+    color: var(--maroon);
+    min-width: 160px;
+    text-align: center;
+}
+
+.cal-nav-today {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: .78rem;
+    font-weight: 600;
+    padding: .35rem .9rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+}
+
+.cal-nav-today:hover {
+    border-color: var(--maroon);
+    color: var(--maroon);
+}
+
 .cal-legend {
     display: flex;
     gap: 1.2rem;
@@ -530,6 +590,21 @@
     color: #1e40af;
 }
 
+.edp-cleaning {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.edp-urgentcleaning {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.edp-travel {
+    background: #cffafe;
+    color: #0e7490;
+}
+
 .edp-status {
     font-size: .7rem;
     font-weight: 700;
@@ -610,101 +685,142 @@
 
 /* ── UBRA card ───────────────────────────────────────────────── */
 .ubra-card {
-    background: var(--maroon);
-    color: #fff;
-    border-radius: var(--radius);
-    padding: 1rem;
+    background: #fff;
+    color: var(--ink, #26262c);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
     box-shadow: var(--shadow);
 }
 
 .ubra-header {
     display: flex;
     align-items: center;
-    gap: .6rem;
-    margin-bottom: .8rem;
+    gap: .7rem;
+    margin-bottom: 1.1rem;
 }
 
 .ubra-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, .2);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--surface-alt);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
-    font-size: .85rem;
-    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--maroon);
     flex-shrink: 0;
 }
 
 .ubra-name {
     font-weight: 700;
-    font-size: .88rem;
-    color: #fff;
+    font-size: .95rem;
+    color: var(--ink, #26262c);
 }
 
 .ubra-sub {
+    font-size: .74rem;
+    color: var(--text-muted);
+}
+
+.ubra-live-badge {
+    margin-left: auto;
     font-size: .7rem;
-    color: rgba(255, 255, 255, .65);
+    font-weight: 600;
+    padding: .2rem .65rem;
+    border-radius: 999px;
+    background: #e6f4ea;
+    color: var(--success);
+    flex-shrink: 0;
 }
 
 .ubra-section-title {
-    font-size: .7rem;
-    font-weight: 700;
+    font-size: .68rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .5px;
-    color: var(--gold);
-    margin-bottom: .5rem;
+    letter-spacing: .06em;
+    color: var(--text-muted);
+    margin-bottom: .55rem;
 }
 
 .ubra-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 .6rem;
+    margin: 0 0 .3rem;
     display: flex;
     flex-direction: column;
-    gap: .3rem;
+    gap: .5rem;
 }
 
 .ubra-list li {
-    font-size: .75rem;
-    color: rgba(255, 255, 255, .85);
-    display: flex;
-    align-items: flex-start;
-    gap: .3rem;
+    font-size: .82rem;
+    line-height: 1.4;
+    color: var(--ink, #26262c);
+    padding-left: .7rem;
+    border-left: 2px solid var(--maroon);
 }
 
 .ubra-btns {
     display: flex;
     flex-direction: column;
-    gap: .4rem;
+    gap: .5rem;
 }
 
 .ubra-btn {
-    padding: .4rem .75rem;
-    border-radius: 7px;
-    border: 1.5px solid rgba(255, 255, 255, .25);
-    background: rgba(255, 255, 255, .1);
-    color: #fff;
-    font-size: .76rem;
+    padding: .6rem .7rem;
+    border-radius: 9px;
+    border: none;
+    background: var(--surface-alt);
+    color: var(--ink, #26262c);
+    font-size: .8rem;
     cursor: pointer;
     text-align: left;
     display: flex;
     align-items: center;
-    gap: .4rem;
-    transition: all .2s;
+    gap: .6rem;
+    transition: background .15s ease;
 }
 
 .ubra-btn:hover {
-    background: rgba(255, 255, 255, .2);
+    background: #efe6e6;
+}
+
+.ubra-btn-icon,
+.ubra-btn-arrow {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: .8rem;
+    color: var(--maroon);
+}
+
+.ubra-btn-arrow {
+    margin-left: auto;
+    font-size: .7rem;
+}
+
+.ubra-btn-label {
+    flex: 1;
+    font-weight: 500;
 }
 
 .ubra-btn.primary {
-    background: var(--gold);
-    border-color: var(--gold);
-    color: var(--maroon);
+    background: var(--maroon);
+    color: #fff;
     font-weight: 700;
+}
+
+.ubra-btn.primary .ubra-btn-icon,
+.ubra-btn.primary .ubra-btn-arrow {
+    background: rgba(255, 255, 255, .18);
+    color: #fff;
 }
 
 /* ── Modal ───────────────────────────────────────────────────── */
