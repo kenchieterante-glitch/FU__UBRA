@@ -29,7 +29,10 @@ class App extends BaseConfig
      *
      * @var list<string>
      */
-    public array $allowedHostnames = ['cblg7wr9-80.asse.devtunnels.ms'];
+    // 192.168.101.32 — this machine's LAN IP, so a groupmate's device on the
+    // same wifi can reach this server directly instead of running (and never
+    // seeing data from) their own separate local copy.
+    public array $allowedHostnames = ['cblg7wr9-80.asse.devtunnels.ms', '192.168.101.32'];
 
     /**
      * --------------------------------------------------------------------------
