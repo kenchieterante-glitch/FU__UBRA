@@ -7,6 +7,7 @@ use App\Models\ToolsModel;
 use App\Models\BorrowModel;
 use App\Models\ReturnModel;
 use App\Models\VehicleModel;
+use App\Models\GPSModel;
 use App\Models\PersonnelModel;
 use App\Models\DepartmentModel;
 use App\Models\TravelRequestModel;
@@ -403,6 +404,32 @@ class Api extends BaseController
         return $this->response->setJSON(['message' => 'Vehicle saved', 'id' => $id]);
     }
 
+    // Live location for the mobile Track vehicle map. Only returns fields the
+    // system actually records (gps_logs has lat/lng/signal/status/logged_at) —
+    // there's no speed, ignition, or battery telemetry anywhere in this app,
+    // including the web GPS Tracker, which hardcodes speed to 0.
+    public function vehicleLocation($plate)
+    {
+        $vehicle = (new VehicleModel())->where('plate_no', $plate)->first();
+        if (!$vehicle) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'No vehicle found for that plate number.']);
+        }
+
+        $log = (new GPSModel())->where('vehicle_id', $vehicle['id'])->orderBy('id', 'DESC')->first();
+        if (!$log || $log['latitude'] === null || $log['longitude'] === null) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'No GPS location recorded for this vehicle yet.']);
+        }
+
+        return $this->response->setJSON([
+            'lat'             => (float) $log['latitude'],
+            'lng'             => (float) $log['longitude'],
+            'gps_status'      => $log['status'] ?? $vehicle['gps_status'],
+            'signal_strength' => $log['signal_strength'],
+            'device_id'       => $log['device_id'],
+            'last_update'     => $log['logged_at'],
+        ]);
+    }
+
     // ---------- TRIP TICKETS ----------
 
     public function nextTripTicket()
@@ -496,6 +523,66 @@ class Api extends BaseController
         }
 
         return $this->response->setJSON(['buildings' => $buildings]);
+    }
+
+    // Mirrors the same status logic as Api\SafetyController::index() (used by
+    // the web dashboard) and SafetyController::index() (web view), so the
+    // mobile overview always agrees with the web Maintenance page.
+    public function safetySummary()
+    {
+        $feModel = new FireExtinguisherModel();
+        $units   = $feModel->findAll();
+        $today   = date('Y-m-d');
+
+        $needsAttention = array_filter($units, fn($u) => in_array($u['status'], ['Defective', 'Missing'], true));
+        $dueForRefill   = array_filter($units, fn($u) => $u['status'] === 'Refillable');
+        $overdue        = array_filter($units, fn($u) => !empty($u['next_due']) && $u['next_due'] < $today);
+
+        $total     = count($units);
+        $readiness = $total > 0 ? round(($total - count($overdue)) / $total * 100) : 100;
+
+        $airconModel = new AirconUnitModel();
+        $airconUnits = $airconModel->findAll();
+        $airconNeedsAttention = array_filter($airconUnits, fn($u) =>
+            $u['condition_status'] !== 'Operational'
+            || (!empty($u['next_schedule']) && $u['next_schedule'] < $today)
+        );
+
+        return $this->response->setJSON([
+            'fire_extinguishers' => [
+                'total'                => $total,
+                'inspection_readiness' => $readiness,
+                'needs_attention'      => count($needsAttention),
+                'due_for_refill'       => count($dueForRefill),
+            ],
+            'aircon' => [
+                'total'           => count($airconUnits),
+                'needs_attention' => count($airconNeedsAttention),
+            ],
+        ]);
+    }
+
+    public function safetyExtinguishers($slug)
+    {
+        $locationName = array_search($slug, self::ZONE_SLUGS, true);
+        if (!$locationName) {
+            return $this->response->setJSON(['units' => []]);
+        }
+
+        $model = new FireExtinguisherModel();
+        $units = $model->where('location', $locationName)->findAll();
+
+        return $this->response->setJSON([
+            'units' => array_map(fn($u) => [
+                'id'        => (int) $u['id'],
+                'unit_id'   => $u['unit_id'],
+                'type'      => $u['type'],
+                'kg'        => (float) $u['weight_kg'],
+                'inspector' => $u['inspector'],
+                'next_due'  => $u['next_due'],
+                'status'    => $u['status'],
+            ], $units),
+        ]);
     }
 
     public function safetyAircon()

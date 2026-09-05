@@ -275,11 +275,14 @@ $routes->group('api', function ($routes) {
     $routes->get('vehicles', 'Api::vehicles');
     $routes->get('vehicles/meta', 'Api::vehiclesMeta');
     $routes->post('vehicles', 'Api::addVehicle');
+    $routes->get('vehicles/(:any)/location', 'Api::vehicleLocation/$1');
     $routes->get('trip-tickets/next', 'Api::nextTripTicket');
     $routes->post('trip-tickets/(:num)/scan-in', 'Api::tripScanIn/$1');
     $routes->post('trip-tickets/(:num)/scan-out', 'Api::tripScanOut/$1');
 
     $routes->get('safety/buildings', 'Api::safetyBuildings');
+    $routes->get('safety/summary', 'Api::safetySummary');
+    $routes->get('safety/extinguishers/(:any)', 'Api::safetyExtinguishers/$1');
     $routes->get('safety/aircon', 'Api::safetyAircon');
     $routes->post('safety/aircon', 'Api::saveAirconUnit');
     $routes->post('safety/aircon/checklist/(:num)', 'Api::saveAirconChecklist/$1');
