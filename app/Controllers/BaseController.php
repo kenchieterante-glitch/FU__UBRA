@@ -64,7 +64,7 @@ abstract class BaseController extends Controller
     }
 
     /**
-     * Gate check-in/check-out at the gate (Guard Dashboard) to the Head of
+     * Gate check-in/check-out at the gate (the Guard page) to the Head of
      * Security role — the only login this system has for guard duty — plus
      * Administrator as the usual superuser override. Previously these
      * actions had no restriction at all: any logged-in role could scan a

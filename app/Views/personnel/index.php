@@ -53,6 +53,8 @@ $personnelStatCards = [
      resumes from the same position, not a restart). The second copy is
      aria-hidden/untabbable since it's a purely visual duplicate. -->
 <div class="stat-marquee" id="personnelStatCards">
+  <button type="button" class="marquee-nav marquee-nav-left" onclick="marqueeStep(-1)" aria-label="Scroll status cards left"><i class="bi bi-chevron-left"></i></button>
+  <button type="button" class="marquee-nav marquee-nav-right" onclick="marqueeStep(1)" aria-label="Scroll status cards right"><i class="bi bi-chevron-right"></i></button>
   <div class="stat-marquee-track">
     <?php foreach ($personnelStatCards as $card): ?>
       <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" role="button" tabindex="0">
@@ -112,6 +114,18 @@ $personnelStatCards = [
             <option value="Active">Active</option>
             <option value="On Leave">On Leave</option>
             <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <label for="personnelSort">Sort By</label>
+          <select id="personnelSort" onchange="applyPersonnelSort()">
+            <option value="">Default</option>
+            <option value="0-asc">Name (A&ndash;Z)</option>
+            <option value="0-desc">Name (Z&ndash;A)</option>
+            <option value="2-asc">Department (A&ndash;Z)</option>
+            <option value="2-desc">Department (Z&ndash;A)</option>
+            <option value="5-asc">Status (A&ndash;Z)</option>
+            <option value="5-desc">Status (Z&ndash;A)</option>
           </select>
         </div>
       </div>
@@ -294,6 +308,37 @@ function filterPersonnelTable() {
   });
 }
 
+let personnelOriginalOrder = null;
+
+function applyPersonnelSort() {
+  const tbody = document.querySelector('#personnelTable tbody');
+  if (!tbody) return;
+
+  if (!personnelOriginalOrder) {
+    personnelOriginalOrder = Array.from(tbody.querySelectorAll('tr[data-search]'));
+  }
+
+  const value = document.getElementById('personnelSort').value;
+  if (!value) {
+    personnelOriginalOrder.forEach(row => tbody.appendChild(row));
+    return;
+  }
+
+  const [colIndexStr, direction] = value.split('-');
+  const colIndex = parseInt(colIndexStr, 10);
+  const ascending = direction === 'asc';
+
+  const rows = Array.from(tbody.querySelectorAll('tr[data-search]'));
+  rows.sort((a, b) => {
+    const aText = a.children[colIndex]?.innerText.trim() ?? '';
+    const bText = b.children[colIndex]?.innerText.trim() ?? '';
+    const cmp = aText.localeCompare(bText, undefined, { sensitivity: 'base' });
+    return ascending ? cmp : -cmp;
+  });
+
+  rows.forEach(row => tbody.appendChild(row));
+}
+
 const personnelStatLabels = { 'Active': 'Active Personnel', 'On Leave': 'On Leave Personnel' };
 
 // Active / On Leave stat cards act as quick filters into the table below —
@@ -323,6 +368,25 @@ function resetPersonnelOverview() {
   document.getElementById('personnelStatus').value = '';
   filterPersonnelTable();
   document.getElementById('personnelStatCards')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Left/right arrows for the status-card marquee. Rather than pausing or
+// swapping out .stat-marquee-track's CSS animation, this seeks the SAME
+// running animation forward/back by one card's worth of time (Web
+// Animations API — Animation.currentTime) — the loop never stops, it just
+// jumps to a different point in its own cycle and keeps playing from there.
+function marqueeStep(direction) {
+  const wrap = document.getElementById('personnelStatCards');
+  const track = wrap?.querySelector('.stat-marquee-track');
+  const anim = track?.getAnimations()[0];
+  if (!anim) return;
+
+  const cardStep = 179; // 165px card width + 14px gap, per .stat-marquee-track .stat-card
+  const totalDistance = (track.scrollWidth / 2) + 7; // matches translateX(calc(-50% - 7px))
+  const duration = Number(anim.effect.getTiming().duration); // ms
+  const timeStep = (cardStep / totalDistance) * duration;
+
+  anim.currentTime = (Number(anim.currentTime) + (direction * timeStep) + duration) % duration;
 }
 
 function togglePersonnelFilterMenu() {

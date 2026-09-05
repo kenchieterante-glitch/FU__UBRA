@@ -40,7 +40,48 @@ class RecordsController extends BaseController
         $this->borrowModel->autoFlagForArchiving();
         $this->reportModel->autoFlagForArchiving();
 
-        // Get all records (including archived — this page needs to show every state)
+        $built = $this->buildActivities();
+        $activities    = $built['activities'];
+        $borrowRecords = $built['borrowRecords'];
+        $reportRecords = $built['reportRecords'];
+
+        $today = date('Y-m-d');
+        $archivableSets = [$borrowRecords, $reportRecords];
+        $archivedCount = 0;
+        foreach ($archivableSets as $set) {
+            foreach ($set as $r) {
+                if (!empty($r['is_archived'])) {
+                    $archivedCount++;
+                }
+            }
+        }
+        $archivedCount += count($built['archivedTools']) + count($built['archivedVehicles']) + count($built['archivedPersonnel']);
+
+        $stats = [
+            'total_records'     => count($borrowRecords) + count($reportRecords),
+            'archived_records'  => $archivedCount,
+            'reports_generated' => count($reportRecords),
+            'today_activities'  => count(array_filter($activities, fn($a) => ($a['date'] ?? '') !== null && date('Y-m-d', strtotime($a['date'])) === $today)),
+        ];
+
+        return view('records/index', [
+            'title'         => 'Information Hub',
+            'pageCss'       => 'records.css',
+            'stats'         => $stats,
+            'activities'    => $activities,
+            'reportRecords' => $reportRecords,
+            'flash_success' => session()->getFlashdata('success'),
+            'flash_error'   => session()->getFlashdata('error'),
+        ]);
+    }
+
+    // Builds the exact same unified activity rows the Information Hub table
+    // renders (borrow/report/disposal/archived-tool/archived-vehicle/
+    // archived-personnel, merged and sorted by date) — shared by index() for
+    // display and exportReport() for export, so what's on screen (once
+    // filtered) is always what comes out in the exported file.
+    private function buildActivities(): array
+    {
         $borrowRecords = $this->borrowModel->getAllWithDetailsForRecords();
         $reportRecords = $this->reportModel->getAllWithDetailsForRecords();
         $disposalLogs  = $this->disposalLogModel->getAllWithDetails();
@@ -175,34 +216,14 @@ class RecordsController extends BaseController
             return (strtotime($b['date'] ?? '') ?: 0) <=> (strtotime($a['date'] ?? '') ?: 0);
         });
 
-        $today = date('Y-m-d');
-        $archivableSets = [$borrowRecords, $reportRecords];
-        $archivedCount = 0;
-        foreach ($archivableSets as $set) {
-            foreach ($set as $r) {
-                if (!empty($r['is_archived'])) {
-                    $archivedCount++;
-                }
-            }
-        }
-        $archivedCount += count($archivedTools) + count($archivedVehicles) + count($archivedPersonnel);
-
-        $stats = [
-            'total_records'     => count($borrowRecords) + count($reportRecords),
-            'archived_records'  => $archivedCount,
-            'reports_generated' => count($reportRecords),
-            'today_activities'  => count(array_filter($activities, fn($a) => ($a['date'] ?? '') !== null && date('Y-m-d', strtotime($a['date'])) === $today)),
+        return [
+            'activities'        => $activities,
+            'borrowRecords'     => $borrowRecords,
+            'reportRecords'     => $reportRecords,
+            'archivedTools'     => $archivedTools,
+            'archivedVehicles'  => $archivedVehicles,
+            'archivedPersonnel' => $archivedPersonnel,
         ];
-
-        return view('records/index', [
-            'title'         => 'Information Hub',
-            'pageCss'       => 'records.css',
-            'stats'         => $stats,
-            'activities'    => $activities,
-            'reportRecords' => $reportRecords,
-            'flash_success' => session()->getFlashdata('success'),
-            'flash_error'   => session()->getFlashdata('error'),
-        ]);
     }
 
     // Mark record as "For Disposal"
@@ -269,118 +290,118 @@ class RecordsController extends BaseController
         return redirect()->to('/records')->with('success', 'Disposal authorized and logged');
     }
 
-    // Export archiving report
+    // Export archiving report — filtered by the same module/kind/status/date/
+    // search the on-screen table uses (records/index.php's filterTable()),
+    // passed through as query params, so "export" means "export what I'm
+    // actually looking at right now", not an unrelated fixed summary.
     public function exportReport($format = 'csv')
     {
         if (!$this->session->get('isLoggedIn')) {
             return redirect()->to('/login');
         }
 
-        $data = [
-            'borrow' => $this->borrowModel->findAll(),
-            'report' => $this->reportModel->findAll(),
-            'disposal' => $this->disposalLogModel->getAllWithDetails(),
-        ];
+        $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
+
+        $module = strtolower(trim((string) ($this->request->getGet('module') ?? '')));
+        $kind   = strtolower(trim((string) ($this->request->getGet('kind') ?? '')));
+        $status = strtolower(trim((string) ($this->request->getGet('status') ?? '')));
+        $date   = trim((string) ($this->request->getGet('date') ?? ''));
+        $search = strtolower(trim((string) ($this->request->getGet('search') ?? '')));
+
+        $activities = $this->buildActivities()['activities'];
+
+        $filtered = array_values(array_filter($activities, function ($a) use ($slug, $module, $kind, $status, $date, $search) {
+            $modSlug    = $slug($a['module']);
+            $kindSlug   = $slug($a['kind']);
+            $statusSlug = $slug($a['status']);
+            $dateKey    = !empty($a['date']) ? date('Y-m-d', strtotime($a['date'])) : '';
+            $searchBlob = strtolower($a['module'] . ' ' . $a['record'] . ' ' . $a['record_sub'] . ' ' . $a['performed_by'] . ' ' . $a['action'] . ' ' . $a['status']);
+
+            return (!$module || $modSlug === $module)
+                && (!$kind || $kindSlug === $kind)
+                && (!$status || $statusSlug === $status)
+                && (!$date || $dateKey === $date)
+                && (!$search || str_contains($searchBlob, $search));
+        }));
+
+        $moduleLabel = $module !== '' ? ucfirst(str_replace('-', ' ', $module)) : 'All Modules';
 
         if ($format === 'csv' || $format === 'excel') {
-            return $this->exportCSV($data, $format === 'excel');
+            return $this->exportCSV($filtered, $moduleLabel, $format === 'excel');
         }
 
         if ($format === 'pdf') {
-            return $this->exportPDF($data);
+            return $this->exportPDF($filtered, $moduleLabel);
         }
 
         return redirect()->to('/records')->with('error', 'Unsupported format');
     }
 
-    private function exportPDF($data)
+    private function exportPDF(array $activities, string $moduleLabel)
     {
-        $lines = [
-            'UBRA Information Hub Summary',
-            'Generated: ' . date('M j, Y g:i A'),
-            '',
-            'Total operational records: ' . (count($data['borrow']) + count($data['report'])),
-            'Tool borrow logs: ' . count($data['borrow']),
-            'Reports generated: ' . count($data['report']),
-            'Disposal actions logged: ' . count($data['disposal']),
-        ];
-
-        $stream = 'BT /F1 14 Tf 50 770 Td ';
-        foreach ($lines as $i => $line) {
-            $escaped = str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $line);
-            $stream .= ($i === 0 ? '' : '0 -20 Td ') . "($escaped) Tj ";
+        $rows = '';
+        foreach ($activities as $a) {
+            $dateStr = !empty($a['date']) ? date('M j, Y', strtotime($a['date'])) : '—';
+            $rows .= '<tr>'
+                . '<td>' . esc($dateStr) . '</td>'
+                . '<td>' . esc($a['module']) . '</td>'
+                . '<td>' . esc($a['kind']) . '</td>'
+                . '<td>' . esc($a['record']) . '<br><span class="sub">' . esc($a['record_sub']) . '</span></td>'
+                . '<td>' . esc($a['performed_by']) . '</td>'
+                . '<td>' . esc($a['status']) . '</td>'
+                . '</tr>';
         }
-        $stream .= 'ET';
-        $length = strlen($stream);
+        if ($rows === '') {
+            $rows = '<tr><td colspan="6" style="text-align:center;color:#888;">No matching records.</td></tr>';
+        }
 
-        $pdf  = "%PDF-1.4\n";
-        $pdf .= "1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n";
-        $pdf .= "2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n";
-        $pdf .= "3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>endobj\n";
-        $pdf .= "4 0 obj<< /Length {$length} >>stream\n{$stream}\nendstream\nendobj\n";
-        $pdf .= "5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n";
-        $pdf .= "trailer<< /Size 6 /Root 1 0 R >>\n";
-        $pdf .= "%%EOF\n";
+        $html = '<html><head><style>
+                body { font-family: Helvetica, Arial, sans-serif; color: #222; }
+                h1 { font-size: 16px; margin-bottom: 2px; }
+                .meta { color: #666; font-size: 11px; margin-bottom: 18px; }
+                table { border-collapse: collapse; width: 100%; }
+                th, td { border: 1px solid #ccc; padding: 6px 8px; font-size: 11px; text-align: left; vertical-align: top; }
+                th { background: #800000; color: #fff; }
+                .sub { color: #888; font-size: 9.5px; }
+            </style></head><body>
+                <h1>UBRA Information Hub — ' . esc($moduleLabel) . '</h1>
+                <div class="meta">Generated: ' . esc(date('M j, Y g:i A')) . ' &middot; ' . count($activities) . ' record(s)</div>
+                <table>
+                    <thead><tr><th>Date</th><th>Module</th><th>Type</th><th>Record</th><th>Performed By</th><th>Status</th></tr></thead>
+                    <tbody>' . $rows . '</tbody>
+                </table>
+            </body></html>';
 
-        $filename = 'fu-ubra-records-summary-' . date('Y-m-d') . '.pdf';
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('letter', 'portrait');
+        $dompdf->render();
+
+        $filenameModule = strtolower(str_replace(' ', '-', $moduleLabel));
+        $filename = 'fu-ubra-' . $filenameModule . '-records-' . date('Y-m-d') . '.pdf';
         return $this->response
             ->setHeader('Content-Type', 'application/pdf')
             ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
-            ->setBody($pdf);
+            ->setBody($dompdf->output());
     }
 
-    private function exportCSV($data, $asExcel = false)
+    private function exportCSV(array $activities, string $moduleLabel, bool $asExcel = false)
     {
         helper('filesystem');
 
         $extension = $asExcel ? 'xls' : 'csv';
-        $filename = 'fu-ubra-archiving-report-' . date('Y-m-d') . '.' . $extension;
+        $filenameModule = strtolower(str_replace(' ', '-', $moduleLabel));
+        $filename = 'fu-ubra-' . $filenameModule . '-records-' . date('Y-m-d') . '.' . $extension;
         $tempPath = WRITEPATH . 'uploads/' . $filename;
 
         $file = fopen($tempPath, 'w');
-
-        // Write headers
-        fputcsv($file, ['Record Type', 'ID', 'Status', 'Archived At', 'Disposal Status', 'Disposal Date']);
-        
-        // Write borrow records
-        foreach ($data['borrow'] as $row) {
-            fputcsv($file, [
-                'Borrowing Log',
-                $row['id'],
-                $row['status'] ?? '',
-                $row['archived_at'] ?? '',
-                $row['disposal_status'] ?? '',
-                $row['disposal_date'] ?? ''
-            ]);
+        fputcsv($file, ['Date', 'Module', 'Type', 'Record', 'Reference', 'Performed By', 'Status']);
+        foreach ($activities as $a) {
+            $dateStr = !empty($a['date']) ? date('Y-m-d', strtotime($a['date'])) : '';
+            fputcsv($file, [$dateStr, $a['module'], $a['kind'], $a['record'], $a['record_sub'], $a['performed_by'], $a['status']]);
         }
-        
-        // Write report records
-        foreach ($data['report'] as $row) {
-            fputcsv($file, [
-                'Maintenance Report',
-                $row['id'],
-                $row['status'] ?? '',
-                $row['archived_at'] ?? '',
-                $row['disposal_status'] ?? '',
-                $row['disposal_date'] ?? ''
-            ]);
-        }
-        
-        // Write disposal logs
-        fputcsv($file, []);
-        fputcsv($file, ['Disposal Logs']);
-        fputcsv($file, ['Record Type', 'Record ID', 'Authorized By', 'Disposal Date']);
-        foreach ($data['disposal'] as $row) {
-            fputcsv($file, [
-                $row['record_type'],
-                $row['record_id'],
-                $row['authorized_by_name'] ?? $row['authorized_by_id'] ?? '',
-                $row['disposal_date'] ?? ''
-            ]);
-        }
-        
         fclose($file);
-        
+
         return $this->response->download($tempPath, null)->setFileName($filename);
     }
 

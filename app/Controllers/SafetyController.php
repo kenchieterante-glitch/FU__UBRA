@@ -236,7 +236,7 @@ class SafetyController extends BaseController
         usort($guardTrips, fn($a, $b) => strtotime($a['travel_date'] . ' ' . $a['departure_time']) <=> strtotime($b['travel_date'] . ' ' . $b['departure_time']));
 
         return view('safety/guard_dashboard', [
-            'title' => 'Guard Dashboard',
+            'title' => 'Guard',
             'openModule' => 'safety',
             'trips' => $guardTrips,
             'key_logs_json' => $this->jsonForScript(array_map(fn($k) => [

@@ -42,19 +42,46 @@ class ToolsController extends BaseController
         return view('tools/index', $data);
     }
 
-    public function electronicDevices()
+    public function powerTools()
     {
-        return $this->categoryView('Electronic Devices');
-    }
-
-    public function toolsEquipment()
-    {
-        return $this->categoryView('Tools Equipment');
+        return $this->categoryView('Power Tools');
     }
 
     public function consumable()
     {
         return $this->categoryView('Consumable');
+    }
+
+    public function sportsEquipment()
+    {
+        return $this->categoryView('Sports Equipment');
+    }
+
+    // Borrowing ledger — one row per borrow_records transaction (active and
+    // returned), not per tool, so it's a history view rather than a live
+    // inventory filter like the category tabs above. 'Overdue' is derived
+    // on read from expected_return vs today, same reasoning as
+    // MonitoringStatus::derive() elsewhere in the app: no cron exists here,
+    // so compute-on-read is what keeps it correct without a background job.
+    public function borrowing()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $today = date('Y-m-d');
+        $records = array_map(function ($r) use ($today) {
+            $r['computed_status'] = ($r['status'] === 'Borrowed' && !empty($r['expected_return']) && $r['expected_return'] < $today)
+                ? 'Overdue'
+                : $r['status'];
+            return $r;
+        }, $this->borrowModel->getAllWithDetails());
+
+        return view('tools/borrowing', [
+            'title'   => 'Borrowing',
+            'pageCss' => 'borrowing.css',
+            'records' => $records,
+        ]);
     }
 
     private function categoryView(string $category)

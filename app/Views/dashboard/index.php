@@ -97,7 +97,7 @@
     <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
       <div>
         <h2>Travel History</h2>
-        <p>Recent driver trip tickets — connected live to Vehicle Management &amp; the Guard Dashboard.</p>
+        <p>Recent driver trip tickets — connected live to Vehicle Management &amp; Guard.</p>
       </div>
       <a class="overview-link" href="<?= esc(site_url('travel')) ?>">View all trip tickets →</a>
     </div>

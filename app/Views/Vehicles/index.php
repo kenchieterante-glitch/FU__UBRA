@@ -84,6 +84,20 @@
               <option value="Inactive">Inactive</option>
             </select>
           </div>
+          <div class="filter-row">
+            <label for="vehiclesSort">Sort By</label>
+            <select id="vehiclesSort" onchange="applyVehiclesSort()">
+              <option value="">Default</option>
+              <option value="0-asc">Vehicle (A&ndash;Z)</option>
+              <option value="0-desc">Vehicle (Z&ndash;A)</option>
+              <option value="3-asc">Driver (A&ndash;Z)</option>
+              <option value="3-desc">Driver (Z&ndash;A)</option>
+              <option value="5-asc">GPS Status (A&ndash;Z)</option>
+              <option value="5-desc">GPS Status (Z&ndash;A)</option>
+              <option value="7-asc">Availability (A&ndash;Z)</option>
+              <option value="7-desc">Availability (Z&ndash;A)</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -208,6 +222,37 @@ function filterVehiclesTable() {
       && (!availability || availabilityText === availability);
     row.style.display = matches ? '' : 'none';
   });
+}
+
+let vehiclesOriginalOrder = null;
+
+function applyVehiclesSort() {
+  const tbody = document.querySelector('#vehiclesTable tbody');
+  if (!tbody) return;
+
+  if (!vehiclesOriginalOrder) {
+    vehiclesOriginalOrder = Array.from(tbody.querySelectorAll('tr'));
+  }
+
+  const value = document.getElementById('vehiclesSort').value;
+  if (!value) {
+    vehiclesOriginalOrder.forEach(row => tbody.appendChild(row));
+    return;
+  }
+
+  const [colIndexStr, direction] = value.split('-');
+  const colIndex = parseInt(colIndexStr, 10);
+  const ascending = direction === 'asc';
+
+  const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.children.length > 1);
+  rows.sort((a, b) => {
+    const aText = a.children[colIndex]?.innerText.trim() ?? '';
+    const bText = b.children[colIndex]?.innerText.trim() ?? '';
+    const cmp = aText.localeCompare(bText, undefined, { sensitivity: 'base' });
+    return ascending ? cmp : -cmp;
+  });
+
+  rows.forEach(row => tbody.appendChild(row));
 }
 
 function toggleVehicleFilterMenu() {

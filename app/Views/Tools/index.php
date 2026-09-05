@@ -6,7 +6,8 @@
 $toolList = $tools ?? [];
 $personnelList = $personnel ?? [];
 $title = $title ?? 'Tools Equipment Management';
-$showCategoryTabs = in_array($title, ['Electronic Devices', 'Tools Equipment', 'Consumable'], true);
+$showCategoryTabs = in_array($title, ['Power Tools', 'Consumable', 'Sports Equipment'], true);
+$isConsumablePage = ($title === 'Consumable');
 ?>
 
 <div class="page-header">
@@ -76,9 +77,9 @@ $showCategoryTabs = in_array($title, ['Electronic Devices', 'Tools Equipment', '
             <label for="toolsCategory">Category</label>
             <select id="toolsCategory" onchange="filterToolsTable()">
               <option value="">All Categories</option>
-              <option value="Tools Equipment">Tools Equipment</option>
-              <option value="Electronic Devices">Electronic Devices</option>
+              <option value="Power Tools">Power Tools</option>
               <option value="Consumable">Consumable</option>
+              <option value="Sports Equipment">Sports Equipment</option>
             </select>
           </div>
           <div class="filter-row">
@@ -101,12 +102,29 @@ $showCategoryTabs = in_array($title, ['Electronic Devices', 'Tools Equipment', '
               <option value="Poor">Poor</option>
             </select>
           </div>
+          <div class="filter-row">
+            <label for="toolsSort">Sort By</label>
+            <select id="toolsSort" onchange="applyToolsSort()">
+              <option value="">Default</option>
+              <option value="0-asc">Tool Name (A&ndash;Z)</option>
+              <option value="0-desc">Tool Name (Z&ndash;A)</option>
+              <option value="2-asc">Category (A&ndash;Z)</option>
+              <option value="2-desc">Category (Z&ndash;A)</option>
+              <option value="5-asc">Condition (A&ndash;Z)</option>
+              <option value="5-desc">Condition (Z&ndash;A)</option>
+              <option value="6-asc">Status (A&ndash;Z)</option>
+              <option value="6-desc">Status (Z&ndash;A)</option>
+              <?php if ($isConsumablePage): ?>
+                <option value="8-asc">Stock (Low&ndash;High)</option>
+                <option value="8-desc">Stock (High&ndash;Low)</option>
+              <?php endif; ?>
+            </select>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <?php $isConsumablePage = ($title === 'Consumable'); ?>
   <div class="tools-table-scroll">
   <table id="toolsTable" class="data-table">
   <thead>
@@ -190,7 +208,7 @@ $showCategoryTabs = in_array($title, ['Electronic Devices', 'Tools Equipment', '
           <label>Category</label>
           <select name="category">
             <option value="">— Select Category —</option>
-            <?php foreach (['Tools Equipment', 'Electronic Devices', 'Consumable'] as $cat): ?>
+            <?php foreach (['Power Tools', 'Consumable', 'Sports Equipment'] as $cat): ?>
               <option value="<?= esc($cat) ?>" <?= $t['category'] === $cat ? 'selected' : '' ?>><?= esc($cat) ?></option>
             <?php endforeach; ?>
           </select>
@@ -260,6 +278,45 @@ function filterToolsTable() {
       && (!condition || conditionText === condition);
     row.style.display = matches ? '' : 'none';
   });
+}
+
+// "Sort By" lives in the filter popup (#toolsSort) rather than clickable
+// column headers. Sorts the actual DOM row order (not just what's
+// visible), so it stays correct together with filterToolsTable()'s
+// show/hide. toolsOriginalOrder is captured once so picking "Default"
+// can restore it without a page reload.
+let toolsOriginalOrder = null;
+
+function applyToolsSort() {
+  const tbody = document.querySelector('#toolsTable tbody');
+  if (!tbody) return;
+
+  if (!toolsOriginalOrder) {
+    toolsOriginalOrder = Array.from(tbody.querySelectorAll('tr'));
+  }
+
+  const value = document.getElementById('toolsSort').value;
+  if (!value) {
+    toolsOriginalOrder.forEach(row => tbody.appendChild(row));
+    return;
+  }
+
+  const [colIndexStr, direction] = value.split('-');
+  const colIndex = parseInt(colIndexStr, 10);
+  const ascending = direction === 'asc';
+
+  const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.children.length > 1);
+  rows.sort((a, b) => {
+    const aText = a.children[colIndex]?.innerText.trim() ?? '';
+    const bText = b.children[colIndex]?.innerText.trim() ?? '';
+    const aNum = parseFloat(aText);
+    const bNum = parseFloat(bText);
+    const bothNumeric = !isNaN(aNum) && !isNaN(bNum) && aText !== '' && bText !== '';
+    const cmp = bothNumeric ? (aNum - bNum) : aText.localeCompare(bText, undefined, { sensitivity: 'base' });
+    return ascending ? cmp : -cmp;
+  });
+
+  rows.forEach(row => tbody.appendChild(row));
 }
 
 const toolsStatLabels = {
@@ -369,9 +426,9 @@ if (toolsUrlFilter) filterToolsByStat(toolsUrlFilter);
       <label>Category</label>
       <select name="category">
         <option value="">— Select Category —</option>
-        <option value="Tools Equipment">Tools Equipment</option>
-        <option value="Electronic Devices">Electronic Devices</option>
+        <option value="Power Tools">Power Tools</option>
         <option value="Consumable">Consumable</option>
+        <option value="Sports Equipment">Sports Equipment</option>
       </select>
       <label>Location</label>
       <input type="text" name="location" placeholder="e.g. Shelf B-3">

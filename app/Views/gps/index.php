@@ -111,6 +111,20 @@
                             <option value="Under Maintenance">Maintenance</option>
                           </select>
                         </div>
+                        <div class="filter-row">
+                          <label for="gpsSort">Sort By</label>
+                          <select id="gpsSort" onchange="applyGpsSort()">
+                            <option value="">Default</option>
+                            <option value="vehicle-asc">Vehicle (A&ndash;Z)</option>
+                            <option value="vehicle-desc">Vehicle (Z&ndash;A)</option>
+                            <option value="3-asc">Driver (A&ndash;Z)</option>
+                            <option value="3-desc">Driver (Z&ndash;A)</option>
+                            <option value="5-asc">GPS Status (A&ndash;Z)</option>
+                            <option value="5-desc">GPS Status (Z&ndash;A)</option>
+                            <option value="7-asc">Availability (A&ndash;Z)</option>
+                            <option value="7-desc">Availability (Z&ndash;A)</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                     <div class="toolbar-search">
@@ -197,7 +211,7 @@
                                     <div class="action-btns">
                                         <button class="icon-btn view" title="View Profile"
                                             onclick="event.stopPropagation(); openVehicleModal(<?= $v['id'] ?>)">
-                                            <i class="bi bi-eye"></i>
+                                            <i class="fa-solid fa-eye"></i>
                                         </button>
                                         <button class="icon-btn sync" title="Sync GPS"
                                             onclick="event.stopPropagation(); syncVehicle(<?= $v['id'] ?>, this)">
@@ -392,6 +406,41 @@ function filterTable() {
 function toggleGpsFilterMenu() {
     const popup = document.getElementById('gpsFilterPopup');
     popup.classList.toggle('visible');
+}
+
+let gpsOriginalOrder = null;
+
+function applyGpsSort() {
+    const tbody = document.querySelector('#gpsTable tbody');
+    if (!tbody) return;
+
+    if (!gpsOriginalOrder) {
+        gpsOriginalOrder = Array.from(tbody.querySelectorAll('.fleet-row'));
+    }
+
+    const value = document.getElementById('gpsSort').value;
+    if (!value) {
+        gpsOriginalOrder.forEach(row => tbody.appendChild(row));
+        return;
+    }
+
+    const [key, direction] = value.split('-');
+    const ascending = direction === 'asc';
+    const colIndex = parseInt(key, 10);
+
+    const rows = Array.from(tbody.querySelectorAll('.fleet-row'));
+    rows.sort((a, b) => {
+        const aText = (key === 'vehicle')
+            ? (a.querySelector('.v-model')?.innerText.trim() ?? '')
+            : (a.children[colIndex]?.innerText.trim() ?? '');
+        const bText = (key === 'vehicle')
+            ? (b.querySelector('.v-model')?.innerText.trim() ?? '')
+            : (b.children[colIndex]?.innerText.trim() ?? '');
+        const cmp = aText.localeCompare(bText, undefined, { sensitivity: 'base' });
+        return ascending ? cmp : -cmp;
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
 }
 
 document.addEventListener('click', e => {

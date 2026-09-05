@@ -45,18 +45,29 @@
     white-space: nowrap;
 }
 
-.status-online,
 .status-available,
 .status-completed {
     background: #e6f4ea;
     color: #2e7d32;
 }
 
-.status-offline,
 .status-expired,
 .status-maintenance {
     background: #fdecea;
     color: #b3261e;
+}
+
+/* Solid, saturated fills (not the pale tint the other statuses use) so
+   GPS Online/Offline reads as an unmistakable color at a glance, not a
+   near-white pill that only shows a faint tint of its text color. */
+.status-online {
+    background: #2e7d32;
+    color: #fff;
+}
+
+.status-offline {
+    background: #6b7280;
+    color: #fff;
 }
 
 .status-due-soon,
@@ -66,13 +77,6 @@
 .status-unknown {
     background: #fff4e0;
     color: #b26a00;
-}
-
-.status-available,
-.status-online,
-.status-completed {
-    background: #e6f4ea;
-    color: #2e7d32;
 }
 
 .modal {

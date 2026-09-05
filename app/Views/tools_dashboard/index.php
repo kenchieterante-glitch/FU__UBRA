@@ -3,14 +3,14 @@
 <?php
   $totalAlerts = (int) $maintenance_tools + (int) $disposal_tools + (int) $low_stock_items;
   $categoryRoutes = [
-      'Electronic Devices' => 'tools/electronic-devices',
-      'Tools Equipment'    => 'tools/equipment',
+      'Power Tools'        => 'tools/power-tools',
       'Consumable'         => 'tools/consumable',
+      'Sports Equipment'   => 'tools/sports-equipment',
   ];
   $categoryIcons = [
-      'Electronic Devices' => 'fa-laptop',
-      'Tools Equipment'    => 'fa-toolbox',
+      'Power Tools'        => 'fa-bolt',
       'Consumable'         => 'fa-box',
+      'Sports Equipment'   => 'fa-futbol',
   ];
 ?>
 

@@ -397,7 +397,7 @@ $work_order_total = $work_order_total ?? 0;
           <div class="fec-row"><span>Floor</span><strong>${esc(u.floor || 'Ground Floor')}</strong></div>
           <div class="fec-row"><span>Weight</span><strong>${u.kg} kg</strong></div>
           <div class="fec-row"><span>Installed</span><strong>${esc(u.year)}</strong></div>
-          <div class="fec-row"><span>Installed by</span><strong>${esc(u.inspector)} <button type="button" class="fec-edit-btn" title="Change installer" onclick="openInstallerModal('fe', ${u.dbId}, '${esc(u.inspector).replace(/'/g, "\\'")}')"><i class="bi bi-pencil"></i></button></strong></div>
+          <div class="fec-row"><span>Installed by</span><strong>${esc(u.inspector)} <button type="button" class="fec-edit-btn" title="Change installer" onclick="openInstallerModal('fe', ${u.dbId}, '${esc(u.inspector).replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen"></i></button></strong></div>
           <div class="fec-row"><span>Assigned Guard</span><strong>${esc(u.assigned)}</strong></div>
           <div class="fec-row"><span>Last Insp.</span><strong>${esc(u.lastInsp)}</strong></div>
           <div class="fec-row"><span>Next Due</span><strong class="${daysLeft < 0 ? 'text-danger' : daysLeft < 30 ? 'text-warn' : ''}">${esc(u.nextDue)} (${daysLeft < 0 ? 'OVERDUE' : daysLeft + 'd'})</strong></div>
@@ -413,7 +413,7 @@ $work_order_total = $work_order_total ?? 0;
           <div class="fec-row"><span>Last Cleaning</span><strong>${esc(u.lastClean) || '—'}</strong></div>
           <div class="fec-row"><span>Next Schedule</span><strong>${esc(u.nextDue) || '—'}</strong></div>
           <div class="fec-row"><span>Assigned Tech</span><strong>${esc(u.tech)}</strong></div>
-          <div class="fec-row"><span>Installed By</span><strong>${esc(u.installedBy)} <button type="button" class="fec-edit-btn" title="Change installer" onclick="openInstallerModal('aircon', ${u.id}, '${esc(u.installedBy).replace(/'/g, "\\'")}')"><i class="bi bi-pencil"></i></button></strong></div>
+          <div class="fec-row"><span>Installed By</span><strong>${esc(u.installedBy)} <button type="button" class="fec-edit-btn" title="Change installer" onclick="openInstallerModal('aircon', ${u.id}, '${esc(u.installedBy).replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen"></i></button></strong></div>
           <div class="fec-row"><span>Checklist</span><strong>${done}/${total} done</strong></div>
         </div>`;
     }

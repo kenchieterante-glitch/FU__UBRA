@@ -275,7 +275,11 @@ img {
   font-family: var(--heading-font);
   font-weight: 700;
   font-size: 16px;
-  letter-spacing: 0.3px;
+  /* Wider than the app's usual heading letter-spacing — this is the brand
+     wordmark, always short and always at this exact size, so it's worth
+     spacing out further for readability (incl. far-sighted users) without
+     touching the shared heading-font default used everywhere else. */
+  letter-spacing: 2.5px;
   display: block;
 }
 /* The one sanctioned exception in the whole system: the literal
@@ -498,17 +502,25 @@ img {
 .page-content .sidebar-card-title {
   margin-bottom: .8rem;
 }
-.page-content .sidebar-card-title,
-.page-content .panel-title {
+/* .sidebar-card-title is currently unused anywhere in the app — kept here
+   only so a future small sidebar-widget label has a ready-made style —
+   while .panel-title is the real, actively-used one (GPS, Notifications,
+   Reports, and 3 role dashboards), sized to match the other table/section
+   titles across the app (e.g. Recent Activity History, Refill Log)
+   instead of the tiny uppercase label style it was accidentally sharing. */
+.page-content .sidebar-card-title {
   font-size: .82rem;
   font-family: var(--heading-font);
-  /* Bebas Neue only ships a 400 weight — asking for --fw-bold here makes
-     the browser synthesize bold, which renders inconsistently depending
-     on exactly when the font swaps in. Match its real weight instead. */
   font-weight: 400;
   color: var(--maroon);
   text-transform: uppercase;
   letter-spacing: .5px;
+}
+.page-content .panel-title {
+  font-size: 1.1rem;
+  font-family: var(--heading-font);
+  font-weight: 400;
+  color: var(--maroon);
 }
 .page-content .summary-card,
 .page-content .panel-card,

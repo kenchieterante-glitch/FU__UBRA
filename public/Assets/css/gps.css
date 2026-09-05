@@ -411,10 +411,10 @@
     gap: .75rem;
 }
 
+/* Sizing/color for .panel-title actually lives in base.css's
+   .page-content .panel-title rule (higher specificity — always wins over
+   this one), so this only needs to exist for the margin reset. */
 .panel-title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--maroon);
     margin: 0;
 }
 
@@ -536,7 +536,7 @@
     display: inline-block;
     width: 8px;
     height: 8px;
-    background: #9ca3af;
+    background: var(--danger, #dc2626);
     border-radius: 50%;
 }
 
@@ -557,8 +557,8 @@
 }
 
 .gps-offline {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: var(--red-bg, #fdecea);
+    color: var(--danger, #dc2626);
 }
 
 .gps-time {

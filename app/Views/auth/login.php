@@ -3,9 +3,17 @@
 <?= $this->section('content') ?>
 
 <style>
+.auth-title-block {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
 .auth-badge {
-    width: 88px;
-    margin: 0 auto 18px;
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -13,13 +21,9 @@
 
 .auth-badge img {
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
     display: block;
-}
-
-.auth-title-block {
-    text-align: center;
-    margin-bottom: 32px;
 }
 
 .auth-card h1 {
@@ -168,8 +172,8 @@
 }
 </style>
 
-<div class="auth-badge"><img src="<?= base_url('images/' . rawurlencode('UBRA LOGO (no background).png')) ?>" alt="UBRA logo"></div>
 <div class="auth-title-block">
+    <div class="auth-badge"><img src="<?= base_url('images/' . rawurlencode('UBRA LOGO (cropped).png')) ?>" alt="UBRA logo"></div>
     <h1>UBRA</h1>
     <p class="auth-subtitle">Sign in to your account</p>
 </div>

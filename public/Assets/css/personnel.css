@@ -19,6 +19,67 @@
     overflow-y: auto;
 }
 
+/* Left/right step controls for the auto-scrolling status-card marquee
+   (base.css .stat-marquee). Stepping the animation's own clock forward/
+   back is handled in JS (marqueeStep()); this just styles the overlay
+   buttons and the edge fades so cards don't look clipped hard behind them. */
+.stat-marquee {
+    position: relative;
+}
+
+.stat-marquee::before,
+.stat-marquee::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 48px;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.stat-marquee::before {
+    left: 0;
+    background: linear-gradient(90deg, var(--bg) 0%, transparent 100%);
+}
+
+.stat-marquee::after {
+    right: 0;
+    background: linear-gradient(270deg, var(--bg) 0%, transparent 100%);
+}
+
+.marquee-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #e2e2e2;
+    background: #fff;
+    color: #4a4a4a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+    transition: box-shadow .15s ease, color .15s ease;
+}
+
+.marquee-nav:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
+    color: #800000;
+}
+
+.marquee-nav-left {
+    left: 4px;
+}
+
+.marquee-nav-right {
+    right: 4px;
+}
+
 /* Scoped to just the main personnel listing table. Fixed (not max-) height
    and fixed column widths so the header/table footprint is pixel-identical
    every time you navigate to a different Personnel Management sub-tab

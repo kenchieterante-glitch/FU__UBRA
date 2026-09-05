@@ -1,0 +1,28 @@
+.tools-table-scroll {
+    max-height: 520px;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+.tools-table-scroll #borrowingTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.tool-name-cell {
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 200px;
+}
+
+/* Overdue rows get a light red wash on top of the status badge, not just
+   the badge alone — same "color the whole row, not just the pill" idea
+   used for the GPS/vehicle status tables. */
+.row-overdue {
+    background: var(--red-bg, #fdecea);
+}
+
+.data-table tbody tr.row-overdue:hover {
+    background: #fbdedb;
+}

@@ -71,10 +71,13 @@ class UbraController extends BaseController
 
         $systemPrompt = $this->buildSystemPrompt($context);
 
-        // Two supported key formats, detected by their distinctive prefix:
-        // Anthropic (sk-ant-...) and Groq (gsk_...) — Groq's API is
-        // OpenAI-compatible, so its request/response shape differs from
-        // Anthropic's Messages API.
+        // Four supported key formats, detected by their distinctive prefix:
+        // Anthropic (sk-ant-...), Groq (gsk_...), OpenRouter (sk-or-...), and
+        // Gemini (AIzaSy... — the documented format — or AQ. — an alternate
+        // format Google issues for some accounts; confirmed working directly
+        // against the Gemini API before adding it here). Groq and OpenRouter
+        // are both OpenAI-compatible, so they share a request/response shape
+        // that differs from Anthropic's Messages API and from Gemini's own.
         if (str_starts_with($apiKey, 'sk-ant-')) {
             [$httpCode, $response] = $this->callAnthropic($apiKey, $systemPrompt, $messages);
             $reply = null;
@@ -89,9 +92,23 @@ class UbraController extends BaseController
                 $data  = json_decode($response, true);
                 $reply = $data['choices'][0]['message']['content'] ?? null;
             }
+        } elseif (str_starts_with($apiKey, 'sk-or-')) {
+            [$httpCode, $response] = $this->callOpenRouter($apiKey, $systemPrompt, $messages);
+            $reply = null;
+            if ($httpCode === 200 && $response) {
+                $data  = json_decode($response, true);
+                $reply = $data['choices'][0]['message']['content'] ?? null;
+            }
+        } elseif (str_starts_with($apiKey, 'AIzaSy') || str_starts_with($apiKey, 'AQ.')) {
+            [$httpCode, $response] = $this->callGemini($apiKey, $systemPrompt, $messages);
+            $reply = null;
+            if ($httpCode === 200 && $response) {
+                $data  = json_decode($response, true);
+                $reply = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+            }
         } else {
             return $this->response->setJSON([
-                'reply' => "⚠️ That API key doesn't match a supported format (Anthropic keys start with sk-ant-, Groq keys start with gsk_). Please check the key in Settings → AI Configuration.",
+                'reply' => "⚠️ That API key doesn't match a supported format (Anthropic keys start with sk-ant-, Groq keys start with gsk_, OpenRouter keys start with sk-or-, Gemini keys start with AIzaSy). Please check the key in Settings → AI Configuration.",
                 'role'  => 'assistant',
             ]);
         }
@@ -192,6 +209,79 @@ class UbraController extends BaseController
                 'Content-Type: application/json',
                 'Authorization: Bearer ' . $apiKey,
             ],
+            CURLOPT_TIMEOUT => 30,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return [$httpCode, $response];
+    }
+
+    private function callOpenRouter(string $apiKey, string $systemPrompt, array $messages): array
+    {
+        // A free-tier model — OpenRouter periodically retires/renames its
+        // free models, so if this one starts 404ing, swap in whatever's
+        // current at openrouter.ai/models?max_price=0. Verified working
+        // (real 200 response) as of this writing.
+        $payload = json_encode([
+            'model'      => 'minimax/minimax-m3:free',
+            'max_tokens' => 1000,
+            'messages'   => array_merge(
+                [['role' => 'system', 'content' => $systemPrompt]],
+                $messages
+            ),
+        ]);
+
+        $ch = curl_init('https://openrouter.ai/api/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+                // Optional per OpenRouter's docs, but they ask for these to
+                // attribute traffic on their end — harmless to send.
+                'HTTP-Referer: ' . base_url(),
+                'X-Title: UBRA',
+            ],
+            CURLOPT_TIMEOUT => 30,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return [$httpCode, $response];
+    }
+
+    private function callGemini(string $apiKey, string $systemPrompt, array $messages): array
+    {
+        // Gemini's own message shape: role is "user"/"model" (never
+        // "assistant"), and the system prompt is a separate top-level field
+        // rather than a message in the list.
+        $contents = array_map(fn($m) => [
+            'role'  => $m['role'] === 'assistant' ? 'model' : 'user',
+            'parts' => [['text' => $m['content']]],
+        ], $messages);
+
+        $payload = json_encode([
+            'contents'          => $contents,
+            'systemInstruction' => ['parts' => [['text' => $systemPrompt]]],
+            'generationConfig'  => ['maxOutputTokens' => 1000],
+        ]);
+
+        // gemini-2.0-flash (an earlier default) has since been retired by
+        // Google in favor of this one — verified working (real 200 response)
+        // directly against the endpoint before adding it here.
+        $ch = curl_init('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . urlencode($apiKey));
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
             CURLOPT_TIMEOUT => 30,
         ]);
 

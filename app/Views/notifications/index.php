@@ -83,7 +83,7 @@ $draft_count = $draft_count ?? 0;
                         <div class="filter-popup" id="notificationsFilterPopup">
                             <div class="filter-popup-title">Filter</div>
                             <div class="filter-row">
-                                <label for="readFilter"><i class="bi bi-envelope"></i> View</label>
+                                <label for="readFilter">View</label>
                                 <select id="readFilter" onchange="filterTable()">
                                     <option value="">All Notifications</option>
                                     <option value="unread">Unread Only</option>
@@ -91,7 +91,7 @@ $draft_count = $draft_count ?? 0;
                                 </select>
                             </div>
                             <div class="filter-row">
-                                <label for="catFilter"><i class="bi bi-tags"></i> Category</label>
+                                <label for="catFilter">Category</label>
                                 <select id="catFilter" onchange="filterTable()">
                                     <option value=""> All Categories</option>
                                     <option value="Vehicle Inspection"> Vehicle Inspection</option>
@@ -110,7 +110,7 @@ $draft_count = $draft_count ?? 0;
                                 </select>
                             </div>
                             <div class="filter-row">
-                                <label for="priFilter"><i class="bi bi-flag"></i> Priority</label>
+                                <label for="priFilter">Priority</label>
                                 <select id="priFilter" onchange="filterTable()">
                                     <option value=""> All Priorities</option>
                                     <option value="CRITICAL"> Critical</option>

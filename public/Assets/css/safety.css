@@ -393,7 +393,12 @@
 }
 
 .maintenance-section .dp-fe-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    /* auto-fit (not auto-fill) — auto-fill reserves a phantom empty
+       column whenever the row has room for one more card than actually
+       exist, which is exactly the dead space this was leaving on the
+       right. auto-fit collapses that empty track so the real cards
+       stretch to fill the row instead. */
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .overview-link {

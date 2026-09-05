@@ -17,6 +17,17 @@ use App\Models\JanitorialAssignmentModel;
 use App\Models\JanitorialTaskModel;
 use App\Models\KeyBorrowLogModel;
 use App\Models\NotificationModel;
+use App\Models\ReportModel;
+use App\Models\FacilityChecklistModel;
+use App\Models\FacilityChecklistItemModel;
+use App\Models\EquipmentMaintenanceLogModel;
+use App\Models\EquipmentMaintenanceEntryModel;
+use App\Models\AirconInspectionLogModel;
+use App\Models\AirconInspectionEntryModel;
+use App\Models\VehicleInspectionChecklistModel;
+use App\Models\VehicleInspectionItemModel;
+use App\Models\RestroomChecklistModel;
+use App\Models\RestroomChecklistEntryModel;
 
 /**
  * JSON API layer for the FU-UBRA Expo mobile app — wired to the same tables/Models
@@ -159,6 +170,26 @@ class Api extends BaseController
             'name'        => $user['full_name'] ?? $employeeId,
             'employee_id' => $user['emp_id'] ?? $employeeId,
         ];
+    }
+
+    // Auto-logs a completed maintenance action (aircon cleaning, fire
+    // extinguisher renewal, etc.) as a report so it shows up in the
+    // Records/Information Hub without staff having to fill out a separate
+    // report by hand — the mobile action itself is the report.
+    private function logMaintenanceReport(string $reportName, string $module, ?string $empId): void
+    {
+        $generatedById = null;
+        if (!empty($empId)) {
+            $person = (new PersonnelModel())->getByEmpId($empId);
+            $generatedById = $person['id'] ?? null;
+        }
+
+        (new ReportModel())->insert([
+            'report_name'     => $reportName,
+            'generated_by_id' => $generatedById,
+            'type_module'     => $module,
+            'status'          => 'Completed',
+        ]);
     }
 
     // ---------- TOOLS ----------
@@ -562,6 +593,20 @@ class Api extends BaseController
 
         $tasks = $checklistModel->getForUnit((int) $unitId);
 
+        // The whole checklist just got completed (not merely one task ticked
+        // mid-cleaning) — that's the "cleaned the aircon" event worth a
+        // report, not every individual checkbox save.
+        if (!empty($tasks) && count(array_filter($tasks, fn($t) => (int) $t['is_done'] === 1)) === count($tasks)) {
+            $unit = (new AirconUnitModel())->find((int) $unitId);
+            $apiUser = $this->currentApiUser();
+            $empId = $apiUser['employee_id'] ?? ($data['employee_id'] ?? null);
+            $this->logMaintenanceReport(
+                'Aircon Cleaning Completed — ' . ($unit['unit_name'] ?? "Unit {$unitId}") . ' (' . ($unit['location'] ?? 'Unknown location') . ')',
+                'Maintenance Compliance',
+                $empId
+            );
+        }
+
         return $this->response->setJSON([
             'message'   => "Aircon checklist for unit {$unitId} saved",
             'checklist' => array_map(fn($t) => [
@@ -602,10 +647,10 @@ class Api extends BaseController
             'type'            => $type,
             'location'        => $locationName,
             'weight_kg'       => (float) ($data['kg'] ?? 6.0),
-            'last_inspection' => $data['inspected'] ?: null,
-            'next_due'        => $data['expiry'] ?: null,
+            'last_inspection' => $data['inspected'] ?? null,
+            'next_due'        => $data['expiry'] ?? null,
             'status'          => 'New',
-            'year_acquired'   => $data['installed'] ? date('Y', strtotime($data['installed'])) : date('Y'),
+            'year_acquired'   => !empty($data['installed']) ? date('Y', strtotime($data['installed'])) : date('Y'),
             'inspector'       => $inspector,
             'notes'           => $data['notes'] ?? null,
         ]);
@@ -624,6 +669,12 @@ class Api extends BaseController
             'is_read'     => 0,
             'created_at'  => date('Y-m-d H:i:s'),
         ]);
+
+        $this->logMaintenanceReport(
+            'Fire Extinguisher Replaced/Renewed — ' . $unitCode . ' (' . $locationText . ')',
+            'Maintenance Compliance',
+            $apiUser['employee_id'] ?? $installedById
+        );
 
         return $this->response->setJSON(['message' => 'Fire extinguisher record saved', 'id' => $id, 'unit_id' => $unitCode]);
     }
@@ -832,5 +883,196 @@ class Api extends BaseController
     {
         (new NotificationModel())->update($id, ['is_read' => 1, 'read_at' => date('Y-m-d H:i:s')]);
         return $this->response->setJSON(['message' => 'Notification marked as read']);
+    }
+
+    // ---------- FACILITIES MAINTENANCE PROGRAM FORMS ----------
+    // Mobile equivalents of the 5 web admin screens under MaintenanceFormsController
+    // — same tables, so a submission from the field shows up on the web
+    // screens (and the Information Hub, via logMaintenanceReport()) exactly
+    // like an admin-entered one would.
+
+    // Facility Maintenance Checklist: inspector fills the whole fixed
+    // 21-item form in one submission. items keyed by item_code ("1.1" etc.)
+    // since that's the one stable identifier that exists before the row is
+    // created — {"1.1": {"rating": "C", "corrective_action": "..."}, ...}.
+    public function saveFacilityChecklist()
+    {
+        $data = $this->request->getJSON(true) ?? [];
+
+        $model = new FacilityChecklistModel();
+        $id = $model->createWithItems([
+            'inspector'       => $data['inspector'] ?? null,
+            'building_area'   => $data['building_area'] ?? null,
+            'inspection_date' => ($data['inspection_date'] ?? null) ?: date('Y-m-d'),
+            'inspection_type' => $data['inspection_type'] ?? null,
+        ]);
+
+        $itemModel = new FacilityChecklistItemModel();
+        $seeded = $itemModel->where('checklist_id', $id)->findAll();
+        foreach ($seeded as $item) {
+            $submitted = $data['items'][$item['item_code']] ?? null;
+            if ($submitted === null) continue;
+            $itemModel->update($item['id'], [
+                'rating'            => $submitted['rating'] ?: null,
+                'corrective_action' => $submitted['corrective_action'] ?? null,
+            ]);
+        }
+
+        $apiUser = $this->currentApiUser();
+        $this->logMaintenanceReport(
+            'Facility Inspection Completed — ' . ($data['building_area'] ?? 'Unspecified area'),
+            'Facilities Management',
+            $apiUser['employee_id'] ?? ($data['employee_id'] ?? null)
+        );
+
+        return $this->response->setJSON(['message' => 'Facility checklist saved', 'id' => $id]);
+    }
+
+    // Equipment Maintenance Log: one submission = one log sheet + one entry,
+    // created together — the mobile app isn't expected to track "is there
+    // already an open sheet for this department today", it just submits.
+    public function saveEquipmentLogEntry()
+    {
+        $data = $this->request->getJSON(true) ?? [];
+
+        $logId = (new EquipmentMaintenanceLogModel())->insert([
+            'department'     => $data['department'] ?? null,
+            'date_submitted' => ($data['date_submitted'] ?? null) ?: date('Y-m-d'),
+        ]);
+
+        (new EquipmentMaintenanceEntryModel())->insert([
+            'log_id'                => $logId,
+            'entry_date'            => ($data['entry_date'] ?? null) ?: date('Y-m-d'),
+            'asset_name'            => $data['asset_name'] ?? '',
+            'serial_number'         => $data['serial_number'] ?? null,
+            'maintenance_frequency' => $data['maintenance_frequency'] ?? null,
+            'work_description'      => $data['work_description'] ?? null,
+            'status'                => $data['status'] ?? null,
+            'next_due_date'         => $data['next_due_date'] ?? null,
+            'performed_by'          => $data['performed_by'] ?? null,
+            'signature'             => $data['signature'] ?? null,
+        ]);
+
+        $apiUser = $this->currentApiUser();
+        $this->logMaintenanceReport(
+            'Equipment Maintenance Logged — ' . ($data['asset_name'] ?? 'Asset') . ' (' . ($data['department'] ?? 'Unspecified dept') . ')',
+            'Facilities Management',
+            $apiUser['employee_id'] ?? ($data['employee_id'] ?? null)
+        );
+
+        return $this->response->setJSON(['message' => 'Equipment log entry saved', 'log_id' => $logId]);
+    }
+
+    // Aircon Inspection Log (F-FAC-PMP-AIL-003) — distinct from the
+    // aircon_units/aircon_checklist_items table saveAirconChecklist() above
+    // uses; that one tracks per-unit cleaning checklists, this one is the
+    // separate department log-sheet form. Same one-submission-does-both
+    // pattern as the equipment log.
+    public function saveAirconInspectionEntry()
+    {
+        $data = $this->request->getJSON(true) ?? [];
+
+        $logId = (new AirconInspectionLogModel())->insert([
+            'performed_by'   => $data['performed_by'] ?? null,
+            'date_submitted' => ($data['date_submitted'] ?? null) ?: date('Y-m-d'),
+        ]);
+
+        (new AirconInspectionEntryModel())->insert([
+            'log_id'      => $logId,
+            'entry_date'  => ($data['entry_date'] ?? null) ?: date('Y-m-d'),
+            'department'  => $data['department'] ?? null,
+            'qty'         => $data['qty'] ?? null,
+            'room_no'     => $data['room_no'] ?? null,
+            'aircon_type' => $data['aircon_type'] ?? null,
+            'work_done'   => $data['work_done'] ?? null,
+            'remarks'     => $data['remarks'] ?? null,
+        ]);
+
+        $apiUser = $this->currentApiUser();
+        $this->logMaintenanceReport(
+            'Aircon Inspection Logged — Room ' . ($data['room_no'] ?? '—') . ' (' . ($data['department'] ?? 'Unspecified dept') . ')',
+            'Facilities Management',
+            $apiUser['employee_id'] ?? ($data['employee_id'] ?? null)
+        );
+
+        return $this->response->setJSON(['message' => 'Aircon inspection entry saved', 'log_id' => $logId]);
+    }
+
+    // Vehicle Maintenance Inspection Checklist: same whole-form-at-once
+    // pattern as the facility checklist. Vehicle items have no stable code
+    // (only their label text), so items are matched by [section, item_label]
+    // pair instead — {"section": "...", "item_label": "...", "response":
+    // "Yes", "remarks": "..."}.
+    public function saveVehicleChecklist()
+    {
+        $data = $this->request->getJSON(true) ?? [];
+
+        $model = new VehicleInspectionChecklistModel();
+        $id = $model->createWithItems([
+            'vehicle_type'       => $data['vehicle_type'] ?? null,
+            'plate_no'           => $data['plate_no'] ?? null,
+            'odometer_reading'   => $data['odometer_reading'] ?? null,
+            'mechanic_inspector' => $data['mechanic_inspector'] ?? null,
+            'next_pm_schedule'   => $data['next_pm_schedule'] ?? null,
+            'inspection_date'    => ($data['inspection_date'] ?? null) ?: date('Y-m-d'),
+        ]);
+
+        $itemModel = new VehicleInspectionItemModel();
+        $seeded = $itemModel->where('checklist_id', $id)->findAll();
+        $submittedItems = (array) ($data['items'] ?? []);
+        foreach ($seeded as $item) {
+            foreach ($submittedItems as $s) {
+                if (($s['section'] ?? '') === $item['section'] && ($s['item_label'] ?? '') === $item['item_label']) {
+                    $itemModel->update($item['id'], [
+                        'response' => $s['response'] ?: null,
+                        'remarks'  => $s['remarks'] ?? null,
+                    ]);
+                    break;
+                }
+            }
+        }
+
+        $apiUser = $this->currentApiUser();
+        $this->logMaintenanceReport(
+            'Vehicle Inspection Completed — ' . ($data['plate_no'] ?? 'Unspecified vehicle'),
+            'Vehicle Fleet',
+            $apiUser['employee_id'] ?? ($data['employee_id'] ?? null)
+        );
+
+        return $this->response->setJSON(['message' => 'Vehicle checklist saved', 'id' => $id]);
+    }
+
+    // Restroom Checklist: one submission = one checklist (by location) + one
+    // cleaning-round entry, same header+entry-together pattern.
+    public function saveRestroomChecklistEntry()
+    {
+        $data = $this->request->getJSON(true) ?? [];
+
+        $checklistId = (new RestroomChecklistModel())->insert([
+            'location' => $data['location'] ?? '',
+        ]);
+
+        (new RestroomChecklistEntryModel())->insert([
+            'checklist_id' => $checklistId,
+            'entry_date'   => ($data['entry_date'] ?? null) ?: date('Y-m-d'),
+            'entry_time'   => ($data['entry_time'] ?? null) ?: date('H:i:s'),
+            'empty_trash'  => !empty($data['empty_trash']) ? 1 : 0,
+            'refill_paper' => !empty($data['refill_paper']) ? 1 : 0,
+            'refill_soap'  => !empty($data['refill_soap']) ? 1 : 0,
+            'clean_floor'  => !empty($data['clean_floor']) ? 1 : 0,
+            'clean_sink'   => !empty($data['clean_sink']) ? 1 : 0,
+            'clean_toilet' => !empty($data['clean_toilet']) ? 1 : 0,
+            'cleaned_by'   => $data['cleaned_by'] ?? null,
+            'signature'    => $data['signature'] ?? null,
+        ]);
+
+        $apiUser = $this->currentApiUser();
+        $this->logMaintenanceReport(
+            'Restroom Cleaned — ' . ($data['location'] ?? 'Unspecified location'),
+            'Janitorial Performance',
+            $apiUser['employee_id'] ?? ($data['employee_id'] ?? null)
+        );
+
+        return $this->response->setJSON(['message' => 'Restroom checklist entry saved', 'checklist_id' => $checklistId]);
     }
 }

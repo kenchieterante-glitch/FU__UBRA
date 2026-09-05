@@ -127,7 +127,7 @@ class Dashboard extends BaseController
         ], array_slice($activityFeed, 0, 7));
 
         // ── Travel History: same TravelModel/travel_requests data used by the
-        // Driver's Trip Ticket page and the Guard Dashboard, so all three
+        // Driver's Trip Ticket page and the Guard page, so all three
         // always agree on trip status. ──
         $recentTrips = $travelModel->getAllWithDetails();
         usort($recentTrips, fn($a, $b) => strcmp($b['last_activity_at'], $a['last_activity_at']));

@@ -145,12 +145,12 @@
                                     <div class="action-btns">
                                         <button class="icon-btn ticket" title="View Trip Ticket"
                                             onclick="viewTicket(<?= $trip['id'] ?>)">
-                                            <i class="bi bi-eye-fill"></i>
+                                            <i class="fa-solid fa-eye"></i>
                                         </button>
 
                                         <form method="post" action="<?= base_url('travel/delete/'.$trip['id']) ?>" onsubmit="return confirm('Archive this trip ticket?')" style="display:contents;">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="icon-btn" style="background:#f3f4f6;color:#6b7280;" title="Archive"><i class="bi bi-archive-fill"></i></button>
+                                            <button type="submit" class="icon-btn" style="background:#f3f4f6;color:#6b7280;" title="Archive"><i class="fa-solid fa-archive"></i></button>
                                         </form>
                                     </div>
                                 </td>

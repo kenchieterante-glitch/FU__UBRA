@@ -331,8 +331,8 @@
                     <?= csrf_field() ?>
                     <div class="form-group" style="max-width:480px;margin-top:1.2rem;">
                         <label>AI API Key</label>
-                        <input type="text" name="ai_api_key" value="<?= esc($settings['ai_api_key'] ?? '') ?>" placeholder="sk-ant-... or gsk_...">
-                        <div class="field-hint">Powers Mr. UBRA's responses. Provider is auto-detected from the key: <strong>Anthropic</strong> (console.anthropic.com, starts with <code>sk-ant-</code>, paid) or <strong>Groq</strong> (console.groq.com, starts with <code>gsk_</code>, free tier). Kept separate from the Google Calendar key on the General tab.</div>
+                        <input type="text" name="ai_api_key" value="<?= esc($settings['ai_api_key'] ?? '') ?>" placeholder="sk-ant-... or gsk_... or sk-or-... or AIzaSy...">
+                        <div class="field-hint">Powers Mr. UBRA's responses. Provider is auto-detected from the key: <strong>Anthropic</strong> (console.anthropic.com, starts with <code>sk-ant-</code>, paid), <strong>Groq</strong> (console.groq.com, starts with <code>gsk_</code>, free tier), <strong>OpenRouter</strong> (openrouter.ai/keys, starts with <code>sk-or-</code>, has free models), or <strong>Gemini</strong> (aistudio.google.com/apikey, starts with <code>AIzaSy</code>, free tier). Kept separate from the Google Calendar key on the General tab.</div>
                     </div>
                     <button type="submit" class="btn-save">
                         <i class="bi bi-floppy-fill"></i> Save Changes
@@ -340,7 +340,7 @@
                 </form>
                 <div class="int-note" style="margin-top:1rem;">
                     <i class="bi bi-robot"></i>
-                    Mr. UBRA supports Anthropic Claude or Groq. The AI sidebar panel appears on Dashboard, Personnel, Calendar, Notifications, Reports, GPS Tracker, and Vehicle Management.
+                    Mr. UBRA supports Anthropic Claude, Groq, OpenRouter, or Gemini. The AI sidebar panel appears on Dashboard, Personnel, Calendar, Notifications, Reports, GPS Tracker, and Vehicle Management.
                 </div>
             </div>
 

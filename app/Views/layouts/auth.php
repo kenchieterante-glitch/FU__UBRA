@@ -15,50 +15,86 @@
     <link rel="stylesheet" href="<?= base_url('fonts/bebas-neue/bebas-neue.css') ?>">
     <link rel="stylesheet" href="<?= base_url('icons/bootstrap-icons/bootstrap-icons.css') ?>">
     <style>
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             margin: 0;
-            min-height: 100vh;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             font-weight: 400;
             color: #333;
-            background-color: #181818;
-            background-image:
-                linear-gradient(135deg, rgba(24, 10, 10, .55) 0%, rgba(10, 5, 5, .65) 100%),
-                url('<?= base_url('images/' . rawurlencode('BnG background.jpg')) ?>');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            /* The source photo is only 480x360 — a dark overlay (above) plus a
-               small contrast/saturation lift is the most we can do to keep the
-               unavoidable upscale blur from looking flat and washed out. It
-               cannot make the image genuinely sharper; there's no more detail
-               in the file to recover. Swap in a higher-resolution original
-               here if one becomes available. */
-            filter: contrast(1.08) saturate(1.12);
+            background-color: #fff;
         }
 
         .auth-shell {
-            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            position: relative;
+        }
+
+        .auth-form-panel {
+            flex: 1 1 50%;
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 24px;
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(160deg, #8a1010 0%, #5c0000 100%);
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        .auth-image-panel {
+            flex: 1 1 50%;
+            position: relative;
+            overflow: hidden;
+            background-color: #181818;
+        }
+
+        /* Upscaled from the original 480x360 source (Lanczos + unsharp
+           mask) — sharper than a raw browser stretch, but still an
+           upscale, not genuine 4K detail. Swap in a real high-res original
+           here if one becomes available. */
+        .auth-image-panel img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
         }
 
         .auth-card {
             width: 100%;
-            max-width: 440px;
+            max-width: 420px;
             background: #fff;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
             padding: 40px 36px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 900px) {
+            .auth-shell {
+                flex-direction: column;
+            }
+
+            .auth-image-panel {
+                display: none;
+            }
+
+            .auth-form-panel {
+                flex: 1 1 100%;
+            }
         }
 
         .auth-card h1 {
             font-family: "Bebas Neue Pro", "Bebas Neue", "Arial Narrow", sans-serif;
             font-weight: 700;
-            letter-spacing: 1px;
+            letter-spacing: 4px;
             color: #800000;
         }
 
@@ -76,8 +112,13 @@
 </head>
 <body>
     <div class="auth-shell">
-        <div class="auth-card">
-            <?= $this->renderSection('content') ?>
+        <div class="auth-form-panel">
+            <div class="auth-card">
+                <?= $this->renderSection('content') ?>
+            </div>
+        </div>
+        <div class="auth-image-panel">
+            <img src="<?= base_url('images/' . rawurlencode('BnG background 4k.jpg')) ?>" alt="">
         </div>
     </div>
 </body>

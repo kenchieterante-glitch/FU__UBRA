@@ -85,15 +85,57 @@ $routes->post('personnel/documents/reject/(:num)', 'PersonnelDocumentController:
 // TOOLS & EQUIPMENT
 // ============================================================
 $routes->get ('tools',                  'ToolsController::index');
-$routes->get ('tools/electronic-devices','ToolsController::electronicDevices');
-$routes->get ('tools/equipment',        'ToolsController::toolsEquipment');
+$routes->get ('tools/power-tools',      'ToolsController::powerTools');
 $routes->get ('tools/consumable',       'ToolsController::consumable');
+$routes->get ('tools/sports-equipment', 'ToolsController::sportsEquipment');
+$routes->get ('tools/borrowing',        'ToolsController::borrowing');
+// "Tools Equipment" was merged into Power Tools — redirect any old
+// bookmarks/links instead of leaving them as a dead 404.
+$routes->get ('tools/equipment', static fn () => redirect()->to(base_url('tools/power-tools')));
 $routes->post('tools/add',              'ToolsController::add');
 $routes->post('tools/edit/(:num)',      'ToolsController::edit/$1');
 $routes->post('tools/delete/(:num)',    'ToolsController::delete/$1');
 $routes->post('tools/borrow/(:num)',    'ToolsController::borrow/$1');
 $routes->post('tools/returnTool/(:num)','ToolsController::returnTool/$1');
 $routes->post('tools/refillStock/(:num)','ToolsController::refillStock/$1');
+
+// ============================================================
+// FACILITIES MAINTENANCE PROGRAM FORMS
+// ============================================================
+$routes->get ('maintenance-forms/facility',                       'MaintenanceFormsController::facilityChecklist');
+$routes->post('maintenance-forms/facility/add',                   'MaintenanceFormsController::facilityChecklistAdd');
+$routes->post('maintenance-forms/facility/updateItems/(:num)',    'MaintenanceFormsController::facilityChecklistUpdateItems/$1');
+$routes->post('maintenance-forms/facility/updateHeader/(:num)',   'MaintenanceFormsController::facilityChecklistUpdateHeader/$1');
+$routes->post('maintenance-forms/facility/delete/(:num)',         'MaintenanceFormsController::facilityChecklistDelete/$1');
+
+$routes->get ('maintenance-forms/equipment-log',                  'MaintenanceFormsController::equipmentLog');
+$routes->post('maintenance-forms/equipment-log/add',              'MaintenanceFormsController::equipmentLogAdd');
+$routes->post('maintenance-forms/equipment-log/addEntry/(:num)',  'MaintenanceFormsController::equipmentLogAddEntry/$1');
+$routes->post('maintenance-forms/equipment-log/editEntry/(:num)', 'MaintenanceFormsController::equipmentLogEditEntry/$1');
+$routes->post('maintenance-forms/equipment-log/deleteEntry/(:num)', 'MaintenanceFormsController::equipmentLogDeleteEntry/$1');
+$routes->post('maintenance-forms/equipment-log/delete/(:num)',    'MaintenanceFormsController::equipmentLogDelete/$1');
+$routes->post('maintenance-forms/equipment-log/updateHeader/(:num)', 'MaintenanceFormsController::equipmentLogUpdateHeader/$1');
+
+$routes->get ('maintenance-forms/aircon-log',                     'MaintenanceFormsController::airconLog');
+$routes->post('maintenance-forms/aircon-log/add',                 'MaintenanceFormsController::airconLogAdd');
+$routes->post('maintenance-forms/aircon-log/addEntry/(:num)',     'MaintenanceFormsController::airconLogAddEntry/$1');
+$routes->post('maintenance-forms/aircon-log/editEntry/(:num)',    'MaintenanceFormsController::airconLogEditEntry/$1');
+$routes->post('maintenance-forms/aircon-log/deleteEntry/(:num)',  'MaintenanceFormsController::airconLogDeleteEntry/$1');
+$routes->post('maintenance-forms/aircon-log/delete/(:num)',       'MaintenanceFormsController::airconLogDelete/$1');
+$routes->post('maintenance-forms/aircon-log/updateHeader/(:num)', 'MaintenanceFormsController::airconLogUpdateHeader/$1');
+
+$routes->get ('maintenance-forms/vehicle-checklist',               'MaintenanceFormsController::vehicleChecklist');
+$routes->post('maintenance-forms/vehicle-checklist/add',           'MaintenanceFormsController::vehicleChecklistAdd');
+$routes->post('maintenance-forms/vehicle-checklist/updateItems/(:num)', 'MaintenanceFormsController::vehicleChecklistUpdateItems/$1');
+$routes->post('maintenance-forms/vehicle-checklist/delete/(:num)', 'MaintenanceFormsController::vehicleChecklistDelete/$1');
+
+$routes->get ('maintenance-forms/restroom',                        'MaintenanceFormsController::restroomChecklist');
+$routes->post('maintenance-forms/restroom/add',                    'MaintenanceFormsController::restroomChecklistAdd');
+$routes->post('maintenance-forms/restroom/addEntry/(:num)',        'MaintenanceFormsController::restroomChecklistAddEntry/$1');
+$routes->post('maintenance-forms/restroom/editEntry/(:num)',       'MaintenanceFormsController::restroomChecklistEditEntry/$1');
+$routes->post('maintenance-forms/restroom/deleteEntry/(:num)',     'MaintenanceFormsController::restroomChecklistDeleteEntry/$1');
+$routes->post('maintenance-forms/restroom/delete/(:num)',          'MaintenanceFormsController::restroomChecklistDelete/$1');
+$routes->post('maintenance-forms/restroom/updateHeader/(:num)',    'MaintenanceFormsController::restroomChecklistUpdateHeader/$1');
 
 // ============================================================
 // VEHICLE MANAGEMENT
@@ -242,6 +284,12 @@ $routes->group('api', function ($routes) {
     $routes->post('safety/aircon', 'Api::saveAirconUnit');
     $routes->post('safety/aircon/checklist/(:num)', 'Api::saveAirconChecklist/$1');
     $routes->post('safety/fire-extinguishers', 'Api::saveExtinguisher');
+
+    $routes->post('maintenance-forms/facility', 'Api::saveFacilityChecklist');
+    $routes->post('maintenance-forms/equipment-log', 'Api::saveEquipmentLogEntry');
+    $routes->post('maintenance-forms/aircon-log', 'Api::saveAirconInspectionEntry');
+    $routes->post('maintenance-forms/vehicle-checklist', 'Api::saveVehicleChecklist');
+    $routes->post('maintenance-forms/restroom', 'Api::saveRestroomChecklistEntry');
 
     $routes->get('janitorial/zones', 'Api::janitorialZones');
     $routes->get('janitorial/checklist/(:num)', 'Api::janitorialChecklist/$1');

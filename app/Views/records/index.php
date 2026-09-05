@@ -88,8 +88,8 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
         <div class="rec-table-head">
             <div class="rec-table-title"><i class="bi bi-list-ul"></i> Recent Activity History</div>
             <div class="rec-table-actions">
-                <a href="<?= base_url('records/export/excel') ?>" class="rec-btn-outline"><i class="bi bi-file-earmark-excel"></i> Export Excel</a>
-                <a href="<?= base_url('records/export/pdf') ?>" class="rec-btn-outline"><i class="bi bi-file-earmark-pdf"></i> Export PDF</a>
+                <button type="button" class="rec-btn-outline" onclick="openExportModal('excel')"><i class="bi bi-file-earmark-excel"></i> Export Excel</button>
+                <button type="button" class="rec-btn-outline" onclick="openExportModal('pdf')"><i class="bi bi-file-earmark-pdf"></i> Export PDF</button>
                 <button type="button" class="rec-btn-dark" onclick="filterArchivedOnly()"><i class="bi bi-archive"></i> Archive</button>
             </div>
         </div>
@@ -169,7 +169,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                                         data-generated_by="<?= esc($act['performed_by']) ?>"
                                         data-type_module="<?= esc($act['record_sub']) ?>"
                                         data-date_range="Last 30 Days">
-                                        <i class="bi bi-eye"></i>
+                                        <i class="fa-solid fa-eye"></i>
                                     </button>
                                 <?php else: ?>
                                     <button type="button" class="rec-view-btn open-record-detail"
@@ -185,7 +185,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                                         data-status="<?= esc($act['status']) ?>"
                                         data-is_archived="<?= $act['is_archived'] ? '1' : '0' ?>"
                                         data-disposal_status="<?= esc($act['disposal_status']) ?>">
-                                        <i class="bi bi-eye"></i>
+                                        <i class="fa-solid fa-eye"></i>
                                     </button>
                                 <?php endif; ?>
                             </td>
@@ -222,6 +222,10 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
 <!-- ═══════════════════════════════════════════════════════════════
      MODAL: AUTHORIZE DISPOSAL
 ════════════════════════════════════════════════════════════════ -->
+<form id="markDisposalForm" method="post" action="" style="display:none;">
+    <?= csrf_field() ?>
+</form>
+
 <div id="authorizeModal" class="modal-overlay" style="display:none;">
     <div class="modal-box modal-sm">
         <div class="modal-header">
@@ -253,6 +257,32 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                 <button type="submit" class="btn-maroon">Authorize</button>
             </div>
         </form>
+    </div>
+</div>
+
+<div id="exportModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-sm">
+        <div class="modal-header">
+            <h3 id="exportModalTitle"><i class="bi bi-download"></i> Export</h3>
+            <button class="modal-close" onclick="closeExportModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Which module do you want to export?</label>
+                <select id="exportModuleSelect">
+                    <option value="">All Modules</option>
+                    <option value="tools">Tools</option>
+                    <option value="vehicle">Vehicle</option>
+                    <option value="safety">Safety</option>
+                    <option value="janitorial">Janitorial</option>
+                    <option value="personnel">Personnel</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeExportModal()">Cancel</button>
+            <button type="button" class="btn-maroon" onclick="confirmExport()">Export</button>
+        </div>
     </div>
 </div>
 
@@ -333,6 +363,35 @@ document.querySelectorAll('.rec-icon-filter').forEach(group => {
         filterTable();
     });
 });
+
+// Export asks explicitly which module to export, rather than silently
+// reusing whatever filter chip happens to be active on screen — defaults
+// to whatever's currently selected (if any) so it's a sensible starting
+// point, not a blank pick every time.
+let exportFormat = 'pdf';
+
+function openExportModal(format) {
+    exportFormat = format;
+    document.getElementById('exportModuleSelect').value = getIconFilterValue('moduleFilterGroup');
+    document.getElementById('exportModalTitle').textContent = 'Export ' + (format === 'pdf' ? 'PDF' : 'Excel');
+    document.getElementById('exportModal').style.display = 'flex';
+}
+
+function closeExportModal() {
+    document.getElementById('exportModal').style.display = 'none';
+}
+
+function confirmExport() {
+    const params = new URLSearchParams({
+        module: document.getElementById('exportModuleSelect').value,
+        kind:   getIconFilterValue('kindFilterGroup'),
+        status: document.getElementById('statusFilter').value,
+        date:   document.getElementById('dateFilter').value,
+        search: document.getElementById('searchInput').value.trim(),
+    });
+    window.location.href = `<?= base_url('records/export/') ?>${exportFormat}?${params.toString()}`;
+    closeExportModal();
+}
 
 function filterTable() {
     const mod    = getIconFilterValue('moduleFilterGroup');
@@ -451,11 +510,16 @@ function openRecordDetail(btn) {
 
     if (d.type !== 'disposal') {
         if (d.is_archived !== '1' && d.disposal_status === 'None') {
-            const form = document.createElement('form');
-            form.method = 'post';
-            form.action = `${BASE_URL}records/markForDisposal/${d.type}/${d.id}`;
-            form.innerHTML = '<button type="submit" class="btn-cancel">Mark for Disposal</button>';
-            actions.appendChild(form);
+            const btn1 = document.createElement('button');
+            btn1.type = 'button';
+            btn1.className = 'btn-cancel';
+            btn1.textContent = 'Mark for Disposal';
+            btn1.onclick = () => {
+                const form = document.getElementById('markDisposalForm');
+                form.action = `${BASE_URL}records/markForDisposal/${d.type}/${d.id}`;
+                form.submit();
+            };
+            actions.appendChild(btn1);
         } else if (d.disposal_status === 'For Disposal') {
             const btn2 = document.createElement('button');
             btn2.type = 'button';
@@ -571,7 +635,7 @@ function openReportView(button) {
     document.getElementById('editorGeneratedBy').value = button.dataset.generated_by || '';
     document.getElementById('editorTypeModule').value = button.dataset.type_module || 'General';
     document.getElementById('editorDateRange').value = button.dataset.date_range || 'Last 30 Days';
-    document.getElementById('reportEditorTitle').innerHTML = '<i class="bi bi-eye"></i> View / Edit Report';
+    document.getElementById('reportEditorTitle').innerHTML = '<i class="bi bi-pencil-square"></i> View / Edit Report';
     editor.style.display = 'flex';
 }
 

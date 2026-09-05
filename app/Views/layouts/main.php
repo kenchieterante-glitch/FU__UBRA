@@ -180,16 +180,17 @@
         </a>
         <div class="nav-submenu" id="tools-submenu">
           <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="fa-solid fa-boxes-stacked"></i> <span class="nav-label">All Tools</span></a>
-          <a href="<?= base_url('tools/electronic-devices') ?>" class="<?= navActive('tools/electronic-devices') ?>"><i class="fa-solid fa-laptop"></i> <span class="nav-label">Electronic Devices</span></a>
-          <a href="<?= base_url('tools/equipment') ?>" class="<?= navActive('tools/equipment') ?>"><i class="fa-solid fa-toolbox"></i> <span class="nav-label">Tools Equipment</span></a>
+          <a href="<?= base_url('tools/power-tools') ?>" class="<?= navActive('tools/power-tools') ?>"><i class="fa-solid fa-bolt"></i> <span class="nav-label">Power Tools</span></a>
           <a href="<?= base_url('tools/consumable') ?>" class="<?= navActive('tools/consumable') ?>"><i class="fa-solid fa-box"></i> <span class="nav-label">Consumable</span></a>
+          <a href="<?= base_url('tools/sports-equipment') ?>" class="<?= navActive('tools/sports-equipment') ?>"><i class="fa-solid fa-futbol"></i> <span class="nav-label">Sports Equipment</span></a>
+          <a href="<?= base_url('tools/borrowing') ?>" class="<?= navActive('tools/borrowing') ?>"><i class="fa-solid fa-hand-holding"></i> <span class="nav-label">Borrowing</span></a>
         </div>
       </div>
       <?php endif; ?>
 
       <?php if ($isFullAccess || $isSecurityHead): ?>
       <a href="<?= base_url('safety') ?>" class="<?= navActive('safety') ?>" data-tooltip="Maintenance"><i class="bi bi-wrench-adjustable"></i> <span class="nav-label">Maintenance</span></a>
-      <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>" data-tooltip="Guard Dashboard"><i class="bi bi-shield-check"></i> <span class="nav-label">Guard Dashboard</span></a>
+      <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>" data-tooltip="Guard"><i class="bi bi-shield-check"></i> <span class="nav-label">Guard</span></a>
       <?php endif; ?>
 
       <?php if ($isFullAccess): ?>
@@ -201,7 +202,22 @@
       <?php endif; ?>
 
       <a href="<?= base_url('notifications') ?>" class="<?= navActive('notifications') ?>" data-tooltip="Notifications"><i class="bi bi-bell"></i> <span class="nav-label">Notifications</span><?php if ($topbarUnreadCount > 0): ?><span class="nav-count"><?= $topbarUnreadCount > 99 ? '99+' : (int) $topbarUnreadCount ?></span><?php endif; ?></a>
-      <a href="<?= base_url('reports') ?>" class="<?= navActive('reports') ?>" data-tooltip="Information Hub"><i class="bi bi-folder2"></i> <span class="nav-label">Information Hub</span></a>
+      <?php $isInfoHubSection = $currentUri === 'reports' || strpos($currentUri, 'maintenance-forms/') === 0; ?>
+      <div class="nav-parent-group <?= $isInfoHubSection ? 'open' : '' ?>">
+        <a href="<?= base_url('reports') ?>" class="nav-parent-link <?= $isInfoHubSection ? 'active open' : '' ?>" data-infohub-toggle data-tooltip="Information Hub">
+          <i class="bi bi-folder2"></i>
+          <span class="nav-label">Information Hub</span>
+          <i class="bi bi-chevron-down nav-parent-caret"></i>
+        </a>
+        <div class="nav-submenu" id="infohub-submenu">
+          <a href="<?= base_url('reports') ?>" class="<?= navActive('reports') ?>"><i class="fa-solid fa-table-list"></i> <span class="nav-label">All Records</span></a>
+          <a href="<?= base_url('maintenance-forms/facility') ?>" class="<?= navActive('maintenance-forms/facility') ?>"><i class="fa-solid fa-clipboard-check"></i> <span class="nav-label">Facility Checklist</span></a>
+          <a href="<?= base_url('maintenance-forms/equipment-log') ?>" class="<?= navActive('maintenance-forms/equipment-log') ?>"><i class="fa-solid fa-screwdriver-wrench"></i> <span class="nav-label">Equipment Log</span></a>
+          <a href="<?= base_url('maintenance-forms/aircon-log') ?>" class="<?= navActive('maintenance-forms/aircon-log') ?>"><i class="fa-solid fa-snowflake"></i> <span class="nav-label">Aircon Inspection Log</span></a>
+          <a href="<?= base_url('maintenance-forms/vehicle-checklist') ?>" class="<?= navActive('maintenance-forms/vehicle-checklist') ?>"><i class="fa-solid fa-truck"></i> <span class="nav-label">Vehicle Checklist</span></a>
+          <a href="<?= base_url('maintenance-forms/restroom') ?>" class="<?= navActive('maintenance-forms/restroom') ?>"><i class="fa-solid fa-broom"></i> <span class="nav-label">Restroom Checklist</span></a>
+        </div>
+      </div>
       <div class="nav-sep"></div>
       <a href="<?= base_url('ubra') ?>" class="ai-link <?= navActive('ubra') ?>" data-tooltip="Mr. UBRA AI"><i class="bi bi-robot"></i> <span class="nav-label">Mr. UBRA AI</span> <span class="dot"></span></a>
       <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor): ?>
@@ -450,6 +466,22 @@ if (toolsLink && toolsGroup) {
       event.preventDefault();
       toolsGroup.classList.toggle('open');
       toolsLink.classList.toggle('open');
+    }
+  });
+}
+
+const infoHubLink = document.querySelector('[data-infohub-toggle]');
+const infoHubGroup = infoHubLink?.closest('.nav-parent-group');
+if (infoHubLink && infoHubGroup) {
+  infoHubLink.addEventListener('click', (event) => {
+    const currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
+    const isInfoHubRoute = currentPath === 'reports' || currentPath.startsWith('maintenance-forms/');
+    const clickedCaret = event.target.closest('.nav-parent-caret');
+
+    if (clickedCaret || isInfoHubRoute) {
+      event.preventDefault();
+      infoHubGroup.classList.toggle('open');
+      infoHubLink.classList.toggle('open');
     }
   });
 }

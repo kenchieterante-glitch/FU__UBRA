@@ -2,7 +2,7 @@
 
 <?= $this->section('content') ?>
 <?php
-  $title = $title ?? 'Guard Dashboard';
+  $title = $title ?? 'Guard';
   $trips = $trips ?? [];
   $key_logs_json = $key_logs_json ?? '[]';
   $activity_json = $activity_json ?? '[]';
@@ -21,7 +21,7 @@
   <div class="guard-main-column">
     <div class="guard-card">
       <div class="pane-header">
-        <div class="pane-title"><i class="bi bi-person-badge-fill"></i> Security Guard Dashboard</div>
+        <div class="pane-title"><i class="bi bi-person-badge-fill"></i> Security Guard</div>
         <div class="pane-actions">
           <span class="guard-shift">On Duty: <strong>Guard Santos, J.</strong></span>
           <span class="guard-time" id="guardClock"></span>
