@@ -34,27 +34,27 @@
 
     <!-- ── SUMMARY CARDS ────────────────────────────────────────── -->
     <div class="stat-cards">
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('total')" role="button" tabindex="0">
             <span class="stat-icon tone-maroon"><i class="fa-solid fa-truck"></i></span>
             <h3>Total Vehicles</h3>
             <div class="value"><?= $total ?></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('online')" role="button" tabindex="0">
             <span class="stat-icon tone-green"><i class="fa-solid fa-signal"></i></span>
             <h3>GPS Online</h3>
             <div class="value"><?= $online_count ?></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('offline')" role="button" tabindex="0">
             <span class="stat-icon tone-neutral"><i class="fa-solid fa-satellite-dish"></i></span>
             <h3>GPS Offline</h3>
             <div class="value"><?= $offline_count ?></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('transit')" role="button" tabindex="0">
             <span class="stat-icon tone-gold"><i class="fa-solid fa-route"></i></span>
             <h3>In Transit</h3>
             <div class="value"><?= $transit_count ?></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('maintenance')" role="button" tabindex="0">
             <span class="stat-icon tone-red"><i class="fa-solid fa-screwdriver-wrench"></i></span>
             <h3>Under Maintenance</h3>
             <div class="value"><?= $maint_count ?></div>
@@ -108,7 +108,7 @@
                             <option value="Available">Available</option>
                             <option value="In Use">In Use</option>
                             <option value="Reserved">Reserved</option>
-                            <option value="Under Maintenance">Maintenance</option>
+                            <option value="Maintenance">Maintenance</option>
                           </select>
                         </div>
                         <div class="filter-row">
@@ -401,6 +401,31 @@ function toggleGpsFilterMenu() {
     const popup = document.getElementById('gpsFilterPopup');
     popup.classList.toggle('visible');
 }
+
+// Stat cards act as quick filters into the fleet table below — same as
+// Vehicle Management / Tools Management: the cards stay right where they
+// are, the table just filters in place.
+function filterGpsByStat(kind) {
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('availFilter').value = '';
+    document.getElementById('searchInput').value = '';
+
+    if (kind === 'online')      document.getElementById('statusFilter').value = 'Online';
+    if (kind === 'offline')     document.getElementById('statusFilter').value = 'Offline';
+    if (kind === 'transit')     document.getElementById('availFilter').value = 'In Use';
+    if (kind === 'maintenance') document.getElementById('availFilter').value = 'Maintenance';
+
+    filterTable();
+}
+
+document.querySelectorAll('.stat-card-clickable').forEach(card => {
+    card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+        }
+    });
+});
 
 let gpsOriginalOrder = null;
 

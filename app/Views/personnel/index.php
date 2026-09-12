@@ -73,10 +73,6 @@ $personnelStatCards = [
   </div>
 </div>
 
-<?php else: ?>
-<div class="stat-back-bar">
-  <a href="<?= base_url('personnel') ?>" class="stat-back-btn"><i class="bi bi-arrow-left"></i> Back to Overview</a>
-</div>
 <?php endif; ?>
 
 <div class="table-card">

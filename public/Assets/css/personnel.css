@@ -350,6 +350,14 @@
     margin-top: 1.2rem;
 }
 
+/* Compact Cancel/Save pair, same as the Add Vehicle / Add Tool modals —
+   .btn-maroon defaults to a full-width banner button, which looks wrong
+   sitting next to a compact Cancel button. */
+.personnel-edit-modal .modal-actions .btn-maroon {
+    width: auto;
+    margin-top: 0;
+}
+
 @media (max-width: 720px) {
     #personnelDetailModal .modal-box,
     .personnel-edit-modal .modal-box {
