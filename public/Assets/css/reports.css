@@ -4,10 +4,13 @@
 ════════════════════════════════════════════════════════════════ */
 
 :root {
-    --surface: #ffffff;
-    --surface-alt: #f8f4f4;
-    --border: #e0d5d5;
-    --text-muted: #6b6b6b;
+    /* --surface/--surface-alt/--border/--text-muted alias the shared
+       theme tokens (not fixed light-mode colors) so this page's cards
+       still flip correctly under [data-theme="dark"]. */
+    --surface: var(--card);
+    --surface-alt: var(--bg-subtle);
+    --border: var(--line);
+    --text-muted: var(--muted);
     --success: #16a34a;
     --warning: #d97706;
     --danger: #dc2626;
@@ -317,13 +320,13 @@
 .reports-filter-row .filter-popup {
     border: 1px solid rgba(150, 150, 160, 0.15);
     border-radius: 14px;
-    background: #fff;
+    background: var(--surface);
 }
 
 .reports-filter-row .filter-btn {
     width: 42px;
     height: 42px;
-    color: #333;
+    color: var(--text);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -359,7 +362,7 @@
     font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #4e4e55;
+    color: var(--text);
     margin-bottom: 12px;
 }
 
@@ -374,7 +377,7 @@
     font-weight: var(--fw-medium);
     font-size: 11px;
     text-transform: uppercase;
-    color: #67676d;
+    color: var(--muted);
     letter-spacing: 0.08em;
 }
 

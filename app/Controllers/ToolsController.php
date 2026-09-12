@@ -98,9 +98,11 @@ class ToolsController extends BaseController
         ], $this->getStatCounts());
 
         if ($category === 'Consumable') {
+            $unitByToolId = array_column($data['tools'], 'unit', 'id');
             $data['refill_log_json'] = $this->jsonForScript(array_map(fn($l) => [
                 'item' => $l['asset_name'],
                 'qty'  => (float) $l['quantity_added'],
+                'unit' => $unitByToolId[$l['tool_id']] ?? 'pcs',
                 'by'   => $l['performed_by'],
                 'at'   => $l['performed_at'],
             ], $this->refillLogModel->getRecent(50)));
@@ -133,6 +135,7 @@ class ToolsController extends BaseController
             'custodian'        => $custodianName,
             'condition_status' => $this->request->getPost('condition_status') ?? 'Excellent',
             'availability'     => 'Available',
+            'unit'             => $this->request->getPost('unit') ?: 'pcs',
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
 
@@ -150,6 +153,7 @@ class ToolsController extends BaseController
             'location'         => $this->request->getPost('location'),
             'custodian'        => $custodianName,
             'condition_status' => $this->request->getPost('condition_status'),
+            'unit'             => $this->request->getPost('unit') ?: 'pcs',
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
 

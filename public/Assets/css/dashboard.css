@@ -3,10 +3,13 @@
 ════════════════════════════════════════════════════════════════ */
 
 :root {
-    --ink-soft: #5B534E;
+    /* --ink-soft and --surface are local aliases for the shared theme
+       tokens (not fixed light-mode colors) so this dashboard's panels and
+       secondary text still flip correctly under [data-theme="dark"]. */
+    --ink-soft: var(--muted);
     --line: #DEDAD3;
     --bg: #F1EFEA;
-    --surface: #FFFFFF;
+    --surface: var(--card);
     --maroon-deep: #5A1F24;
     --maroon-tint: #F5E7E8;
     --gold-tint: #EAE8E4;
@@ -189,7 +192,7 @@
     text-decoration: none;
     cursor: pointer;
     border-radius: 8px;
-    transition: background .15s ease;
+    transition: background .3s ease;
 }
 
 .alert-item:hover,

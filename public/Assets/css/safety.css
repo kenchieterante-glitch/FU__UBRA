@@ -7,11 +7,16 @@
     --m: #800000;
     --md: #5e1620;
     --gs: #d6d6d6;
-    --surf: #ffffff;
+    /* --surf/--bdr/--txt alias the shared theme tokens (not fixed
+       light-mode colors) so this page's cards and text still flip
+       correctly under [data-theme="dark"]. --muted is intentionally NOT
+       redeclared here (it used to shadow the shared --muted with a fixed
+       #6b7280) — removing the shadow lets base.css's theme-aware --muted
+       (and its dark-mode flip) cascade through instead. */
+    --surf: var(--card);
     --bg: #f4f2f2;
-    --bdr: #e2d8d8;
-    --txt: #1a1a1a;
-    --muted: #6b7280;
+    --bdr: var(--line);
+    --txt: var(--ink);
     --ok: #16a34a;
     --warn: #d97706;
     --dang: #dc2626;
@@ -88,13 +93,13 @@
 .kpi-value {
     font-size: 24px;
     font-weight: 700;
-    color: #111827;
+    color: var(--txt);
 }
 
 .kpi-label {
     font-size: 13px;
     font-weight: 600;
-    color: #374151;
+    color: var(--muted);
 }
 
 .kpi-sub a {
@@ -368,7 +373,7 @@
 .overview-card .card-value {
     font-size: 1.45rem;
     font-weight: 800;
-    color: #111827;
+    color: var(--txt);
 }
 
 .overview-card-clickable {
@@ -542,7 +547,7 @@
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    background: #fff;
+    background: var(--surf);
     border: 1px solid var(--bdr);
     border-radius: 10px;
     padding: 8px 14px;
@@ -599,7 +604,7 @@
     width: 188px;
     font-size: 12.5px;
     color: var(--txt);
-    background: #fff;
+    background: var(--surf);
     border: 1px solid var(--bdr);
     border-radius: 12px;
     padding: 8px;
@@ -938,6 +943,89 @@
     color: var(--m);
 }
 
+/* Building/Department/Status filter popup for the fire extinguisher list.
+   Vehicles/GPS get this same look for free by nesting it inside
+   .table-toolbar (see base.css) — this section header isn't a
+   .table-toolbar, so the popup positioning/visibility has to be re-declared
+   here or it renders as a plain, always-visible inline block. */
+.dp-header .filter-menu-wrapper {
+    position: relative;
+}
+
+.dp-header .filter-btn {
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--bdr);
+    border-radius: 7px;
+    background: var(--bg);
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+}
+
+.dp-header .filter-btn:hover {
+    border-color: var(--m);
+    color: var(--m);
+}
+
+.dp-header .filter-popup {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 240px;
+    padding: 14px;
+    border: 1px solid var(--bdr);
+    border-radius: 10px;
+    background: var(--bg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+    display: none;
+    z-index: 20;
+}
+
+.dp-header .filter-popup.visible {
+    display: block;
+}
+
+.dp-header .filter-popup-title {
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+
+.dp-header .filter-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.dp-header .filter-row:last-child {
+    margin-bottom: 0;
+}
+
+.dp-header .filter-row label {
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--muted);
+}
+
+.dp-header .filter-popup select {
+    width: 100%;
+    border: 1px solid var(--bdr);
+    border-radius: 7px;
+    padding: 7px 8px;
+    font-size: .78rem;
+    background: var(--card, #fff);
+    color: var(--text);
+}
+
 .dp-status-box {
     border: 1px solid var(--bdr);
     border-left: 4px solid var(--muted);
@@ -963,6 +1051,10 @@
     margin-bottom: 1rem;
     min-width: 0;
     width: 100%;
+    /* Grid items stretch to the row's tallest cell by default — without
+       this, expanding one collapsible card also stretches every other
+       card sharing its row, even though they're still collapsed. */
+    align-items: start;
 }
 
 .fe-card {
@@ -974,10 +1066,81 @@
     min-width: 0;
     width: 100%;
     overflow-wrap: break-word;
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+
+.fe-card:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .1);
+    transform: translateY(-1px);
 }
 
 .fe-card:has(.fe-card-close) .fec-id {
     padding-right: 1.6rem;
+}
+
+.fe-card:has(.fe-card-toggle) .fec-id {
+    padding-right: 1.6rem;
+}
+
+.fe-card-toggle {
+    position: absolute;
+    top: .5rem;
+    right: .5rem;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, .06);
+    color: var(--muted);
+    font-size: .65rem;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+}
+
+.fe-card-toggle:hover,
+.fe-card-toggle:focus-visible {
+    background: var(--maroon);
+    color: #fff;
+    outline: none;
+}
+
+.fe-card.fe-collapsed .fec-body {
+    display: none;
+}
+
+.fec-body {
+    margin-top: .3rem;
+}
+
+.dp-fe-floor-divider {
+    grid-column: 1 / -1;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+    padding: .5rem 0 .25rem;
+    border-bottom: 1px solid var(--bdr);
+    margin-bottom: .2rem;
+}
+
+.dp-fe-floor-divider:first-child {
+    padding-top: 0;
+}
+
+.fe-view-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px dashed var(--bdr);
+    border-radius: 10px;
+    padding: .7rem;
+    background: none;
+    cursor: pointer;
+    width: 100%;
 }
 
 .fe-card-close {
@@ -1286,7 +1449,7 @@
 }
 
 .sj-table tbody tr:hover {
-    background: #fdf8f8;
+    background: var(--bg-subtle);
 }
 
 .sj-table tbody td {
@@ -2145,7 +2308,7 @@
     height: 38px;
     border-radius: 10px;
     border: 1px solid var(--line);
-    background: #f5f5f5;
+    background: var(--bg-subtle);
     color: var(--ink);
     font-size: 18px;
     font-weight: 700;
@@ -2154,7 +2317,7 @@
 }
 
 .refill-stepper button:hover {
-    background: #ebebeb;
+    background: var(--line);
 }
 
 .refill-stepper input {
@@ -2163,7 +2326,7 @@
     font-size: 16px;
     font-weight: 700;
     color: var(--ink);
-    background: #fff;
+    background: var(--card);
     border: 1px solid var(--line);
     border-radius: 10px;
     padding: 9px 6px;

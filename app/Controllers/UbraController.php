@@ -343,6 +343,14 @@ class UbraController extends BaseController
 
     private function getApiKey(): string
     {
+        // .env's AI_API_KEY takes priority — lets a key be pinned per
+        // environment without going through the Settings UI. Falls back to
+        // whatever's saved in Settings -> AI Configuration otherwise.
+        $envKey = trim((string) (env('AI_API_KEY') ?? ''));
+        if ($envKey !== '') {
+            return $envKey;
+        }
+
         try {
             $db = \Config\Database::connect();
 

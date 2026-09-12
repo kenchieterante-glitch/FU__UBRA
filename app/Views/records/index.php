@@ -19,22 +19,22 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
 
     <!-- ── STATS CARDS ──────────────────────────────────────────── -->
     <div class="stat-cards">
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('total')" role="button" tabindex="0">
             <span class="stat-icon tone-maroon"><i class="fa-solid fa-folder-open"></i></span>
             <h3>Total Records</h3>
             <div class="value"><?= (int) $stats['total_records'] ?></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('archived')" role="button" tabindex="0">
             <span class="stat-icon tone-neutral"><i class="fa-solid fa-box-archive"></i></span>
             <h3>Archived Records</h3>
             <div class="value"><?= (int) $stats['archived_records'] ?></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('reports')" role="button" tabindex="0">
             <span class="stat-icon tone-gold"><i class="fa-solid fa-file-lines"></i></span>
             <h3>Reports Generated</h3>
             <div class="value"><?= (int) $stats['reports_generated'] ?></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('today')" role="button" tabindex="0">
             <span class="stat-icon tone-green"><i class="fa-solid fa-calendar-day"></i></span>
             <h3>Today's Activities</h3>
             <div class="value"><?= (int) $stats['today_activities'] ?></div>
@@ -424,10 +424,34 @@ function resetFilters() {
 }
 
 function filterArchivedOnly() {
-    setIconFilterValue('kindFilterGroup', 'archive');
-    filterTable();
-    document.querySelector('.rec-table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    filterRecordsByStat('archived');
 }
+
+// Stat cards act as quick filters into the table below — same as Vehicle
+// Management / Tools Management / Notification Center: the cards stay
+// right where they are, the table just filters in place.
+function filterRecordsByStat(kind) {
+    setIconFilterValue('moduleFilterGroup', '');
+    setIconFilterValue('kindFilterGroup', '');
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('dateFilter').value = '';
+    document.getElementById('searchInput').value = '';
+
+    if (kind === 'archived') setIconFilterValue('kindFilterGroup', 'archive');
+    if (kind === 'reports')  setIconFilterValue('kindFilterGroup', 'report');
+    if (kind === 'today')    document.getElementById('dateFilter').value = new Date().toISOString().slice(0, 10);
+
+    filterTable();
+}
+
+document.querySelectorAll('.stat-card-clickable').forEach(card => {
+    card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+        }
+    });
+});
 
 // ── Pagination (client-side, over already-filtered rows) ─────────
 function applyPagination() {

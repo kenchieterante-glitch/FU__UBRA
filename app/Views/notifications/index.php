@@ -59,11 +59,6 @@ $draft_count = $draft_count ?? 0;
         </div>
     </div>
 
-    <div class="stat-back-bar" id="notifBackBar" style="display:none">
-        <button type="button" class="stat-back-btn" onclick="resetNotifOverview()"><i class="bi bi-arrow-left"></i> Back to Overview</button>
-        <h2 class="stat-list-title" id="notifBackLabel"></h2>
-    </div>
-
     <!-- ── BODY: LOG TABLE + RIGHT SIDEBAR ──────────────────────── -->
     <div class="notif-body">
 
@@ -386,13 +381,9 @@ function filterTable() {
 }
 
 // ── Summary cards → filter shortcuts ─────────────────────────────
-const notifStatLabels = {
-    unread:   'Unread Notifications',
-    today:    "Today's Alerts",
-    upcoming: 'Upcoming Schedules',
-    draft:    'Draft Messages',
-};
-
+// Same as Vehicle Management / Tools Management: the cards stay right
+// where they are, the table just filters in place, no hiding the cards
+// and no "Back to Overview" bar.
 function filterNotifByStat(kind) {
     document.getElementById('searchInput').value = '';
     document.getElementById('catFilter').value = '';
@@ -406,25 +397,7 @@ function filterNotifByStat(kind) {
     if (kind === 'today')    statTodayOnly = true;
     if (kind === 'draft')    statDraftOnly = true;
 
-    document.getElementById('notifStatCards')?.style.setProperty('display', 'none');
-    document.getElementById('notifBackBar').style.display = 'flex';
-    document.getElementById('notifBackLabel').textContent = notifStatLabels[kind] ?? 'Filtered';
-
     filterTable();
-    document.querySelector('.table-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function resetNotifOverview() {
-    document.getElementById('notifStatCards')?.style.setProperty('display', '');
-    document.getElementById('notifBackBar').style.display = 'none';
-    document.getElementById('searchInput').value = '';
-    document.getElementById('catFilter').value = '';
-    document.getElementById('priFilter').value = '';
-    document.getElementById('readFilter').value = '';
-    statTodayOnly = false;
-    statDraftOnly = false;
-    filterTable();
-    document.getElementById('notifStatCards')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 document.querySelectorAll('.stat-card-clickable').forEach(card => {

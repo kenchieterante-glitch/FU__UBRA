@@ -10,6 +10,7 @@ use App\Models\SafetyWorkOrderModel;
 use App\Models\NotificationModel;
 use App\Models\TravelModel;
 use App\Models\PersonnelModel;
+use App\Models\DepartmentModel;
 
 class SafetyController extends BaseController
 {
@@ -21,6 +22,7 @@ class SafetyController extends BaseController
     protected $workOrderModel;
     protected $travelModel;
     protected $personnelModel;
+    protected $departmentModel;
 
     public function __construct()
     {
@@ -32,6 +34,7 @@ class SafetyController extends BaseController
         $this->workOrderModel = new SafetyWorkOrderModel();
         $this->travelModel = new TravelModel();
         $this->personnelModel = new PersonnelModel();
+        $this->departmentModel = new DepartmentModel();
     }
 
     public function index()
@@ -40,6 +43,8 @@ class SafetyController extends BaseController
 
         $units = $this->fireExtinguisherModel->findAll();
         $today = date('Y-m-d');
+        $departments = $this->departmentModel->findAll();
+        $departmentNamesById = array_column($departments, 'name', 'id');
 
         $needsAttention = count(array_filter($units, fn($u) => in_array($u['status'], ['Defective', 'Missing'], true)));
         $dueForRefill   = count(array_filter($units, fn($u) => $u['status'] === 'Refillable'));
@@ -52,6 +57,8 @@ class SafetyController extends BaseController
             'type'      => $u['type'],
             'loc'       => $u['location'],
             'floor'     => $u['floor'] ?? 'Ground Floor',
+            'deptId'    => $u['department_id'] !== null ? (int) $u['department_id'] : null,
+            'dept'      => $departmentNamesById[$u['department_id']] ?? 'Unassigned',
             'kg'        => (float) $u['weight_kg'],
             'lastInsp'  => $u['last_inspection'],
             'nextDue'   => $u['next_due'],
@@ -124,6 +131,7 @@ class SafetyController extends BaseController
             'aircon_attention'     => $airconNeedsAttention,
             'work_order_registry_json' => $this->jsonForScript($workOrderRegistry),
             'work_order_total'         => count($openWorkOrders),
+            'departments'              => $departments,
             'personnel_options_json'   => $this->jsonForScript(
                 array_map(fn($p) => $p['full_name'], $this->personnelModel->where('is_archived', 0)->orderBy('full_name', 'ASC')->findAll())
             ),
@@ -141,6 +149,23 @@ class SafetyController extends BaseController
         $name = trim((string) $this->request->getPost('installed_by'));
         $this->fireExtinguisherModel->update($id, ['inspector' => $name !== '' ? $name : null]);
         return $this->response->setJSON(['success' => true]);
+    }
+
+    // Assigns which department a fire extinguisher unit belongs to, so the
+    // Department filter on the fire extinguisher list has real data to filter.
+    public function setDepartment($id)
+    {
+        if (!$this->session->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+        $departmentId = $this->request->getPost('department_id');
+        $this->fireExtinguisherModel->update($id, ['department_id' => $departmentId !== '' ? (int) $departmentId : null]);
+
+        $department = $departmentId !== '' ? $this->departmentModel->find((int) $departmentId) : null;
+        return $this->response->setJSON([
+            'success' => true,
+            'department' => $department['name'] ?? 'Unassigned',
+        ]);
     }
 
     // Same, for aircon units.

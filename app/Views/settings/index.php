@@ -52,6 +52,20 @@
             <!-- ── GENERAL ────────────────────────────────────────── -->
             <div id="tab-general" class="tab-pane active">
                 <div class="tab-title">General Configuration</div>
+
+                <div class="toggle-list" style="margin-bottom:1.4rem;">
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-label"><i class="bi bi-moon-stars-fill"></i> Dark Mode</div>
+                            <div class="toggle-sub">Switch the whole system to a dark color scheme. Saved on this device only.</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" data-theme-toggle>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
                 <form method="post" action="<?= base_url('settings/saveGeneral') ?>">
                     <?= csrf_field() ?>
                     <div class="form-grid">

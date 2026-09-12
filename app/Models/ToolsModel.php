@@ -9,7 +9,7 @@ class ToolsModel extends Model
     protected $useTimestamps = false;
     protected $allowedFields = [
         'asset_name','asset_code','category','location','custodian',
-        'condition_status','availability','current_stock','reorder_threshold',
+        'condition_status','availability','current_stock','reorder_threshold','unit',
         'is_archived','archived_at','last_activity_at'
     ];
 

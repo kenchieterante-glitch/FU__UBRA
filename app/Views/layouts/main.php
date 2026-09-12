@@ -85,6 +85,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    // Applied before any CSS paints, so the page never flashes light-then-dark.
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  </script>
   <title>UBRA | <?= esc($title ?? 'Dashboard') ?></title>
   <meta name="csrf-token-name" content="<?= esc(csrf_token(), 'attr') ?>">
   <meta name="csrf-token-value" content="<?= esc(csrf_hash(), 'attr') ?>">
@@ -146,10 +152,6 @@
           <a href="<?= base_url('personnel/carpentries') ?>" class="<?= navActive('personnel/carpentries') ?>"><i class="fa-solid fa-hammer"></i> <span class="nav-label">Carpentries Shop</span></a>
           <a href="<?= base_url('personnel/maintenance') ?>" class="<?= navActive('personnel/maintenance') ?>"><i class="fa-solid fa-wrench"></i> <span class="nav-label">Maintenance</span></a>
           <a href="<?= base_url('personnel/construction-workers') ?>" class="<?= navActive('personnel/construction-workers') ?>"><i class="fa-solid fa-helmet-safety"></i> <span class="nav-label">Construction Workers</span></a>
-          <a href="<?= base_url('personnel/on-job-order') ?>" class="<?= navActive('personnel/on-job-order') ?>"><i class="fa-solid fa-file-contract"></i> <span class="nav-label">Job Order Personnel</span></a>
-          <div class="nav-sep"></div>
-          <a href="<?= base_url('personnel/job-orders') ?>" class="<?= navActive('personnel/job-orders') ?>"><i class="fa-solid fa-file-contract"></i> <span class="nav-label">Job Orders</span></a>
-          <a href="<?= base_url('personnel/monitoring') ?>" class="<?= navActive('personnel/monitoring') ?>"><i class="fa-solid fa-chart-line"></i> <span class="nav-label">Job Order Monitoring</span></a>
         </div>
       </div>
       <?php endif; ?>
@@ -280,14 +282,26 @@
     </header>
     <?php endif; ?>
 
-    <main class="page-content">
-      <?php if (session()->getFlashdata('success')): ?>
-        <div class="alert-success"><i class="fa-solid fa-circle-check"></i> <?= esc(session()->getFlashdata('success')) ?></div>
-      <?php endif; ?>
-      <?php if (session()->getFlashdata('error')): ?>
-        <div class="alert-error"><i class="fa-solid fa-circle-exclamation"></i> <?= esc(session()->getFlashdata('error')) ?></div>
-      <?php endif; ?>
+    <?php if (session()->getFlashdata('success') || session()->getFlashdata('error')): ?>
+      <div class="flash-toast-stack">
+        <?php if (session()->getFlashdata('success')): ?>
+          <div class="flash-toast flash-toast-success" id="flashToastSuccess">
+            <i class="fa-solid fa-circle-check"></i>
+            <span><?= esc(session()->getFlashdata('success')) ?></span>
+            <button type="button" class="flash-toast-close" onclick="this.closest('.flash-toast').remove()" aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        <?php endif; ?>
+        <?php if (session()->getFlashdata('error')): ?>
+          <div class="flash-toast flash-toast-error" id="flashToastError">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span><?= esc(session()->getFlashdata('error')) ?></span>
+            <button type="button" class="flash-toast-close" onclick="this.closest('.flash-toast').remove()" aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
 
+    <main class="page-content">
       <?= $this->renderSection('content') ?>
     </main>
 
@@ -348,6 +362,35 @@ function csrfHeaders(extra) {
   const token = document.querySelector('meta[name="csrf-token-value"]')?.content || '';
   return Object.assign({}, extra || {}, { [headerName]: token });
 }
+
+// Flash message toasts (redirect-based "Personnel updated successfully"
+// style messages) fade in, then auto-dismiss on their own after a few
+// seconds instead of sitting on screen until the page is reloaded again.
+document.querySelectorAll('.flash-toast').forEach(toast => {
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+});
+
+// Site-wide safety net: whenever any .modal popup is open, the page behind
+// it shouldn't also be scrollable — that's what shows up as a second,
+// confusing scrollbar at the edge of the browser window. Pages that toggle
+// their own modals already set this directly, but this covers every other
+// modal (Edit forms, Assign to Job Order, etc.) without editing each one.
+document.addEventListener('click', () => {
+  setTimeout(() => {
+    // Most pages hide a closed modal with display:none; the GPS Tracker's
+    // modal instead stays display:flex permanently and hides via
+    // opacity/pointer-events — checking both conventions covers either.
+    const anyOpen = Array.from(document.querySelectorAll('.modal')).some(m => {
+      const cs = getComputedStyle(m);
+      return cs.display !== 'none' && cs.opacity !== '0';
+    });
+    document.body.style.overflow = anyOpen ? 'hidden' : '';
+  }, 0);
+});
 
 // Sidebar toggle function
 function updateSidebarToggleIcon() {
@@ -415,6 +458,37 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('sidebar-collapsed');
   }
   updateSidebarToggleIcon();
+});
+
+// ── Dark / light mode ────────────────────────────────────────────
+// The <html data-theme="dark"> attribute is what base.css keys off of;
+// it's also set early in <head> (see top of file) to avoid a flash of
+// the light theme on load. Any page can have its own toggle switch —
+// they all call this same function and stay in sync via the shared
+// 'theme' localStorage key plus the 'themechange' event below.
+function isDarkTheme() {
+  return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
+function setTheme(isDark) {
+  if (isDark) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  document.querySelectorAll('[data-theme-toggle]').forEach(el => { el.checked = isDark; });
+}
+
+function toggleTheme() {
+  setTheme(!isDarkTheme());
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-theme-toggle]').forEach(el => {
+    el.checked = isDarkTheme();
+    el.addEventListener('change', () => setTheme(el.checked));
+  });
 });
 
 // generic modal helpers used across pages

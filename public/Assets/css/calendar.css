@@ -4,10 +4,13 @@
 ════════════════════════════════════════════════════════════════ */
 
 :root {
-    --surface: #ffffff;
-    --surface-alt: #f8f4f4;
-    --border: #e0d5d5;
-    --text-muted: #6b6b6b;
+    /* --surface/--surface-alt/--border/--text-muted alias the shared
+       theme tokens (not fixed light-mode colors) so this page's cards
+       still flip correctly under [data-theme="dark"]. */
+    --surface: var(--card);
+    --surface-alt: var(--bg-subtle);
+    --border: var(--line);
+    --text-muted: var(--muted);
     --success: #16a34a;
     --warning: #d97706;
     --danger: #dc2626;
@@ -150,7 +153,7 @@
     height: 32px;
     border-radius: 8px;
     border: 1px solid var(--border);
-    background: #fff;
+    background: var(--surface);
     color: var(--maroon);
     display: flex;
     align-items: center;
@@ -180,7 +183,7 @@
     padding: .35rem .9rem;
     border-radius: 8px;
     border: 1px solid var(--border);
-    background: #fff;
+    background: var(--surface);
     color: var(--text-muted);
     cursor: pointer;
     transition: border-color .15s ease, color .15s ease;
@@ -685,7 +688,7 @@
 
 /* ── UBRA card ───────────────────────────────────────────────── */
 .ubra-card {
-    background: #fff;
+    background: var(--surface);
     color: var(--ink, #26262c);
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -784,7 +787,7 @@
 }
 
 .ubra-btn:hover {
-    background: #efe6e6;
+    background: var(--border);
 }
 
 .ubra-btn-icon,
@@ -792,7 +795,7 @@
     width: 26px;
     height: 26px;
     border-radius: 7px;
-    background: #fff;
+    background: var(--surface);
     display: flex;
     align-items: center;
     justify-content: center;

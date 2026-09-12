@@ -8,10 +8,13 @@
 :root {
     --ubra-accent: #6e1414;
     --ubra-accent-soft: #f6ecec;
-    --ubra-border: #e4e4e7;
-    --ubra-muted: #8a8a94;
-    --ubra-surface: #f4f4f6;
-    --ubra-ink: #26262c;
+    /* --ubra-border/--ubra-muted/--ubra-surface/--ubra-ink alias the
+       shared theme tokens (not fixed light-mode colors) so this panel
+       still flips correctly under [data-theme="dark"]. */
+    --ubra-border: var(--line);
+    --ubra-muted: var(--muted);
+    --ubra-surface: var(--bg-subtle);
+    --ubra-ink: var(--ink);
 }
 
 .ubra-wrapper {
@@ -24,7 +27,7 @@
     max-width: 980px;
     height: calc(100vh - 140px);
     min-height: 560px;
-    background: #fff;
+    background: var(--card);
     border: 1px solid var(--ubra-border);
     border-radius: 14px;
     overflow: hidden;
@@ -86,6 +89,97 @@
     flex-shrink: 0;
 }
 
+.ubra-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Chat History popup — same wide "crosswise" treatment as the Vehicle
+   Management, Personnel Management, and GPS Tracker detail popups. */
+#ubraHistoryModal .modal-box {
+    width: 50vw;
+    min-width: 480px;
+    max-width: 900px;
+    padding: 0;
+    overflow: hidden;
+}
+
+#ubraHistoryModal .modal-header {
+    background: var(--maroon);
+    color: #fff;
+    padding: .9rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#ubraHistoryModal .modal-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #fff;
+}
+
+#ubraHistoryModal .modal-close-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px 9px;
+    border-radius: 6px;
+}
+
+#ubraHistoryModal .modal-close-btn:hover {
+    background: rgba(255, 255, 255, .15);
+}
+
+#ubraHistoryModal .modal-body {
+    padding: 1.1rem 1.2rem;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
+#ubraHistoryModal .no-data {
+    font-size: .85rem;
+    color: var(--ubra-muted);
+    padding: 1rem 0;
+}
+
+#ubraHistoryModal .history-table-wrap {
+    overflow-x: auto;
+}
+
+#ubraHistoryModal .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .82rem;
+}
+
+#ubraHistoryModal .history-table th,
+#ubraHistoryModal .history-table td {
+    text-align: left;
+    padding: .5rem .6rem;
+    border-bottom: 1px solid var(--ubra-border);
+    vertical-align: top;
+}
+
+#ubraHistoryModal .history-table th {
+    color: var(--ubra-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: .68rem;
+    letter-spacing: .04em;
+}
+
+@media (max-width: 720px) {
+    #ubraHistoryModal .modal-box {
+        width: 94vw;
+        min-width: 0;
+    }
+}
+
 .ubra-clear-btn {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 12.5px;
@@ -128,7 +222,7 @@
     height: 36px;
     border-radius: 10px;
     border: 1px solid var(--ubra-border);
-    background: #fff;
+    background: var(--card);
     color: var(--ubra-muted);
     font-size: 15px;
     display: flex;
@@ -192,7 +286,7 @@
     border-radius: 8px;
     border: 1.5px solid var(--ubra-accent);
     color: var(--ubra-accent);
-    background: #fff;
+    background: var(--card);
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 12px;
     font-weight: 500;
@@ -290,7 +384,7 @@
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 13.5px;
     color: var(--ubra-ink);
-    background: #fff;
+    background: var(--card);
 }
 
 .ubra-input:focus {

@@ -17,6 +17,34 @@
     font-weight: 700;
 }
 
+/* Same stock-status badge convention already used for the Janitorial
+   consumables list (safety.css .inv-badge) — kept visually consistent
+   across both consumable inventories. */
+.inv-badge {
+    display: inline-block;
+    font-size: .68rem;
+    font-weight: 700;
+    padding: .2rem .55rem;
+    border-radius: 10px;
+    margin-left: .4rem;
+    white-space: nowrap;
+}
+
+.inv-ok {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.inv-low {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.inv-out {
+    background: #fee2e2;
+    color: #b3261e;
+}
+
 .stat-back-bar {
     display: flex;
     align-items: center;
@@ -33,9 +61,9 @@
     font-weight: 700;
     padding: 8px 14px;
     border-radius: 999px;
-    border: 1px solid #d8d8d8;
-    background: #fff;
-    color: #4a4a4a;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
     cursor: pointer;
     transition: box-shadow .15s ease, transform .15s ease;
 }
@@ -50,7 +78,7 @@
 .stat-list-title {
     font-size: 20px;
     font-weight: 800;
-    color: #1a1a1a;
+    color: var(--ink);
     margin: 0;
     padding-left: 12px;
     border-left: 3px solid #800000;
@@ -83,11 +111,11 @@
     font-size: 12px;
     padding: 5px 10px;
     border-radius: 5px;
-    border: 1px solid #ddd;
-    background: #fff;
+    border: 1px solid var(--line);
+    background: var(--card);
     cursor: pointer;
     text-decoration: none;
-    color: #333;
+    color: var(--text);
 }
 
 .status-excellent,
@@ -135,7 +163,7 @@
 }
 
 .modal-box {
-    background: #fff;
+    background: var(--card);
     padding: 24px;
     border-radius: 10px;
     width: 400px;
@@ -151,7 +179,7 @@
     display: block;
     margin-top: 10px;
     font-size: 13px;
-    color: #444;
+    color: var(--muted);
 }
 
 .modal-box input,
@@ -159,7 +187,7 @@
     width: 100%;
     padding: 8px;
     margin-top: 4px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--line);
     border-radius: 6px;
 }
 
@@ -215,7 +243,7 @@
     height: 38px;
     border-radius: 10px;
     border: 1px solid var(--line);
-    background: #f5f5f5;
+    background: var(--bg-subtle);
     color: var(--ink);
     font-size: 18px;
     font-weight: 700;
@@ -224,7 +252,7 @@
 }
 
 .refill-stepper button:hover {
-    background: #ebebeb;
+    background: var(--line);
 }
 
 .refill-stepper input {
@@ -233,7 +261,7 @@
     font-size: 16px;
     font-weight: 700;
     color: var(--ink);
-    background: #fff;
+    background: var(--card);
     border: 1px solid var(--line);
     border-radius: 10px;
     padding: 9px 6px;

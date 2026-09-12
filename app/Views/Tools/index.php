@@ -45,18 +45,13 @@ $isConsumablePage = ($title === 'Consumable');
     <h3>Disposal</h3>
     <div class="value"><?= esc((string) ((int) ($disposal_tools ?? 0))) ?></div>
   </div>
-  <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('tools/consumable') ?>'" role="button" tabindex="0">
+  <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('consumable')" role="button" tabindex="0">
     <span class="stat-icon tone-blue"><i class="fa-solid fa-box-open"></i></span>
     <h3>Consumable</h3>
     <div class="value"><?= esc((string) ((int) ($consumable_tools ?? 0))) ?></div>
   </div>
 </div>
 <?php endif; ?>
-
-<div class="stat-back-bar" id="toolsBackBar" style="display:none">
-  <button type="button" class="stat-back-btn" onclick="resetToolsOverview()"><i class="bi bi-arrow-left"></i> Back to Overview</button>
-  <h2 class="stat-list-title" id="toolsBackLabel"></h2>
-</div>
 
 <div class="table-card">
   <div class="table-toolbar">
@@ -80,6 +75,10 @@ $isConsumablePage = ($title === 'Consumable');
               <option value="Power Tools">Power Tools</option>
               <option value="Consumable">Consumable</option>
               <option value="Sports Equipment">Sports Equipment</option>
+              <option value="IT Equipment">IT Equipment</option>
+              <option value="Media Studio">Media Studio</option>
+              <option value="Janitorial">Janitorial</option>
+              <option value="Tools">Tools</option>
             </select>
           </div>
           <div class="filter-row">
@@ -154,14 +153,22 @@ $isConsumablePage = ($title === 'Consumable');
           <td><span class="status-badge status-<?= strtolower($t['availability']) ?>"><?= esc($t['availability']) ?></span></td>
           <td><?= (($t['availability'] ?? '') === 'Borrowed') ? esc($t['borrower_name'] ?? 'Not on record') : '—' ?></td>
           <?php if ($isConsumablePage): ?>
-            <?php $stockLow = ((float) ($t['current_stock'] ?? 0)) <= ((float) ($t['reorder_threshold'] ?? 0)); ?>
-            <td class="<?= $stockLow ? 'text-warn' : '' ?>"><strong><?= esc((string) ((float) ($t['current_stock'] ?? 0))) ?></strong></td>
+            <?php
+              $stockQty = (float) ($t['current_stock'] ?? 0);
+              $reorderLevel = (float) ($t['reorder_threshold'] ?? 0);
+              $unitLabel = $t['unit'] ?? 'pcs';
+              $stockBadge = $stockQty <= 0 ? ['inv-out', 'Out of Stock'] : ($stockQty <= $reorderLevel ? ['inv-low', 'Low Stock'] : ['inv-ok', 'Full Stock']);
+            ?>
+            <td>
+              <strong><?= esc((string) $stockQty) ?> <?= esc($unitLabel) ?></strong>
+              <span class="inv-badge <?= $stockBadge[0] ?>"><?= $stockBadge[1] ?></span>
+            </td>
           <?php endif; ?>
           <td>
             <div class="action-buttons">
               <button type="button" class="icon-btn" onclick="document.getElementById('editModal<?= $t['id'] ?>').style.display='flex'" title="Edit" aria-label="Edit <?= esc($t['asset_name']) ?>"><i class="fa-solid fa-pen"></i></button>
               <?php if ($isConsumablePage): ?>
-                <button type="button" class="icon-btn" title="Refill" aria-label="Refill <?= esc($t['asset_name']) ?>" onclick="refillToolStock(<?= (int) $t['id'] ?>, '<?= esc($t['asset_name'], 'js') ?>')"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>
+                <button type="button" class="icon-btn" title="Refill" aria-label="Refill <?= esc($t['asset_name']) ?>" onclick="refillToolStock(<?= (int) $t['id'] ?>, '<?= esc($t['asset_name'], 'js') ?>', '<?= esc($t['unit'] ?? 'pcs', 'js') ?>')"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>
               <?php else: ?>
                 <form method="post" action="<?= base_url('tools/delete/'.$t['id']) ?>" onsubmit="return confirm('Archive this tool?')" style="display:contents;">
                   <?= csrf_field() ?>
@@ -208,7 +215,7 @@ $isConsumablePage = ($title === 'Consumable');
           <label>Category</label>
           <select name="category">
             <option value="">— Select Category —</option>
-            <?php foreach (['Power Tools', 'Consumable', 'Sports Equipment'] as $cat): ?>
+            <?php foreach (['Power Tools', 'Consumable', 'Sports Equipment', 'IT Equipment', 'Media Studio', 'Janitorial', 'Tools'] as $cat): ?>
               <option value="<?= esc($cat) ?>" <?= $t['category'] === $cat ? 'selected' : '' ?>><?= esc($cat) ?></option>
             <?php endforeach; ?>
           </select>
@@ -227,6 +234,10 @@ $isConsumablePage = ($title === 'Consumable');
               <option value="<?= esc($cond) ?>" <?= $t['condition_status'] === $cond ? 'selected' : '' ?>><?= esc($cond) ?></option>
             <?php endforeach; ?>
           </select>
+          <?php if ($t['category'] === 'Consumable'): ?>
+            <label>Unit</label>
+            <input type="text" name="unit" list="toolUnitOptions" value="<?= esc($t['unit'] ?? 'pcs') ?>" placeholder="e.g. rolls, bottles, pcs">
+          <?php endif; ?>
           <div class="modal-actions">
             <button type="button" onclick="document.getElementById('editModal<?= $t['id'] ?>').style.display='none'">Cancel</button>
             <button type="submit" class="btn-maroon">Save Changes</button>
@@ -254,7 +265,7 @@ function renderToolsRefillLog() {
     const dateStr = isNaN(dt) ? entry.at : dt.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
     return `<tr>
       <td><strong>${entry.item}</strong></td>
-      <td>+${entry.qty}</td>
+      <td>+${entry.qty} ${entry.unit || 'pcs'}</td>
       <td>${dateStr}</td>
       <td>${entry.by}</td>
     </tr>`;
@@ -319,17 +330,9 @@ function applyToolsSort() {
   rows.forEach(row => tbody.appendChild(row));
 }
 
-const toolsStatLabels = {
-  '': 'All Tools',
-  available: 'Available Tools',
-  borrowed: 'Borrowed Tools',
-  maintenance: 'Needs Maintenance',
-  disposal: 'Disposal',
-};
-
-// Stat cards act as quick filters into the table below — clicking one shows
-// just that list, same as Personnel Management's category pages, instead of
-// leaving the whole stat-cards row sitting on top of the filtered table.
+// Stat cards act as quick filters into the table below — same as Vehicle
+// Management: the cards stay right where they are, the table just filters
+// in place, no hiding the cards and no "Back to Overview" bar.
 function filterToolsByStat(kind) {
   document.getElementById('toolsSearch').value = '';
   document.getElementById('toolsCategory').value = '';
@@ -340,24 +343,9 @@ function filterToolsByStat(kind) {
   if (kind === 'borrowed')    document.getElementById('toolsAvailability').value = 'Borrowed';
   if (kind === 'maintenance') document.getElementById('toolsAvailability').value = 'Maintenance';
   if (kind === 'disposal')    document.getElementById('toolsAvailability').value = 'Disposal';
-
-  document.getElementById('toolsStatCards')?.style.setProperty('display', 'none');
-  document.getElementById('toolsBackBar').style.display = 'flex';
-  document.getElementById('toolsBackLabel').textContent = toolsStatLabels[kind] ?? 'Filtered';
+  if (kind === 'consumable')  document.getElementById('toolsCategory').value = 'Consumable';
 
   filterToolsTable();
-  document.querySelector('.table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function resetToolsOverview() {
-  document.getElementById('toolsStatCards')?.style.setProperty('display', '');
-  document.getElementById('toolsBackBar').style.display = 'none';
-  document.getElementById('toolsSearch').value = '';
-  document.getElementById('toolsCategory').value = '';
-  document.getElementById('toolsAvailability').value = '';
-  document.getElementById('toolsCondition').value = '';
-  filterToolsTable();
-  document.getElementById('toolsStatCards')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 document.querySelectorAll('.stat-card-clickable').forEach(card => {
@@ -378,9 +366,13 @@ function toggleToolsFilterMenu() {
 // Consumables don't get archived when they run low — they get refilled.
 let refillToolId = null;
 
-function refillToolStock(id, name) {
+let refillToolUnit = 'pcs';
+
+function refillToolStock(id, name, unit) {
   refillToolId = id;
+  refillToolUnit = unit || 'pcs';
   document.getElementById('refillItemName').textContent = name;
+  document.getElementById('refillUnitLabel').textContent = refillToolUnit;
   document.getElementById('refillQtyInput').value = 1;
   document.getElementById('refillModal').style.display = 'flex';
 }
@@ -412,6 +404,15 @@ const toolsUrlFilter = new URLSearchParams(window.location.search).get('filter')
 if (toolsUrlFilter) filterToolsByStat(toolsUrlFilter);
 </script>
 
+<datalist id="toolUnitOptions">
+  <option value="pcs">
+  <option value="rolls">
+  <option value="bottles">
+  <option value="box">
+  <option value="liter">
+  <option value="pack">
+</datalist>
+
 <!-- ADD MODAL -->
 <div class="modal" id="addModal">
   <div class="modal-box">
@@ -424,12 +425,20 @@ if (toolsUrlFilter) filterToolsByStat(toolsUrlFilter);
       <label>Tool Code</label>
       <input type="text" name="asset_code" placeholder="e.g. TL-0042">
       <label>Category</label>
-      <select name="category">
+      <select name="category" onchange="document.getElementById('addUnitField').style.display = this.value === 'Consumable' ? 'block' : 'none'">
         <option value="">— Select Category —</option>
         <option value="Power Tools">Power Tools</option>
         <option value="Consumable">Consumable</option>
         <option value="Sports Equipment">Sports Equipment</option>
+        <option value="IT Equipment">IT Equipment</option>
+        <option value="Media Studio">Media Studio</option>
+        <option value="Janitorial">Janitorial</option>
+        <option value="Tools">Tools</option>
       </select>
+      <div id="addUnitField" style="display:none">
+        <label>Unit</label>
+        <input type="text" name="unit" list="toolUnitOptions" placeholder="e.g. rolls, bottles, pcs">
+      </div>
       <label>Location</label>
       <input type="text" name="location" placeholder="e.g. Shelf B-3">
       <label>Custodian</label>
@@ -465,6 +474,7 @@ if (toolsUrlFilter) filterToolsByStat(toolsUrlFilter);
       <button type="button" onclick="stepRefillQty(-1)" aria-label="Decrease quantity">&minus;</button>
       <input type="number" id="refillQtyInput" value="1" min="1">
       <button type="button" onclick="stepRefillQty(1)" aria-label="Increase quantity">+</button>
+      <span id="refillUnitLabel"></span>
     </div>
     <div class="modal-actions">
       <button type="button" onclick="document.getElementById('refillModal').style.display='none'">Cancel</button>

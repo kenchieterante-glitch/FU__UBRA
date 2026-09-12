@@ -35,13 +35,13 @@ $taskLabel = ($title === 'Drivers') ? 'Vehicle In Use' : 'Assigned Task';
 <?php if (!$showStatusTabs): ?>
 <?php
 $personnelStatCards = [
-  ['tone' => 'tone-maroon',  'icon' => 'fa-users',         'label' => 'Total Personnel',   'value' => (int) ($total_personnel_count ?? 0), 'onclick' => "window.location.href='" . base_url('personnel') . "'"],
-  ['tone' => 'tone-neutral', 'icon' => 'fa-id-badge',      'label' => 'Drivers',            'value' => (int) ($drivers_count ?? 0),         'onclick' => "window.location.href='" . base_url('personnel/drivers') . "'"],
-  ['tone' => 'tone-green',   'icon' => 'fa-broom',         'label' => 'Janitors',           'value' => (int) ($janitors_count ?? 0),        'onclick' => "window.location.href='" . base_url('personnel/janitors') . "'"],
-  ['tone' => 'tone-gold',    'icon' => 'fa-hammer',        'label' => 'Carpentries Shop',   'value' => (int) ($carpentries_count ?? 0),     'onclick' => "window.location.href='" . base_url('personnel/carpentries') . "'"],
-  ['tone' => 'tone-neutral', 'icon' => 'fa-wrench',        'label' => 'Maintenance',        'value' => (int) ($maintenance_count ?? 0),     'onclick' => "window.location.href='" . base_url('personnel/maintenance') . "'"],
-  ['tone' => 'tone-gold',    'icon' => 'fa-helmet-safety', 'label' => 'Construction Workers', 'value' => (int) ($construction_count ?? 0),  'onclick' => "window.location.href='" . base_url('personnel/construction-workers') . "'"],
-  ['tone' => 'tone-neutral', 'icon' => 'fa-file-contract', 'label' => 'Job Order Personnel', 'value' => (int) ($job_order_count ?? 0),      'onclick' => "window.location.href='" . base_url('personnel/on-job-order') . "'"],
+  ['tone' => 'tone-maroon',  'icon' => 'fa-users',         'label' => 'Total Personnel',   'value' => (int) ($total_personnel_count ?? 0), 'onclick' => "filterPersonnelByStat('total')"],
+  ['tone' => 'tone-neutral', 'icon' => 'fa-id-badge',      'label' => 'Drivers',            'value' => (int) ($drivers_count ?? 0),         'onclick' => "filterPersonnelByStat('drivers')"],
+  ['tone' => 'tone-green',   'icon' => 'fa-broom',         'label' => 'Janitors',           'value' => (int) ($janitors_count ?? 0),        'onclick' => "filterPersonnelByStat('janitors')"],
+  ['tone' => 'tone-gold',    'icon' => 'fa-hammer',        'label' => 'Carpentries Shop',   'value' => (int) ($carpentries_count ?? 0),     'onclick' => "filterPersonnelByStat('carpentries')"],
+  ['tone' => 'tone-neutral', 'icon' => 'fa-wrench',        'label' => 'Maintenance',        'value' => (int) ($maintenance_count ?? 0),     'onclick' => "filterPersonnelByStat('maintenance')"],
+  ['tone' => 'tone-gold',    'icon' => 'fa-helmet-safety', 'label' => 'Construction Workers', 'value' => (int) ($construction_count ?? 0),  'onclick' => "filterPersonnelByStat('construction')"],
+  ['tone' => 'tone-neutral', 'icon' => 'fa-file-contract', 'label' => 'Job Order Personnel', 'value' => (int) ($job_order_count ?? 0),      'onclick' => "filterPersonnelByStat('joborder')"],
   ['tone' => 'tone-green',   'icon' => 'fa-circle-check',  'label' => 'Active',             'value' => (int) ($active_count ?? 0),          'onclick' => "filterPersonnelByStat('Active')"],
   ['tone' => 'tone-gold',    'icon' => 'fa-calendar-day',  'label' => 'On Leave',           'value' => (int) ($on_leave_count ?? 0),        'onclick' => "filterPersonnelByStat('On Leave')"],
 ];
@@ -53,7 +53,7 @@ $personnelStatCards = [
      resumes from the same position, not a restart). The second copy is
      aria-hidden/untabbable since it's a purely visual duplicate. -->
 <div class="stat-marquee" id="personnelStatCards">
-  <button type="button" class="marquee-nav marquee-nav-left" onclick="marqueeStep(-1)" aria-label="Scroll status cards left"><i class="bi bi-chevron-left"></i></button>
+  <button type="button" id="personnelMarqueeLeft" class="marquee-nav marquee-nav-left" onclick="marqueeStep(-1)" aria-label="Scroll status cards left" style="display:none"><i class="bi bi-chevron-left"></i></button>
   <button type="button" class="marquee-nav marquee-nav-right" onclick="marqueeStep(1)" aria-label="Scroll status cards right"><i class="bi bi-chevron-right"></i></button>
   <div class="stat-marquee-track">
     <?php foreach ($personnelStatCards as $card): ?>
@@ -73,10 +73,6 @@ $personnelStatCards = [
   </div>
 </div>
 
-<div class="stat-back-bar" id="personnelBackBar" style="display:none">
-  <button type="button" class="stat-back-btn" onclick="resetPersonnelOverview()"><i class="bi bi-arrow-left"></i> Back to Overview</button>
-  <h2 class="stat-list-title" id="personnelBackLabel"></h2>
-</div>
 <?php else: ?>
 <div class="stat-back-bar">
   <a href="<?= base_url('personnel') ?>" class="stat-back-btn"><i class="bi bi-arrow-left"></i> Back to Overview</a>
@@ -160,10 +156,31 @@ $personnelStatCards = [
           $statusValue = $p['status'] ?? 'Active';
           $statusClass = (strtolower((string) $statusValue) === 'active') ? 'active' : 'pending';
           $isJobOrder = ($p['employment_type'] ?? 'Regular') === 'JobOrder';
+
+          // Same position-keyword grouping as the dedicated Drivers/Janitors/
+          // etc. routes (PersonnelController), just computed per row so the
+          // Total Personnel overview's own stat cards can filter in place
+          // instead of navigating to those separate pages.
+          $positionLower = strtolower((string) ($p['position'] ?? ''));
+          $category = '';
+          if (str_contains($positionLower, 'driver')) {
+            $category = 'drivers';
+          } elseif (str_contains($positionLower, 'janitor') || str_contains($positionLower, 'cleaning')) {
+            $category = 'janitors';
+          } elseif (str_contains($positionLower, 'carpenter')) {
+            $category = 'carpentries';
+          } elseif (str_contains($positionLower, 'maintenance') || str_contains($positionLower, 'physical plant')) {
+            $category = 'maintenance';
+          } elseif (str_contains($positionLower, 'construction')) {
+            $category = 'construction';
+          }
         ?>
-        <tr data-search="<?= esc(strtolower((string) ($p['full_name'] ?? '') . ' ' . ($p['emp_id'] ?? '') . ' ' . ($p['email'] ?? '') . ' ' . ($p['assigned_task'] ?? '') . ' ' . $departmentName)) ?>"
+        <tr class="personnel-row" onclick="openPersonnelDetail(<?= (int) $p['id'] ?>)"
+            data-search="<?= esc(strtolower((string) ($p['full_name'] ?? '') . ' ' . ($p['emp_id'] ?? '') . ' ' . ($p['email'] ?? '') . ' ' . ($p['assigned_task'] ?? '') . ' ' . $departmentName)) ?>"
             data-department="<?= esc(strtolower($departmentName)) ?>"
-            data-status="<?= esc(strtolower((string) ($statusValue ?? '')) ) ?>">
+            data-status="<?= esc(strtolower((string) ($statusValue ?? '')) ) ?>"
+            data-category="<?= esc($category, 'attr') ?>"
+            data-joborder="<?= $isJobOrder ? '1' : '0' ?>">
           <td><?= esc($p['full_name']) ?><br><small><?= esc($p['email']) ?></small></td>
           <td><?= esc($p['emp_id']) ?></td>
           <td><?= esc($departmentName) ?></td>
@@ -171,9 +188,7 @@ $personnelStatCards = [
           <td><?= esc($p['assigned_task'] ?? 'No current assignment') ?></td>
           <td><span class="status-badge status-<?= esc($statusClass) ?>"><?= esc($statusValue) ?></span></td>
           <td>
-            <div class="action-buttons">
-              <a class="icon-btn" href="<?= base_url('personnel/view/' . $p['id']) ?>" title="View Profile" aria-label="View <?= esc($p['full_name']) ?>"><i class="fa-solid fa-eye"></i></a>
-              <button class="icon-btn" onclick="document.getElementById('editModal<?= $p['id'] ?>')  .style.display='flex'" title="Edit" aria-label="Edit <?= esc($p['full_name']) ?>"><i class="fa-solid fa-pen"></i></button>
+            <div class="action-buttons" onclick="event.stopPropagation()">
               <?php if (!$isJobOrder): ?>
                 <button class="icon-btn" onclick="document.getElementById('assignJoModal<?= $p['id'] ?>').style.display='flex'" title="Assign to Job Order" aria-label="Assign <?= esc($p['full_name']) ?> to a Job Order"><i class="fa-solid fa-file-contract"></i></button>
               <?php endif; ?>
@@ -185,44 +200,70 @@ $personnelStatCards = [
           </td>
         </tr>
 
-        <!-- EDIT MODAL -->
-        <div class="modal" id="editModal<?= $p['id'] ?>">
+        <!-- EDIT MODAL — same wide popup styling as the Personnel Detail
+             view, so editing looks like a continuation of that view instead
+             of a different, smaller UI. -->
+        <div class="modal personnel-edit-modal" id="editModal<?= $p['id'] ?>">
           <div class="modal-box">
-            <h3>Edit Personnel</h3>
-            <form action="<?= site_url('personnel/edit/'.$p['id']) ?>" method="post">
-              <?= csrf_field() ?>
-              <label>Employee ID <span class="required-mark">*</span></label>
-              <input type="text" name="emp_id" value="<?= esc($p['emp_id']) ?>" required>
-              <label>Full Name <span class="required-mark">*</span></label>
-              <input type="text" name="full_name" value="<?= esc($p['full_name']) ?>" required>
-              <label>Email</label>
-              <input type="email" name="email" value="<?= esc($p['email']) ?>">
-              <label>Department</label>
-              <select name="department_id">
-                <?php foreach ($departments as $d): ?>
-                  <option value="<?= $d['id'] ?>" <?= $d['id']==$p['department_id']?'selected':'' ?>><?= esc($d['name']) ?></option>
-                <?php endforeach; ?>
-              </select>
-              <label>Position</label>
-              <select name="position">
-                <option value="">Select Position</option>
-                <?php foreach ($positionOptions as $positionOption): ?>
-                  <option value="<?= esc($positionOption) ?>" <?= strtolower(trim((string) $p['position'])) === strtolower(trim((string) $positionOption)) ? 'selected' : '' ?>><?= esc($positionOption) ?></option>
-                <?php endforeach; ?>
-              </select>
-              <label><?= esc($taskLabel) ?></label>
-              <input type="text" name="assigned_task" value="<?= esc($p['assigned_task']) ?>">
-              <label>Status</label>
-              <select name="status">
-                <option <?= $p['status']=='Active'?'selected':'' ?>>Active</option>
-                <option <?= $p['status']=='On Leave'?'selected':'' ?>>On Leave</option>
-                <option <?= $p['status']=='Inactive'?'selected':'' ?>>Inactive</option>
-              </select>
-              <div class="modal-actions">
-                <button type="button" onclick="document.getElementById('editModal<?= $p['id'] ?>').style.display='none'">Cancel</button>
-                <button type="submit" class="btn-maroon">Save Changes</button>
-              </div>
-            </form>
+            <div class="modal-header">
+              <h3>Edit Personnel</h3>
+              <button type="button" class="modal-close-btn" onclick="document.getElementById('editModal<?= $p['id'] ?>').style.display='none'" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+              <form action="<?= site_url('personnel/edit/'.$p['id']) ?>" method="post">
+                <?= csrf_field() ?>
+                <div class="detail-section">
+                  <div class="detail-section-title">Personnel Details</div>
+                  <div class="detail-grid">
+                    <div class="edit-field">
+                      <label>Employee ID <span class="required-mark">*</span></label>
+                      <input type="text" name="emp_id" value="<?= esc($p['emp_id']) ?>" required>
+                    </div>
+                    <div class="edit-field">
+                      <label>Full Name <span class="required-mark">*</span></label>
+                      <input type="text" name="full_name" value="<?= esc($p['full_name']) ?>" required>
+                    </div>
+                    <div class="edit-field span-2">
+                      <label>Email</label>
+                      <input type="email" name="email" value="<?= esc($p['email']) ?>">
+                    </div>
+                    <div class="edit-field">
+                      <label>Department</label>
+                      <select name="department_id">
+                        <?php foreach ($departments as $d): ?>
+                          <option value="<?= $d['id'] ?>" <?= $d['id']==$p['department_id']?'selected':'' ?>><?= esc($d['name']) ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
+                    <div class="edit-field">
+                      <label>Position</label>
+                      <select name="position">
+                        <option value="">Select Position</option>
+                        <?php foreach ($positionOptions as $positionOption): ?>
+                          <option value="<?= esc($positionOption) ?>" <?= strtolower(trim((string) $p['position'])) === strtolower(trim((string) $positionOption)) ? 'selected' : '' ?>><?= esc($positionOption) ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
+                    <div class="edit-field">
+                      <label><?= esc($taskLabel) ?></label>
+                      <input type="text" name="assigned_task" value="<?= esc($p['assigned_task']) ?>">
+                    </div>
+                    <div class="edit-field">
+                      <label>Status</label>
+                      <select name="status">
+                        <option <?= $p['status']=='Active'?'selected':'' ?>>Active</option>
+                        <option <?= $p['status']=='On Leave'?'selected':'' ?>>On Leave</option>
+                        <option <?= $p['status']=='Inactive'?'selected':'' ?>>Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-actions">
+                  <button type="button" onclick="document.getElementById('editModal<?= $p['id'] ?>').style.display='none'">Cancel</button>
+                  <button type="submit" class="btn-maroon">Save Changes</button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
 
@@ -278,7 +319,123 @@ $personnelStatCards = [
 </div>
 </div>
 
+<!-- PERSONNEL DETAIL MODAL — view-only: assignment, documents, and history
+     in one popup, closed with the × only (no edit/save here). -->
+<div class="modal" id="personnelDetailModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="pdTitle">Personnel Detail</h3>
+      <div class="modal-header-actions">
+        <button type="button" class="modal-close-btn" onclick="openEditFromDetail()" aria-label="Edit"><i class="fa-solid fa-pen"></i></button>
+        <button type="button" class="modal-close-btn" onclick="closePersonnelDetail()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+    <div class="modal-body" id="pdBody"></div>
+  </div>
+</div>
+
 <script>
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = String(s ?? '');
+  return d.innerHTML;
+}
+
+let currentDetailPersonId = null;
+
+function openPersonnelDetail(id) {
+  currentDetailPersonId = id;
+  const modal = document.getElementById('personnelDetailModal');
+  const body = document.getElementById('pdBody');
+  document.getElementById('pdTitle').textContent = 'Loading...';
+  body.innerHTML = `<div class="no-data">Loading personnel detail...</div>`;
+  modal.style.display = 'flex';
+  // The popup already scrolls internally (.modal-body) if it needs to —
+  // without this, the page behind it stays scrollable too, showing a
+  // second, confusing scrollbar at the edge of the browser window.
+  document.body.style.overflow = 'hidden';
+
+  fetch(`<?= base_url('personnel/detail/') ?>${id}`)
+    .then(r => r.json())
+    .then(p => renderPersonnelDetail(p))
+    .catch(() => {
+      body.innerHTML = `<div class="no-data">Could not load personnel detail. Please try again.</div>`;
+    });
+}
+
+function closePersonnelDetail() {
+  document.getElementById('personnelDetailModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// The Edit form itself still lives in each row's own #editModal<id> — the
+// popup just closes itself and opens that same modal instead of duplicating
+// the form.
+function openEditFromDetail() {
+  if (currentDetailPersonId === null) return;
+  closePersonnelDetail();
+  const editModal = document.getElementById('editModal' + currentDetailPersonId);
+  if (editModal) editModal.style.display = 'flex';
+}
+
+function renderPersonnelDetail(p) {
+  document.getElementById('pdTitle').textContent = p.name;
+
+  const assignment = p.activeAssignment
+    ? `<div class="detail-row"><span>Job Order</span><strong>${esc(p.activeAssignment.jobOrder)}</strong></div>
+       <div class="detail-row"><span>Location</span><strong>${esc(p.activeAssignment.location)}</strong></div>
+       <div class="detail-row"><span>Supervisor</span><strong>${esc(p.activeAssignment.supervisor)}</strong></div>
+       <div class="detail-row"><span>Period</span><strong>${esc(p.activeAssignment.period)}</strong></div>`
+    : `<div class="detail-row"><span>Job Order</span><strong>Not currently assigned</strong></div>`;
+
+  const historyRows = p.assignmentHistory.length
+    ? p.assignmentHistory.map(h => `<tr><td>${esc(h.jobOrder)}</td><td>${esc(h.location)}</td><td>${esc(h.period)}</td><td>${esc(h.status)}</td></tr>`).join('')
+    : `<tr><td colspan="4">No past assignments recorded yet.</td></tr>`;
+
+  const docRows = p.documents.length
+    ? p.documents.map(d => `<tr><td>${esc(d.type)}</td><td>${esc(d.status)}</td><td>${esc(d.expiry)}</td></tr>`).join('')
+    : `<tr><td colspan="3">No documents on file yet.</td></tr>`;
+
+  document.getElementById('pdBody').innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-title">Personnel Details</div>
+      <div class="detail-grid">
+        <div class="detail-row"><span>Employee ID</span><strong>${esc(p.empId)}</strong></div>
+        <div class="detail-row"><span>Department</span><strong>${esc(p.department)}</strong></div>
+        <div class="detail-row"><span>Position</span><strong>${esc(p.position)}</strong></div>
+        <div class="detail-row"><span>Employment Type</span><strong>${esc(p.employmentType)}</strong></div>
+        <div class="detail-row"><span>Status</span><strong>${esc(p.status)}</strong></div>
+        <div class="detail-row"><span>Email</span><strong>${esc(p.email)}</strong></div>
+        <div class="detail-row"><span>Current Task</span><strong>${esc(p.assignedTask)}</strong></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Current Assignment</div>
+      ${assignment}
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Assignment History</div>
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead><tr><th>Job Order</th><th>Location</th><th>Period</th><th>Status</th></tr></thead>
+          <tbody>${historyRows}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Documents — ${esc(p.documentCompleteness)}</div>
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead><tr><th>Type</th><th>Status</th><th>Expiry</th></tr></thead>
+          <tbody>${docRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
 const personnelLookup = <?= json_encode(array_values(array_filter(array_map(function($person) {
   return [
     'emp_id' => (string) ($person['emp_id'] ?? ''),
@@ -339,35 +496,29 @@ function applyPersonnelSort() {
   rows.forEach(row => tbody.appendChild(row));
 }
 
-const personnelStatLabels = { 'Active': 'Active Personnel', 'On Leave': 'On Leave Personnel' };
-
-// Active / On Leave stat cards act as quick filters into the table below —
-// clicking one shows just that list, same as Tools Management, instead of
-// leaving the whole stat-cards row sitting on top of the filtered table.
-function filterPersonnelByStat(status) {
-  document.getElementById('personnelSearch').value = '';
-  document.getElementById('personnelDepartment').value = '';
-  document.getElementById('personnelStatus').value = status;
-
-  document.getElementById('personnelStatCards')?.style.setProperty('display', 'none');
-  const backBar = document.getElementById('personnelBackBar');
-  if (backBar) {
-    backBar.style.display = 'flex';
-    document.getElementById('personnelBackLabel').textContent = personnelStatLabels[status] ?? 'Filtered';
-  }
-
-  filterPersonnelTable();
-  document.querySelector('.table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function resetPersonnelOverview() {
-  document.getElementById('personnelStatCards')?.style.setProperty('display', '');
-  document.getElementById('personnelBackBar').style.display = 'none';
+// Stat cards act as quick filters into the table below — same as Vehicle
+// Management: the cards stay right where they are, the table just filters
+// in place, no navigating to a separate page and no "Back to Overview" bar.
+function filterPersonnelByStat(kind) {
   document.getElementById('personnelSearch').value = '';
   document.getElementById('personnelDepartment').value = '';
   document.getElementById('personnelStatus').value = '';
-  filterPersonnelTable();
-  document.getElementById('personnelStatCards')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  if (kind === 'total') {
+    filterPersonnelTable();
+  } else if (kind === 'Active' || kind === 'On Leave') {
+    document.getElementById('personnelStatus').value = kind;
+    filterPersonnelTable();
+  } else if (kind === 'joborder') {
+    document.querySelectorAll('#personnelTable tbody tr[data-search]').forEach(row => {
+      row.style.display = row.dataset.joborder === '1' ? '' : 'none';
+    });
+  } else {
+    // drivers / janitors / carpentries / maintenance / construction
+    document.querySelectorAll('#personnelTable tbody tr[data-search]').forEach(row => {
+      row.style.display = row.dataset.category === kind ? '' : 'none';
+    });
+  }
 }
 
 // Left/right arrows for the status-card marquee. Rather than pausing or
@@ -375,6 +526,11 @@ function resetPersonnelOverview() {
 // running animation forward/back by one card's worth of time (Web
 // Animations API — Animation.currentTime) — the loop never stops, it just
 // jumps to a different point in its own cycle and keeps playing from there.
+// Tracks how many steps forward (right) the user has moved from the
+// starting position, purely to decide whether the back arrow should be
+// shown — the marquee animation itself still loops continuously.
+let marqueeStepsFromStart = 0;
+
 function marqueeStep(direction) {
   const wrap = document.getElementById('personnelStatCards');
   const track = wrap?.querySelector('.stat-marquee-track');
@@ -387,6 +543,10 @@ function marqueeStep(direction) {
   const timeStep = (cardStep / totalDistance) * duration;
 
   anim.currentTime = (Number(anim.currentTime) + (direction * timeStep) + duration) % duration;
+
+  marqueeStepsFromStart = Math.max(0, marqueeStepsFromStart + direction);
+  const leftArrow = document.getElementById('personnelMarqueeLeft');
+  if (leftArrow) leftArrow.style.display = marqueeStepsFromStart > 0 ? '' : 'none';
 }
 
 function togglePersonnelFilterMenu() {

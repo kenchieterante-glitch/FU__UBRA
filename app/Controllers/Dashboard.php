@@ -98,6 +98,44 @@ class Dashboard extends BaseController
             return true;
         }));
 
+        $cleaningIncompleteList = [];
+        foreach ($zoneShifts as $zoneName => $shifts) {
+            $doneCount = array_sum(array_column($shifts, 'done'));
+            $totalCount = array_sum(array_column($shifts, 'total'));
+            $isDone = $totalCount > 0 && $doneCount === $totalCount;
+            if (!$isDone) {
+                $cleaningIncompleteList[] = [
+                    'title'    => $zoneName,
+                    'subtitle' => "{$doneCount} of {$totalCount} tasks done",
+                ];
+            }
+        }
+
+        // ── Detail lists behind each KPI banner — same idea as the Pending
+        // Requests panel's two columns, just one real itemized list per
+        // card instead of repeating the card's own summary text back to itself. ──
+        $vehiclesInUseList = array_map(fn($v) => [
+            'title'    => $v['vehicle_name'] . ' (' . $v['plate_no'] . ')',
+            'subtitle' => 'Driver: ' . ($v['driver_name'] ?? 'Unassigned'),
+        ], array_values(array_filter($vehicleModel->getAllWithDetails(), fn($v) => $v['availability'] === 'In Use')));
+
+        $overdueFeRows = $fireModel->where('next_due <', $today)->findAll();
+        $maintenanceDueList = array_merge(
+            array_map(fn($w) => [
+                'title'    => $w['wo_number'] . ' — ' . $w['issue'],
+                'subtitle' => $w['location'] . ' · ' . $w['priority'] . ' priority',
+            ], $openWorkOrdersList),
+            array_map(fn($f) => [
+                'title'    => 'FE ' . $f['unit_id'] . ' overdue',
+                'subtitle' => $f['location'] . ' · due ' . $f['next_due'],
+            ], $overdueFeRows)
+        );
+
+        $activeBorrowingsList = array_map(fn($t) => [
+            'title'    => $t['name'],
+            'subtitle' => $t['borrower'] . ' · due ' . ($t['due'] ?? '—'),
+        ], $borrowedToolsList);
+
         // ── Recent Activity: merged from real timestamped events (no activity_logs data exists yet) ──
         $activityFeed = [];
         foreach ($allBorrowRecords as $b) {
@@ -167,6 +205,7 @@ class Dashboard extends BaseController
                     'tone' => 'tone-neutral',
                     'icon' => 'fa-hand-holding',
                     'url' => 'tools?filter=borrowed',
+                    'listKey' => 'activeBorrowingsList',
                 ],
                 [
                     'label' => 'Vehicles in Use',
@@ -176,6 +215,7 @@ class Dashboard extends BaseController
                     'tone' => 'tone-neutral',
                     'icon' => 'fa-truck',
                     'url' => 'vehicles?filter=inuse',
+                    'listKey' => 'vehiclesInUseList',
                 ],
                 [
                     'label' => 'Maintenance Due',
@@ -185,6 +225,7 @@ class Dashboard extends BaseController
                     'tone' => 'tone-red',
                     'icon' => 'fa-screwdriver-wrench',
                     'url' => 'safety?filter=duework',
+                    'listKey' => 'maintenanceDueList',
                 ],
                 [
                     'label' => 'Cleaning Completion',
@@ -194,6 +235,7 @@ class Dashboard extends BaseController
                     'tone' => 'tone-green',
                     'icon' => 'fa-broom',
                     'url' => 'janitorial?filter=pending',
+                    'listKey' => 'cleaningIncompleteList',
                 ],
             ],
             'pending_tools_json' => $this->jsonForScript($borrowedToolsList),
@@ -203,6 +245,10 @@ class Dashboard extends BaseController
                 'loc'      => $w['location'],
                 'priority' => $w['priority'],
             ], $openWorkOrdersList)),
+            'active_borrowings_json'   => $this->jsonForScript($activeBorrowingsList),
+            'vehicles_inuse_json'      => $this->jsonForScript($vehiclesInUseList),
+            'maintenance_due_json'     => $this->jsonForScript($maintenanceDueList),
+            'cleaning_incomplete_json' => $this->jsonForScript($cleaningIncompleteList),
             'alerts' => [
                 [
                     'icon' => 'fa-circle-exclamation',

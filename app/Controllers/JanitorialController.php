@@ -102,6 +102,9 @@ class JanitorialController extends BaseController
                 ];
             }
 
+            // Completed tasks are listed before pending ones (adviser feedback).
+            usort($mergedTasks, fn($a, $b) => (int) $b['done'] <=> (int) $a['done']);
+
             $checklists[$slug] = [
                 'staff' => implode(' & ', $staffNames),
                 'shift' => implode(' / ', array_unique($shiftLabels)),

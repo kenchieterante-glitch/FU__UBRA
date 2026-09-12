@@ -32,32 +32,32 @@
 <div class="role-dash-panel">
     <div class="role-dash-panel-title"><i class="bi bi-tools"></i> Tools Overview</div>
     <div class="stat-cards">
-        <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('tools') ?>'" role="button" tabindex="0">
+        <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Total Tools" data-url="<?= base_url('tools') ?>">
             <span class="stat-icon tone-maroon"><i class="fa-solid fa-toolbox"></i></span>
             <h3>Total Tools</h3>
             <div class="value"><?= (int) $total_tools ?></div>
         </div>
-        <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('tools') ?>'" role="button" tabindex="0">
+        <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Available Tools" data-url="<?= base_url('tools') ?>">
             <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
             <h3>Available Tools</h3>
             <div class="value"><?= (int) $available_tools ?></div>
         </div>
-        <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('tools') ?>'" role="button" tabindex="0">
+        <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Borrowed Tools" data-url="<?= base_url('tools?filter=borrowed') ?>">
             <span class="stat-icon tone-neutral"><i class="fa-solid fa-hand-holding"></i></span>
             <h3>Borrowed Tools</h3>
             <div class="value"><?= (int) $borrowed_tools ?></div>
         </div>
-        <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('tools') ?>'" role="button" tabindex="0">
+        <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Needs Maintenance" data-url="<?= base_url('tools') ?>">
             <span class="stat-icon tone-gold"><i class="fa-solid fa-screwdriver-wrench"></i></span>
             <h3>Needs Maintenance</h3>
             <div class="value"><?= (int) $maintenance_tools ?></div>
         </div>
-        <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('tools') ?>'" role="button" tabindex="0">
+        <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Disposal" data-url="<?= base_url('tools') ?>">
             <span class="stat-icon tone-red"><i class="fa-solid fa-trash"></i></span>
             <h3>Disposal</h3>
             <div class="value"><?= (int) $disposal_tools ?></div>
         </div>
-        <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url('tools/consumable') ?>'" role="button" tabindex="0">
+        <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Low Stock Items" data-url="<?= base_url('tools/consumable') ?>">
             <span class="stat-icon tone-red"><i class="fa-solid fa-box-open"></i></span>
             <h3>Low Stock Items</h3>
             <div class="value"><?= (int) $low_stock_items ?></div>
@@ -75,7 +75,7 @@
               $route = $categoryRoutes[$cat] ?? 'tools';
               $icon = $categoryIcons[$cat] ?? 'fa-cube';
             ?>
-            <div class="stat-card stat-card-clickable" onclick="window.location.href='<?= base_url($route) ?>'" role="button" tabindex="0">
+            <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="<?= esc($cat, 'attr') ?>" data-url="<?= base_url($route) ?>">
                 <span class="stat-icon tone-neutral"><i class="fa-solid <?= esc($icon, 'attr') ?>"></i></span>
                 <h3><?= esc($cat) ?></h3>
                 <div class="value"><?= (int) $row['count'] ?></div>
@@ -84,5 +84,46 @@
     </div>
 </div>
 <?php endif; ?>
+
+<!-- Click-to-reveal banner shared by every stat card above, instead of
+     navigating away instantly — consistent with the dashboard's KPI cards. -->
+<section class="panel-card pending-panel" id="kpiBanner" style="display:none" aria-label="Status detail">
+    <div class="panel-head">
+        <h2 id="kpiBannerTitle"></h2>
+    </div>
+    <div class="pending-column">
+        <a id="kpiBannerLink" class="overview-link" href="#">View details →</a>
+    </div>
+</section>
+
+<script>
+function toggleKpiBanner(card) {
+    const panel = document.getElementById('kpiBanner');
+    const alreadyOpenForThisCard = panel.style.display !== 'none' && panel.dataset.forLabel === card.dataset.label;
+
+    if (alreadyOpenForThisCard) {
+        panel.style.display = 'none';
+        panel.dataset.forLabel = '';
+        return;
+    }
+
+    document.getElementById('kpiBannerTitle').textContent = card.dataset.label;
+    const link = document.getElementById('kpiBannerLink');
+    link.href = card.dataset.url;
+    link.textContent = 'View in ' + card.dataset.label + ' →';
+
+    panel.dataset.forLabel = card.dataset.label;
+    panel.style.display = 'block';
+}
+
+document.querySelectorAll('.stat-card[role="button"]').forEach(card => {
+    card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+        }
+    });
+});
+</script>
 
 <?= $this->endSection() ?>

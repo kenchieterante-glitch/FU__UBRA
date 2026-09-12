@@ -14,7 +14,10 @@
         <h1 class="ubra-title">Mr. UBRA</h1>
         <p class="ubra-subtext"><span class="pulse-dot"></span> Operations assistant &middot; online</p>
       </div>
-      <button type="button" class="ubra-clear-btn" onclick="clearChat()">Clear</button>
+      <div class="ubra-header-actions">
+        <button type="button" class="ubra-clear-btn" onclick="openChatHistory()">History</button>
+        <button type="button" class="ubra-clear-btn" onclick="clearChat()">Clear</button>
+      </div>
     </div>
 
     <!-- ── BODY: rail + conversation ─────────────────────────── -->
@@ -62,6 +65,18 @@
       <div class="ubra-input-error" id="inputError">Type a message before sending.</div>
     </div>
 
+  </div>
+</div>
+
+<!-- CHAT HISTORY MODAL — same wide "crosswise" popup treatment used
+     elsewhere (Vehicle Management, Personnel Management, GPS Tracker). -->
+<div class="modal" id="ubraHistoryModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Chat History</h3>
+      <button type="button" class="modal-close-btn" onclick="closeChatHistory()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body" id="ubraHistoryBody"></div>
   </div>
 </div>
 
@@ -198,6 +213,47 @@ async function loadChatHistory() {
     } catch (err) {
         // Leave the default greeting in place if history can't load.
     }
+}
+
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = String(s ?? '');
+    return d.innerHTML;
+}
+
+// ── Chat History popup — the full persisted log with timestamps, as
+// its own reviewable list instead of just whatever's currently scrolled
+// into view in the live conversation above. ─────────────────────
+async function openChatHistory() {
+    const body = document.getElementById('ubraHistoryBody');
+    body.innerHTML = `<div class="no-data">Loading chat history...</div>`;
+    document.getElementById('ubraHistoryModal').style.display = 'flex';
+
+    try {
+        const res  = await fetch(HISTORY_URL, { headers: csrfHeaders() });
+        const data = await res.json();
+        const rows = data.history || [];
+
+        body.innerHTML = rows.length
+            ? `<div class="history-table-wrap">
+                 <table class="history-table">
+                   <thead><tr><th>Time</th><th>Speaker</th><th>Message</th></tr></thead>
+                   <tbody>${rows.map(r => `
+                     <tr>
+                       <td>${esc(r.created_at)}</td>
+                       <td>${r.role === 'assistant' ? 'Mr. UBRA' : 'You'}</td>
+                       <td>${esc(r.message)}</td>
+                     </tr>`).join('')}</tbody>
+                 </table>
+               </div>`
+            : `<div class="no-data">No chat history yet.</div>`;
+    } catch (err) {
+        body.innerHTML = `<div class="no-data">Could not load chat history. Please try again.</div>`;
+    }
+}
+
+function closeChatHistory() {
+    document.getElementById('ubraHistoryModal').style.display = 'none';
 }
 
 // ── Clear chat — resets back to the initial greeting state ─────

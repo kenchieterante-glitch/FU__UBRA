@@ -60,6 +60,7 @@ $routes->post('personnel/edit/(:num)','PersonnelController::edit/$1');
 $routes->post('personnel/edit/(:num)/','PersonnelController::edit/$1');
 $routes->post('personnel/delete/(:num)','PersonnelController::delete/$1');
 $routes->get ('personnel/view/(:num)', 'PersonnelController::view/$1');
+$routes->get ('personnel/detail/(:num)', 'PersonnelController::detailJson/$1');
 $routes->get ('personnel/on-job-order', 'PersonnelController::jobOrder');
 $routes->post('personnel/assign-job-order/(:num)', 'PersonnelController::assignJobOrder/$1');
 
@@ -144,6 +145,7 @@ $routes->get ('vehicles',              'VehicleController::index');
 $routes->post('vehicles/add',          'VehicleController::add');
 $routes->post('vehicles/edit/(:num)',  'VehicleController::edit/$1');
 $routes->post('vehicles/delete/(:num)','VehicleController::delete/$1');
+$routes->post('vehicles/logFuel/(:num)', 'VehicleController::logFuel/$1');
 
 // ============================================================
 // DRIVER'S TRIP TICKET
@@ -180,6 +182,7 @@ $routes->post('safety/keylogs/scan-borrow',    'SafetyController::scanBorrow');
 $routes->post('safety/keylogs/scan-return',    'SafetyController::scanReturn');
 $routes->post('safety/setInstaller/(:num)',       'SafetyController::setInstaller/$1');
 $routes->post('safety/setAirconInstaller/(:num)', 'SafetyController::setAirconInstaller/$1');
+$routes->post('safety/setDepartment/(:num)',      'SafetyController::setDepartment/$1');
 
 // ============================================================
 // JANITORIAL MONITORING (Separated from Safety)
