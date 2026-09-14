@@ -709,12 +709,15 @@ $departments = $departments ?? [];
     const total = u.checklist.length;
     const sev = u.condition === 'Operational' ? 'fe-ok' : u.condition === 'Needs Cleaning' ? 'fe-warn' : 'fe-urgent';
     return `
-      <div class="fe-card ${sev}">
+      <div class="fe-card ${sev} fe-collapsed">
+        <button type="button" class="fe-card-toggle" title="Expand/collapse" onclick="toggleFeCard(this)"><i class="fa-solid fa-chevron-down"></i></button>
         <div class="fec-id">${esc(u.unit)}</div>
         <div class="fec-status">${esc(u.condition)}</div>
-        <div class="fec-row"><span>Location</span><strong>${esc(u.loc)} (${esc(u.floor || 'Ground Floor')})</strong></div>
-        <div class="fec-row"><span>Assigned Tech</span><strong>${esc(u.tech)}</strong></div>
-        <div class="fec-row"><span>Checklist</span><strong>${done}/${total} done</strong></div>
+        <div class="fec-body">
+          <div class="fec-row"><span>Location</span><strong>${esc(u.loc)} (${esc(u.floor || 'Ground Floor')})</strong></div>
+          <div class="fec-row"><span>Assigned Tech</span><strong>${esc(u.tech)}</strong></div>
+          <div class="fec-row"><span>Checklist</span><strong>${done}/${total} done</strong></div>
+        </div>
       </div>`;
   }
 
@@ -731,7 +734,15 @@ $departments = $departments ?? [];
     return { title: 'All Aircon Units', units: airconRegistry, cardFn: airconUnitCardHtml, isFe: false, byFloor: true };
   }
 
+  // Clicking the same KPI card that's already open closes it — clicking a
+  // different one switches the panel to that card's list instead.
   function showStatusList(kind) {
+    const panel = document.getElementById('statusListSection');
+    if (panel.style.display === 'block' && currentStatusKind === kind) {
+      closeStatusList();
+      return;
+    }
+
     currentStatusKind = kind;
     const { isFe } = baseUnitsForKind(kind);
 
@@ -746,7 +757,7 @@ $departments = $departments ?? [];
 
     renderStatusList();
 
-    document.getElementById('statusListSection').style.display = 'block';
+    panel.style.display = 'block';
   }
 
   function closeStatusList() {
@@ -772,12 +783,19 @@ $departments = $departments ?? [];
 
     document.getElementById('statusListTitle').innerHTML = `<i class="bi bi-list-ul"></i> ${title}`;
 
+    const grid = document.getElementById('statusListGrid');
+    // Floor-grouped lists break into several short per-floor rows, and the
+    // auto-fit column sizing used for a single flat row would stretch each
+    // row's cards to a different width depending on how many are in it —
+    // fixed-width columns here keep every card the same size regardless.
+    grid.classList.toggle('by-floor-grid', !!byFloor);
+
     if (!filtered.length) {
-      document.getElementById('statusListGrid').innerHTML = '<div class="no-data" style="padding:1rem;">No matching units.</div>';
+      grid.innerHTML = '<div class="no-data" style="padding:1rem;">No matching units.</div>';
       return;
     }
 
-    document.getElementById('statusListGrid').innerHTML = byFloor
+    grid.innerHTML = byFloor
       ? groupedByFloorHtml(filtered, cardFn)
       : filtered.map(cardFn).join('');
   }

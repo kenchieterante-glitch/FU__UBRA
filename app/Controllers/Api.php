@@ -17,6 +17,7 @@ use App\Models\AirconChecklistItemModel;
 use App\Models\JanitorialAssignmentModel;
 use App\Models\JanitorialTaskModel;
 use App\Models\KeyBorrowLogModel;
+use App\Models\FacilityKeyModel;
 use App\Models\NotificationModel;
 use App\Models\ReportModel;
 use App\Models\FacilityChecklistModel;
@@ -862,20 +863,32 @@ class Api extends BaseController
         ]);
     }
 
+    // Borrower is still identified by scanning/entering their employee ID
+    // (unchanged) — what's new is the key itself is identified by tapping
+    // its physical NFC tag instead of typing a free-text key name.
     public function guardScanBorrow()
     {
-        $body  = $this->request->getJSON(true) ?? [];
-        $empId = trim((string) ($body['code'] ?? ''));
-        $keyItem = trim((string) ($body['key_item'] ?? ''));
+        $body   = $this->request->getJSON(true) ?? [];
+        $empId  = trim((string) ($body['code'] ?? ''));
+        $nfcUid = trim((string) ($body['nfc_uid'] ?? ''));
 
-        if ($empId === '' || $keyItem === '') {
-            return $this->response->setStatusCode(422)->setJSON(['message' => 'Scan an ID and specify the key/item being borrowed.']);
+        if ($empId === '' || $nfcUid === '') {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'Scan a staff ID and tap the key\'s NFC tag.']);
         }
 
         $personnelModel = new PersonnelModel();
         $person = $personnelModel->getByEmpId($empId);
         if (!$person) {
             return $this->response->setStatusCode(403)->setJSON(['message' => 'No staff/faculty record found for that ID — students are not authorized to borrow keys.']);
+        }
+
+        $keyModel = new FacilityKeyModel();
+        $key = $keyModel->findByNfcUid($nfcUid);
+        if (!$key) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'This key tag isn\'t registered yet.', 'unregistered' => true, 'nfc_uid' => $nfcUid]);
+        }
+        if ($key['status'] === 'Borrowed') {
+            return $this->response->setStatusCode(409)->setJSON(['message' => "\"{$key['key_name']}\" is already checked out."]);
         }
 
         $model = new KeyBorrowLogModel();
@@ -886,33 +899,86 @@ class Api extends BaseController
             'borrower_id'   => $empId,
             'full_name'     => $person['full_name'],
             'department'    => $person['department_name'] ?? '',
-            'key_item'      => $keyItem,
+            'key_item'      => $key['key_name'],
+            'key_id'        => $key['id'],
             'scan_in'       => date('Y-m-d H:i:s'),
             'status'        => 'Active',
             'guard_on_duty' => $body['guard_name'] ?? null,
         ]);
+        $keyModel->update($key['id'], ['status' => 'Borrowed']);
 
-        return $this->response->setJSON(['message' => 'Key borrow logged']);
+        return $this->response->setJSON(['message' => "\"{$key['key_name']}\" checked out to {$person['full_name']}."]);
     }
 
+    // Returning only needs the key's tag tapped — whoever's at the guard
+    // post handing it back doesn't need to be the same person who
+    // borrowed it, so this isn't keyed off the borrower's employee ID.
     public function guardScanReturn()
     {
-        $body  = $this->request->getJSON(true) ?? [];
-        $empId = trim((string) ($body['code'] ?? ''));
+        $body   = $this->request->getJSON(true) ?? [];
+        $nfcUid = trim((string) ($body['nfc_uid'] ?? ''));
+
+        if ($nfcUid === '') {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'Tap the key\'s NFC tag.']);
+        }
+
+        $keyModel = new FacilityKeyModel();
+        $key = $keyModel->findByNfcUid($nfcUid);
+        if (!$key) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'This key tag isn\'t registered.']);
+        }
 
         $model = new KeyBorrowLogModel();
-        $log = $model->where('borrower_id', $empId)->where('status', 'Active')->orderBy('id', 'DESC')->first();
+        $log = $model->where('key_id', $key['id'])->where('status', 'Active')->orderBy('id', 'DESC')->first();
 
         if (!$log) {
-            return $this->response->setStatusCode(409)->setJSON(['message' => 'No active key borrow found for that ID.']);
+            return $this->response->setStatusCode(409)->setJSON(['message' => "\"{$key['key_name']}\" isn't currently checked out."]);
         }
 
         $model->update($log['id'], [
             'scan_out' => date('Y-m-d H:i:s'),
             'status'   => 'Returned',
         ]);
+        $keyModel->update($key['id'], ['status' => 'Available']);
 
-        return $this->response->setJSON(['message' => 'Key return logged']);
+        return $this->response->setJSON(['message' => "\"{$key['key_name']}\" returned."]);
+    }
+
+    // Lets the app show a keys inventory screen, and lets it tell whether a
+    // freshly-tapped tag is already registered before deciding to prompt
+    // "register this as a new key" vs proceeding with borrow/return.
+    public function guardKeysList()
+    {
+        $keyModel = new FacilityKeyModel();
+        return $this->response->setJSON(['keys' => $keyModel->orderBy('key_name', 'ASC')->findAll()]);
+    }
+
+    // Pairs a brand-new physical tag with a key record — used once per key
+    // when it's first put into service.
+    public function guardRegisterKey()
+    {
+        $body    = $this->request->getJSON(true) ?? [];
+        $nfcUid  = trim((string) ($body['nfc_uid'] ?? ''));
+        $keyName = trim((string) ($body['key_name'] ?? ''));
+        $location = trim((string) ($body['location'] ?? ''));
+
+        if ($nfcUid === '' || $keyName === '') {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'Tap the tag and give the key a name.']);
+        }
+
+        $keyModel = new FacilityKeyModel();
+        if ($keyModel->findByNfcUid($nfcUid)) {
+            return $this->response->setStatusCode(409)->setJSON(['message' => 'This tag is already registered to a key.']);
+        }
+
+        $keyModel->insert([
+            'key_name' => $keyName,
+            'location' => $location ?: null,
+            'nfc_uid'  => $nfcUid,
+            'status'   => 'Available',
+        ]);
+
+        return $this->response->setJSON(['message' => "\"{$keyName}\" registered."]);
     }
 
     public function guardTripTicketsToday()

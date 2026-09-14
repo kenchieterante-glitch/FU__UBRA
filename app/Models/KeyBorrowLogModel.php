@@ -9,7 +9,7 @@ class KeyBorrowLogModel extends Model
     protected $useTimestamps = false;
     protected $allowedFields = [
         'log_number', 'borrower_id', 'trip_ticket_id', 'full_name', 'department',
-        'key_item', 'scan_in', 'scan_out', 'status', 'guard_on_duty',
+        'key_item', 'key_id', 'scan_in', 'scan_out', 'status', 'guard_on_duty',
     ];
 
     public function getAllWithTrip()

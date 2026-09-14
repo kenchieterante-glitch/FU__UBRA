@@ -304,6 +304,8 @@ $routes->group('api', function ($routes) {
     $routes->get('guard/keylog', 'Api::guardKeylog');
     $routes->post('guard/keylog/scan-borrow', 'Api::guardScanBorrow');
     $routes->post('guard/keylog/scan-return', 'Api::guardScanReturn');
+    $routes->get('guard/keys', 'Api::guardKeysList');
+    $routes->post('guard/keys/register', 'Api::guardRegisterKey');
     $routes->get('guard/trip-tickets/today', 'Api::guardTripTicketsToday');
 
     $routes->get('notifications', 'Api::notifications');

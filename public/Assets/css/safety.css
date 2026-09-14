@@ -1043,7 +1043,9 @@
     color: var(--m);
 }
 
-/* FE card grid */
+/* FE card grid — shared by the always-expanded Overdue/Work Order grids
+   (which should stretch to a uniform row height) and the collapsible
+   status-list grid (which should not: see #statusListGrid below). */
 .dp-fe-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -1051,10 +1053,22 @@
     margin-bottom: 1rem;
     min-width: 0;
     width: 100%;
-    /* Grid items stretch to the row's tallest cell by default — without
-       this, expanding one collapsible card also stretches every other
-       card sharing its row, even though they're still collapsed. */
+}
+
+/* Only the status-list grid holds collapsible cards — grid items stretch to
+   the row's tallest cell by default, so without this, expanding one card
+   here also stretches every other card sharing its row, even though
+   they're still collapsed. The Overdue/Work Order grids don't have this
+   toggle at all, so they keep the default stretch for even card heights. */
+#statusListGrid.dp-fe-grid {
     align-items: start;
+}
+
+/* Floor-grouped lists (Aircon) — fixed-width, left-aligned cards so every
+   floor's row matches regardless of how many cards are in it. */
+#statusListGrid.dp-fe-grid.by-floor-grid {
+    grid-template-columns: repeat(auto-fill, 240px);
+    justify-content: start;
 }
 
 .fe-card {
