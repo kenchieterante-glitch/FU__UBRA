@@ -209,10 +209,6 @@
                                 </td>
                                 <td>
                                     <div class="action-btns">
-                                        <button class="icon-btn view" title="View Profile"
-                                            onclick="event.stopPropagation(); openVehicleModal(<?= $v['id'] ?>)">
-                                            <i class="fa-solid fa-eye"></i>
-                                        </button>
                                         <button class="icon-btn sync" title="Sync GPS"
                                             onclick="event.stopPropagation(); syncVehicle(<?= $v['id'] ?>, this)">
                                             <i class="bi bi-arrow-clockwise"></i>
