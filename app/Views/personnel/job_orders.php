@@ -64,10 +64,10 @@ function joStatusClass($status) {
             <td><span class="status-badge <?= joStatusClass($jo['status']) ?>"><?= esc(str_replace('_',' ',$jo['status'])) ?></span></td>
             <td>
               <div class="action-buttons">
-                <button class="icon-btn" onclick="document.getElementById('editJoModal<?= $jo['id'] ?>').style.display='flex'" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                <button class="icon-btn" onclick="document.getElementById('editJoModal<?= $jo['id'] ?>').style.display='flex'" title="Edit"><i class="bi bi-pencil-fill"></i></button>
                 <form method="post" action="<?= base_url('personnel/job-orders/archive/' . $jo['id']) ?>" onsubmit="return confirm('Archive this Job Order?')" style="display:contents;">
                   <?= csrf_field() ?>
-                  <button type="submit" class="icon-btn delete" title="Archive"><i class="fa-solid fa-archive"></i></button>
+                  <button type="submit" class="icon-btn delete" title="Archive"><i class="bi bi-archive-fill"></i></button>
                 </form>
               </div>
             </td>

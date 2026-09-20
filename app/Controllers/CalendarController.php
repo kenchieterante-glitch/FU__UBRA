@@ -7,6 +7,7 @@ use App\Models\UserModel;
 use App\Models\JanitorialAssignmentModel;
 use App\Models\JanitorialTaskModel;
 use App\Models\NotificationModel;
+use App\Models\PersonnelModel;
 use App\Models\SafetyWorkOrderModel;
 use App\Models\TravelModel;
 
@@ -37,11 +38,19 @@ class CalendarController extends BaseController
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
 
+        $personnel = new PersonnelModel();
+
         $data = [
             'title'            => 'Operations Calendar',
             'events_json'      => $this->jsonForScript($this->persistedEvents()),
             'flash_success'    => $this->session->getFlashdata('success'),
             'pending_renewals' => $this->pendingVehicleRenewals(),
+            // Real people, with contact numbers when on file — power the
+            // "Notify Driver" / "Notify Cleaning Personnel" suggested-action
+            // pickers so they actually target someone instead of a hardcoded
+            // "Van-03 driver" placeholder.
+            'drivers_json'     => $this->jsonForScript($personnel->getActiveByPositionLike('Driver')),
+            'janitors_json'    => $this->jsonForScript($personnel->getActiveByPositionLike(['Janitor', 'Cleaning'])),
         ];
 
         return view('calendar/index', $data);
@@ -120,40 +129,74 @@ class CalendarController extends BaseController
             return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'Unauthorized']);
         }
 
-        $data   = $this->request->getJSON(true) ?? [];
-        $zone   = trim((string) ($data['zone'] ?? ''));
-        $date   = trim((string) ($data['date'] ?? ''));
-        $urgent = !empty($data['urgent']);
-        $notes  = trim((string) ($data['notes'] ?? ''));
+        $data      = $this->request->getJSON(true) ?? [];
+        $zone      = trim((string) ($data['zone'] ?? ''));
+        // 'date' is kept as a fallback so nothing else calling this endpoint
+        // with the old single-date shape breaks.
+        $startDate = trim((string) ($data['startDate'] ?? $data['date'] ?? ''));
+        $endDate   = trim((string) ($data['endDate'] ?? $startDate));
+        $urgent    = !empty($data['urgent']);
+        $notes     = trim((string) ($data['notes'] ?? ''));
 
-        if ($zone === '' || $date === '') {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'Building/zone and date are required.']);
+        if ($zone === '' || $startDate === '' || $endDate === '') {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'Building/zone, start date, and end date are required.']);
+        }
+
+        $startTs = strtotime($startDate);
+        $endTs   = strtotime($endDate);
+        if ($startTs === false || $endTs === false) {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'Invalid date.']);
+        }
+        if ($endTs < $startTs) {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'End date can\'t be before the start date.']);
+        }
+        // A cleaning schedule spanning more than 2 months is almost certainly
+        // a mistyped date, not a real multi-day job — refuse rather than
+        // silently creating dozens of assignments.
+        $spanDays = (int) round(($endTs - $startTs) / 86400) + 1;
+        if ($spanDays > 60) {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'Date range is too long (max 60 days).']);
         }
 
         $janitor   = (new UserModel())->getByEmployeeId(self::JANITORIAL_EMP_ID);
         $staffName = $janitor['full_name'] ?? 'Janitorial Staff';
 
         $assignmentModel = new JanitorialAssignmentModel();
-        $assignmentId = $assignmentModel->insert([
-            'staff_name'    => $staffName,
-            'assigned_zone' => $zone,
-            'shift_start'   => $urgent ? date('H:i:s') : '08:00:00',
-            'shift_end'     => '17:00:00',
-            'date_assigned' => $date,
-            'status'        => 'Active',
-            'priority'      => $urgent ? 'Urgent' : 'Routine',
-        ]);
+        $taskModel       = new JanitorialTaskModel();
+        $events          = [];
 
-        (new JanitorialTaskModel())->insert([
-            'assignment_id' => $assignmentId,
-            'task_name'     => ($urgent ? 'Urgent Cleaning: ' : 'Scheduled Cleaning: ') . $zone,
-            'is_done'       => 0,
-        ]);
+        // One real Janitorial Monitoring assignment per day in the range —
+        // each day stays independently trackable/completable there, same as
+        // if the admin had added them one at a time.
+        for ($ts = $startTs; $ts <= $endTs; $ts += 86400) {
+            $day = date('Y-m-d', $ts);
 
-        $niceDate = date('M j, Y', strtotime($date));
+            $assignmentId = $assignmentModel->insert([
+                'staff_name'    => $staffName,
+                'assigned_zone' => $zone,
+                'shift_start'   => $urgent ? date('H:i:s') : '08:00:00',
+                'shift_end'     => '17:00:00',
+                'date_assigned' => $day,
+                'status'        => 'Active',
+                'priority'      => $urgent ? 'Urgent' : 'Routine',
+            ]);
+
+            $taskModel->insert([
+                'assignment_id' => $assignmentId,
+                'task_name'     => ($urgent ? 'Urgent Cleaning: ' : 'Scheduled Cleaning: ') . $zone,
+                'is_done'       => 0,
+            ]);
+
+            $events[] = $this->toEvent($assignmentId, $zone, $day, $urgent, $staffName);
+        }
+
+        $niceStart = date('M j, Y', $startTs);
+        $niceEnd   = date('M j, Y', $endTs);
+        $dateRangeText = $spanDays > 1 ? "from {$niceStart} to {$niceEnd}" : "on {$niceStart}";
+
         (new NotificationModel())->insert([
             'category'    => $urgent ? 'Urgent Cleaning Scheduled' : 'Cleaning Scheduled',
-            'description' => ($urgent ? "Urgent cleaning" : 'Cleaning') . " scheduled for {$zone} on {$niceDate}." . ($notes !== '' ? " Notes: {$notes}" : ''),
+            'description' => ($urgent ? "Urgent cleaning" : 'Cleaning') . " scheduled for {$zone} {$dateRangeText}." . ($notes !== '' ? " Notes: {$notes}" : ''),
             'recipient'   => $staffName,
             'priority'    => $urgent ? 'CRITICAL' : 'ROUTINE',
             'status'      => 'Pending',
@@ -161,10 +204,12 @@ class CalendarController extends BaseController
             'created_at'  => date('Y-m-d H:i:s'),
         ]);
 
+        $this->logActivity('Janitorial', ($urgent ? 'Urgent cleaning' : 'Cleaning') . " scheduled for {$zone} {$dateRangeText}");
+
         return $this->response->setJSON([
             'success' => true,
-            'message' => ($urgent ? 'Urgent cleaning' : 'Cleaning') . " scheduled for {$zone} — {$staffName} notified.",
-            'event'   => $this->toEvent($assignmentId, $zone, $date, $urgent, $staffName),
+            'message' => ($urgent ? 'Urgent cleaning' : 'Cleaning') . " scheduled for {$zone} {$dateRangeText} — {$staffName} notified.",
+            'events'  => $events,
         ]);
     }
 
@@ -214,6 +259,8 @@ class CalendarController extends BaseController
             'is_read'     => 0,
             'created_at'  => date('Y-m-d H:i:s'),
         ]);
+
+        $this->logActivity('Safety', "Logged work order {$woNumber} — {$issue} at {$location}");
 
         return $this->response->setJSON([
             'success' => true,

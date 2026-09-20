@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\ToolsModel;
 use App\Models\BorrowModel;
+use App\Models\NotificationModel;
 use App\Models\PersonnelModel;
 use App\Models\ToolsRefillLogModel;
 use CodeIgniter\HTTP\RequestInterface;
@@ -32,11 +33,14 @@ class ToolsController extends BaseController
             return redirect()->to('/login');
         }
 
+        $tools = $this->toolsModel->getAllWithDetails();
+
         $data = array_merge([
             'title'   => 'Tools Equipment Management',
             'pageCss' => 'tools.css',
-            'tools'   => $this->toolsModel->getAllWithDetails(),
+            'tools'   => $tools,
             'personnel' => $this->personnelModel->findAll(),
+            'tool_details_json' => $this->jsonForScript($this->buildToolDetails($tools)),
         ], $this->getStatCounts());
 
         return view('tools/index', $data);
@@ -90,11 +94,14 @@ class ToolsController extends BaseController
             return redirect()->to('/login');
         }
 
+        $categoryTools = $this->toolsModel->getByCategory($category);
+
         $data = array_merge([
             'title'   => $category,
             'pageCss' => 'tools.css',
-            'tools'   => $this->toolsModel->getByCategory($category),
+            'tools'   => $categoryTools,
             'personnel' => $this->personnelModel->findAll(),
+            'tool_details_json' => $this->jsonForScript($this->buildToolDetails($categoryTools)),
         ], $this->getStatCounts());
 
         if ($category === 'Consumable') {
@@ -109,6 +116,39 @@ class ToolsController extends BaseController
         }
 
         return view('tools/index', $data);
+    }
+
+    // Per-tool "View Details" popup data — usage count and full borrow
+    // history, same idea as VehicleController's per-vehicle fuel/trip
+    // history popup, so a piece of equipment (e.g. a sports set) shows how
+    // many times it's been borrowed and by whom, not just its current status.
+    private function buildToolDetails(array $tools): array
+    {
+        $details = [];
+        foreach ($tools as $t) {
+            $history = $this->borrowModel->getForTool((int) $t['id']);
+            $details[$t['id']] = [
+                'name'        => $t['asset_name'],
+                'code'        => $t['asset_code'] ?: '—',
+                'category'    => $t['category'],
+                'location'    => $t['location'] ?: 'Unassigned',
+                'custodian'   => $t['custodian_name'] ?? 'Unassigned',
+                'condition'   => $t['condition_status'],
+                'availability' => $t['availability'],
+                'unit'        => $t['category'] === 'Consumable'
+                    ? ((float) ($t['current_stock'] ?? 0) . ' ' . ($t['unit'] ?: 'pcs') . ' in stock')
+                    : null,
+                'timesBorrowed' => count($history),
+                'history' => array_map(fn($h) => [
+                    'borrower'   => $h['borrower'] ?: 'Not on record',
+                    'department' => $h['department'] ?: '—',
+                    'borrowed'   => !empty($h['borrowed_date']) ? date('M j, Y', strtotime($h['borrowed_date'])) : '—',
+                    'due'        => !empty($h['expected_return']) ? date('M j, Y', strtotime($h['expected_return'])) : '—',
+                    'status'     => $h['status'],
+                ], array_slice($history, 0, 20)),
+            ];
+        }
+        return $details;
     }
 
     private function getStatCounts(): array
@@ -126,9 +166,10 @@ class ToolsController extends BaseController
     public function add()
     {
         $custodianName = $this->request->getPost('custodian_id') ?? $this->request->getPost('custodian');
+        $name = $this->request->getPost('asset_name');
 
         $this->toolsModel->insert([
-            'asset_name'       => $this->request->getPost('asset_name'),
+            'asset_name'       => $name,
             'asset_code'       => $this->request->getPost('asset_code'),
             'category'         => $this->request->getPost('category'),
             'location'         => $this->request->getPost('location'),
@@ -138,6 +179,7 @@ class ToolsController extends BaseController
             'unit'             => $this->request->getPost('unit') ?: 'pcs',
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->logActivity('Tools', "Added asset {$name}");
 
         return redirect()->to('/tools')->with('success', 'Asset added successfully.');
     }
@@ -145,9 +187,10 @@ class ToolsController extends BaseController
     public function edit($id)
     {
         $custodianName = $this->request->getPost('custodian_id') ?? $this->request->getPost('custodian');
+        $name = $this->request->getPost('asset_name');
 
         $this->toolsModel->update($id, [
-            'asset_name'       => $this->request->getPost('asset_name'),
+            'asset_name'       => $name,
             'asset_code'       => $this->request->getPost('asset_code'),
             'category'         => $this->request->getPost('category'),
             'location'         => $this->request->getPost('location'),
@@ -156,6 +199,7 @@ class ToolsController extends BaseController
             'unit'             => $this->request->getPost('unit') ?: 'pcs',
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->logActivity('Tools', "Updated asset {$name} (#{$id})");
 
         return redirect()->to('/tools')->with('success', 'Asset updated successfully.');
     }
@@ -164,10 +208,14 @@ class ToolsController extends BaseController
     {
         if ($resp = $this->requireAdmin()) return $resp;
 
+        // Not separately logged here — Information Hub already tracks
+        // archived tools natively via is_archived, so this stays as-is to
+        // avoid a duplicate entry for the same event.
         $this->toolsModel->update($id, [
             'is_archived' => 1,
             'archived_at' => date('Y-m-d H:i:s'),
         ]);
+
         return redirect()->to('/tools')->with('success', 'Asset archived.');
     }
 
@@ -192,6 +240,7 @@ class ToolsController extends BaseController
             'performed_by'   => (string) (session()->get('full_name') ?? session()->get('emp_id') ?? 'Unknown'),
             'performed_at'   => date('Y-m-d H:i:s'),
         ]);
+        $this->logActivity('Tools', "Refilled {$item['asset_name']} by {$qty}");
 
         return redirect()->to('/tools/consumable')->with('success', $item['asset_name'] . ' refilled by ' . $qty . '.');
     }
@@ -206,14 +255,16 @@ class ToolsController extends BaseController
             return redirect()->to('/tools')->with('error', 'That tool is not available to borrow right now.');
         }
 
-        $borrowerName = $this->request->getPost('borrower_id') ?? $this->request->getPost('borrower');
+        $borrowerName   = $this->request->getPost('borrower_id') ?? $this->request->getPost('borrower');
+        $department     = $this->request->getPost('department');
+        $expectedReturn = $this->request->getPost('expected_return');
 
         $this->borrowModel->insert([
             'tool_id'           => $toolId,
             'borrower'         => $borrowerName,
-            'department'       => $this->request->getPost('department'),
+            'department'       => $department,
             'borrowed_date'    => date('Y-m-d'),
-            'expected_return'   => $this->request->getPost('expected_return'),
+            'expected_return'   => $expectedReturn,
             'condition_on_borrow' => $this->request->getPost('condition_on_borrow') ?? 'Excellent',
             'status'           => 'Borrowed',
             'created_at'       => date('Y-m-d H:i:s'),
@@ -223,6 +274,18 @@ class ToolsController extends BaseController
         $this->toolsModel->update($toolId, [
             'availability' => 'Borrowed',
             'last_activity_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        $dueText = !empty($expectedReturn) ? date('M j, Y', strtotime($expectedReturn)) : 'no due date set';
+        (new NotificationModel())->insert([
+            'category'    => 'Tool Borrowed',
+            'description' => "{$tool['asset_name']} borrowed by " . ($borrowerName ?: 'an unrecorded borrower')
+                . ($department ? " ({$department})" : '') . " — due back on {$dueText}.",
+            'recipient'   => 'Tools & Equipment Office',
+            'priority'    => 'MODERATE',
+            'status'      => 'Pending',
+            'is_read'     => 0,
+            'created_at'  => date('Y-m-d H:i:s'),
         ]);
 
         return redirect()->to('/tools')->with('success', 'Tool marked as borrowed.');

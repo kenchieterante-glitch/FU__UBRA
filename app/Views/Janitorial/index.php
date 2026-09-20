@@ -130,6 +130,42 @@
 </div>
 
 <!-- ── MODALS ───────────────────────────────────────────────────────── -->
+<div id="assignStaffModal" class="sj-modal-overlay" style="display:none">
+  <div class="sj-modal">
+    <div class="sj-modal-header">
+      <h3><i class="bi bi-person-plus-fill"></i> Assign Staff</h3>
+    </div>
+    <div class="sj-modal-body">
+      <div class="form-grid2">
+        <div class="fg"><label>Staff Name</label><input type="text" id="asStaffName" placeholder="e.g. Dela Cruz, J."></div>
+        <div class="fg"><label>Zone</label>
+          <select id="asZone">
+            <option value="">— Select zone —</option>
+            <option>Admin Building</option>
+            <option>Library</option>
+            <option>Science Building</option>
+            <option>Gymnasium</option>
+            <option>Canteen</option>
+            <option>Engineering</option>
+            <option>CCS Building</option>
+            <option>Clinic</option>
+          </select>
+        </div>
+        <div class="fg"><label>Shift Start</label><input type="time" id="asShiftStart"></div>
+        <div class="fg"><label>Shift End</label><input type="time" id="asShiftEnd"></div>
+      </div>
+      <div class="fg" style="margin-top:.6rem">
+        <label>Checklist Tasks <span style="font-weight:400;color:var(--muted)">(one per line)</span></label>
+        <textarea id="asTasks" rows="4" placeholder="Sweep corridors&#10;Mop hallway&#10;Empty trash bins"></textarea>
+      </div>
+    </div>
+    <div class="sj-modal-footer">
+      <button class="btn-cancel" onclick="closeInventoryModal('assignStaffModal')">Cancel</button>
+      <button class="btn-maroon-sm" onclick="saveAssignStaff()"><i class="bi bi-floppy-fill"></i> Assign</button>
+    </div>
+  </div>
+</div>
+
 <div id="addInventoryModal" class="sj-modal-overlay" style="display:none">
   <div class="sj-modal">
     <div class="sj-modal-header">
@@ -182,8 +218,8 @@ const janStaff = <?= $staff_json ?>;
 const janAreaChecklists = <?= $checklists_json ?>;
 let inventoryItems = <?= $inventory_json ?>;
 const refillLogEntries = <?= $refill_log_json ?>;
-// Zone counts (not per-shift) — a zone with two staff assigned only counts
-// as "cleaned" once every assignment mapped to it is done. See
+// Zone counts (not per-shift) — a zone with two staff assigned counts as
+// "cleaned" once at least one of them finishes all of their own tasks. See
 // JanitorialController::index() for the aggregation.
 const zoneTotal = <?= (int) $zone_total ?>;
 const zoneCleaned = <?= (int) $zone_cleaned ?>;
@@ -196,6 +232,10 @@ function getJanStatusValue(areaKey) {
 
   if (areaKey && janAreaChecklists[areaKey]) {
     const data = janAreaChecklists[areaKey];
+    // A zone with several staff (e.g. CCS Building) reads "Clean" as soon as
+    // any one of them finishes all of their own tasks — matches the
+    // Janitorial Completion stat, which counts zones the same way.
+    if (data.anyStaffDone) return 'clean';
     const done = data.tasks.filter(t => t.done).length;
     const total = data.tasks.length;
     if (total === 0) return 'untracked';
@@ -260,8 +300,8 @@ function janDrillDown(area) {
 
   data.tasks.forEach((t,i) => {
     html += `
-    <label class="jcl-item ${t.done?'done':''}">
-      <input type="checkbox" ${t.done?'checked':''}>
+    <label class="jcl-item ${t.done?'done':''}" title="Marked ${t.done ? 'done' : 'pending'} by the assigned staff via the mobile app — read-only here">
+      <input type="checkbox" ${t.done?'checked':''} disabled>
       <span class="jcl-text">${t.t}</span>
       ${t.done ? `<span class="jcl-time"><i class="bi bi-check-circle-fill"></i> ${t.time}</span>` : '<span class="jcl-time pending">Pending</span>'}
     </label>`;
@@ -344,8 +384,9 @@ const janMapBuildingsRaw = [
   {n:22, name:'College of Nursing', cat:'Yellow', x:830, y:362, w:52, h:254, hasExt:true},
   {n:23, name:'Administration Building', cat:'Yellow', x:782, y:625, w:100, h:48, hasExt:true, areaKey:'admin'},
   {n:24, name:'Rizal Monument / Social Garden', cat:'NA', x:588, y:648, w:132, h:92, hasExt:false},
-  {n:25, name:'Registrar\'s Office', cat:'Orange', x:702, y:760, w:130, h:22, hasExt:true, areaKey:'clinic'},
+  {n:25, name:'Registrar\'s Office', cat:'Orange', x:702, y:760, w:130, h:22, hasExt:true},
   {n:26, name:'Business and Finance Office', cat:'Orange', x:702, y:784, w:130, h:24, hasExt:false},
+  {n:30, name:'Clinic', cat:'Orange', x:838, y:758, w:96, h:50, hasExt:true, areaKey:'clinic'},
   {n:27, name:'Old College of Industrial Engineering and Technology', cat:'Orange', x:480, y:795, w:210, h:34, hasExt:true, areaKey:'engr'},
   {n:28, name:'Overhead Water Supply Tank', cat:'NA', cx:850, cy:745, r:7, hasExt:false},
   {n:29, name:'Flag Pole', cat:'NA', cx:542, cy:720, r:6, hasExt:false},
@@ -681,7 +722,7 @@ function renderInventory() {
       <td>${st}</td>
       <td>
         <div class="action-buttons">
-          <button type="button" class="icon-btn" onclick="refillItem(${i})" title="Refill" aria-label="Refill ${item.name}"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>
+          <button type="button" class="icon-btn" onclick="refillItem(${i})" title="Refill" aria-label="Refill ${item.name}"><i class="bi bi-upload"></i></button>
         </div>
       </td>
     </tr>`;
@@ -716,27 +757,27 @@ function renderJanitorialSummary() {
 
   document.getElementById('janitorialSummary').innerHTML = `
     <div class="stat-card stat-card-clickable" onclick="clearMapFilter();switchJanTab('janmap')" role="button" tabindex="0">
-      <span class="stat-icon tone-maroon"><i class="fa-solid fa-map-location-dot"></i></span>
+      <span class="stat-icon tone-maroon"><i class="bi bi-map-fill"></i></span>
       <h3>Janitorial Zones</h3>
       <div class="value">${totalZones}</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="filterShiftsByStat('')" role="button" tabindex="0">
-      <span class="stat-icon tone-neutral"><i class="fa-solid fa-broom"></i></span>
+      <span class="stat-icon tone-neutral"><i class="bi bi-brush"></i></span>
       <h3>Active Shifts</h3>
       <div class="value">${activeShifts}</div>
     </div>
-    <div class="stat-card stat-card-clickable" onclick="filterShiftsByStat('pending')" role="button" tabindex="0">
-      <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
+    <div class="stat-card stat-card-clickable" onclick="filterShiftsByStat('done')" role="button" tabindex="0">
+      <span class="stat-icon tone-green"><i class="bi bi-check-circle-fill"></i></span>
       <h3>Janitorial Completion</h3>
       <div class="value">${zoneCleaned}/${zoneTotal}</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="filterInventoryByStat('low')" role="button" tabindex="0">
-      <span class="stat-icon tone-gold"><i class="fa-solid fa-box"></i></span>
+      <span class="stat-icon tone-gold"><i class="bi bi-box-seam-fill"></i></span>
       <h3>Low Stock Items</h3>
       <div class="value">${lowStock}</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="filterInventoryByStat('out')" role="button" tabindex="0">
-      <span class="stat-icon tone-red"><i class="fa-solid fa-triangle-exclamation"></i></span>
+      <span class="stat-icon tone-red"><i class="bi bi-exclamation-triangle-fill"></i></span>
       <h3>Out of Stock</h3>
       <div class="value">${outOfStock}</div>
     </div>
@@ -801,7 +842,42 @@ function saveInventoryItem() {
     .then(() => window.location.reload());
 }
 
-function openAddShiftModal()     { showToast('Staff assignment form — connect to PersonnelController.'); }
+function openAddShiftModal() {
+  document.getElementById('asStaffName').value = '';
+  document.getElementById('asZone').value = '';
+  document.getElementById('asShiftStart').value = '';
+  document.getElementById('asShiftEnd').value = '';
+  document.getElementById('asTasks').value = '';
+  document.getElementById('assignStaffModal').style.display = 'flex';
+}
+
+function saveAssignStaff() {
+  const staffName = document.getElementById('asStaffName').value.trim();
+  const zone      = document.getElementById('asZone').value;
+  const start     = document.getElementById('asShiftStart').value;
+  const end       = document.getElementById('asShiftEnd').value;
+
+  if (!staffName) { showToast('Staff name is required.', true); return; }
+  if (!zone)       { showToast('Please select a zone.', true); return; }
+  if (!start || !end) { showToast('Shift start and end time are required.', true); return; }
+
+  const fd = new FormData();
+  fd.append('staff_name', staffName);
+  fd.append('assigned_zone', zone);
+  fd.append('shift_start', start);
+  fd.append('shift_end', end);
+  fd.append('tasks', document.getElementById('asTasks').value);
+
+  fetch('<?= base_url('janitorial/assignStaff') ?>', { method: 'POST', headers: csrfHeaders(), body: fd })
+    .then(r => {
+      if (!r.ok) throw new Error('Assign failed');
+      document.getElementById('assignStaffModal').style.display = 'none';
+      showToast(`${staffName} assigned to ${zone}.`);
+      setTimeout(() => window.location.reload(), 900);
+    })
+    .catch(() => showToast('Could not assign staff. Please try again.', true));
+}
+
 function openAddInventoryModal() { document.getElementById('addInventoryModal').style.display = 'flex'; }
 
 // Named distinctly from layouts/main.php's own closeModal(id) (which

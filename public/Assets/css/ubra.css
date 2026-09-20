@@ -173,6 +173,26 @@
     letter-spacing: .04em;
 }
 
+/* Rows are clickable — jump back into the live chat at that exact turn. */
+#ubraHistoryModal .history-table tbody tr {
+    cursor: pointer;
+    transition: background .15s ease;
+}
+
+#ubraHistoryModal .history-table tbody tr:hover {
+    background: var(--ubra-hover, rgba(128, 0, 0, .06));
+}
+
+/* Briefly highlighted bubble when resumed from History. */
+.ubra-bubble.resume-highlight {
+    animation: ubraResumeFlash 1.6s ease;
+}
+
+@keyframes ubraResumeFlash {
+    0%   { box-shadow: 0 0 0 2px var(--maroon, #800000); }
+    100% { box-shadow: 0 0 0 0 transparent; }
+}
+
 @media (max-width: 720px) {
     #ubraHistoryModal .modal-box {
         width: 94vw;
@@ -341,6 +361,29 @@
     font-size: 11px;
     color: var(--ubra-muted);
     margin-top: 3px;
+}
+
+/* Real file link on a report-request reply — opens in its own tab instead
+   of navigating the chat away. */
+.ubra-download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 7px 13px;
+    border: none;
+    border-radius: 8px;
+    background: var(--ubra-accent);
+    color: #fff;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s ease;
+}
+
+.ubra-download-btn:hover {
+    opacity: .88;
 }
 
 .ubra-typing {

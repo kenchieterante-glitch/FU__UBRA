@@ -171,6 +171,7 @@ class Api extends BaseController
         return [
             'name'        => $user['full_name'] ?? $employeeId,
             'employee_id' => $user['emp_id'] ?? $employeeId,
+            'role'        => $user['role'] ?? '',
         ];
     }
 
@@ -1011,7 +1012,8 @@ class Api extends BaseController
     public function notifications()
     {
         $model = new NotificationModel();
-        $rows  = $model->getAllSorted();
+        $role  = (string) ($this->currentApiUser()['role'] ?? '');
+        $rows  = NotificationModel::scopeToRole($model->getAllSorted(), $role);
 
         return $this->response->setJSON([
             'notifications' => array_map(fn($n) => [
@@ -1023,13 +1025,14 @@ class Api extends BaseController
                 'is_read'     => (bool) $n['is_read'],
                 'created_at'  => $n['created_at'],
             ], $rows),
-            'unread_count' => $model->getUnreadCount(),
+            'unread_count' => count(array_filter($rows, fn($n) => (int) ($n['is_read'] ?? 0) === 0)),
         ]);
     }
 
     public function notificationsUnreadCount()
     {
-        return $this->response->setJSON(['count' => (new NotificationModel())->getUnreadCount()]);
+        $role = (string) ($this->currentApiUser()['role'] ?? '');
+        return $this->response->setJSON(['count' => (new NotificationModel())->getUnreadCountForRole($role)]);
     }
 
     public function markNotificationRead($id)

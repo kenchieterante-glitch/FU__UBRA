@@ -22,16 +22,13 @@ class SettingsController extends BaseController
 
         $logs = [];
         try {
+            // activity_logs' real columns are id/user_id/module/action/logged_at
+            // — no description/created_at/ip_address (an older migration
+            // proposed those, but the live table was never built that way).
             $logs = $this->db->table('activity_logs')
                              ->orderBy('id', 'DESC')
                              ->limit(50)
                              ->get()->getResultArray();
-
-            foreach ($logs as &$log) {
-                $log['description'] = $log['description'] ?? ($log['action'] ?? 'Activity recorded');
-                $log['created_at']  = $log['created_at'] ?? null;
-            }
-            unset($log);
         } catch (\Exception $e) {
             log_message('error', 'SettingsController::index activity_logs fetch failed: ' . $e->getMessage());
         }
@@ -66,6 +63,7 @@ class SettingsController extends BaseController
         }
 
         $this->session->setFlashdata($ok ? 'success' : 'error', $ok ? 'General settings saved.' : 'Some general settings could not be saved.');
+        if ($ok) $this->logActivity('Settings', 'Updated general settings');
         return redirect()->to('/settings');
     }
 
@@ -76,6 +74,8 @@ class SettingsController extends BaseController
         $ok = $this->upsertSetting('ai_api_key', $this->request->getPost('ai_api_key') ?? '');
 
         $this->session->setFlashdata($ok ? 'success' : 'error', $ok ? 'AI configuration saved.' : 'AI configuration could not be saved.');
+        // Never log the key value itself — just that it changed.
+        if ($ok) $this->logActivity('Settings', 'Updated AI configuration');
         return redirect()->to('/settings');
     }
 
@@ -91,6 +91,8 @@ class SettingsController extends BaseController
         if (!empty($pass)) $ok = $this->upsertSetting('smtp_pass', $pass) && $ok;
 
         $this->session->setFlashdata($ok ? 'success' : 'error', $ok ? 'Email settings saved.' : 'Some email settings could not be saved.');
+        // Never log the password value itself — just that settings changed.
+        if ($ok) $this->logActivity('Settings', 'Updated email settings');
         return redirect()->to('/settings');
     }
 
@@ -105,6 +107,7 @@ class SettingsController extends BaseController
         $ok = $this->upsertSetting('reminder_days', $this->request->getPost('reminder_days') ?? '5') && $ok;
 
         $this->session->setFlashdata($ok ? 'success' : 'error', $ok ? 'Notification settings saved.' : 'Some notification settings could not be saved.');
+        if ($ok) $this->logActivity('Settings', 'Updated notification settings');
         return redirect()->to('/settings');
     }
 
@@ -148,6 +151,7 @@ class SettingsController extends BaseController
         ]);
 
         $this->session->setFlashdata('success', "User {$employeeId} created.");
+        $this->logActivity('Settings', "Created user account {$fullName} ({$employeeId}), role: {$role}");
         return redirect()->to('/settings');
     }
 
@@ -162,8 +166,10 @@ class SettingsController extends BaseController
         }
 
         // users' real primary key is department_id — there is no 'id' column.
+        $user = $this->db->table('users')->where('department_id', $id)->get()->getRowArray();
         $this->db->table('users')->where('department_id', $id)->delete();
         $this->session->setFlashdata('success', 'User deleted.');
+        $this->logActivity('Settings', 'Deleted user account ' . ($user['full_name'] ?? "#{$id}"));
         return redirect()->to('/settings');
     }
 

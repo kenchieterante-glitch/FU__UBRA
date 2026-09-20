@@ -21,17 +21,17 @@
     <div class="role-dash-panel-title"><i class="bi bi-people"></i> Personnel Management</div>
     <div class="stat-cards">
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Total Personnel" data-url="<?= base_url('personnel') ?>">
-            <span class="stat-icon tone-maroon"><i class="fa-solid fa-users"></i></span>
+            <span class="stat-icon tone-maroon"><i class="bi bi-people-fill"></i></span>
             <h3>Total Personnel</h3>
             <div class="value"><?= (int) $total_personnel ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Active" data-url="<?= base_url('personnel') ?>">
-            <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
+            <span class="stat-icon tone-green"><i class="bi bi-check-circle-fill"></i></span>
             <h3>Active</h3>
             <div class="value"><?= (int) $active_personnel ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="On Leave" data-url="<?= base_url('personnel') ?>">
-            <span class="stat-icon tone-gold"><i class="fa-solid fa-calendar-day"></i></span>
+            <span class="stat-icon tone-gold"><i class="bi bi-calendar-day"></i></span>
             <h3>On Leave</h3>
             <div class="value"><?= (int) $on_leave_personnel ?></div>
         </div>
@@ -42,27 +42,27 @@
     <div class="role-dash-panel-title"><i class="bi bi-tools"></i> Tools Management</div>
     <div class="stat-cards">
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Total Tools" data-url="<?= base_url('tools') ?>">
-            <span class="stat-icon tone-maroon"><i class="fa-solid fa-toolbox"></i></span>
+            <span class="stat-icon tone-maroon"><i class="bi bi-tools"></i></span>
             <h3>Total Tools</h3>
             <div class="value"><?= (int) $total_tools ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Available" data-url="<?= base_url('tools') ?>">
-            <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
+            <span class="stat-icon tone-green"><i class="bi bi-check-circle-fill"></i></span>
             <h3>Available</h3>
             <div class="value"><?= (int) $available_tools ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Borrowed" data-url="<?= base_url('tools?filter=borrowed') ?>">
-            <span class="stat-icon tone-neutral"><i class="fa-solid fa-hand-holding"></i></span>
+            <span class="stat-icon tone-neutral"><i class="bi bi-hand-index-thumb-fill"></i></span>
             <h3>Borrowed</h3>
             <div class="value"><?= (int) $borrowed_tools ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Needs Maintenance" data-url="<?= base_url('tools') ?>">
-            <span class="stat-icon tone-gold"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+            <span class="stat-icon tone-gold"><i class="bi bi-wrench-adjustable"></i></span>
             <h3>Needs Maintenance</h3>
             <div class="value"><?= (int) $maintenance_tools ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Disposal" data-url="<?= base_url('tools') ?>">
-            <span class="stat-icon tone-red"><i class="fa-solid fa-trash"></i></span>
+            <span class="stat-icon tone-red"><i class="bi bi-trash3-fill"></i></span>
             <h3>Disposal</h3>
             <div class="value"><?= (int) $disposal_tools ?></div>
         </div>

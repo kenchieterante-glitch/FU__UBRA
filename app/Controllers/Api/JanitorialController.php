@@ -43,18 +43,11 @@ class JanitorialController extends BaseApiController
         }
 
         $staff = [];
-        $cleanedZones = 0;
-        $pendingZones = 0;
 
         foreach ($assignments as $a) {
             $myTasks = $tasksByAssignment[$a['id']] ?? [];
             $done    = count(array_filter($myTasks, fn ($t) => (int) $t['is_done'] === 1));
             $total   = count($myTasks);
-            if ($total > 0 && $done === $total) {
-                $cleanedZones++;
-            } else {
-                $pendingZones++;
-            }
 
             $staff[] = [
                 'id'    => $a['id'],
@@ -72,15 +65,22 @@ class JanitorialController extends BaseApiController
         $lowStock    = array_values(array_filter($inventory, fn ($i) => $i['current_stock'] > 0 && $i['current_stock'] <= $i['reorder_threshold']));
         $outOfStock  = array_values(array_filter($inventory, fn ($i) => $i['current_stock'] <= 0));
 
+        // Shared with the main Dashboard's "Cleaning Completion" card and
+        // Janitorial Monitoring's own stat — counts zones (not shifts), and
+        // a zone with several staff needs only one of them to finish. This
+        // used to count per-assignment here, which double-counted a zone
+        // with multiple staff and disagreed with the web dashboards.
+        $zoneCounts = $this->assignmentModel->getZoneCleanCounts();
+
         return $this->ok([
             'areas'     => self::ZONE_SLUGS,
             'staff'     => $staff,
             'inventory' => $inventory,
             'summary'   => [
-                'total_zones'    => count(self::ZONE_SLUGS),
+                'total_zones'    => $zoneCounts['total'],
                 'active_shifts'  => count(array_filter($assignments, fn ($a) => $a['status'] === 'Active')),
-                'cleaned_zones'  => $cleanedZones,
-                'pending_zones'  => $pendingZones,
+                'cleaned_zones'  => $zoneCounts['cleaned'],
+                'pending_zones'  => $zoneCounts['pending'],
                 'low_stock'      => count($lowStock),
                 'out_of_stock'   => count($outOfStock),
             ],

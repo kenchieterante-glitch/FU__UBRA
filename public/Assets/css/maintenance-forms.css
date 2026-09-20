@@ -4,13 +4,25 @@
     overflow-x: auto;
 }
 
-/* Wider modal for the two big checklists (Facility: 21 items, Vehicle: 26) —
-   the default .modal-box width is too narrow to read a rating row cleanly. */
+/* Wider modal for the two big checklists (Facility: 21 items, Vehicle: 26)
+   and the log-book forms' entries table (Equipment/Aircon/Restroom, up to
+   10 columns) — the default .modal-box width forced the entries table into
+   its own horizontal scrollbar even though the modal itself had room to
+   grow. */
 .mf-big-box {
-    width: 100%;
-    max-width: 760px;
+    width: 92vw;
+    max-width: 1000px;
     max-height: 88vh;
     overflow-y: auto;
+}
+
+/* Save/Cancel (and the single "Add Entry" button) shouldn't stretch full
+   width — same fix applied elsewhere (Tools, Vehicles) for .btn-maroon's
+   default width:100%. These modals use a per-row id (viewModal<id>), so a
+   prefix match is used instead of one fixed id. */
+[id^="viewModal"] .modal-actions .btn-maroon {
+    width: auto;
+    margin-top: 0;
 }
 
 .mf-meta {

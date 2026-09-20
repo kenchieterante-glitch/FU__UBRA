@@ -80,11 +80,11 @@ foreach ($recordList as $r) {
             <td><span class="status-badge <?= $badgeClass ?>"><?= esc($computedStatus) ?></span></td>
             <td>
               <div class="action-buttons">
-                <button type="button" class="icon-btn" onclick="openBorrowDetail(<?= (int) $r['id'] ?>)" title="View Details" aria-label="View borrow details for <?= esc($r['asset_name'] ?? 'tool') ?>"><i class="fa-solid fa-eye"></i></button>
+                <button type="button" class="icon-btn" onclick="openBorrowDetail(<?= (int) $r['id'] ?>)" title="View Details" aria-label="View borrow details for <?= esc($r['asset_name'] ?? 'tool') ?>"><i class="bi bi-eye-fill"></i></button>
                 <?php if ($r['status'] === 'Borrowed'): ?>
                   <form id="returnForm<?= $r['id'] ?>" method="post" action="<?= base_url('tools/returnTool/' . $r['tool_id']) ?>" style="display:contents;">
                     <?= csrf_field() ?>
-                    <button type="button" class="icon-btn" onclick="confirmReturnTool('returnForm<?= $r['id'] ?>', '<?= esc($r['asset_name'] ?? 'this tool', 'js') ?>')" title="Mark Returned" aria-label="Mark <?= esc($r['asset_name'] ?? 'tool') ?> as returned"><i class="fa-solid fa-rotate-left"></i></button>
+                    <button type="button" class="icon-btn" onclick="confirmReturnTool('returnForm<?= $r['id'] ?>', '<?= esc($r['asset_name'] ?? 'this tool', 'js') ?>')" title="Mark Returned" aria-label="Mark <?= esc($r['asset_name'] ?? 'tool') ?> as returned"><i class="bi bi-arrow-counterclockwise"></i></button>
                   </form>
                 <?php endif; ?>
               </div>
@@ -106,7 +106,7 @@ foreach ($recordList as $r) {
   <div class="modal-box">
     <div class="modal-header">
       <h3 id="bdTitle">Borrowing Detail</h3>
-      <button type="button" class="modal-close-btn" onclick="closeBorrowDetail()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      <button type="button" class="modal-close-btn" onclick="closeBorrowDetail()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="modal-body" id="bdBody"></div>
   </div>

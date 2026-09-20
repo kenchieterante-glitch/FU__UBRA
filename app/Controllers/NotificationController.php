@@ -44,6 +44,9 @@ class NotificationController extends BaseController
             'draft_count'    => count($drafts),
             'supervisors'    => $this->getCoSupervisors(),
             'fireInspectors' => $this->getFireExtinguisherInspectors(),
+            'drivers'        => $this->getPersonnelByPosition('Driver'),
+            'maintenanceStaff' => $this->getPersonnelByPosition('Maintenance'),
+            'janitors'       => $this->getPersonnelByPosition(['Janitor', 'Cleaning']),
         ];
 
         return view('notifications/index', $data);
@@ -64,6 +67,28 @@ class NotificationController extends BaseController
             ->findAll();
 
         return array_map(fn($p) => ['name' => $p['full_name'], 'position' => $p['position']], $rows);
+    }
+
+    // Drivers, Maintenance, and Janitorial staff — used for the "New Message"
+    // Recipient dropdown so a message can actually be sent to one of them by
+    // name, not just to supervisors/fire inspectors. Accepts one position
+    // keyword or several (e.g. Janitor/Cleaning Operative are both
+    // "janitorial" for this purpose).
+    private function getPersonnelByPosition($positionLike): array
+    {
+        $keywords = (array) $positionLike;
+        $personnel = new PersonnelModel();
+        $query = $personnel->where('is_archived', 0)->groupStart();
+        foreach ($keywords as $i => $kw) {
+            $i === 0 ? $query->like('position', $kw) : $query->orLike('position', $kw);
+        }
+        $rows = $query->groupEnd()->orderBy('full_name', 'ASC')->findAll();
+
+        return array_map(fn($p) => [
+            'name'          => $p['full_name'],
+            'position'      => $p['position'],
+            'contactNumber' => $p['contact_number'] ?? '',
+        ], $rows);
     }
 
     // The specific person assigned to check each fire extinguisher unit —
@@ -121,7 +146,10 @@ class NotificationController extends BaseController
             return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
         }
         $act = ucfirst($this->request->getPost('action') ?? 'reviewed');
+        $notif = $this->notifModel->find($id);
         $this->notifModel->update($id, ['status' => $act, 'is_read' => 1, 'read_at' => date('Y-m-d H:i:s')]);
+        $module = ucfirst(NotificationModel::CATEGORY_MODULE[$notif['category'] ?? ''] ?? 'safety');
+        $this->logActivity($module, "{$act} notification: " . ($notif['category'] ?? "#{$id}"));
         return $this->response->setJSON(['success' => true, 'new_status' => $act]);
     }
 
@@ -148,6 +176,7 @@ class NotificationController extends BaseController
             'is_read'     => 1,
             'created_at'  => date('Y-m-d H:i:s'),
         ]);
+        $this->logActivity('Notifications', "Drafted message to " . (trim((string) $this->request->getPost('recipient')) ?: 'Operations Team'));
         return $this->response->setJSON(['success' => true]);
     }
 
@@ -165,6 +194,7 @@ class NotificationController extends BaseController
             'is_read'    => 0,
             'created_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->logActivity('Notifications', 'Sent message to ' . ($row['recipient'] ?? 'recipient'));
         return $this->response->setJSON(['success' => true]);
     }
 
@@ -182,9 +212,27 @@ class NotificationController extends BaseController
 
     public function unreadCount()
     {
-        if (!$this->session->get('isLoggedIn')) return $this->response->setJSON(['count' => 0]);
+        if (!$this->session->get('isLoggedIn')) return $this->response->setJSON(['count' => 0, 'latest' => []]);
         $role = (string) $this->session->get('role');
-        return $this->response->setJSON(['count' => $this->notifModel->getUnreadCountForRole($role)]);
+        $unread = array_filter(
+            NotificationModel::scopeToRole($this->notifModel->getAllSorted(), $role),
+            fn($n) => (int) ($n['is_read'] ?? 0) === 0
+        );
+
+        // Newest-first, capped small — the frontend only needs enough to pop
+        // a toast per notification it hasn't shown yet, not the full list.
+        $latest = array_slice(array_values($unread), 0, 10);
+
+        return $this->response->setJSON([
+            'count'  => count($unread),
+            'latest' => array_map(fn($n) => [
+                'id'          => (int) $n['id'],
+                'category'    => $n['category'] ?? 'Notification',
+                'description' => $n['description'] ?? '',
+                'priority'    => strtoupper($n['priority'] ?? 'ROUTINE'),
+                'created_at'  => $n['created_at'] ?? null,
+            ], $latest),
+        ]);
     }
 
     public function export()

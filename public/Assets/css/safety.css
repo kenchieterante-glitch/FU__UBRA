@@ -868,8 +868,6 @@
     border-left: 3px solid var(--m);
     border-radius: var(--r);
     padding: 1rem;
-    overflow-y: auto;
-    max-height: 600px;
     box-shadow: var(--shad-lg);
     animation: slideIn .25s ease;
     min-width: 0;
@@ -943,16 +941,39 @@
     color: var(--m);
 }
 
-/* Building/Department/Status filter popup for the fire extinguisher list.
-   Vehicles/GPS get this same look for free by nesting it inside
-   .table-toolbar (see base.css) — this section header isn't a
-   .table-toolbar, so the popup positioning/visibility has to be re-declared
-   here or it renders as a plain, always-visible inline block. */
-.dp-header .filter-menu-wrapper {
+/* Search + Building/Department/Status filter row for the overdue/status
+   list panel — its own row below the title/close header instead of being
+   crammed into that header as a third flex item (which rendered the filter
+   icon oddly centered between the title and the × button). */
+.fe-toolbar-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .8rem;
+    margin-bottom: .9rem;
+}
+
+.fe-toolbar-row .toolbar-search {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 1;
+    max-width: 360px;
+}
+
+.fe-toolbar-row .toolbar-search .search-box {
+    width: 100%;
+}
+
+/* Vehicles/GPS get this same look for free by nesting it inside
+   .table-toolbar (see base.css) — this row isn't a .table-toolbar, so the
+   popup positioning/visibility has to be re-declared here or it renders as
+   a plain, always-visible inline block. */
+.fe-toolbar-row .filter-menu-wrapper {
     position: relative;
 }
 
-.dp-header .filter-btn {
+.fe-toolbar-row .filter-btn {
     width: 36px;
     height: 36px;
     border: 1.5px solid var(--bdr);
@@ -966,12 +987,12 @@
     transition: border-color .15s ease, color .15s ease;
 }
 
-.dp-header .filter-btn:hover {
+.fe-toolbar-row .filter-btn:hover {
     border-color: var(--m);
     color: var(--m);
 }
 
-.dp-header .filter-popup {
+.fe-toolbar-row .filter-popup {
     position: absolute;
     top: calc(100% + 6px);
     right: 0;
@@ -985,11 +1006,11 @@
     z-index: 20;
 }
 
-.dp-header .filter-popup.visible {
+.fe-toolbar-row .filter-popup.visible {
     display: block;
 }
 
-.dp-header .filter-popup-title {
+.fe-toolbar-row .filter-popup-title {
     font-size: .7rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -998,25 +1019,25 @@
     margin-bottom: 10px;
 }
 
-.dp-header .filter-row {
+.fe-toolbar-row .filter-row {
     display: flex;
     flex-direction: column;
     gap: 5px;
     margin-bottom: 10px;
 }
 
-.dp-header .filter-row:last-child {
+.fe-toolbar-row .filter-row:last-child {
     margin-bottom: 0;
 }
 
-.dp-header .filter-row label {
+.fe-toolbar-row .filter-row label {
     font-size: .68rem;
     text-transform: uppercase;
     letter-spacing: .05em;
     color: var(--muted);
 }
 
-.dp-header .filter-popup select {
+.fe-toolbar-row .filter-popup select {
     width: 100%;
     border: 1px solid var(--bdr);
     border-radius: 7px;
@@ -1086,6 +1107,19 @@
 .fe-card:hover {
     box-shadow: 0 4px 14px rgba(0, 0, 0, .1);
     transform: translateY(-1px);
+}
+
+.fe-card-clickable {
+    cursor: pointer;
+}
+
+.fe-card-clickable:hover {
+    border-color: var(--maroon);
+}
+
+.fe-card-clickable:focus-visible {
+    outline: 2px solid var(--maroon);
+    outline-offset: 2px;
 }
 
 .fe-card:has(.fe-card-close) .fec-id {
@@ -2000,11 +2034,13 @@
     font-size: .78rem;
     padding: .35rem .4rem;
     border-radius: 7px;
-    cursor: pointer;
+    cursor: default;
 }
 
-.jcl-item:hover {
-    background: var(--bg);
+/* Checklist here just mirrors what staff mark done on the mobile app —
+   the checkbox is disabled, so no hover/click affordance either. */
+.jcl-item input[type="checkbox"] {
+    cursor: default;
 }
 
 .jcl-item.done {

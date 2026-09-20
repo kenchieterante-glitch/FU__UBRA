@@ -30,22 +30,22 @@ $vehicle_details_json = $vehicle_details_json ?? '{}';
 
 <div class="stat-cards">
   <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('')" role="button" tabindex="0">
-    <span class="stat-icon tone-maroon"><i class="fa-solid fa-truck"></i></span>
+    <span class="stat-icon tone-maroon"><i class="bi bi-truck"></i></span>
     <h3>Total Vehicles</h3>
     <div class="value"><?= (int) $total_vehicles ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('available')" role="button" tabindex="0">
-    <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
+    <span class="stat-icon tone-green"><i class="bi bi-check-circle-fill"></i></span>
     <h3>Available</h3>
     <div class="value"><?= (int) $available_vehicles ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('inuse')" role="button" tabindex="0">
-    <span class="stat-icon tone-neutral"><i class="fa-solid fa-road"></i></span>
+    <span class="stat-icon tone-neutral"><i class="bi bi-signpost-2"></i></span>
     <h3>In Use</h3>
     <div class="value"><?= (int) $inuse_vehicles ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('maintenance')" role="button" tabindex="0">
-    <span class="stat-icon tone-red"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+    <span class="stat-icon tone-red"><i class="bi bi-wrench-adjustable"></i></span>
     <h3>Needs Maintenance</h3>
     <div class="value"><?= count(array_filter($vehicles, fn($v) => $v['inspection_status'] == 'Expired' || $v['availability'] == 'Maintenance')) ?></div>
   </div>
@@ -132,28 +132,40 @@ $vehicle_details_json = $vehicle_details_json ?? '{}';
           <td><?= esc($v['type']) ?></td>
           <td><?= esc($v['driver_name'] ?? 'Unassigned') ?></td>
           <td><?= esc($v['department_name'] ?? 'Unassigned') ?></td>
-          <?php $gpsClass = $normalize_status($v['gps_status'] ?? 'unknown'); ?>
           <?php $inspectionClass = $normalize_status($v['inspection_status'] ?? 'unknown'); ?>
-          <?php $availabilityClass = $normalize_status($v['availability'] ?? 'unknown'); ?>
-          <td><span class="status-badge status-<?= esc($gpsClass) ?>"><?= esc($v['gps_status']) ?></span></td>
+          <?php $gpsOnline = ($v['gps_status'] ?? '') === 'Online'; ?>
+          <?php $availClass = match ($v['availability'] ?? 'Available') {
+              'In Use'      => 'avail-inuse',
+              'Reserved'    => 'avail-reserved',
+              'Maintenance' => 'avail-maint',
+              'Inactive'    => 'avail-inactive',
+              default       => 'avail-available',
+          }; ?>
+          <td>
+            <span class="gps-badge <?= $gpsOnline ? 'gps-online' : 'gps-offline' ?>">
+              <span class="<?= $gpsOnline ? 'pulse-dot' : 'dead-dot' ?>"></span>
+              <?= esc($v['gps_status']) ?>
+            </span>
+          </td>
           <td><span class="status-badge status-<?= esc($inspectionClass) ?>"><?= esc($v['inspection_status']) ?></span></td>
-          <td><span class="status-badge status-<?= esc($availabilityClass) ?>"><?= esc($v['availability']) ?></span></td>
+          <td><span class="avail-badge <?= esc($availClass) ?>"><?= esc($v['availability']) ?></span></td>
           <?php $prediction = $fuel_predictions[$v['id']] ?? ['hasData' => false]; ?>
           <td>
             <?php if (!empty($prediction['hasData'])): ?>
               <strong><?= esc((string) $prediction['predictedLiters30d']) ?> L</strong> / 30 days
               <br><small class="page-subtitle" style="margin:0;"><?= esc((string) $prediction['avgLPer100km']) ?> L per 100km avg</small>
+            <?php elseif (($prediction['logsCount'] ?? 0) >= 1): ?>
+              <small class="page-subtitle" style="margin:0;">Log 1 more fill-up to enable predictions</small>
             <?php else: ?>
-              <small class="page-subtitle" style="margin:0;">Not enough fuel logs yet</small>
+              <small class="page-subtitle" style="margin:0;">No fuel logs yet</small>
             <?php endif; ?>
           </td>
           <td class="action-cell">
             <div class="action-buttons" onclick="event.stopPropagation()">
-              <button type="button" class="icon-btn" onclick="document.getElementById('editModal<?= $v['id'] ?>').style.display='flex'" title="Edit" aria-label="Edit <?= esc($v['vehicle_name']) ?>"><i class="fa-solid fa-pen"></i></button>
-              <button type="button" class="icon-btn" onclick="openFuelLogModal(<?= (int) $v['id'] ?>, '<?= esc($v['vehicle_name'], 'js') ?>')" title="Log Fuel" aria-label="Log fuel for <?= esc($v['vehicle_name']) ?>"><i class="fa-solid fa-gas-pump"></i></button>
+              <button type="button" class="icon-btn" onclick="openFuelLogModal(<?= (int) $v['id'] ?>, '<?= esc($v['vehicle_name'], 'js') ?>')" title="Log Fuel" aria-label="Log fuel for <?= esc($v['vehicle_name']) ?>"><i class="bi bi-fuel-pump-fill"></i></button>
               <form method="post" action="<?= base_url('vehicles/delete/'.$v['id']) ?>" onsubmit="return confirm('Archive this vehicle?')" style="display:contents;">
                 <?= csrf_field() ?>
-                <button type="submit" class="icon-btn delete" title="Archive" aria-label="Archive <?= esc($v['vehicle_name']) ?>"><i class="fa-solid fa-archive"></i></button>
+                <button type="submit" class="icon-btn delete" title="Archive" aria-label="Archive <?= esc($v['vehicle_name']) ?>"><i class="bi bi-archive-fill"></i></button>
               </form>
             </div>
           </td>
@@ -166,62 +178,6 @@ $vehicle_details_json = $vehicle_details_json ?? '{}';
 </table>
 </div>
 </div>
-
-<?php if (!empty($vehicles)): ?>
-  <?php foreach ($vehicles as $v): ?>
-    <div class="modal" id="editModal<?= $v['id'] ?>">
-      <div class="modal-box">
-        <h3>Edit Vehicle</h3>
-        <form action="<?= base_url('vehicles/edit/'.$v['id']) ?>" method="post">
-          <?= csrf_field() ?>
-          <label>Vehicle Name / Model <span class="required-mark">*</span></label>
-          <input type="text" name="vehicle_name" value="<?= esc($v['vehicle_name']) ?>" required>
-          <label>Plate Number <span class="required-mark">*</span></label>
-          <input type="text" name="plate_no" value="<?= esc($v['plate_no']) ?>" required>
-          <label>Type</label>
-          <input type="text" name="type" value="<?= esc($v['type']) ?>">
-          <label>Driver</label>
-          <select name="driver_id">
-            <option value="">— Unassigned —</option>
-            <?php foreach ($personnel as $p): ?>
-              <option value="<?= $p['id'] ?>" <?= $p['id']==$v['driver_id']?'selected':'' ?>><?= esc($p['full_name']) ?></option>
-            <?php endforeach; ?>
-          </select>
-          <label>Department</label>
-          <select name="department_id">
-            <option value="">— Unassigned —</option>
-            <?php foreach ($departments as $d): ?>
-              <option value="<?= $d['id'] ?>" <?= $d['id']==$v['department_id']?'selected':'' ?>><?= esc($d['name']) ?></option>
-            <?php endforeach; ?>
-          </select>
-          <label>GPS Status</label>
-          <select name="gps_status">
-            <option <?= $v['gps_status']=='Online'?'selected':'' ?>>Online</option>
-            <option <?= $v['gps_status']=='Offline'?'selected':'' ?>>Offline</option>
-          </select>
-          <label>Inspection Status</label>
-          <select name="inspection_status">
-            <option <?= $v['inspection_status']=='Completed'?'selected':'' ?>>Completed</option>
-            <option <?= $v['inspection_status']=='Due Soon'?'selected':'' ?>>Due Soon</option>
-            <option <?= $v['inspection_status']=='Expired'?'selected':'' ?>>Expired</option>
-          </select>
-          <label>Availability</label>
-          <select name="availability">
-            <option <?= $v['availability']=='Available'?'selected':'' ?>>Available</option>
-            <option <?= $v['availability']=='In Use'?'selected':'' ?>>In Use</option>
-            <option <?= $v['availability']=='Maintenance'?'selected':'' ?>>Maintenance</option>
-            <option <?= $v['availability']=='Reserved'?'selected':'' ?>>Reserved</option>
-            <option <?= $v['availability']=='Inactive'?'selected':'' ?>>Inactive</option>
-          </select>
-          <div class="modal-actions">
-            <button type="button" onclick="document.getElementById('editModal<?= $v['id'] ?>').style.display='none'">Cancel</button>
-            <button type="submit" class="btn-maroon">Save Changes</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  <?php endforeach; ?>
-<?php endif; ?>
 
 <!-- LOG FUEL MODAL -->
 <div class="modal" id="fuelLogModal">
@@ -246,15 +202,86 @@ $vehicle_details_json = $vehicle_details_json ?? '{}';
   </div>
 </div>
 
-<!-- VEHICLE DETAIL MODAL — view-only: driver, department, fuel, PSI, and
-     history in one popup, closed with the × only (no edit/save here). -->
+<!-- VEHICLE DETAIL / EDIT MODAL — one shared popup, one shared size. The
+     pencil icon swaps #vdBody (view) for #vdEditForm (edit) in place rather
+     than closing this popup and opening a separate, differently-sized one. -->
 <div class="modal" id="vehicleDetailModal">
   <div class="modal-box">
     <div class="modal-header">
       <h3 id="vdTitle">Vehicle Detail</h3>
-      <button type="button" class="modal-close-btn" onclick="closeVehicleDetail()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header-actions">
+        <button type="button" class="modal-close-btn" id="vdEditBtn" onclick="toggleVehicleEditMode(true)" aria-label="Edit"><i class="bi bi-pencil-fill"></i></button>
+        <button type="button" class="modal-close-btn" onclick="closeVehicleDetail()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
     </div>
     <div class="modal-body" id="vdBody"></div>
+    <form class="modal-body" id="vdEditForm" method="post" style="display:none;">
+      <?= csrf_field() ?>
+      <!-- Same two-column .detail-grid the view mode uses (Driver/Department
+           side by side, etc.) so editing fills the same wide box instead of
+           a plain single-column stacked form. -->
+      <div class="detail-grid">
+        <div class="edit-field">
+          <label>Vehicle Name / Model <span class="required-mark">*</span></label>
+          <input type="text" name="vehicle_name" id="vdEditName" required>
+        </div>
+        <div class="edit-field">
+          <label>Plate Number <span class="required-mark">*</span></label>
+          <input type="text" name="plate_no" id="vdEditPlate" required>
+        </div>
+        <div class="edit-field">
+          <label>Type</label>
+          <input type="text" name="type" id="vdEditType">
+        </div>
+        <div class="edit-field">
+          <label>Driver</label>
+          <select name="driver_id" id="vdEditDriver">
+            <option value="">— Unassigned —</option>
+            <?php foreach ($personnel as $p): ?>
+              <option value="<?= $p['id'] ?>"><?= esc($p['full_name']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>Department</label>
+          <select name="department_id" id="vdEditDept">
+            <option value="">— Unassigned —</option>
+            <?php foreach ($departments as $d): ?>
+              <option value="<?= $d['id'] ?>"><?= esc($d['name']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>GPS Status</label>
+          <select name="gps_status" id="vdEditGps">
+            <option>Online</option>
+            <option>Offline</option>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>Inspection Status</label>
+          <select name="inspection_status" id="vdEditInspection">
+            <option>Completed</option>
+            <option>Due Soon</option>
+            <option>Expired</option>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>Availability</label>
+          <select name="availability" id="vdEditAvailability">
+            <option>Available</option>
+            <option>In Use</option>
+            <option>Maintenance</option>
+            <option>Reserved</option>
+            <option>Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" onclick="toggleVehicleEditMode(false)">Cancel</button>
+        <button type="submit" class="btn-maroon">Save Changes</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -267,16 +294,24 @@ function esc(s) {
 
 const vehicleDetails = <?= $vehicle_details_json ?? '{}' ?>;
 
+let currentDetailVehicleId = null;
+
 function openVehicleDetail(id) {
   const v = vehicleDetails[id];
   if (!v) return;
 
+  currentDetailVehicleId = id;
   document.getElementById('vdTitle').textContent = `${v.name} (${v.plate})`;
+
+  // Always reopen in view mode, even if a previous vehicle was left mid-edit.
+  document.getElementById('vdEditForm').style.display = 'none';
+  document.getElementById('vdBody').style.display = 'block';
+  document.getElementById('vdEditBtn').style.display = '';
 
   const pred = v.prediction && v.prediction.hasData
     ? `<div class="detail-row"><span>Predicted need</span><strong>${esc(v.prediction.predictedLiters30d)} L / 30 days</strong></div>
        <div class="detail-row"><span>Avg. consumption</span><strong>${esc(v.prediction.avgLPer100km)} L per 100km</strong></div>`
-    : `<div class="detail-row"><span>Predicted need</span><strong>Not enough fuel logs yet</strong></div>`;
+    : `<div class="detail-row"><span>Predicted need</span><strong>${(v.prediction && v.prediction.logsCount >= 1) ? 'Log 1 more fill-up to enable predictions' : 'No fuel logs yet'}</strong></div>`;
 
   const fuelRows = v.fuelLogs.length
     ? v.fuelLogs.map(f => `<tr><td>${esc(f.date)}</td><td>${esc(f.odo)} km</td><td>${esc(f.liters)} L</td><td>${esc(f.by || '—')}</td></tr>`).join('')
@@ -335,6 +370,41 @@ function openVehicleDetail(id) {
 function closeVehicleDetail() {
   document.getElementById('vehicleDetailModal').style.display = 'none';
   document.body.style.overflow = '';
+}
+
+// Swaps the view (#vdBody) and edit (#vdEditForm) content in place inside
+// the same popup — same modal element, same size — instead of closing this
+// one and opening a separate, differently-sized Edit modal.
+function toggleVehicleEditMode(editing) {
+  if (currentDetailVehicleId === null) return;
+  const v = vehicleDetails[currentDetailVehicleId];
+  if (!v) return;
+
+  const body = document.getElementById('vdBody');
+  const form = document.getElementById('vdEditForm');
+  const editBtn = document.getElementById('vdEditBtn');
+
+  if (editing) {
+    form.action = '<?= base_url('vehicles/edit/') ?>' + currentDetailVehicleId;
+    document.getElementById('vdEditName').value = v.name;
+    document.getElementById('vdEditPlate').value = v.plate;
+    document.getElementById('vdEditType').value = v.type;
+    document.getElementById('vdEditDriver').value = v.driverId ?? '';
+    document.getElementById('vdEditDept').value = v.departmentId ?? '';
+    document.getElementById('vdEditGps').value = v.gpsStatus;
+    document.getElementById('vdEditInspection').value = v.inspection;
+    document.getElementById('vdEditAvailability').value = v.availability;
+
+    document.getElementById('vdTitle').textContent = `Edit ${v.name} (${v.plate})`;
+    body.style.display = 'none';
+    form.style.display = 'block';
+    editBtn.style.display = 'none';
+  } else {
+    document.getElementById('vdTitle').textContent = `${v.name} (${v.plate})`;
+    form.style.display = 'none';
+    body.style.display = 'block';
+    editBtn.style.display = '';
+  }
 }
 
 function openFuelLogModal(vehicleId, vehicleName) {
@@ -424,8 +494,6 @@ function filterVehiclesByStat(kind) {
   } else {
     filterVehiclesTable();
   }
-
-  document.querySelector('.table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 document.querySelectorAll('.stat-card-clickable').forEach(card => {
@@ -442,11 +510,12 @@ const vehiclesUrlFilter = new URLSearchParams(window.location.search).get('filte
 if (vehiclesUrlFilter) filterVehiclesByStat(vehiclesUrlFilter);
 
 // Arriving from the GPS Tracker's Vehicle Profile popup's edit pencil
-// (e.g. vehicles?edit=6) — jump straight into that vehicle's edit form.
+// (e.g. vehicles?edit=6) — jump straight into that vehicle's detail popup,
+// already switched to edit mode.
 const vehiclesUrlEdit = new URLSearchParams(window.location.search).get('edit');
 if (vehiclesUrlEdit) {
-  const editModal = document.getElementById('editModal' + vehiclesUrlEdit);
-  if (editModal) editModal.style.display = 'flex';
+  openVehicleDetail(Number(vehiclesUrlEdit));
+  toggleVehicleEditMode(true);
 }
 </script>
 

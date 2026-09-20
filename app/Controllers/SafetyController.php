@@ -132,8 +132,11 @@ class SafetyController extends BaseController
             'work_order_registry_json' => $this->jsonForScript($workOrderRegistry),
             'work_order_total'         => count($openWorkOrders),
             'departments'              => $departments,
+            // Installer picker — Maintenance staff only, not every active
+            // employee (guards, drivers, janitors, etc. don't install fire
+            // extinguishers or aircon units).
             'personnel_options_json'   => $this->jsonForScript(
-                array_map(fn($p) => $p['full_name'], $this->personnelModel->where('is_archived', 0)->orderBy('full_name', 'ASC')->findAll())
+                array_map(fn($p) => $p['name'], $this->personnelModel->getActiveByPositionLike('Maintenance'))
             ),
         ]);
     }
@@ -148,6 +151,7 @@ class SafetyController extends BaseController
         }
         $name = trim((string) $this->request->getPost('installed_by'));
         $this->fireExtinguisherModel->update($id, ['inspector' => $name !== '' ? $name : null]);
+        $this->logActivity('Safety', "Set installer for fire extinguisher #{$id} to " . ($name !== '' ? $name : 'Unassigned'));
         return $this->response->setJSON(['success' => true]);
     }
 
@@ -176,6 +180,7 @@ class SafetyController extends BaseController
         }
         $name = trim((string) $this->request->getPost('installed_by'));
         $this->airconUnitModel->update($id, ['installed_by' => $name !== '' ? $name : null]);
+        $this->logActivity('Safety', "Set installer for aircon unit #{$id} to " . ($name !== '' ? $name : 'Unassigned'));
         return $this->response->setJSON(['success' => true]);
     }
 
@@ -343,6 +348,7 @@ class SafetyController extends BaseController
             'status'        => 'Active',
             'guard_on_duty' => session()->get('full_name'),
         ]);
+        $this->logActivity('Safety', "Key \"{$keyItem}\" scanned out to {$fullName}");
 
         return redirect()->back()->with('success', "Key \"{$keyItem}\" scanned out to {$fullName}.");
     }
@@ -376,6 +382,7 @@ class SafetyController extends BaseController
             'scan_out' => date('Y-m-d H:i:s'),
             'status'   => 'Returned',
         ]);
+        $this->logActivity('Safety', "Key \"{$log['key_item']}\" returned by {$log['full_name']}");
 
         return redirect()->back()->with('success', "Key \"{$log['key_item']}\" returned by {$log['full_name']}.");
     }

@@ -29,13 +29,13 @@
         </div>
         <div class="profile-hero-info">
             <h2><?= esc($fullName) ?></h2>
-            <span class="profile-role-badge"><i class="fa-solid fa-shield-halved"></i> <?= esc($user['role'] ?? 'Staff') ?></span>
+            <span class="profile-role-badge"><i class="bi bi-shield-fill-check"></i> <?= esc($user['role'] ?? 'Staff') ?></span>
             <div class="profile-meta-row">
-                <span><i class="fa-solid fa-id-badge"></i> <?= esc($user['emp_id'] ?? '—') ?></span>
-                <span><i class="fa-solid fa-building"></i> <?= esc($user['department'] ?? '—') ?></span>
-                <span><i class="fa-solid fa-envelope"></i> <?= esc($user['email'] ?? '—') ?></span>
+                <span><i class="bi bi-person-vcard-fill"></i> <?= esc($user['emp_id'] ?? '—') ?></span>
+                <span><i class="bi bi-building"></i> <?= esc($user['department'] ?? '—') ?></span>
+                <span><i class="bi bi-envelope-fill"></i> <?= esc($user['email'] ?? '—') ?></span>
                 <?php if ($memberSince): ?>
-                    <span><i class="fa-solid fa-calendar"></i> Member since <?= esc($memberSince) ?></span>
+                    <span><i class="bi bi-calendar3"></i> Member since <?= esc($memberSince) ?></span>
                 <?php endif; ?>
             </div>
         </div>
@@ -45,7 +45,7 @@
 <div class="profile-row">
     <div class="card profile-card">
         <div class="card-head">
-            <h3><i class="fa-solid fa-user-pen"></i> Profile Information</h3>
+            <h3><i class="bi bi-person-fill-gear"></i> Profile Information</h3>
         </div>
         <form method="post" action="<?= base_url('profile/updateProfile') ?>" enctype="multipart/form-data">
             <?= csrf_field() ?>
@@ -69,14 +69,14 @@
                 </div>
             </div>
             <div class="modal-actions" style="justify-content: flex-start;">
-                <button type="submit" class="btn-maroon"><i class="fa-solid fa-floppy-disk"></i> Update Profile</button>
+                <button type="submit" class="btn-maroon"><i class="bi bi-floppy-fill"></i> Update Profile</button>
             </div>
         </form>
     </div>
 
     <div class="card profile-card">
         <div class="card-head">
-            <h3><i class="fa-solid fa-lock"></i> Change Password</h3>
+            <h3><i class="bi bi-lock-fill"></i> Change Password</h3>
         </div>
         <form method="post" action="<?= base_url('profile/changePassword') ?>">
             <?= csrf_field() ?>
@@ -91,7 +91,7 @@
                 </div>
             </div>
             <div class="modal-actions" style="justify-content: flex-start;">
-                <button type="submit" class="btn-maroon"><i class="fa-solid fa-key"></i> Change Password</button>
+                <button type="submit" class="btn-maroon"><i class="bi bi-key-fill"></i> Change Password</button>
             </div>
         </form>
     </div>

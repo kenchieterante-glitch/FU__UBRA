@@ -131,7 +131,7 @@
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn-delete"
                                                 <?= $userId == session()->get('user_id') ? 'disabled title="Cannot delete yourself"' : '' ?>>
-                                                <i class="bi bi-trash3"></i>
+                                                <i class="bi bi-trash3-fill"></i>
                                             </button>
                                         </form>
                                     <?php else: ?>
@@ -369,7 +369,7 @@
                         ['icon'=>'bi-database-fill-lock','label'=>'SQL Injection',      'value'=>'PDO prepared statements',     'status'=>'active'],
                         ['icon'=>'bi-filetype-html',     'label'=>'XSS Prevention',     'value'=>'server-side input sanitization','status'=>'active'],
                         ['icon'=>'bi-person-lock',       'label'=>'Role-Based Access',  'value'=>'controller-level enforcement','status'=>'active'],
-                        ['icon'=>'bi-pencil-square',     'label'=>'Append-Only Records','value'=>'approved records are locked', 'status'=>'active'],
+                        ['icon'=>'bi-pencil-fill',     'label'=>'Append-Only Records','value'=>'approved records are locked', 'status'=>'active'],
                         ['icon'=>'bi-pen-fill',          'label'=>'Digital Signatures', 'value'=>'Canvas + hash + timestamp',   'status'=>'active'],
                         ['icon'=>'bi-journal-check',     'label'=>'Activity Logging',   'value'=>'user + IP + timestamp',       'status'=>'active'],
                         ['icon'=>'bi-image',             'label'=>'Media Upload Validation','value'=>'MIME-type checked server-side','status'=>'active'],
@@ -395,22 +395,20 @@
                 <div class="table-scroll">
                     <table class="stg-table">
                         <thead>
-                            <tr><th>User ID</th><th>Action</th><th>Description</th><th>IP Address</th><th>Date &amp; Time</th></tr>
+                            <tr><th>Module</th><th>Activity</th><th>Date &amp; Time</th></tr>
                         </thead>
                         <tbody>
                             <?php if (empty($logs)): ?>
-                                <tr><td colspan="5" class="empty-row">No activity logged yet.</td></tr>
+                                <tr><td colspan="3" class="empty-row">No activity logged yet.</td></tr>
                             <?php else: ?>
                                 <?php foreach ($logs as $log): ?>
                                 <tr>
-                                    <td><?= esc($log['user_id'] ?? '—') ?></td>
-                                    <td><span class="log-action"><?= esc($log['action'] ?? '—') ?></span></td>
-                                    <td class="log-desc"><?= esc($log['description'] ?? $log['action'] ?? '—') ?></td>
-                                    <td><code><?= esc($log['ip_address'] ?? '—') ?></code></td>
+                                    <td><span class="log-action"><?= esc($log['module'] ?? '—') ?></span></td>
+                                    <td class="log-desc"><?= esc($log['action'] ?? '—') ?></td>
                                     <td>
-                                        <?php if (!empty($log['created_at'])): ?>
-                                            <?= date('M j, Y', strtotime($log['created_at'])) ?>
-                                            <span class="time-muted"><?= date('h:i A', strtotime($log['created_at'])) ?></span>
+                                        <?php if (!empty($log['logged_at'])): ?>
+                                            <?= date('M j, Y', strtotime($log['logged_at'])) ?>
+                                            <span class="time-muted"><?= date('h:i A', strtotime($log['logged_at'])) ?></span>
                                         <?php else: ?>
                                             <span class="time-muted">—</span>
                                         <?php endif; ?>
@@ -495,6 +493,10 @@
                         <option>Driver</option>
                         <option>Janitorial Staff</option>
                         <option>Borrower</option>
+                        <option value="Security">Security Head</option>
+                        <option value="Tools">Tools Head</option>
+                        <option value="Facilities">Facilities Supervisor</option>
+                        <option value="Janitorial">Janitorial Supervisor</option>
                     </select>
                 </div>
                 <div class="form-group">

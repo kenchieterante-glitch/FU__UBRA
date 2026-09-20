@@ -44,6 +44,7 @@ $routes->get('dashboard', 'Dashboard::index');
 $routes->get('security-dashboard', 'SecurityDashboardController::index');
 $routes->get('tools-dashboard', 'ToolsDashboardController::index');
 $routes->get('facilities-dashboard', 'FacilitiesDashboardController::index');
+$routes->get('janitorial-dashboard', 'JanitorialDashboardController::index');
 
 // ============================================================
 // PERSONNEL
@@ -191,6 +192,7 @@ $routes->get('janitorial',            'JanitorialController::index');
 $routes->get('janitorial/checklists', 'JanitorialController::checklists');
 $routes->post('janitorial/refillInventory/(:num)', 'JanitorialController::refillInventory/$1');
 $routes->post('janitorial/addInventoryItem',       'JanitorialController::addInventoryItem');
+$routes->post('janitorial/assignStaff',            'JanitorialController::assignStaff');
 
 // ============================================================
 // CALENDAR

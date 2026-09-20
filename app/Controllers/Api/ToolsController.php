@@ -3,6 +3,7 @@
 namespace App\Controllers\Api;
 
 use App\Models\BorrowModel;
+use App\Models\NotificationModel;
 use App\Models\PersonnelModel;
 use App\Models\ToolsModel;
 
@@ -78,12 +79,16 @@ class ToolsController extends BaseApiController
             return $this->fail('This tool is not available to borrow.', 409);
         }
 
+        $borrower       = $this->request->getPost('borrower_id') ?: $this->request->getPost('borrower');
+        $department     = $this->request->getPost('department');
+        $expectedReturn = $this->request->getPost('expected_return');
+
         $this->borrowModel->insert([
             'tool_id'              => $toolId,
-            'borrower'             => $this->request->getPost('borrower_id') ?: $this->request->getPost('borrower'),
-            'department'           => $this->request->getPost('department'),
+            'borrower'             => $borrower,
+            'department'           => $department,
             'borrowed_date'        => date('Y-m-d'),
-            'expected_return'      => $this->request->getPost('expected_return'),
+            'expected_return'      => $expectedReturn,
             'condition_on_borrow'  => $this->request->getPost('condition_on_borrow') ?: 'Excellent',
             'status'               => 'Borrowed',
             'created_at'           => date('Y-m-d H:i:s'),
@@ -91,6 +96,18 @@ class ToolsController extends BaseApiController
         ]);
 
         $this->toolsModel->update($toolId, ['availability' => 'Borrowed', 'last_activity_at' => date('Y-m-d H:i:s')]);
+
+        $dueText = !empty($expectedReturn) ? date('M j, Y', strtotime($expectedReturn)) : 'no due date set';
+        (new NotificationModel())->insert([
+            'category'    => 'Tool Borrowed',
+            'description' => "{$tool['asset_name']} borrowed by " . ($borrower ?: 'an unrecorded borrower')
+                . ($department ? " ({$department})" : '') . " — due back on {$dueText}.",
+            'recipient'   => 'Tools & Equipment Office',
+            'priority'    => 'MODERATE',
+            'status'      => 'Pending',
+            'is_read'     => 0,
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
 
         return $this->ok();
     }

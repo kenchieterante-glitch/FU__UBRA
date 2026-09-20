@@ -32,27 +32,33 @@ class DepartmentController extends BaseController
 
     public function add()
     {
+        $name = $this->request->getPost('name');
         $this->departmentModel->insert([
-            'name'        => $this->request->getPost('name'),
+            'name'        => $name,
             'description' => $this->request->getPost('description'),
         ]);
+        $this->logActivity('Personnel', "Added department {$name}");
 
         return redirect()->to('/departments')->with('success', 'Department added successfully.');
     }
 
     public function edit($id)
     {
+        $name = $this->request->getPost('name');
         $this->departmentModel->update($id, [
-            'name'        => $this->request->getPost('name'),
+            'name'        => $name,
             'description' => $this->request->getPost('description'),
         ]);
+        $this->logActivity('Personnel', "Updated department {$name} (#{$id})");
 
         return redirect()->to('/departments')->with('success', 'Department updated successfully.');
     }
 
     public function delete($id)
     {
+        $dept = $this->departmentModel->find($id);
         $this->departmentModel->delete($id);
+        $this->logActivity('Personnel', 'Removed department ' . ($dept['name'] ?? "#{$id}"));
         return redirect()->to('/departments')->with('success', 'Department removed.');
     }
 }

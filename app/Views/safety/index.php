@@ -27,32 +27,32 @@ $departments = $departments ?? [];
 
   <div class="stat-cards" id="overviewGrid">
     <div class="stat-card stat-card-clickable" onclick="showStatusList('coverage')" role="button" tabindex="0">
-      <span class="stat-icon tone-maroon"><i class="fa-solid fa-fire-extinguisher"></i></span>
+      <span class="stat-icon tone-maroon"><i class="bi bi-fire"></i></span>
       <h3>Fire Safety Coverage</h3>
       <div class="value"><?= (int) $coverage_total ?> units</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="showStatusList('readiness')" role="button" tabindex="0">
-      <span class="stat-icon tone-green"><i class="fa-solid fa-clipboard-check"></i></span>
+      <span class="stat-icon tone-green"><i class="bi bi-clipboard2-check"></i></span>
       <h3>Inspection Readiness</h3>
       <div class="value"><?= (int) $inspection_readiness ?>%</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="showStatusList('critical')" role="button" tabindex="0">
-      <span class="stat-icon tone-red"><i class="fa-solid fa-triangle-exclamation"></i></span>
+      <span class="stat-icon tone-red"><i class="bi bi-exclamation-triangle-fill"></i></span>
       <h3>Critical Alerts</h3>
       <div class="value" id="criticalAlertsValue">0 active</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="showStatusList('aircon')" role="button" tabindex="0">
-      <span class="stat-icon tone-neutral"><i class="fa-solid fa-snowflake"></i></span>
+      <span class="stat-icon tone-neutral"><i class="bi bi-snow2"></i></span>
       <h3>Aircon</h3>
       <div class="value"><?= (int) $aircon_total ?> units</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="showStatusList('aircon-attention')" role="button" tabindex="0">
-      <span class="stat-icon tone-red"><i class="fa-solid fa-fan"></i></span>
+      <span class="stat-icon tone-red"><i class="bi bi-fan"></i></span>
       <h3>Aircon Not Working</h3>
       <div class="value"><?= (int) $aircon_attention ?> units</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="scrollToMaintenance()" role="button" tabindex="0" style="display:none">
-      <span class="stat-icon tone-gold"><i class="fa-solid fa-clipboard-list"></i></span>
+      <span class="stat-icon tone-gold"><i class="bi bi-clipboard2-check"></i></span>
       <h3>Work Orders</h3>
       <div class="value" id="workOrderCount"><?= (int) $work_order_total ?> open</div>
     </div>
@@ -62,6 +62,13 @@ $departments = $departments ?? [];
   <div class="maintenance-section" id="statusListSection" style="display:none">
     <div class="dp-header">
       <div class="dp-section-title" id="statusListTitle"><i class="bi bi-list-ul"></i> List</div>
+      <button class="dp-close" onclick="closeStatusList()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="fe-toolbar-row">
+      <div class="toolbar-search">
+        <input type="text" id="feSearchInput" class="search-box" placeholder="Search unit ID or location…" oninput="renderStatusList()">
+        <i class="bi bi-search search-icon"></i>
+      </div>
       <div class="filter-menu-wrapper" id="feFilterWrapper" style="display:none">
         <button type="button" class="filter-btn" onclick="toggleFeFilterMenu()" aria-label="Open filters">
           <i class="bi bi-funnel"></i>
@@ -69,19 +76,18 @@ $departments = $departments ?? [];
         <div class="filter-popup" id="feFilterPopup">
           <div class="filter-popup-title">Filter</div>
           <div class="filter-row">
-            <label for="feFilterBuilding">Building</label>
+            <label for="feFilterBuilding">Department</label>
             <select id="feFilterBuilding" onchange="applyFeFilters()">
-              <option value="">All Buildings</option>
+              <option value="">All Departments</option>
             </select>
           </div>
           <div class="filter-row">
-            <label for="feFilterDept">Department</label>
+            <label for="feFilterDept">Installed by</label>
+            <!-- Options are filled in from the actual fire extinguisher
+                 registry (populateFeDeptOptions) — only departments that
+                 really appear on this map, not the full company-wide list. -->
             <select id="feFilterDept" onchange="applyFeFilters()">
-              <option value="">All Departments</option>
-              <?php foreach ($departments as $d): ?>
-                <option value="<?= esc($d['name']) ?>"><?= esc($d['name']) ?></option>
-              <?php endforeach; ?>
-              <option value="Unassigned">Unassigned</option>
+              <option value="">All (Installed by)</option>
             </select>
           </div>
           <div class="filter-row">
@@ -96,7 +102,6 @@ $departments = $departments ?? [];
           </div>
         </div>
       </div>
-      <button class="dp-close" onclick="closeStatusList()"><i class="bi bi-x-lg"></i></button>
     </div>
     <div id="statusListGrid" class="dp-fe-grid"></div>
   </div>
@@ -108,7 +113,7 @@ $departments = $departments ?? [];
       <div id="workOrderGrid" class="dp-fe-grid"></div>
     </div>
 
-    <div class="dp-section-title"><i class="bi bi-exclamation-triangle"></i> Overdue Fire Extinguishers</div>
+    <div class="dp-section-title"><i class="bi bi-exclamation-triangle-fill"></i> Overdue Fire Extinguishers</div>
     <div id="overdueFeGrid" class="dp-fe-grid"></div>
   </div>
 
@@ -171,7 +176,7 @@ $departments = $departments ?? [];
       <div class="missing-alert" id="missingAlert" style="display:none">
         <i class="bi bi-exclamation-octagon-fill"></i>
         <span id="missingAlertMsg"></span>
-        <button onclick="document.getElementById('missingAlert').style.display='none'"><i class="bi bi-x"></i></button>
+        <button onclick="document.getElementById('missingAlert').style.display='none'"><i class="bi bi-x-lg"></i></button>
       </div>
 
       <div class="drill-panel" id="drillPanel" style="display:none">
@@ -201,31 +206,13 @@ $departments = $departments ?? [];
 <div class="modal" id="installerModal">
   <div class="modal-box">
     <h3>Set Installer</h3>
-    <label>Installed By</label>
+    <label>Installer</label>
     <select id="installerSelect">
       <option value="">— Unassigned —</option>
     </select>
     <div class="modal-actions">
       <button type="button" onclick="document.getElementById('installerModal').style.display='none'">Cancel</button>
       <button type="button" class="btn-maroon" onclick="saveInstaller()">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- Set Department modal — fire extinguisher units only -->
-<div class="modal" id="departmentModal">
-  <div class="modal-box">
-    <h3>Set Department</h3>
-    <label>Department</label>
-    <select id="departmentSelect">
-      <option value="">— Unassigned —</option>
-      <?php foreach ($departments as $d): ?>
-        <option value="<?= (int) $d['id'] ?>"><?= esc($d['name']) ?></option>
-      <?php endforeach; ?>
-    </select>
-    <div class="modal-actions">
-      <button type="button" onclick="document.getElementById('departmentModal').style.display='none'">Cancel</button>
-      <button type="button" class="btn-maroon" onclick="saveDepartment()">Save</button>
     </div>
   </div>
 </div>
@@ -453,10 +440,9 @@ $departments = $departments ?? [];
           <div class="fec-status status-${u.status.toLowerCase().replace(' ', '')}">${esc(u.status)}</div>
           <div class="fec-row"><span>Type</span><strong>${esc(u.type)}</strong></div>
           <div class="fec-row"><span>Floor</span><strong>${esc(u.floor || 'Ground Floor')}</strong></div>
-          <div class="fec-row"><span>Department</span><strong>${esc(u.dept)} <button type="button" class="fec-edit-btn" title="Change department" onclick="openDepartmentModal(${u.dbId}, '${esc(u.dept).replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen"></i></button></strong></div>
           <div class="fec-row"><span>Weight</span><strong>${u.kg} kg</strong></div>
           <div class="fec-row"><span>Installed</span><strong>${esc(u.year)}</strong></div>
-          <div class="fec-row"><span>Installed by</span><strong>${esc(u.inspector)} <button type="button" class="fec-edit-btn" title="Change installer" onclick="openInstallerModal('fe', ${u.dbId}, '${esc(u.inspector).replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen"></i></button></strong></div>
+          <div class="fec-row"><span>Installed by</span><strong>${esc(u.inspector)} <button type="button" class="fec-edit-btn" title="Change installed by" onclick="openInstallerModal('fe', ${u.dbId}, '${esc(u.inspector).replace(/'/g, "\\'")}')"><i class="bi bi-pencil-fill"></i></button></strong></div>
           <div class="fec-row"><span>Assigned Guard</span><strong>${esc(u.assigned)}</strong></div>
           <div class="fec-row"><span>Last Insp.</span><strong>${esc(u.lastInsp)}</strong></div>
           <div class="fec-row"><span>Next Due</span><strong class="${daysLeft < 0 ? 'text-danger' : daysLeft < 30 ? 'text-warn' : ''}">${esc(u.nextDue)} (${daysLeft < 0 ? 'OVERDUE' : daysLeft + 'd'})</strong></div>
@@ -472,7 +458,7 @@ $departments = $departments ?? [];
           <div class="fec-row"><span>Last Cleaning</span><strong>${esc(u.lastClean) || '—'}</strong></div>
           <div class="fec-row"><span>Next Schedule</span><strong>${esc(u.nextDue) || '—'}</strong></div>
           <div class="fec-row"><span>Assigned Tech</span><strong>${esc(u.tech)}</strong></div>
-          <div class="fec-row"><span>Installed By</span><strong>${esc(u.installedBy)} <button type="button" class="fec-edit-btn" title="Change installer" onclick="openInstallerModal('aircon', ${u.id}, '${esc(u.installedBy).replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen"></i></button></strong></div>
+          <div class="fec-row"><span>Installer</span><strong>${esc(u.installedBy)} <button type="button" class="fec-edit-btn" title="Change installer" onclick="openInstallerModal('aircon', ${u.id}, '${esc(u.installedBy).replace(/'/g, "\\'")}')"><i class="bi bi-pencil-fill"></i></button></strong></div>
           <div class="fec-row"><span>Checklist</span><strong>${done}/${total} done</strong></div>
         </div>`;
     }
@@ -602,10 +588,10 @@ $departments = $departments ?? [];
     grid.innerHTML = preview.map(u => {
       const daysLeft = Math.ceil((new Date(u.nextDue) - today) / 86400000);
       return `
-      <div class="fe-card fe-urgent">
+      <div class="fe-card fe-urgent fe-card-clickable" role="button" tabindex="0" title="View ${esc(u.id)} on the campus map" onclick="openOverdueFeDetail('${esc(u.id).replace(/'/g, "\\'")}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
         <div class="fec-id">${esc(u.id)}</div>
         <div class="fec-status status-${u.status.toLowerCase().replace(' ','')}">${esc(u.status)}</div>
-        <div class="fec-row"><span>Location</span><strong>${esc(u.loc)}</strong></div>
+        <div class="fec-row"><span>Department</span><strong>${esc(u.loc)}</strong></div>
         <div class="fec-row"><span>Next Due</span><strong class="text-danger">${esc(u.nextDue)} (${Math.abs(daysLeft)}d overdue)</strong></div>
         <div class="fec-row"><span>Assigned Guard</span><strong>${esc(u.assigned)}</strong></div>
       </div>`;
@@ -617,6 +603,30 @@ $departments = $departments ?? [];
           View all ${overdue.length} overdue →
         </button>`);
     }
+  }
+
+  // Jump straight from an overdue-extinguisher card to its exact spot on the
+  // campus map, with that unit's detail already open in the drill panel —
+  // saves hunting for the right building/floor manually.
+  function openOverdueFeDetail(id) {
+    const u = feRegistry.find(x => x.id === id);
+    if (!u) return;
+
+    if (activeSafetyTab !== 'fe') switchSafetyTab('fe');
+
+    zoomToBuilding(u.loc);
+
+    // zoomToBuilding/selectMapBuilding auto-pick whichever floor has any
+    // unit, which isn't necessarily this unit's floor — pin it explicitly.
+    currentFloor = u.floor || 'Ground Floor';
+    renderFloorTabs();
+    renderFloorDiagram();
+
+    const unitsOnFloor = getUnitsForCurrentBuilding().filter(x => (x.floor || 'Ground Floor') === currentFloor);
+    const idx = unitsOnFloor.findIndex(x => x.id === id);
+    if (idx > -1) selectFloorUnit(idx);
+
+    document.getElementById('mapLayout').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function scrollToMaintenance() {
@@ -632,12 +642,11 @@ $departments = $departments ?? [];
     const sev = daysLeft === null ? 'fe-ok' : daysLeft < 0 ? 'fe-urgent' : daysLeft < 30 ? 'fe-warn' : 'fe-ok';
     return `
       <div class="fe-card ${sev} fe-collapsed">
-        <button type="button" class="fe-card-toggle" title="Expand/collapse" onclick="toggleFeCard(this)"><i class="fa-solid fa-chevron-down"></i></button>
+        <button type="button" class="fe-card-toggle" title="Expand/collapse" onclick="toggleFeCard(this)"><i class="bi bi-chevron-down"></i></button>
         <div class="fec-id">${esc(u.id)}</div>
         <div class="fec-status status-${u.status.toLowerCase().replace(' ', '')}">${esc(u.status)}</div>
         <div class="fec-body">
-          <div class="fec-row"><span>Location</span><strong>${esc(u.loc)} (${esc(u.floor || 'Ground Floor')})</strong></div>
-          <div class="fec-row"><span>Department</span><strong>${esc(u.dept)} <button type="button" class="fec-edit-btn" title="Change department" onclick="openDepartmentModal(${u.dbId}, '${esc(u.dept).replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen"></i></button></strong></div>
+          <div class="fec-row"><span>Department</span><strong>${esc(u.loc)} (${esc(u.floor || 'Ground Floor')})</strong></div>
           <div class="fec-row"><span>Type</span><strong>${esc(u.type)}</strong></div>
           <div class="fec-row"><span>Installed by</span><strong>${esc(u.inspector)}</strong></div>
           <div class="fec-row"><span>Next Due</span><strong class="${daysLeft !== null && daysLeft < 0 ? 'text-danger' : daysLeft !== null && daysLeft < 30 ? 'text-warn' : ''}">${esc(u.nextDue) || '—'}${daysLeft !== null ? ` (${daysLeft < 0 ? 'OVERDUE' : daysLeft + 'd'})` : ''}</strong></div>
@@ -665,43 +674,9 @@ $departments = $departments ?? [];
     card.classList.toggle('fe-collapsed', collapsed);
     const icon = card.querySelector('.fe-card-toggle i');
     if (icon) {
-      icon.classList.toggle('fa-chevron-down', collapsed);
-      icon.classList.toggle('fa-chevron-up', !collapsed);
+      icon.classList.toggle('bi-chevron-down', collapsed);
+      icon.classList.toggle('bi-chevron-up', !collapsed);
     }
-  }
-
-  let departmentTarget = null;
-
-  function openDepartmentModal(dbId, currentDept) {
-    departmentTarget = dbId;
-    const select = document.getElementById('departmentSelect');
-    select.value = '';
-    [...select.options].forEach(opt => { if (opt.textContent === currentDept) select.value = opt.value; });
-    document.getElementById('departmentModal').style.display = 'flex';
-  }
-
-  function saveDepartment() {
-    if (!departmentTarget) return;
-    const departmentId = document.getElementById('departmentSelect').value;
-
-    const fd = new FormData();
-    fd.append('department_id', departmentId);
-
-    fetch(`<?= base_url('safety/setDepartment/') ?>${departmentTarget}`, { method: 'POST', headers: csrfHeaders(), body: fd })
-      .then(r => r.json())
-      .then(res => {
-        if (!res.success) throw new Error('Could not save department.');
-        const unit = feRegistry.find(u => u.dbId === departmentTarget);
-        if (unit) unit.dept = res.department;
-
-        document.getElementById('departmentModal').style.display = 'none';
-        if (currentStatusKind) renderStatusList();
-        const selectedIcons = [...document.querySelectorAll('.floor-plan-icon')];
-        const selectedIdx = selectedIcons.findIndex(el => el.classList.contains('selected'));
-        if (selectedIdx !== -1) selectFloorUnit(selectedIdx);
-        showToast('Department updated.');
-      })
-      .catch(() => showToast('Could not save department. Please try again.', true));
   }
 
   function airconUnitCardHtml(u) {
@@ -710,7 +685,7 @@ $departments = $departments ?? [];
     const sev = u.condition === 'Operational' ? 'fe-ok' : u.condition === 'Needs Cleaning' ? 'fe-warn' : 'fe-urgent';
     return `
       <div class="fe-card ${sev} fe-collapsed">
-        <button type="button" class="fe-card-toggle" title="Expand/collapse" onclick="toggleFeCard(this)"><i class="fa-solid fa-chevron-down"></i></button>
+        <button type="button" class="fe-card-toggle" title="Expand/collapse" onclick="toggleFeCard(this)"><i class="bi bi-chevron-down"></i></button>
         <div class="fec-id">${esc(u.unit)}</div>
         <div class="fec-status">${esc(u.condition)}</div>
         <div class="fec-body">
@@ -746,6 +721,7 @@ $departments = $departments ?? [];
     currentStatusKind = kind;
     const { isFe } = baseUnitsForKind(kind);
 
+    document.getElementById('feSearchInput').value = '';
     document.getElementById('feFilterWrapper').style.display = isFe ? '' : 'none';
     document.getElementById('feFilterPopup').classList.remove('visible');
     if (isFe) {
@@ -753,6 +729,7 @@ $departments = $departments ?? [];
       document.getElementById('feFilterDept').value = '';
       document.getElementById('feFilterStatus').value = '';
       populateFeBuildingOptions();
+      populateFeDeptOptions();
     }
 
     renderStatusList();
@@ -764,21 +741,32 @@ $departments = $departments ?? [];
     document.getElementById('statusListSection').style.display = 'none';
   }
 
-  // Re-renders the currently open status list, applying the Building/
-  // Department/Status filters on top of whichever KPI card was clicked.
+  // Re-renders the currently open status list, applying the search box plus
+  // (for fire extinguishers) the Building/Department/Status filters on top
+  // of whichever KPI card was clicked.
   function renderStatusList() {
     const { title, units, cardFn, isFe, byFloor } = baseUnitsForKind(currentStatusKind);
 
     let filtered = units;
     if (isFe) {
       const building = document.getElementById('feFilterBuilding').value;
-      const dept = document.getElementById('feFilterDept').value;
+      const installedBy = document.getElementById('feFilterDept').value;
       const status = document.getElementById('feFilterStatus').value;
       filtered = units.filter(u =>
         (!building || u.loc === building)
-        && (!dept || u.dept === dept)
+        && (!installedBy || u.inspector === installedBy)
         && (!status || u.status === status)
       );
+    }
+
+    const search = (document.getElementById('feSearchInput')?.value || '').trim().toLowerCase();
+    if (search) {
+      filtered = filtered.filter(u => {
+        const idText = String(u.id ?? u.unit ?? '').toLowerCase();
+        const locText = String(u.loc ?? '').toLowerCase();
+        const floorText = String(u.floor ?? '').toLowerCase();
+        return idText.includes(search) || locText.includes(search) || floorText.includes(search);
+      });
     }
 
     document.getElementById('statusListTitle').innerHTML = `<i class="bi bi-list-ul"></i> ${title}`;
@@ -824,8 +812,18 @@ $departments = $departments ?? [];
   function populateFeBuildingOptions() {
     const select = document.getElementById('feFilterBuilding');
     const buildings = [...new Set(feRegistry.map(u => u.loc))].sort();
-    select.innerHTML = '<option value="">All Buildings</option>'
+    select.innerHTML = '<option value="">All Departments</option>'
       + buildings.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+  }
+
+  // Only "Installed by" (installer) names actually recorded on a fire
+  // extinguisher on the map — not the full Maintenance roster, which would
+  // include people who haven't actually installed anything yet.
+  function populateFeDeptOptions() {
+    const select = document.getElementById('feFilterDept');
+    const installers = [...new Set(feRegistry.map(u => u.inspector).filter(name => name && name !== '—'))].sort();
+    select.innerHTML = '<option value="">All (Installed by)</option>'
+      + installers.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
   }
 
   function toggleFeFilterMenu() {

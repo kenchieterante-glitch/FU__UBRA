@@ -65,7 +65,9 @@ class VehicleController extends BaseController
                 'plate'        => $v['plate_no'],
                 'type'         => $v['type'],
                 'driver'       => $v['driver_name'] ?? 'Unassigned',
+                'driverId'     => $v['driver_id'],
                 'department'   => $v['department_name'] ?? 'Unassigned',
+                'departmentId' => $v['department_id'],
                 'gpsStatus'    => $v['gps_status'],
                 'inspection'   => $v['inspection_status'],
                 'availability' => $v['availability'],
@@ -100,8 +102,9 @@ class VehicleController extends BaseController
 
     public function add()
     {
+        $name = $this->request->getPost('vehicle_name');
         $this->vehicleModel->insert([
-            'vehicle_name'      => $this->request->getPost('vehicle_name'),
+            'vehicle_name'      => $name,
             'plate_no'          => $this->request->getPost('plate_no'),
             'type'              => $this->request->getPost('type'),
             'driver_id'         => $this->request->getPost('driver_id') ?: null,
@@ -110,14 +113,16 @@ class VehicleController extends BaseController
             'inspection_status' => $this->request->getPost('inspection_status') ?? 'Pending',
             'availability'      => $this->request->getPost('availability') ?? 'Available',
         ]);
+        $this->logActivity('Vehicle', "Registered vehicle {$name} ({$this->request->getPost('plate_no')})");
 
         return redirect()->to('/vehicles')->with('success', 'Vehicle registered successfully.');
     }
 
     public function edit($id)
     {
+        $name = $this->request->getPost('vehicle_name');
         $this->vehicleModel->update($id, [
-            'vehicle_name'      => $this->request->getPost('vehicle_name'),
+            'vehicle_name'      => $name,
             'plate_no'          => $this->request->getPost('plate_no'),
             'type'              => $this->request->getPost('type'),
             'driver_id'         => $this->request->getPost('driver_id') ?: null,
@@ -125,6 +130,7 @@ class VehicleController extends BaseController
             'inspection_status' => $this->request->getPost('inspection_status'),
             'availability'      => $this->request->getPost('availability'),
         ]);
+        $this->logActivity('Vehicle', "Updated vehicle {$name} (#{$id})");
 
         return redirect()->to('/vehicles')->with('success', 'Vehicle updated successfully.');
     }
@@ -133,10 +139,14 @@ class VehicleController extends BaseController
     {
         if ($resp = $this->requireAdmin()) return $resp;
 
+        // Not separately logged here — Information Hub already tracks
+        // archived vehicles natively via is_archived, so this stays as-is
+        // to avoid a duplicate entry for the same event.
         $this->vehicleModel->update($id, [
             'is_archived' => 1,
             'archived_at' => date('Y-m-d H:i:s'),
         ]);
+
         return redirect()->to('/vehicles')->with('success', 'Vehicle archived.');
     }
 
@@ -161,6 +171,8 @@ class VehicleController extends BaseController
             'notes'         => $this->request->getPost('notes'),
             'created_at'    => date('Y-m-d H:i:s'),
         ]);
+        $vehicle = $this->vehicleModel->find($vehicleId);
+        $this->logActivity('Vehicle', 'Logged fuel for ' . ($vehicle['vehicle_name'] ?? "#{$vehicleId}") . " — {$liters}L at {$odometer}km");
 
         return redirect()->to('/vehicles')->with('success', 'Fuel log recorded.');
     }

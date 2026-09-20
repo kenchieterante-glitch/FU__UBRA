@@ -24,7 +24,7 @@
       <?php $tone = esc($kpi['tone'] ?? 'tone-maroon', 'attr'); ?>
       <?php if (!empty($kpi['expand'])): ?>
         <div class="stat-card stat-card-clickable" onclick="togglePendingPanel()" role="button" tabindex="0">
-          <span class="stat-icon <?= $tone ?>"><i class="fa-solid <?= esc($kpi['icon'] ?? 'fa-chart-simple', 'attr') ?>"></i></span>
+          <span class="stat-icon <?= $tone ?>"><i class="bi <?= esc($kpi['icon'] ?? 'bi-bar-chart-fill', 'attr') ?>"></i></span>
           <h3><?= esc($kpi['label']) ?></h3>
           <div class="value"><?= esc($kpi['value']) ?></div>
         </div>
@@ -35,7 +35,7 @@
              data-sub="<?= esc($kpi['sub'] ?? '', 'attr') ?>"
              data-url="<?= esc(site_url($kpi['url'] ?? '#')) ?>"
              data-list-key="<?= esc($kpi['listKey'] ?? '', 'attr') ?>">
-          <span class="stat-icon <?= $tone ?>"><i class="fa-solid <?= esc($kpi['icon'] ?? 'fa-chart-simple', 'attr') ?>"></i></span>
+          <span class="stat-icon <?= $tone ?>"><i class="bi <?= esc($kpi['icon'] ?? 'bi-bar-chart-fill', 'attr') ?>"></i></span>
           <h3><?= esc($kpi['label']) ?></h3>
           <div class="value"><?= esc($kpi['value']) ?></div>
         </div>
@@ -53,12 +53,12 @@
     </div>
     <div class="pending-columns">
       <div class="pending-column">
-        <h3><i class="fa-solid fa-hand-holding"></i> Borrowed Tools</h3>
+        <h3><i class="bi bi-hand-index-thumb-fill"></i> Borrowed Tools</h3>
         <div id="pendingToolsList" class="pending-list"></div>
         <a class="overview-link" href="<?= esc(site_url('tools?filter=borrowed')) ?>">View in Tools Management →</a>
       </div>
       <div class="pending-column">
-        <h3><i class="fa-solid fa-screwdriver-wrench"></i> Open Work Orders</h3>
+        <h3><i class="bi bi-wrench-adjustable"></i> Open Work Orders</h3>
         <div id="pendingWorkOrdersList" class="pending-list"></div>
         <a class="overview-link" href="<?= esc(site_url('safety?filter=duework')) ?>">View in Maintenance →</a>
       </div>
@@ -89,7 +89,7 @@
       <div class="alert-list">
         <?php foreach ($alerts as $alert): ?>
           <a class="alert-item" href="<?= esc(site_url($alert['url'] ?? '#')) ?>">
-            <span class="alert-icon <?= esc($alert['tone']) ?>"><i class="fa-solid <?= esc($alert['icon']) ?>"></i></span>
+            <span class="alert-icon <?= esc($alert['tone']) ?>"><i class="bi <?= esc($alert['icon']) ?>"></i></span>
             <div class="alert-copy">
               <div class="alert-title"><?= esc($alert['title']) ?></div>
               <div class="alert-subtitle"><?= esc($alert['subtitle']) ?></div>

@@ -31,15 +31,17 @@ class ReportController extends BaseController
             return redirect()->to('/reports')->withInput();
         }
 
+        $name = $this->request->getPost('report_name');
         try {
             $this->reportModel->update($id, [
-                'report_name'  => $this->request->getPost('report_name'),
+                'report_name'  => $name,
                 'generated_by' => $this->request->getPost('generated_by'),
             ]);
         } catch (\Exception $e) {
             log_message('error', 'ReportController::update failed for id ' . $id . ': ' . $e->getMessage());
             return redirect()->to('/reports')->withInput()->with('error', 'Could not save report changes.');
         }
+        $this->logActivity('Safety', "Edited report {$name} (#{$id})");
 
         $this->session->setFlashdata('success', 'Report changes saved successfully.');
         return redirect()->to('/reports');

@@ -80,35 +80,37 @@ class Dashboard extends BaseController
             $tasksByAssignment[$task['assignment_id']][] = $task;
         }
         // A zone can have more than one shift/assignment (e.g. two staff
-        // covering the same building) — count it once, and only as cleaned
-        // once every assignment mapped to it is done. Same aggregation as
-        // JanitorialController::index(), so this box and the Janitorial
-        // page's own "Janitorial Completion" stat never disagree.
+        // covering the same building) — count it once, and as cleaned as
+        // soon as ANY ONE assignment mapped to it is done (a zone with
+        // several staff doesn't wait on everyone). Same rule as
+        // JanitorialAssignmentModel::getZoneCleanCounts() and
+        // JanitorialController::index(), so this box, the incomplete-zones
+        // list below it, and the Janitorial page's own "Janitorial
+        // Completion" stat can never disagree with each other.
         $zoneShifts = [];
         foreach ($assignments as $a) {
             $tasks = $tasksByAssignment[$a['id']] ?? [];
             $done  = count(array_filter($tasks, fn($t) => (int) $t['is_done'] === 1));
             $zoneShifts[$a['assigned_zone']][] = ['done' => $done, 'total' => count($tasks)];
         }
-        $totalZones   = count($zoneShifts);
-        $cleanedZones = count(array_filter($zoneShifts, function ($shifts) {
+        $zoneIsDone = function (array $shifts): bool {
             foreach ($shifts as $s) {
-                if ($s['total'] === 0 || $s['done'] !== $s['total']) return false;
+                if ($s['total'] > 0 && $s['done'] === $s['total']) return true;
             }
-            return true;
-        }));
+            return false;
+        };
+        $totalZones   = count($zoneShifts);
+        $cleanedZones = count(array_filter($zoneShifts, $zoneIsDone));
 
         $cleaningIncompleteList = [];
         foreach ($zoneShifts as $zoneName => $shifts) {
-            $doneCount = array_sum(array_column($shifts, 'done'));
+            if ($zoneIsDone($shifts)) continue;
+            $doneCount  = array_sum(array_column($shifts, 'done'));
             $totalCount = array_sum(array_column($shifts, 'total'));
-            $isDone = $totalCount > 0 && $doneCount === $totalCount;
-            if (!$isDone) {
-                $cleaningIncompleteList[] = [
-                    'title'    => $zoneName,
-                    'subtitle' => "{$doneCount} of {$totalCount} tasks done",
-                ];
-            }
+            $cleaningIncompleteList[] = [
+                'title'    => $zoneName,
+                'subtitle' => "{$doneCount} of {$totalCount} tasks done",
+            ];
         }
 
         // ── Detail lists behind each KPI banner — same idea as the Pending
@@ -194,7 +196,7 @@ class Dashboard extends BaseController
                     'meta' => "{$borrowedTools} tools · {$openWorkOrders} work orders",
                     'sub' => 'Waiting on approval',
                     'tone' => 'tone-gold',
-                    'icon' => 'fa-clipboard-list',
+                    'icon' => 'bi-clipboard2-check',
                     'expand' => 'pending',
                 ],
                 [
@@ -203,7 +205,7 @@ class Dashboard extends BaseController
                     'meta' => "{$dueBackToday} due back today",
                     'sub' => 'Tracked across campus',
                     'tone' => 'tone-neutral',
-                    'icon' => 'fa-hand-holding',
+                    'icon' => 'bi-hand-index-thumb-fill',
                     'url' => 'tools?filter=borrowed',
                     'listKey' => 'activeBorrowingsList',
                 ],
@@ -213,7 +215,7 @@ class Dashboard extends BaseController
                     'meta' => "{$fleetStats['available']} available",
                     'sub' => 'Dispatch coverage',
                     'tone' => 'tone-neutral',
-                    'icon' => 'fa-truck',
+                    'icon' => 'bi-truck',
                     'url' => 'vehicles?filter=inuse',
                     'listKey' => 'vehiclesInUseList',
                 ],
@@ -223,7 +225,7 @@ class Dashboard extends BaseController
                     'meta' => "{$overdueFe} overdue",
                     'sub' => 'Immediate attention',
                     'tone' => 'tone-red',
-                    'icon' => 'fa-screwdriver-wrench',
+                    'icon' => 'bi-wrench-adjustable',
                     'url' => 'safety?filter=duework',
                     'listKey' => 'maintenanceDueList',
                 ],
@@ -233,7 +235,7 @@ class Dashboard extends BaseController
                     'meta' => ($totalZones - $cleanedZones) . ' areas remaining',
                     'sub' => 'As of ' . date('g:i A'),
                     'tone' => 'tone-green',
-                    'icon' => 'fa-broom',
+                    'icon' => 'bi-brush',
                     'url' => 'janitorial?filter=pending',
                     'listKey' => 'cleaningIncompleteList',
                 ],
@@ -251,7 +253,7 @@ class Dashboard extends BaseController
             'cleaning_incomplete_json' => $this->jsonForScript($cleaningIncompleteList),
             'alerts' => [
                 [
-                    'icon' => 'fa-circle-exclamation',
+                    'icon' => 'bi-exclamation-circle-fill',
                     'tone' => 'urgent',
                     'title' => "{$overdueFe} overdue maintenance tasks",
                     'subtitle' => 'Fire extinguisher inspections past due',
@@ -259,7 +261,7 @@ class Dashboard extends BaseController
                     'url' => 'safety',
                 ],
                 [
-                    'icon' => 'fa-hourglass-half',
+                    'icon' => 'bi-hourglass-split',
                     'tone' => 'pending',
                     'title' => "{$borrowedTools} tools currently borrowed",
                     'subtitle' => 'Tracked in Tools Management',
@@ -267,7 +269,7 @@ class Dashboard extends BaseController
                     'url' => 'tools',
                 ],
                 [
-                    'icon' => 'fa-circle-exclamation',
+                    'icon' => 'bi-exclamation-circle-fill',
                     'tone' => 'urgent',
                     'title' => ($totalZones - $cleanedZones) . ' janitorial zones not yet complete',
                     'subtitle' => 'Janitorial Monitoring',
@@ -275,7 +277,7 @@ class Dashboard extends BaseController
                     'url' => 'janitorial',
                 ],
                 [
-                    'icon' => 'fa-hourglass-half',
+                    'icon' => 'bi-hourglass-split',
                     'tone' => 'pending',
                     'title' => "{$openWorkOrders} maintenance work orders open",
                     'subtitle' => 'Maintenance',

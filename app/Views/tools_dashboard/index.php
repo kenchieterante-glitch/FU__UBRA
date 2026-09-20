@@ -8,9 +8,9 @@
       'Sports Equipment'   => 'tools/sports-equipment',
   ];
   $categoryIcons = [
-      'Power Tools'        => 'fa-bolt',
-      'Consumable'         => 'fa-box',
-      'Sports Equipment'   => 'fa-futbol',
+      'Power Tools'        => 'bi-lightning-fill',
+      'Consumable'         => 'bi-box-seam-fill',
+      'Sports Equipment'   => 'bi-trophy-fill',
   ];
 ?>
 
@@ -33,32 +33,32 @@
     <div class="role-dash-panel-title"><i class="bi bi-tools"></i> Tools Overview</div>
     <div class="stat-cards">
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Total Tools" data-url="<?= base_url('tools') ?>">
-            <span class="stat-icon tone-maroon"><i class="fa-solid fa-toolbox"></i></span>
+            <span class="stat-icon tone-maroon"><i class="bi bi-tools"></i></span>
             <h3>Total Tools</h3>
             <div class="value"><?= (int) $total_tools ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Available Tools" data-url="<?= base_url('tools') ?>">
-            <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
+            <span class="stat-icon tone-green"><i class="bi bi-check-circle-fill"></i></span>
             <h3>Available Tools</h3>
             <div class="value"><?= (int) $available_tools ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Borrowed Tools" data-url="<?= base_url('tools?filter=borrowed') ?>">
-            <span class="stat-icon tone-neutral"><i class="fa-solid fa-hand-holding"></i></span>
+            <span class="stat-icon tone-neutral"><i class="bi bi-hand-index-thumb-fill"></i></span>
             <h3>Borrowed Tools</h3>
             <div class="value"><?= (int) $borrowed_tools ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Needs Maintenance" data-url="<?= base_url('tools') ?>">
-            <span class="stat-icon tone-gold"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+            <span class="stat-icon tone-gold"><i class="bi bi-wrench-adjustable"></i></span>
             <h3>Needs Maintenance</h3>
             <div class="value"><?= (int) $maintenance_tools ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Disposal" data-url="<?= base_url('tools') ?>">
-            <span class="stat-icon tone-red"><i class="fa-solid fa-trash"></i></span>
+            <span class="stat-icon tone-red"><i class="bi bi-trash3-fill"></i></span>
             <h3>Disposal</h3>
             <div class="value"><?= (int) $disposal_tools ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Low Stock Items" data-url="<?= base_url('tools/consumable') ?>">
-            <span class="stat-icon tone-red"><i class="fa-solid fa-box-open"></i></span>
+            <span class="stat-icon tone-red"><i class="bi bi-box2"></i></span>
             <h3>Low Stock Items</h3>
             <div class="value"><?= (int) $low_stock_items ?></div>
         </div>
@@ -73,10 +73,10 @@
             <?php
               $cat = $row['category'] ?? 'Uncategorized';
               $route = $categoryRoutes[$cat] ?? 'tools';
-              $icon = $categoryIcons[$cat] ?? 'fa-cube';
+              $icon = $categoryIcons[$cat] ?? 'bi-tag-fill';
             ?>
             <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="<?= esc($cat, 'attr') ?>" data-url="<?= base_url($route) ?>">
-                <span class="stat-icon tone-neutral"><i class="fa-solid <?= esc($icon, 'attr') ?>"></i></span>
+                <span class="stat-icon tone-neutral"><i class="bi <?= esc($icon, 'attr') ?>"></i></span>
                 <h3><?= esc($cat) ?></h3>
                 <div class="value"><?= (int) $row['count'] ?></div>
             </div>

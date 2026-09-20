@@ -45,10 +45,10 @@
             <td><?= !empty($c['next_pm_schedule']) ? esc(date('M j, Y', strtotime($c['next_pm_schedule']))) : '—' ?></td>
             <td>
               <div class="action-buttons">
-                <button type="button" class="icon-btn" onclick="document.getElementById('viewModal<?= $c['id'] ?>').style.display='flex'" title="View/Edit" aria-label="View checklist for <?= esc($c['plate_no'] ?? 'this vehicle') ?>"><i class="fa-solid fa-eye"></i></button>
+                <button type="button" class="icon-btn" onclick="document.getElementById('viewModal<?= $c['id'] ?>').style.display='flex'" title="View/Edit" aria-label="View checklist for <?= esc($c['plate_no'] ?? 'this vehicle') ?>"><i class="bi bi-eye-fill"></i></button>
                 <form method="post" action="<?= base_url('maintenance-forms/vehicle-checklist/delete/'.$c['id']) ?>" onsubmit="return confirm('Archive this checklist?')" style="display:contents;">
                   <?= csrf_field() ?>
-                  <button type="submit" class="icon-btn delete" title="Archive"><i class="fa-solid fa-archive"></i></button>
+                  <button type="submit" class="icon-btn delete" title="Archive"><i class="bi bi-archive-fill"></i></button>
                 </form>
               </div>
             </td>

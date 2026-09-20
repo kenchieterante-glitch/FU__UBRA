@@ -13,7 +13,7 @@
         </div>
         <div class="header-actions">
             <button type="button" class="btn-outline" onclick="openComposeModal()">
-                <i class="bi bi-pencil-square"></i> New Message
+                <i class="bi bi-pencil-fill"></i> New Message
             </button>
             <form method="post" action="<?= base_url('notifications/markAllRead') ?>" style="display:contents;">
                 <?= csrf_field() ?>
@@ -38,22 +38,22 @@ $draft_count = $draft_count ?? 0;
     <!-- ── SUMMARY CARDS ────────────────────────────────────────── -->
     <div class="stat-cards" id="notifStatCards">
         <div class="stat-card unread stat-card-clickable" onclick="filterNotifByStat('unread')" role="button" tabindex="0">
-            <span class="stat-icon tone-red"><i class="fa-solid fa-bell"></i></span>
+            <span class="stat-icon tone-red"><i class="bi bi-bell-fill"></i></span>
             <h3>Unread Notifications</h3>
             <div class="value"><?= $unread_count ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="filterNotifByStat('today')" role="button" tabindex="0">
-            <span class="stat-icon tone-gold"><i class="fa-solid fa-calendar-day"></i></span>
+            <span class="stat-icon tone-gold"><i class="bi bi-calendar-day"></i></span>
             <h3>Today's Alerts</h3>
             <div class="value"><?= $today_count ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="filterNotifByStat('upcoming')" role="button" tabindex="0">
-            <span class="stat-icon tone-neutral"><i class="fa-solid fa-hourglass-half"></i></span>
+            <span class="stat-icon tone-neutral"><i class="bi bi-hourglass-split"></i></span>
             <h3>Upcoming Schedules</h3>
             <div class="value"><?= $upcoming_count ?></div>
         </div>
         <div class="stat-card draft stat-card-clickable" onclick="filterNotifByStat('draft')" role="button" tabindex="0">
-            <span class="stat-icon tone-maroon"><i class="fa-solid fa-pen-to-square"></i></span>
+            <span class="stat-icon tone-maroon"><i class="bi bi-pencil-fill"></i></span>
             <h3>Draft Messages</h3>
             <div class="value"><?= $draft_count ?></div>
         </div>
@@ -88,20 +88,21 @@ $draft_count = $draft_count ?? 0;
                             <div class="filter-row">
                                 <label for="catFilter">Category</label>
                                 <select id="catFilter" onchange="filterTable()">
-                                    <option value=""> All Categories</option>
-                                    <option value="Vehicle Inspection"> Vehicle Inspection</option>
-                                    <option value="Air-Con Cleaning"> Air-Con Cleaning</option>
-                                    <option value="Janitorial Assignment"> Janitorial Assignment</option>
-                                    <option value="Inventory Low Stock"> Inventory Low Stock</option>
-                                    <option value="Vehicle Expiry">🗓 Vehicle Expiry</option>
-                                    <option value="Fire Extinguisher Installed"> Fire Extinguisher Installed</option>
-                                    <option value="Fire Extinguisher Expiring Soon">⏳ Fire Extinguisher Expiring Soon</option>
-                                    <option value="Aircon Unit Registered"> Aircon Unit Registered</option>
-                                    <option value="Aircon Needs Cleaning">🧊 Aircon Needs Cleaning</option>
-                                    <option value="Cleaning Scheduled"> Cleaning Scheduled</option>
-                                    <option value="Urgent Cleaning Scheduled"> Urgent Cleaning Scheduled</option>
-                                    <option value="Trip Ticket Request">🎫 Trip Ticket Request</option>
-                                    <option value="Trip Ticket Assignment">🚚 Trip Ticket Assignment</option>
+                                    <option value="">All Categories</option>
+                                    <option value="Vehicle Inspection">Vehicle Inspection</option>
+                                    <option value="Air-Con Cleaning">Air-Con Cleaning</option>
+                                    <option value="Janitorial Assignment">Janitorial Assignment</option>
+                                    <option value="Inventory Low Stock">Inventory Low Stock</option>
+                                    <option value="Tool Borrowed">Tool Borrowed</option>
+                                    <option value="Vehicle Expiry">Vehicle Expiry</option>
+                                    <option value="Fire Extinguisher Installed">Fire Extinguisher Installed</option>
+                                    <option value="Fire Extinguisher Expiring Soon">Fire Extinguisher Expiring Soon</option>
+                                    <option value="Aircon Unit Registered">Aircon Unit Registered</option>
+                                    <option value="Aircon Needs Cleaning">Aircon Needs Cleaning</option>
+                                    <option value="Cleaning Scheduled">Cleaning Scheduled</option>
+                                    <option value="Urgent Cleaning Scheduled">Urgent Cleaning Scheduled</option>
+                                    <option value="Trip Ticket Request">Trip Ticket Request</option>
+                                    <option value="Trip Ticket Assignment">Trip Ticket Assignment</option>
                                 </select>
                             </div>
                             <div class="filter-row">
@@ -153,22 +154,24 @@ $draft_count = $draft_count ?? 0;
                                     'Air-Con Cleaning'      => 'bi-wind',
                                     'Janitorial Assignment' => 'bi-brush',
                                     'Inventory Low Stock'   => 'bi-box-seam',
+                                    'Tool Borrowed'         => 'bi-hand-index-thumb-fill',
                                     'Vehicle Expiry'        => 'bi-card-checklist',
                                     'Fire Extinguisher Installed' => 'bi-fire',
                                     'Fire Extinguisher Expiring Soon' => 'bi-hourglass-split',
                                     'Aircon Unit Registered'      => 'bi-snow2',
                                     'Aircon Needs Cleaning'       => 'bi-snow2',
                                     'Cleaning Scheduled'          => 'bi-brush',
-                                    'Urgent Cleaning Scheduled'   => 'bi-exclamation-triangle',
+                                    'Urgent Cleaning Scheduled'   => 'bi-exclamation-triangle-fill',
                                     'Trip Ticket Request'         => 'bi-ticket-perforated',
                                     'Trip Ticket Assignment'      => 'bi-truck',
-                                    default                 => 'bi-bell',
+                                    default                 => 'bi-bell-fill',
                                 };
                                 // Where clicking the row should take you — the module that actually
                                 // owns this notification's underlying record.
                                 $catRoute = match($n['category'] ?? '') {
                                     'Vehicle Inspection', 'Vehicle Expiry'                     => 'vehicles',
                                     'Inventory Low Stock'                                      => 'tools/consumable',
+                                    'Tool Borrowed'                                            => 'tools/borrowing',
                                     'Janitorial Assignment', 'Cleaning Scheduled',
                                     'Urgent Cleaning Scheduled'                                => 'janitorial',
                                     'Air-Con Cleaning', 'Fire Extinguisher Installed',
@@ -239,7 +242,7 @@ $draft_count = $draft_count ?? 0;
                                                 <i class="bi bi-send"></i> Send
                                             </button>
                                             <button type="button" class="icon-btn delete" onclick="deleteDraftMsg(<?= $n['id'] ?>, this)" title="Delete draft">
-                                                <i class="bi bi-trash"></i>
+                                                <i class="bi bi-trash3-fill"></i>
                                             </button>
                                         </div>
                                     <?php elseif ($status === 'Pending'): ?>
@@ -296,7 +299,7 @@ $draft_count = $draft_count ?? 0;
 <div class="modal" id="composeModal">
   <div class="modal-box notif-detail-box">
     <div class="notif-detail-header">
-      <span class="notif-detail-icon"><i class="bi bi-pencil-square"></i></span>
+      <span class="notif-detail-icon"><i class="bi bi-pencil-fill"></i></span>
       <h3>New Message</h3>
     </div>
     <form id="composeForm">
@@ -311,6 +314,33 @@ $draft_count = $draft_count ?? 0;
           <optgroup label="Co-Supervisors">
             <?php foreach ($supervisors as $s): ?>
               <option value="<?= esc($s['name'], 'attr') ?>"><?= esc($s['name']) ?> — <?= esc($s['position']) ?></option>
+            <?php endforeach; ?>
+          </optgroup>
+        <?php endif; ?>
+        <?php
+          // Shows the phone number right in the option when one's on file
+          // (Personnel Management → Contact Number) — falls back to the
+          // position when it isn't, instead of leaving it blank.
+          $recipientLabel = fn($p) => $p['name'] . ' — ' . ($p['contactNumber'] !== '' ? $p['contactNumber'] : $p['position']);
+        ?>
+        <?php if (!empty($drivers)): ?>
+          <optgroup label="Drivers">
+            <?php foreach ($drivers as $d): ?>
+              <option value="<?= esc($d['name'], 'attr') ?>"><?= esc($recipientLabel($d)) ?></option>
+            <?php endforeach; ?>
+          </optgroup>
+        <?php endif; ?>
+        <?php if (!empty($maintenanceStaff)): ?>
+          <optgroup label="Maintenance">
+            <?php foreach ($maintenanceStaff as $m): ?>
+              <option value="<?= esc($m['name'], 'attr') ?>"><?= esc($recipientLabel($m)) ?></option>
+            <?php endforeach; ?>
+          </optgroup>
+        <?php endif; ?>
+        <?php if (!empty($janitors)): ?>
+          <optgroup label="Janitorial Staff">
+            <?php foreach ($janitors as $j): ?>
+              <option value="<?= esc($j['name'], 'attr') ?>"><?= esc($recipientLabel($j)) ?></option>
             <?php endforeach; ?>
           </optgroup>
         <?php endif; ?>

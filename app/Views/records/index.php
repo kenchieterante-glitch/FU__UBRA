@@ -4,6 +4,7 @@
 <?php
 $stats = $stats ?? ['total_records' => 0, 'archived_records' => 0, 'reports_generated' => 0, 'today_activities' => 0];
 $activities = $activities ?? [];
+$scopedToJanitorial = $scopedToJanitorial ?? false;
 $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
 ?>
 
@@ -13,29 +14,29 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
     <div class="page-header">
         <div>
             <h1>Information Hub</h1>
-            <p class="page-subtitle">View, manage and generate reports for all modules in one place.</p>
+            <p class="page-subtitle"><?= $scopedToJanitorial ? 'Janitorial records and activity only.' : 'View, manage and generate reports for all modules in one place.' ?></p>
         </div>
     </div>
 
     <!-- ── STATS CARDS ──────────────────────────────────────────── -->
     <div class="stat-cards">
         <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('total')" role="button" tabindex="0">
-            <span class="stat-icon tone-maroon"><i class="fa-solid fa-folder-open"></i></span>
+            <span class="stat-icon tone-maroon"><i class="bi bi-folder2-open"></i></span>
             <h3>Total Records</h3>
             <div class="value"><?= (int) $stats['total_records'] ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('archived')" role="button" tabindex="0">
-            <span class="stat-icon tone-neutral"><i class="fa-solid fa-box-archive"></i></span>
+            <span class="stat-icon tone-neutral"><i class="bi bi-archive-fill"></i></span>
             <h3>Archived Records</h3>
             <div class="value"><?= (int) $stats['archived_records'] ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('reports')" role="button" tabindex="0">
-            <span class="stat-icon tone-gold"><i class="fa-solid fa-file-lines"></i></span>
+            <span class="stat-icon tone-gold"><i class="bi bi-file-earmark-text"></i></span>
             <h3>Reports Generated</h3>
             <div class="value"><?= (int) $stats['reports_generated'] ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('today')" role="button" tabindex="0">
-            <span class="stat-icon tone-green"><i class="fa-solid fa-calendar-day"></i></span>
+            <span class="stat-icon tone-green"><i class="bi bi-calendar-day"></i></span>
             <h3>Today's Activities</h3>
             <div class="value"><?= (int) $stats['today_activities'] ?></div>
         </div>
@@ -44,6 +45,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
     <!-- ── FILTER BAR ───────────────────────────────────────────── -->
     <div class="rec-filter-bar">
         <div class="rec-filter-fields">
+            <?php if (!$scopedToJanitorial): ?>
             <div class="rec-icon-filter" id="moduleFilterGroup" data-target="module">
                 <button type="button" class="rec-icon-btn active" data-value="" title="All Modules"><i class="bi bi-grid-fill"></i></button>
                 <button type="button" class="rec-icon-btn" data-value="tools" title="Tools"><i class="bi bi-wrench-adjustable"></i></button>
@@ -52,10 +54,11 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                 <button type="button" class="rec-icon-btn" data-value="janitorial" title="Janitorial"><i class="bi bi-brush"></i></button>
                 <button type="button" class="rec-icon-btn" data-value="personnel" title="Personnel"><i class="bi bi-people-fill"></i></button>
             </div>
+            <?php endif; ?>
             <div class="rec-icon-filter" id="kindFilterGroup" data-target="kind">
                 <button type="button" class="rec-icon-btn active" data-value="" title="All Types"><i class="bi bi-collection"></i></button>
                 <button type="button" class="rec-icon-btn" data-value="record" title="Records"><i class="bi bi-file-earmark-text"></i></button>
-                <button type="button" class="rec-icon-btn" data-value="archive" title="Archived"><i class="bi bi-archive"></i></button>
+                <button type="button" class="rec-icon-btn" data-value="archive" title="Archived"><i class="bi bi-archive-fill"></i></button>
                 <button type="button" class="rec-icon-btn" data-value="report" title="Reports"><i class="bi bi-file-earmark-bar-graph"></i></button>
             </div>
             <select id="statusFilter" onchange="filterTable()">
@@ -90,7 +93,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
             <div class="rec-table-actions">
                 <button type="button" class="rec-btn-outline" onclick="openExportModal('excel')"><i class="bi bi-file-earmark-excel"></i> Export Excel</button>
                 <button type="button" class="rec-btn-outline" onclick="openExportModal('pdf')"><i class="bi bi-file-earmark-pdf"></i> Export PDF</button>
-                <button type="button" class="rec-btn-dark" onclick="filterArchivedOnly()"><i class="bi bi-archive"></i> Archive</button>
+                <button type="button" class="rec-btn-dark" onclick="filterArchivedOnly()"><i class="bi bi-archive-fill"></i> Archive</button>
             </div>
         </div>
 
@@ -169,7 +172,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                                         data-generated_by="<?= esc($act['performed_by']) ?>"
                                         data-type_module="<?= esc($act['record_sub']) ?>"
                                         data-date_range="Last 30 Days">
-                                        <i class="fa-solid fa-eye"></i>
+                                        <i class="bi bi-eye-fill"></i>
                                     </button>
                                 <?php else: ?>
                                     <button type="button" class="rec-view-btn open-record-detail"
@@ -185,7 +188,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                                         data-status="<?= esc($act['status']) ?>"
                                         data-is_archived="<?= $act['is_archived'] ? '1' : '0' ?>"
                                         data-disposal_status="<?= esc($act['disposal_status']) ?>">
-                                        <i class="fa-solid fa-eye"></i>
+                                        <i class="bi bi-eye-fill"></i>
                                     </button>
                                 <?php endif; ?>
                             </td>
@@ -270,12 +273,16 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
             <div class="form-group">
                 <label>Which module do you want to export?</label>
                 <select id="exportModuleSelect">
-                    <option value="">All Modules</option>
-                    <option value="tools">Tools</option>
-                    <option value="vehicle">Vehicle</option>
-                    <option value="safety">Safety</option>
-                    <option value="janitorial">Janitorial</option>
-                    <option value="personnel">Personnel</option>
+                    <?php if ($scopedToJanitorial): ?>
+                        <option value="janitorial">Janitorial</option>
+                    <?php else: ?>
+                        <option value="">All Modules</option>
+                        <option value="tools">Tools</option>
+                        <option value="vehicle">Vehicle</option>
+                        <option value="safety">Safety</option>
+                        <option value="janitorial">Janitorial</option>
+                        <option value="personnel">Personnel</option>
+                    <?php endif; ?>
                 </select>
             </div>
         </div>
@@ -292,7 +299,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
 <div id="reportEditorModal" class="modal-overlay" style="display:none;">
     <div class="modal-box modal-md">
         <div class="modal-header">
-            <h3 id="reportEditorTitle"><i class="bi bi-pencil-square"></i> View Report</h3>
+            <h3 id="reportEditorTitle"><i class="bi bi-pencil-fill"></i> View Report</h3>
             <button class="modal-close" type="button" onclick="closeReportEditor()"><i class="bi bi-x-lg"></i></button>
         </div>
         <form method="post" action="<?= base_url('reports/update') ?>">
@@ -659,7 +666,7 @@ function openReportView(button) {
     document.getElementById('editorGeneratedBy').value = button.dataset.generated_by || '';
     document.getElementById('editorTypeModule').value = button.dataset.type_module || 'General';
     document.getElementById('editorDateRange').value = button.dataset.date_range || 'Last 30 Days';
-    document.getElementById('reportEditorTitle').innerHTML = '<i class="bi bi-pencil-square"></i> View / Edit Report';
+    document.getElementById('reportEditorTitle').innerHTML = '<i class="bi bi-pencil-fill"></i> View / Edit Report';
     editor.style.display = 'flex';
 }
 

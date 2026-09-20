@@ -30,22 +30,22 @@ $remaining = max(0, (int) $jobOrder['personnel_required'] - (int) $jobOrder['ass
 
 <div class="stat-cards">
   <div class="stat-card">
-    <span class="stat-icon tone-maroon"><i class="fa-solid fa-users"></i></span>
+    <span class="stat-icon tone-maroon"><i class="bi bi-people-fill"></i></span>
     <h3>Required</h3>
     <div class="value"><?= (int) $jobOrder['personnel_required'] ?></div>
   </div>
   <div class="stat-card">
-    <span class="stat-icon tone-green"><i class="fa-solid fa-user-check"></i></span>
+    <span class="stat-icon tone-green"><i class="bi bi-person-fill-check"></i></span>
     <h3>Assigned</h3>
     <div class="value"><?= (int) $jobOrder['assigned_count'] ?></div>
   </div>
   <div class="stat-card">
-    <span class="stat-icon <?= $remaining > 0 ? 'tone-red' : 'tone-neutral' ?>"><i class="fa-solid fa-triangle-exclamation"></i></span>
+    <span class="stat-icon <?= $remaining > 0 ? 'tone-red' : 'tone-neutral' ?>"><i class="bi bi-exclamation-triangle-fill"></i></span>
     <h3>Remaining</h3>
     <div class="value"><?= $remaining ?></div>
   </div>
   <div class="stat-card">
-    <span class="stat-icon tone-gold"><i class="fa-solid fa-hourglass-half"></i></span>
+    <span class="stat-icon tone-gold"><i class="bi bi-hourglass-split"></i></span>
     <h3>Days Remaining</h3>
     <div class="value"><?= $jobOrder['end_date'] ? (int) $jobOrder['days_remaining'] : '—' ?></div>
   </div>
@@ -83,7 +83,7 @@ $remaining = max(0, (int) $jobOrder['personnel_required'] - (int) $jobOrder['ass
                 <form method="post" action="<?= base_url('personnel/assignments/end/' . $asg['id']) ?>" onsubmit="return confirm('End this assignment?')" style="display:contents;">
                   <?= csrf_field() ?>
                   <input type="hidden" name="status" value="ENDED">
-                  <button type="submit" class="icon-btn delete" title="End Assignment"><i class="fa-solid fa-circle-xmark"></i></button>
+                  <button type="submit" class="icon-btn delete" title="End Assignment"><i class="bi bi-x-circle-fill"></i></button>
                 </form>
               <?php else: ?>
                 <small>—</small>

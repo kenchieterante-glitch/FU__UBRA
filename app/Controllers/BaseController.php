@@ -64,6 +64,16 @@ abstract class BaseController extends Controller
     }
 
     /**
+     * Janitorial Supervisor — same scoped pattern as Security/Tools/
+     * Facilities: own dashboard, restricted sidebar (Janitorial Monitoring
+     * map + Calendar only).
+     */
+    protected function isJanitorialSupervisor(): bool
+    {
+        return strtolower($this->userRole()) === 'janitorial';
+    }
+
+    /**
      * Gate check-in/check-out at the gate (the Guard page) to the Head of
      * Security role — the only login this system has for guard duty — plus
      * Administrator as the usual superuser override. Previously these
@@ -90,6 +100,7 @@ abstract class BaseController extends Controller
             'security'   => '/security-dashboard',
             'tools'      => '/tools-dashboard',
             'facilities' => '/facilities-dashboard',
+            'janitorial' => '/janitorial-dashboard',
             default      => '/dashboard',
         };
     }
@@ -130,18 +141,24 @@ abstract class BaseController extends Controller
     }
 
     /**
-     * Writes to the existing activity_logs table/model (previously read-only
-     * everywhere in the app — Settings displays it, but nothing wrote to
-     * it). Used by the Job Order Personnel Monitoring module for
-     * its audit trail rather than introducing a second logging table.
+     * Writes to the existing activity_logs table/model — previously used by
+     * only the Job Order Personnel Monitoring module, now called from every
+     * module's create/update/delete actions so Information Hub reflects a
+     * real system-wide audit trail. The acting user's name is embedded
+     * directly in the stored action text ("Name: did something") rather
+     * than added as a new column, so every caller and every existing log
+     * row stays compatible with the activity_logs table exactly as it is.
      */
     protected function logActivity(string $module, string $action): void
     {
         try {
+            $actor = trim((string) (service('session')->get('full_name') ?? ''));
+            $entry = $actor !== '' ? "{$actor}: {$action}" : $action;
+
             (new \App\Models\ActivityLogModel())->insert([
                 'user_id' => service('session')->get('user_id'),
                 'module'  => $module,
-                'action'  => $action,
+                'action'  => $entry,
             ]);
         } catch (\Exception $e) {
             log_message('error', 'ActivityLog insert failed: ' . $e->getMessage());

@@ -35,27 +35,27 @@
     <!-- ── SUMMARY CARDS ────────────────────────────────────────── -->
     <div class="stat-cards">
         <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('total')" role="button" tabindex="0">
-            <span class="stat-icon tone-maroon"><i class="fa-solid fa-truck"></i></span>
+            <span class="stat-icon tone-maroon"><i class="bi bi-truck"></i></span>
             <h3>Total Vehicles</h3>
             <div class="value"><?= $total ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('online')" role="button" tabindex="0">
-            <span class="stat-icon tone-green"><i class="fa-solid fa-signal"></i></span>
+            <span class="stat-icon tone-green"><i class="bi bi-reception-4"></i></span>
             <h3>GPS Online</h3>
             <div class="value"><?= $online_count ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('offline')" role="button" tabindex="0">
-            <span class="stat-icon tone-neutral"><i class="fa-solid fa-satellite-dish"></i></span>
+            <span class="stat-icon tone-neutral"><i class="bi bi-broadcast"></i></span>
             <h3>GPS Offline</h3>
             <div class="value"><?= $offline_count ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('transit')" role="button" tabindex="0">
-            <span class="stat-icon tone-gold"><i class="fa-solid fa-route"></i></span>
+            <span class="stat-icon tone-gold"><i class="bi bi-signpost-split"></i></span>
             <h3>In Transit</h3>
             <div class="value"><?= $transit_count ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('maintenance')" role="button" tabindex="0">
-            <span class="stat-icon tone-red"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+            <span class="stat-icon tone-red"><i class="bi bi-wrench-adjustable"></i></span>
             <h3>Under Maintenance</h3>
             <div class="value"><?= $maint_count ?></div>
         </div>
@@ -263,7 +263,7 @@ function openVehicleModal(id) {
         .then(v => renderModalProfile(v))
         .catch(() => {
             content.innerHTML =
-                '<div class="sidebar-error"><i class="bi bi-exclamation-triangle"></i> Failed to load vehicle data.</div>';
+                '<div class="sidebar-error"><i class="bi bi-exclamation-triangle-fill"></i> Failed to load vehicle data.</div>';
         });
 }
 
@@ -293,7 +293,7 @@ function renderModalProfile(v) {
         <h3>${esc(v.model || 'Unknown Vehicle')} (${esc(v.plate_no || '—')})</h3>
         <div class="modal-header-actions">
             <button class="modal-close-btn" onclick="window.location.href='<?= base_url('vehicles') ?>?edit=' + ${v.id}" aria-label="Edit vehicle">
-                <i class="bi bi-pencil"></i>
+                <i class="bi bi-pencil-fill"></i>
             </button>
             <button class="modal-close-btn" onclick="closeVehicleModal()" aria-label="Close">
                 <i class="bi bi-x-lg"></i>

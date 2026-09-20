@@ -131,6 +131,7 @@ class TravelController extends BaseController
         ], true);
 
         $this->logStatus($newId, 'Submitted', 'Trip ticket requested by ' . ($requester['full_name'] ?? 'requester'));
+        $this->logActivity('Vehicle', "Requested trip ticket {$tripId} to {$destination}");
 
         $this->notificationModel->insert([
             'category'    => 'Trip Ticket Request',
@@ -200,6 +201,7 @@ class TravelController extends BaseController
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
         $this->logStatus($id, 'Cancelled', $this->request->getPost('reason') ?: null);
+        $this->logActivity('Vehicle', "Cancelled trip ticket {$trip['trip_id']}");
 
         return redirect()->to('/travel')->with('success', 'Trip ticket cancelled.');
     }
@@ -232,6 +234,7 @@ class TravelController extends BaseController
 
         $this->travelModel->update($id, $data);
         $this->logStatus($id, 'Approved');
+        $this->logActivity('Vehicle', "Approved trip ticket {$trip['trip_id']}");
 
         if ($vehicleId) {
             $this->vehicleModel->update($vehicleId, ['availability' => 'In Use']);
@@ -285,6 +288,7 @@ class TravelController extends BaseController
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
         $this->logStatus($id, 'Rejected');
+        $this->logActivity('Vehicle', "Rejected trip ticket {$trip['trip_id']}");
 
         if ($notif = $this->findTripNotification($trip['trip_id'])) {
             $this->notificationModel->update($notif['id'], [
@@ -297,12 +301,14 @@ class TravelController extends BaseController
 
     public function complete($id)
     {
+        $trip = $this->travelModel->find($id);
         $this->freeAssignedVehicle($id);
         $this->travelModel->update($id, [
             'status'           => 'Completed',
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
         $this->logStatus($id, 'Completed');
+        $this->logActivity('Vehicle', 'Completed trip ticket ' . ($trip['trip_id'] ?? "#{$id}"));
         return redirect()->to('/travel')->with('success', 'Trip marked as completed.');
     }
 
@@ -310,11 +316,13 @@ class TravelController extends BaseController
     {
         if ($resp = $this->requireAdmin()) return $resp;
 
+        $trip = $this->travelModel->find($id);
         $this->freeAssignedVehicle($id);
         $this->travelModel->update($id, [
             'is_archived' => 1,
             'archived_at' => date('Y-m-d H:i:s'),
         ]);
+        $this->logActivity('Vehicle', 'Archived trip ticket ' . ($trip['trip_id'] ?? "#{$id}"));
         return redirect()->to('/travel')->with('success', 'Trip ticket archived.');
     }
 
@@ -334,6 +342,7 @@ class TravelController extends BaseController
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
         $this->logStatus($id, 'In Transit', 'Driver checked in at the gate for dispatch.');
+        $this->logActivity('Vehicle', "Driver checked in for trip ticket {$trip['trip_id']}");
 
         return redirect()->back()->with('success', 'Driver checked in at the gate for dispatch.');
     }
@@ -355,6 +364,7 @@ class TravelController extends BaseController
             'last_activity_at' => date('Y-m-d H:i:s'),
         ]);
         $this->logStatus($id, 'Completed', 'Driver checked out at the gate — trip completed.');
+        $this->logActivity('Vehicle', "Driver checked out for trip ticket {$trip['trip_id']}");
 
         return redirect()->back()->with('success', 'Driver checked out — trip completed.');
     }

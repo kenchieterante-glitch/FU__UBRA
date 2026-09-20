@@ -85,10 +85,17 @@
 }
 
 .action-buttons {
-    display: flex;
+    display: inline-flex;
     gap: 8px;
     align-items: center;
     justify-content: center;
+}
+
+/* Actions icon row centered under its header — .action-buttons is
+   inline-flex so the <td>'s own text-align controls where it sits. All
+   headers (including this one) are centered by #toolsTable th below. */
+#toolsTable td:last-child {
+    text-align: center;
 }
 
 .alert-success {
@@ -197,6 +204,13 @@
   max-width: 200px;
 }
 
+/* Column header labels centered above their data, not stuck to the left
+   like base.css's default .data-table th. Data cells keep their own
+   alignment (left for text, center for the Actions icon row above). */
+#toolsTable th {
+  text-align: center;
+}
+
 .modal-actions {
   margin-top: 20px;
   display: flex;
@@ -295,5 +309,137 @@
 #addModal .modal-actions .btn-maroon {
     width: auto;
     margin-top: 0;
+}
+
+/* Edit Tool modal — one per row, id="editModal<id>" (no single fixed id to
+   select on), so this needs a prefix match instead of #addModal's exact
+   one. Same fix: Save Changes shouldn't stretch full-width next to the
+   compact Cancel button. */
+[id^="editModal"] .modal-actions .btn-maroon {
+    width: auto;
+    margin-top: 0;
+}
+
+/* Tool Detail modal — same layout pattern as Vehicle Management's detail
+   popup (#vehicleDetailModal in vehicle.css): maroon header, two-column
+   detail grid, dashed-underline rows, and a history table. Ported here
+   rather than shared since each page owns its own detail-modal CSS. */
+#toolDetailModal .modal-box {
+    width: 50vw;
+    min-width: 480px;
+    max-width: 900px;
+    padding: 0;
+    overflow: hidden;
+}
+
+#toolDetailModal .modal-header {
+    background: var(--maroon);
+    color: #fff;
+    padding: .9rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#toolDetailModal .modal-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #fff;
+}
+
+#toolDetailModal .modal-close-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px 9px;
+    border-radius: 6px;
+}
+
+#toolDetailModal .modal-close-btn:hover {
+    background: rgba(255, 255, 255, .15);
+}
+
+#toolDetailModal .modal-body {
+    padding: 1.1rem 1.2rem;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
+#toolDetailModal .detail-section {
+    margin-bottom: 1.2rem;
+}
+
+#toolDetailModal .detail-section:last-child {
+    margin-bottom: 0;
+}
+
+#toolDetailModal .detail-section-title {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--maroon);
+    margin-bottom: .6rem;
+}
+
+#toolDetailModal .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .3rem 1.5rem;
+}
+
+#toolDetailModal .detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: .5rem;
+    font-size: .82rem;
+    padding: .3rem 0;
+    border-bottom: 1px dashed var(--line);
+}
+
+#toolDetailModal .detail-row span {
+    color: var(--muted);
+}
+
+#toolDetailModal .detail-row strong {
+    text-align: right;
+    color: var(--text);
+}
+
+#toolDetailModal .history-table-wrap {
+    overflow-x: auto;
+}
+
+#toolDetailModal .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .78rem;
+}
+
+#toolDetailModal .history-table th,
+#toolDetailModal .history-table td {
+    text-align: left;
+    padding: .4rem .5rem;
+    border-bottom: 1px solid var(--line);
+}
+
+#toolDetailModal .history-table th {
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: .68rem;
+    letter-spacing: .04em;
+}
+
+@media (max-width: 720px) {
+    #toolDetailModal .modal-box {
+        width: 94vw;
+        min-width: 0;
+    }
+    #toolDetailModal .detail-grid {
+        grid-template-columns: 1fr;
+    }
 }
 

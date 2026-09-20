@@ -57,4 +57,24 @@ class TravelModel extends Model
             ->orderBy('travel_requests.id', 'DESC')
             ->findAll();
     }
+
+    // Count of distinct calendar days this vehicle actually went out on a
+    // completed trip within [from, to] — used by FuelLogModel::getPrediction()
+    // as an "actual usage days" measure, instead of assuming every calendar
+    // day between two fuel logs involved driving.
+    public function countDistinctTripDaysForVehicle(int $vehicleId, string $from, string $to): int
+    {
+        // Model::countAllResults() ignores select()/distinct() and always
+        // does its own COUNT(*), so distinct dates have to be counted in
+        // PHP instead of relying on that to dedupe multiple trips sharing
+        // one calendar day.
+        $dates = $this->select('travel_date')
+            ->where('assigned_vehicle_id', $vehicleId)
+            ->where('status', 'Completed')
+            ->where('travel_date >=', $from)
+            ->where('travel_date <=', $to)
+            ->findColumn('travel_date');
+
+        return count(array_unique($dates ?? []));
+    }
 }

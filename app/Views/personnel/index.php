@@ -35,15 +35,15 @@ $taskLabel = ($title === 'Drivers') ? 'Vehicle In Use' : 'Assigned Task';
 <?php if (!$showStatusTabs): ?>
 <?php
 $personnelStatCards = [
-  ['tone' => 'tone-maroon',  'icon' => 'fa-users',         'label' => 'Total Personnel',   'value' => (int) ($total_personnel_count ?? 0), 'onclick' => "filterPersonnelByStat('total')"],
-  ['tone' => 'tone-neutral', 'icon' => 'fa-id-badge',      'label' => 'Drivers',            'value' => (int) ($drivers_count ?? 0),         'onclick' => "filterPersonnelByStat('drivers')"],
-  ['tone' => 'tone-green',   'icon' => 'fa-broom',         'label' => 'Janitors',           'value' => (int) ($janitors_count ?? 0),        'onclick' => "filterPersonnelByStat('janitors')"],
-  ['tone' => 'tone-gold',    'icon' => 'fa-hammer',        'label' => 'Carpentries Shop',   'value' => (int) ($carpentries_count ?? 0),     'onclick' => "filterPersonnelByStat('carpentries')"],
-  ['tone' => 'tone-neutral', 'icon' => 'fa-wrench',        'label' => 'Maintenance',        'value' => (int) ($maintenance_count ?? 0),     'onclick' => "filterPersonnelByStat('maintenance')"],
-  ['tone' => 'tone-gold',    'icon' => 'fa-helmet-safety', 'label' => 'Construction Workers', 'value' => (int) ($construction_count ?? 0),  'onclick' => "filterPersonnelByStat('construction')"],
-  ['tone' => 'tone-neutral', 'icon' => 'fa-file-contract', 'label' => 'Job Order Personnel', 'value' => (int) ($job_order_count ?? 0),      'onclick' => "filterPersonnelByStat('joborder')"],
-  ['tone' => 'tone-green',   'icon' => 'fa-circle-check',  'label' => 'Active',             'value' => (int) ($active_count ?? 0),          'onclick' => "filterPersonnelByStat('Active')"],
-  ['tone' => 'tone-gold',    'icon' => 'fa-calendar-day',  'label' => 'On Leave',           'value' => (int) ($on_leave_count ?? 0),        'onclick' => "filterPersonnelByStat('On Leave')"],
+  ['tone' => 'tone-maroon',  'icon' => 'bi-people-fill',      'label' => 'Total Personnel',   'value' => (int) ($total_personnel_count ?? 0), 'onclick' => "filterPersonnelByStat('total')"],
+  ['tone' => 'tone-neutral', 'icon' => 'bi-person-vcard-fill','label' => 'Drivers',            'value' => (int) ($drivers_count ?? 0),         'onclick' => "filterPersonnelByStat('drivers')"],
+  ['tone' => 'tone-green',   'icon' => 'bi-brush',            'label' => 'Janitors',           'value' => (int) ($janitors_count ?? 0),        'onclick' => "filterPersonnelByStat('janitors')"],
+  ['tone' => 'tone-gold',    'icon' => 'bi-hammer',           'label' => 'Carpentries Shop',   'value' => (int) ($carpentries_count ?? 0),     'onclick' => "filterPersonnelByStat('carpentries')"],
+  ['tone' => 'tone-neutral', 'icon' => 'bi-wrench',           'label' => 'Maintenance',        'value' => (int) ($maintenance_count ?? 0),     'onclick' => "filterPersonnelByStat('maintenance')"],
+  ['tone' => 'tone-gold',    'icon' => 'bi-cone-striped',     'label' => 'Construction Workers', 'value' => (int) ($construction_count ?? 0),  'onclick' => "filterPersonnelByStat('construction')"],
+  ['tone' => 'tone-neutral', 'icon' => 'bi-file-earmark-text','label' => 'Job Order Personnel', 'value' => (int) ($job_order_count ?? 0),      'onclick' => "filterPersonnelByStat('joborder')"],
+  ['tone' => 'tone-green',   'icon' => 'bi-check-circle-fill','label' => 'Active',             'value' => (int) ($active_count ?? 0),          'onclick' => "filterPersonnelByStat('Active')"],
+  ['tone' => 'tone-gold',    'icon' => 'bi-calendar-day',     'label' => 'On Leave',           'value' => (int) ($on_leave_count ?? 0),        'onclick' => "filterPersonnelByStat('On Leave')"],
 ];
 ?>
 <!-- Continuous horizontal auto-scroll ("marquee") of the status boxes —
@@ -58,14 +58,14 @@ $personnelStatCards = [
   <div class="stat-marquee-track">
     <?php foreach ($personnelStatCards as $card): ?>
       <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" role="button" tabindex="0">
-        <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="fa-solid <?= esc($card['icon'], 'attr') ?>"></i></span>
+        <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="bi <?= esc($card['icon'], 'attr') ?>"></i></span>
         <h3><?= esc($card['label']) ?></h3>
         <div class="value"><?= esc((string) $card['value']) ?></div>
       </div>
     <?php endforeach; ?>
     <?php foreach ($personnelStatCards as $card): ?>
       <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" aria-hidden="true" tabindex="-1">
-        <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="fa-solid <?= esc($card['icon'], 'attr') ?>"></i></span>
+        <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="bi <?= esc($card['icon'], 'attr') ?>"></i></span>
         <h3><?= esc($card['label']) ?></h3>
         <div class="value"><?= esc((string) $card['value']) ?></div>
       </div>
@@ -186,11 +186,11 @@ $personnelStatCards = [
           <td>
             <div class="action-buttons" onclick="event.stopPropagation()">
               <?php if (!$isJobOrder): ?>
-                <button class="icon-btn" onclick="document.getElementById('assignJoModal<?= $p['id'] ?>').style.display='flex'" title="Assign to Job Order" aria-label="Assign <?= esc($p['full_name']) ?> to a Job Order"><i class="fa-solid fa-file-contract"></i></button>
+                <button class="icon-btn" onclick="document.getElementById('assignJoModal<?= $p['id'] ?>').style.display='flex'" title="Assign to Job Order" aria-label="Assign <?= esc($p['full_name']) ?> to a Job Order"><i class="bi bi-file-earmark-text"></i></button>
               <?php endif; ?>
               <form method="post" action="<?= base_url('personnel/delete/'.$p['id']) ?>" onsubmit="return confirm('Archive this personnel record?')" style="display:contents;">
                 <?= csrf_field() ?>
-                <button type="submit" class="icon-btn delete" title="Archive" aria-label="Archive <?= esc($p['full_name']) ?>"><i class="fa-solid fa-archive"></i></button>
+                <button type="submit" class="icon-btn delete" title="Archive" aria-label="Archive <?= esc($p['full_name']) ?>"><i class="bi bi-archive-fill"></i></button>
               </form>
             </div>
           </td>
@@ -203,7 +203,7 @@ $personnelStatCards = [
           <div class="modal-box">
             <div class="modal-header">
               <h3>Edit Personnel</h3>
-              <button type="button" class="modal-close-btn" onclick="document.getElementById('editModal<?= $p['id'] ?>').style.display='none'" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+              <button type="button" class="modal-close-btn" onclick="document.getElementById('editModal<?= $p['id'] ?>').style.display='none'" aria-label="Close"><i class="bi bi-x-lg"></i></button>
             </div>
             <div class="modal-body">
               <form action="<?= site_url('personnel/edit/'.$p['id']) ?>" method="post">
@@ -219,9 +219,13 @@ $personnelStatCards = [
                       <label>Full Name <span class="required-mark">*</span></label>
                       <input type="text" name="full_name" value="<?= esc($p['full_name']) ?>" required>
                     </div>
-                    <div class="edit-field span-2">
+                    <div class="edit-field">
                       <label>Email</label>
                       <input type="email" name="email" value="<?= esc($p['email']) ?>">
+                    </div>
+                    <div class="edit-field">
+                      <label>Contact Number</label>
+                      <input type="tel" name="contact_number" value="<?= esc($p['contact_number'] ?? '') ?>" placeholder="e.g. 0917 123 4567">
                     </div>
                     <div class="edit-field">
                       <label>Department</label>
@@ -322,8 +326,8 @@ $personnelStatCards = [
     <div class="modal-header">
       <h3 id="pdTitle">Personnel Detail</h3>
       <div class="modal-header-actions">
-        <button type="button" class="modal-close-btn" onclick="openEditFromDetail()" aria-label="Edit"><i class="fa-solid fa-pen"></i></button>
-        <button type="button" class="modal-close-btn" onclick="closePersonnelDetail()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" class="modal-close-btn" onclick="openEditFromDetail()" aria-label="Edit"><i class="bi bi-pencil-fill"></i></button>
+        <button type="button" class="modal-close-btn" onclick="closePersonnelDetail()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
     <div class="modal-body" id="pdBody"></div>
@@ -402,6 +406,7 @@ function renderPersonnelDetail(p) {
         <div class="detail-row"><span>Employment Type</span><strong>${esc(p.employmentType)}</strong></div>
         <div class="detail-row"><span>Status</span><strong>${esc(p.status)}</strong></div>
         <div class="detail-row"><span>Email</span><strong>${esc(p.email)}</strong></div>
+        <div class="detail-row"><span>Contact Number</span><strong>${esc(p.contactNumber)}</strong></div>
         <div class="detail-row"><span>Current Task</span><strong>${esc(p.assignedTask)}</strong></div>
       </div>
     </div>
@@ -597,6 +602,8 @@ document.addEventListener('DOMContentLoaded', function () {
       <input type="text" name="full_name" placeholder="e.g. Juan Dela Cruz" required>
       <label>Email</label>
       <input type="email" name="email" placeholder="e.g. juan.delacruz@foundation.edu.ph">
+      <label>Contact Number</label>
+      <input type="tel" name="contact_number" placeholder="e.g. 0917 123 4567">
       <label>Department</label>
       <select name="department_id">
         <?php foreach ($departments as $d): ?>

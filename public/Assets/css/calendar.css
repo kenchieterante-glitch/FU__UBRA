@@ -826,6 +826,56 @@
     color: #fff;
 }
 
+/* "Notify Driver" / "Notify Cleaning Personnel" person list, inside the
+   shared Notify popup (#notifyPickerModal). */
+.ubra-picker {
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    overflow: hidden;
+    background: var(--surface);
+}
+
+.ubra-picker-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem;
+    padding: .5rem .7rem;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    font-size: .78rem;
+    color: var(--ink, #26262c);
+    transition: background .15s ease;
+}
+
+.ubra-picker-row:last-child {
+    border-bottom: none;
+}
+
+.ubra-picker-row:hover {
+    background: var(--surface-alt);
+}
+
+.upr-name {
+    font-weight: 600;
+}
+
+.upr-num {
+    color: var(--text-muted);
+    font-size: .74rem;
+    white-space: nowrap;
+}
+
+.ubra-picker-empty {
+    padding: .6rem .7rem;
+    font-size: .78rem;
+    color: var(--text-muted);
+}
+
 /* ── Modal ───────────────────────────────────────────────────── */
 .modal-overlay {
     position: fixed;

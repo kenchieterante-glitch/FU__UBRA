@@ -21,32 +21,32 @@ $isConsumablePage = ($title === 'Consumable');
 <?php if (!$showCategoryTabs): ?>
 <div class="stat-cards" id="toolsStatCards">
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('')" role="button" tabindex="0">
-    <span class="stat-icon tone-maroon"><i class="fa-solid fa-toolbox"></i></span>
+    <span class="stat-icon tone-maroon"><i class="bi bi-tools"></i></span>
     <h3>Total Tools</h3>
     <div class="value"><?= esc((string) ((int) ($total_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('available')" role="button" tabindex="0">
-    <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
+    <span class="stat-icon tone-green"><i class="bi bi-check-circle-fill"></i></span>
     <h3>Available Tools</h3>
     <div class="value"><?= esc((string) ((int) ($available_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('borrowed')" role="button" tabindex="0">
-    <span class="stat-icon tone-neutral"><i class="fa-solid fa-hand-holding"></i></span>
+    <span class="stat-icon tone-neutral"><i class="bi bi-hand-index-thumb-fill"></i></span>
     <h3>Borrowed Tools</h3>
     <div class="value"><?= esc((string) ((int) ($borrowed_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('maintenance')" role="button" tabindex="0">
-    <span class="stat-icon tone-gold"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+    <span class="stat-icon tone-gold"><i class="bi bi-wrench-adjustable"></i></span>
     <h3>Needs Maintenance</h3>
     <div class="value"><?= esc((string) ((int) ($maintenance_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('disposal')" role="button" tabindex="0">
-    <span class="stat-icon tone-red"><i class="fa-solid fa-trash"></i></span>
+    <span class="stat-icon tone-red"><i class="bi bi-trash3-fill"></i></span>
     <h3>Disposal</h3>
     <div class="value"><?= esc((string) ((int) ($disposal_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('consumable')" role="button" tabindex="0">
-    <span class="stat-icon tone-blue"><i class="fa-solid fa-box-open"></i></span>
+    <span class="stat-icon tone-blue"><i class="bi bi-box2"></i></span>
     <h3>Consumable</h3>
     <div class="value"><?= esc((string) ((int) ($consumable_tools ?? 0))) ?></div>
   </div>
@@ -166,13 +166,14 @@ $isConsumablePage = ($title === 'Consumable');
           <?php endif; ?>
           <td>
             <div class="action-buttons">
-              <button type="button" class="icon-btn" onclick="document.getElementById('editModal<?= $t['id'] ?>').style.display='flex'" title="Edit" aria-label="Edit <?= esc($t['asset_name']) ?>"><i class="fa-solid fa-pen"></i></button>
+              <button type="button" class="icon-btn" onclick="openToolDetail(<?= (int) $t['id'] ?>)" title="View Details" aria-label="View details for <?= esc($t['asset_name']) ?>"><i class="bi bi-eye-fill"></i></button>
+              <button type="button" class="icon-btn" onclick="document.getElementById('editModal<?= $t['id'] ?>').style.display='flex'" title="Edit" aria-label="Edit <?= esc($t['asset_name']) ?>"><i class="bi bi-pencil-fill"></i></button>
               <?php if ($isConsumablePage): ?>
-                <button type="button" class="icon-btn" title="Refill" aria-label="Refill <?= esc($t['asset_name']) ?>" onclick="refillToolStock(<?= (int) $t['id'] ?>, '<?= esc($t['asset_name'], 'js') ?>', '<?= esc($t['unit'] ?? 'pcs', 'js') ?>')"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>
+                <button type="button" class="icon-btn" title="Refill" aria-label="Refill <?= esc($t['asset_name']) ?>" onclick="refillToolStock(<?= (int) $t['id'] ?>, '<?= esc($t['asset_name'], 'js') ?>', '<?= esc($t['unit'] ?? 'pcs', 'js') ?>')"><i class="bi bi-upload"></i></button>
               <?php else: ?>
                 <form method="post" action="<?= base_url('tools/delete/'.$t['id']) ?>" onsubmit="return confirm('Archive this tool?')" style="display:contents;">
                   <?= csrf_field() ?>
-                  <button type="submit" class="icon-btn delete" title="Archive" aria-label="Archive <?= esc($t['asset_name']) ?>"><i class="fa-solid fa-archive"></i></button>
+                  <button type="submit" class="icon-btn delete" title="Archive" aria-label="Archive <?= esc($t['asset_name']) ?>"><i class="bi bi-archive-fill"></i></button>
                 </form>
               <?php endif; ?>
             </div>
@@ -189,7 +190,7 @@ $isConsumablePage = ($title === 'Consumable');
 
 <?php if ($isConsumablePage): ?>
 <div class="table-card" style="margin-top:20px;">
-  <div class="table-toolbar"><div class="toolbar-left"><h3 style="margin:0;"><i class="fa-solid fa-clock-rotate-left"></i> Refill Log</h3></div></div>
+  <div class="table-toolbar"><div class="toolbar-left"><h3 style="margin:0;"><i class="bi bi-clock-history"></i> Refill Log</h3></div></div>
   <div class="tools-table-scroll">
   <table class="data-table">
     <thead>
@@ -248,7 +249,80 @@ $isConsumablePage = ($title === 'Consumable');
   <?php endforeach; ?>
 <?php endif; ?>
 
+<!-- TOOL DETAIL MODAL — view-only popup showing usage count and full
+     borrow history, same layout pattern as Vehicle Management's detail
+     popup (maroon header, .detail-grid / .detail-row, .history-table). -->
+<div class="modal" id="toolDetailModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="tdTitle">Tool Detail</h3>
+      <div class="modal-header-actions">
+        <button type="button" class="modal-close-btn" onclick="closeToolDetail()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+    </div>
+    <div class="modal-body" id="tdBody"></div>
+  </div>
+</div>
+
 <script>
+const toolDetails = <?= $tool_details_json ?? '{}' ?>;
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = String(s ?? '');
+  return d.innerHTML;
+}
+
+function openToolDetail(id) {
+  const t = toolDetails[id];
+  if (!t) return;
+
+  document.getElementById('tdTitle').textContent = t.name;
+
+  const historyRows = t.history.length
+    ? t.history.map(h => `<tr><td>${esc(h.borrowed)}</td><td>${esc(h.borrower)}</td><td>${esc(h.department)}</td><td>${esc(h.due)}</td><td>${esc(h.status)}</td></tr>`).join('')
+    : `<tr><td colspan="5">No borrow history recorded yet.</td></tr>`;
+
+  document.getElementById('tdBody').innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-title">Tool Details</div>
+      <div class="detail-grid">
+        <div class="detail-row"><span>Code</span><strong>${esc(t.code)}</strong></div>
+        <div class="detail-row"><span>Category</span><strong>${esc(t.category)}</strong></div>
+        <div class="detail-row"><span>Location</span><strong>${esc(t.location)}</strong></div>
+        <div class="detail-row"><span>Custodian</span><strong>${esc(t.custodian)}</strong></div>
+        <div class="detail-row"><span>Condition</span><strong>${esc(t.condition)}</strong></div>
+        <div class="detail-row"><span>Availability</span><strong>${esc(t.availability)}</strong></div>
+        ${t.unit ? `<div class="detail-row"><span>Stock</span><strong>${esc(t.unit)}</strong></div>` : ''}
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Usage</div>
+      <div class="detail-grid">
+        <div class="detail-row"><span>Times Borrowed</span><strong>${esc(t.timesBorrowed)}</strong></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Borrow History</div>
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead><tr><th>Date Borrowed</th><th>Borrower</th><th>Department</th><th>Due Back</th><th>Status</th></tr></thead>
+          <tbody>${historyRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  document.getElementById('toolDetailModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeToolDetail() {
+  document.getElementById('toolDetailModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
 const toolsRefillLogEntries = <?= $refill_log_json ?? '[]' ?>;
 
 function renderToolsRefillLog() {
