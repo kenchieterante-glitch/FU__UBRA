@@ -243,6 +243,63 @@ class PersonnelController extends BaseController
         ]);
     }
 
+    // AJAX: compact profile data for the row-click detail popup on the
+    // Personnel Management table — same underlying data as view(), just
+    // the fields that fit a quick popup instead of the full profile page,
+    // and fetched on demand instead of loaded for every row up front.
+    public function detailJson($id)
+    {
+        if (!session()->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $person = $this->personnelModel->getWithDetails((int) $id);
+        if (!$person) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Not found']);
+        }
+
+        $assignmentModel = new \App\Models\PersonnelAssignmentModel();
+        $documentModel   = new \App\Models\PersonnelDocumentModel();
+        $docTypeModel    = new \App\Models\DocumentRequirementTypeModel();
+
+        $activeAssignment = $assignmentModel->getActiveForPersonnel((int) $id);
+        $history = array_values(array_filter(
+            $assignmentModel->getHistoryForPersonnel((int) $id),
+            fn($h) => $h['status'] !== 'ACTIVE'
+        ));
+        $completeness = $documentModel->completenessForPersonnel((int) $id, $docTypeModel->getRequired());
+
+        return $this->response->setJSON([
+            'name'           => $person['full_name'],
+            'empId'          => $person['emp_id'],
+            'email'          => $person['email'] ?: '—',
+            'contactNumber'  => $person['contact_number'] ?: '—',
+            'department'     => $person['department_name'] ?? 'Unassigned',
+            'position'       => $person['position'] ?: '—',
+            'employmentType' => ($person['employment_type'] ?? 'Regular') === 'JobOrder' ? 'Job Order' : 'Regular',
+            'status'         => $person['status'] ?? 'Active',
+            'assignedTask'   => $person['assigned_task'] ?: 'No current assignment',
+            'activeAssignment' => $activeAssignment ? [
+                'jobOrder'   => $activeAssignment['job_order_number'] . ' — ' . $activeAssignment['job_order_title'],
+                'location'   => $activeAssignment['assignment_location'] ?: '—',
+                'supervisor' => $activeAssignment['supervisor'] ?: '—',
+                'period'     => $activeAssignment['assignment_start_date'] . ' to ' . ($activeAssignment['assignment_end_date'] ?: 'present'),
+            ] : null,
+            'assignmentHistory' => array_map(fn($h) => [
+                'jobOrder' => $h['job_order_number'] . ' — ' . $h['job_order_title'],
+                'location' => $h['assignment_location'] ?: '—',
+                'period'   => $h['assignment_start_date'] . ' to ' . ($h['assignment_end_date'] ?: 'present'),
+                'status'   => $h['status'],
+            ], $history),
+            'documents' => array_map(fn($d) => [
+                'type'   => $d['document_type_name'] ?? 'Document',
+                'status' => $d['verification_status'],
+                'expiry' => $d['expiration_date'] ?: '—',
+            ], $documentModel->getForPersonnel((int) $id)),
+            'documentCompleteness' => "{$completeness['verified']} of {$completeness['required']} required documents verified",
+        ]);
+    }
+
     private function getStatCounts(): array
     {
         return [
@@ -279,11 +336,13 @@ class PersonnelController extends BaseController
             return redirect()->back()->withInput()->with('error', 'Employee ID already exists.');
         }
 
+        $name = $this->request->getPost('full_name');
         try {
             $this->personnelModel->insert([
                 'emp_id'        => $empId,
-                'full_name'     => $this->request->getPost('full_name'),
+                'full_name'     => $name,
                 'email'         => $this->request->getPost('email'),
+                'contact_number' => $this->request->getPost('contact_number'),
                 'department_id' => $this->request->getPost('department_id'),
                 'position'      => $this->request->getPost('position'),
                 'assigned_task' => $this->request->getPost('assigned_task'),
@@ -292,6 +351,7 @@ class PersonnelController extends BaseController
         } catch (\CodeIgniter\Database\Exceptions\DatabaseException $e) {
             return redirect()->back()->withInput()->with('error', 'Could not save personnel because the employee ID is already in use.');
         }
+        $this->logActivity('Personnel', "Added personnel {$name} ({$empId})");
 
         return redirect()->to('/personnel')->with('success', 'Personnel added successfully.');
     }
@@ -306,11 +366,13 @@ class PersonnelController extends BaseController
             return redirect()->back()->withInput()->with('error', 'Employee ID already exists.');
         }
 
+        $name = $this->request->getPost('full_name');
         try {
             $this->personnelModel->update($id, [
                 'emp_id'        => $empId,
-                'full_name'     => $this->request->getPost('full_name'),
+                'full_name'     => $name,
                 'email'         => $this->request->getPost('email'),
+                'contact_number' => $this->request->getPost('contact_number'),
                 'department_id' => $this->request->getPost('department_id'),
                 'position'      => $this->request->getPost('position'),
                 'assigned_task' => $this->request->getPost('assigned_task'),
@@ -319,6 +381,7 @@ class PersonnelController extends BaseController
         } catch (\CodeIgniter\Database\Exceptions\DatabaseException $e) {
             return redirect()->back()->withInput()->with('error', 'Could not save personnel because the employee ID is already in use.');
         }
+        $this->logActivity('Personnel', "Updated personnel {$name} (#{$id})");
 
         return redirect()->to('/personnel')->with('success', 'Personnel updated successfully.');
     }

@@ -12,6 +12,7 @@ use App\Models\VehicleInspectionChecklistModel;
 use App\Models\VehicleInspectionItemModel;
 use App\Models\RestroomChecklistModel;
 use App\Models\RestroomChecklistEntryModel;
+use App\Models\PersonnelModel;
 
 // The 5 official Facilities Maintenance Program forms (F-FAC-PMP-FMC-001,
 // F-FAC-PMP-EML-002, F-FAC-PMP-AIL-003, F-FAC-PMP-VMI-004, F-FAC-GAL-RC-002),
@@ -38,12 +39,14 @@ class MaintenanceFormsController extends BaseController
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
+        $area = $this->request->getPost('building_area');
         (new FacilityChecklistModel())->createWithItems([
             'inspector'        => $this->request->getPost('inspector'),
-            'building_area'    => $this->request->getPost('building_area'),
+            'building_area'    => $area,
             'inspection_date'  => $this->request->getPost('inspection_date') ?: date('Y-m-d'),
             'inspection_type'  => $this->request->getPost('inspection_type'),
         ]);
+        $this->logActivity('Safety', "Created facility maintenance checklist for {$area}");
 
         return redirect()->to('/maintenance-forms/facility')->with('success', 'New checklist created — fill in ratings per item below.');
     }
@@ -87,6 +90,7 @@ class MaintenanceFormsController extends BaseController
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
         (new FacilityChecklistModel())->update($id, ['is_archived' => 1]);
+        $this->logActivity('Safety', "Archived facility maintenance checklist #{$id}");
 
         return redirect()->to('/maintenance-forms/facility')->with('success', 'Checklist archived.');
     }
@@ -108,10 +112,12 @@ class MaintenanceFormsController extends BaseController
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
+        $dept = $this->request->getPost('department');
         (new EquipmentMaintenanceLogModel())->insert([
-            'department'     => $this->request->getPost('department'),
+            'department'     => $dept,
             'date_submitted' => $this->request->getPost('date_submitted') ?: date('Y-m-d'),
         ]);
+        $this->logActivity('Safety', "Created equipment maintenance log for {$dept}");
 
         return redirect()->to('/maintenance-forms/equipment-log')->with('success', 'New log sheet created.');
     }
@@ -182,6 +188,7 @@ class MaintenanceFormsController extends BaseController
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
         (new EquipmentMaintenanceLogModel())->update($id, ['is_archived' => 1]);
+        $this->logActivity('Safety', "Archived equipment maintenance log #{$id}");
 
         return redirect()->to('/maintenance-forms/equipment-log')->with('success', 'Log sheet archived.');
     }
@@ -203,10 +210,12 @@ class MaintenanceFormsController extends BaseController
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
+        $performedBy = $this->request->getPost('performed_by');
         (new AirconInspectionLogModel())->insert([
-            'performed_by'   => $this->request->getPost('performed_by'),
+            'performed_by'   => $performedBy,
             'date_submitted' => $this->request->getPost('date_submitted') ?: date('Y-m-d'),
         ]);
+        $this->logActivity('Safety', "Created aircon inspection log by {$performedBy}");
 
         return redirect()->to('/maintenance-forms/aircon-log')->with('success', 'New log sheet created.');
     }
@@ -273,6 +282,7 @@ class MaintenanceFormsController extends BaseController
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
         (new AirconInspectionLogModel())->update($id, ['is_archived' => 1]);
+        $this->logActivity('Safety', "Archived aircon inspection log #{$id}");
 
         return redirect()->to('/maintenance-forms/aircon-log')->with('success', 'Log sheet archived.');
     }
@@ -294,14 +304,16 @@ class MaintenanceFormsController extends BaseController
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
+        $plate = $this->request->getPost('plate_no');
         (new VehicleInspectionChecklistModel())->createWithItems([
             'vehicle_type'       => $this->request->getPost('vehicle_type'),
-            'plate_no'           => $this->request->getPost('plate_no'),
+            'plate_no'           => $plate,
             'odometer_reading'   => $this->request->getPost('odometer_reading'),
             'mechanic_inspector' => $this->request->getPost('mechanic_inspector'),
             'next_pm_schedule'   => $this->request->getPost('next_pm_schedule') ?: null,
             'inspection_date'    => $this->request->getPost('inspection_date') ?: date('Y-m-d'),
         ]);
+        $this->logActivity('Vehicle', "Created vehicle inspection checklist for {$plate}");
 
         return redirect()->to('/maintenance-forms/vehicle-checklist')->with('success', 'New checklist created — fill in Yes/No per item below.');
     }
@@ -328,6 +340,7 @@ class MaintenanceFormsController extends BaseController
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
         (new VehicleInspectionChecklistModel())->update($id, ['is_archived' => 1]);
+        $this->logActivity('Vehicle', "Archived vehicle inspection checklist #{$id}");
 
         return redirect()->to('/maintenance-forms/vehicle-checklist')->with('success', 'Checklist archived.');
     }
@@ -342,6 +355,10 @@ class MaintenanceFormsController extends BaseController
             'title'      => 'Restroom Checklist',
             'pageCss'    => 'maintenance-forms.css',
             'checklists' => (new RestroomChecklistModel())->getAllWithEntries(),
+            // "Cleaned By" is a dropdown of actual Janitorial staff rather
+            // than free text, same personnel-picker pattern used by the
+            // Calendar/Notification Center's Janitorial recipient lists.
+            'janitors'   => (new PersonnelModel())->getActiveByPositionLike(['Janitor', 'Cleaning']),
         ]);
     }
 
@@ -349,9 +366,11 @@ class MaintenanceFormsController extends BaseController
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
+        $location = $this->request->getPost('location');
         (new RestroomChecklistModel())->insert([
-            'location' => $this->request->getPost('location'),
+            'location' => $location,
         ]);
+        $this->logActivity('Janitorial', "Created restroom checklist for {$location}");
 
         return redirect()->to('/maintenance-forms/restroom')->with('success', 'New checklist created.');
     }
@@ -423,6 +442,7 @@ class MaintenanceFormsController extends BaseController
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
         (new RestroomChecklistModel())->update($id, ['is_archived' => 1]);
+        $this->logActivity('Janitorial', "Archived restroom checklist #{$id}");
 
         return redirect()->to('/maintenance-forms/restroom')->with('success', 'Checklist archived.');
     }

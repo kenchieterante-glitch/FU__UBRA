@@ -31,22 +31,22 @@
     <!-- ── CATEGORY TABS ────────────────────────────────────────── -->
     <div class="stat-cards" id="tripTabs">
         <div class="stat-card stat-card-clickable" data-tab="requests" onclick="switchTripTab('requests')" role="button" tabindex="0">
-            <span class="stat-icon tone-maroon"><i class="fa-solid fa-inbox"></i></span>
+            <span class="stat-icon tone-maroon"><i class="bi bi-inbox-fill"></i></span>
             <h3>Trip requests</h3>
             <div class="value"><?= count($trips ?? []) ?></div>
         </div>
         <div class="stat-card stat-card-clickable" data-tab="pending" onclick="switchTripTab('pending')" role="button" tabindex="0">
-            <span class="stat-icon tone-gold"><i class="fa-solid fa-hourglass-half"></i></span>
+            <span class="stat-icon tone-gold"><i class="bi bi-hourglass-split"></i></span>
             <h3>Pending trips</h3>
             <div class="value"><?= $pending_count ?? 0 ?></div>
         </div>
         <div class="stat-card stat-card-clickable" data-tab="today" onclick="switchTripTab('today')" role="button" tabindex="0">
-            <span class="stat-icon tone-blue"><i class="fa-solid fa-calendar-day"></i></span>
+            <span class="stat-icon tone-blue"><i class="bi bi-calendar-day"></i></span>
             <h3>Today's trips</h3>
             <div class="value"><?= $today_count ?? 0 ?></div>
         </div>
         <div class="stat-card stat-card-clickable" data-tab="completed" onclick="switchTripTab('completed')" role="button" tabindex="0">
-            <span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span>
+            <span class="stat-icon tone-green"><i class="bi bi-check-circle-fill"></i></span>
             <h3>Completed trips</h3>
             <div class="value"><?= $completed_count ?? 0 ?></div>
         </div>
@@ -145,12 +145,12 @@
                                     <div class="action-btns">
                                         <button class="icon-btn ticket" title="View Trip Ticket"
                                             onclick="viewTicket(<?= $trip['id'] ?>)">
-                                            <i class="fa-solid fa-eye"></i>
+                                            <i class="bi bi-eye-fill"></i>
                                         </button>
 
                                         <form method="post" action="<?= base_url('travel/delete/'.$trip['id']) ?>" onsubmit="return confirm('Archive this trip ticket?')" style="display:contents;">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="icon-btn" style="background:#f3f4f6;color:#6b7280;" title="Archive"><i class="fa-solid fa-archive"></i></button>
+                                            <button type="submit" class="icon-btn" style="background:#f3f4f6;color:#6b7280;" title="Archive"><i class="bi bi-archive-fill"></i></button>
                                         </form>
                                     </div>
                                 </td>
@@ -344,14 +344,14 @@ function viewTicket(id) {
                     </div>
                     <div class="ticket-action-row" style="margin-top:1rem;">
                         <button class="btn-submit" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
-                        <button class="btn-cancel" onclick="closeTicketModal()"><i class="bi bi-x"></i> Close</button>
+                        <button class="btn-cancel" onclick="closeTicketModal()"><i class="bi bi-x-lg"></i> Close</button>
                     </div>
                 </div>
             </div>`;
         })
         .catch(() => {
             document.getElementById('ticketBody').innerHTML =
-                '<div class="ticket-loading error"><i class="bi bi-exclamation-triangle"></i> Failed to load trip details.</div>';
+                '<div class="ticket-loading error"><i class="bi bi-exclamation-triangle-fill"></i> Failed to load trip details.</div>';
         });
 }
 

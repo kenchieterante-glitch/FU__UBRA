@@ -76,12 +76,17 @@ class JanitorialController extends BaseController
             $mergedTasks  = [];
             $staffNames   = [];
             $shiftLabels  = [];
+            $anyStaffDone = false;
 
             foreach ($zoneAssignments as $a) {
                 $tasks = $tasksByAssignment[$a['id']] ?? [];
                 $done  = count(array_filter($tasks, fn($t) => (int) $t['is_done'] === 1));
                 $total = count($tasks);
                 $shift = date('gA', strtotime($a['shift_start'])) . '-' . date('gA', strtotime($a['shift_end']));
+
+                if ($total > 0 && $done === $total) {
+                    $anyStaffDone = true;
+                }
 
                 $staffNames[]  = $a['staff_name'];
                 $shiftLabels[] = $shift;
@@ -105,26 +110,24 @@ class JanitorialController extends BaseController
                 ];
             }
 
+            // Completed tasks are listed before pending ones (adviser feedback).
+            usort($mergedTasks, fn($a, $b) => (int) $b['done'] <=> (int) $a['done']);
+
             $checklists[$slug] = [
-                'staff' => implode(' & ', $staffNames),
-                'shift' => implode(' / ', array_unique($shiftLabels)),
-                'tasks' => $mergedTasks,
+                'staff'       => implode(' & ', $staffNames),
+                'shift'       => implode(' / ', array_unique($shiftLabels)),
+                'tasks'       => $mergedTasks,
+                'anyStaffDone' => $anyStaffDone,
             ];
         }
 
         $inventory = $this->inventoryModel->findAll();
 
-        // A zone counts as cleaned only when every task across every
-        // assignment mapped to it is done — read straight from the same
-        // merged checklist the map and drill-down panel use.
+        // A zone counts as cleaned as soon as at least one staff member
+        // assigned to it has finished all of their own tasks — a zone with
+        // several staff (e.g. CCS Building) doesn't wait on everyone.
         $totalZones   = count($checklists);
-        $cleanedZones = count(array_filter($checklists, function ($c) {
-            if (empty($c['tasks'])) return false;
-            foreach ($c['tasks'] as $t) {
-                if (!$t['done']) return false;
-            }
-            return true;
-        }));
+        $cleanedZones = count(array_filter($checklists, fn($c) => $c['anyStaffDone']));
         $pendingZones  = $totalZones - $cleanedZones;
         $lowStock      = count(array_filter($inventory, fn($i) => (float) $i['current_stock'] <= (float) $i['reorder_threshold'] && (float) $i['current_stock'] > 0));
         $outOfStock    = count(array_filter($inventory, fn($i) => (float) $i['current_stock'] <= 0));
@@ -238,6 +241,7 @@ class JanitorialController extends BaseController
             'performed_by'      => (string) ($this->session->get('full_name') ?? $this->session->get('emp_id') ?? 'Unknown'),
             'performed_at'      => date('Y-m-d H:i:s'),
         ]);
+        $this->logActivity('Janitorial', "Refilled {$item['item_name']} by {$qty} {$item['unit']}");
 
         return redirect()->to('/janitorial')->with('success', $item['item_name'] . ' refilled by ' . $qty . ' ' . $item['unit'] . '.');
     }
@@ -259,7 +263,48 @@ class JanitorialController extends BaseController
             'reorder_threshold' => (float) $this->request->getPost('reorder_threshold'),
             'last_refill'       => date('Y-m-d'),
         ]);
+        $this->logActivity('Janitorial', "Added inventory item {$name}");
 
         return redirect()->to('/janitorial')->with('success', 'Item added to inventory.');
+    }
+
+    public function assignStaff()
+    {
+        if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
+
+        $staffName  = trim((string) $this->request->getPost('staff_name'));
+        $zone       = trim((string) $this->request->getPost('assigned_zone'));
+        $shiftStart = (string) $this->request->getPost('shift_start');
+        $shiftEnd   = (string) $this->request->getPost('shift_end');
+
+        if ($staffName === '' || $zone === '' || $shiftStart === '' || $shiftEnd === '') {
+            return redirect()->to('/janitorial')->with('error', 'Staff name, zone, and shift times are all required.');
+        }
+
+        $assignmentId = $this->assignmentModel->insert([
+            'staff_name'    => $staffName,
+            'assigned_zone' => $zone,
+            'shift_start'   => $shiftStart,
+            'shift_end'     => $shiftEnd,
+            'date_assigned' => date('Y-m-d'),
+            'status'        => 'Active',
+            'priority'      => 'Routine',
+        ], true);
+
+        // Each line becomes one checklist task for this assignment — without
+        // this, a brand-new shift would have 0 tasks and show as "0 of 0"
+        // (NaN%) on the Active Shifts card instead of a real pending count.
+        $taskNames = array_filter(array_map('trim', explode("\n", (string) $this->request->getPost('tasks'))));
+        foreach ($taskNames as $taskName) {
+            $this->taskModel->insert([
+                'assignment_id' => $assignmentId,
+                'task_name'     => $taskName,
+                'is_done'       => 0,
+            ]);
+        }
+
+        $this->logActivity('Janitorial', "Assigned {$staffName} to {$zone}");
+
+        return redirect()->to('/janitorial')->with('success', $staffName . ' assigned to ' . $zone . '.');
     }
 }

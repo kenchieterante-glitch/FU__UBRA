@@ -34,10 +34,10 @@
             <td><?= esc($l['approved_by'] ?? '—') ?></td>
             <td>
               <div class="action-buttons">
-                <button type="button" class="icon-btn" onclick="document.getElementById('viewModal<?= $l['id'] ?>').style.display='flex'" title="Open"><i class="fa-solid fa-eye"></i></button>
+                <button type="button" class="icon-btn" onclick="document.getElementById('viewModal<?= $l['id'] ?>').style.display='flex'" title="Open"><i class="bi bi-eye-fill"></i></button>
                 <form method="post" action="<?= base_url('maintenance-forms/equipment-log/delete/'.$l['id']) ?>" onsubmit="return confirm('Archive this log sheet?')" style="display:contents;">
                   <?= csrf_field() ?>
-                  <button type="submit" class="icon-btn delete" title="Archive"><i class="fa-solid fa-archive"></i></button>
+                  <button type="submit" class="icon-btn delete" title="Archive"><i class="bi bi-archive-fill"></i></button>
                 </form>
               </div>
             </td>
@@ -80,7 +80,7 @@
                 <td><input type="text" name="performed_by" value="<?= esc($e['performed_by'] ?? '') ?>"></td>
                 <td>
                   <div class="action-buttons">
-                    <button type="submit" class="icon-btn" title="Save"><i class="fa-solid fa-floppy-disk"></i></button>
+                    <button type="submit" class="icon-btn" title="Save"><i class="bi bi-floppy-fill"></i></button>
                   </div>
                 </td>
               </form>
@@ -88,7 +88,7 @@
                 <form method="post" action="<?= base_url('maintenance-forms/equipment-log/deleteEntry/'.$e['id']) ?>" onsubmit="return confirm('Delete this entry?')" style="display:contents;">
                   <?= csrf_field() ?>
                   <div class="action-buttons">
-                    <button type="submit" class="icon-btn delete" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    <button type="submit" class="icon-btn delete" title="Delete"><i class="bi bi-trash3-fill"></i></button>
                   </div>
                 </form>
               </td>

@@ -129,9 +129,9 @@
                 <div class="edp-title" id="edpTitle">—</div>
                 <div class="edp-meta-grid" id="edpMeta"></div>
                 <div class="edp-actions">
-                    <button class="btn-outline-sm" id="edpNotifyBtn" onclick="notifyAssigned()"><i class="bi bi-bell"></i> <span id="edpNotifyLabel">Notify</span></button>
+                    <button class="btn-outline-sm" id="edpNotifyBtn" onclick="notifyAssigned()"><i class="bi bi-bell-fill"></i> <span id="edpNotifyLabel">Notify</span></button>
                     <button class="btn-outline-sm" onclick="document.getElementById('eventDetailPanel').style.display='none'">
-                        <i class="bi bi-x"></i> Close
+                        <i class="bi bi-x-lg"></i> Close
                     </button>
                 </div>
             </div>
@@ -153,12 +153,12 @@
                 </ul>
                 <div class="ubra-section-title" style="margin-top:.9rem;">Suggested Actions</div>
                 <div class="ubra-btns">
-                    <button class="ubra-btn" onclick="notifyDriver()">
+                    <button class="ubra-btn" onclick="openNotifyPicker('driver')">
                         <span class="ubra-btn-icon"><i class="bi bi-person-fill"></i></span>
-                        <span class="ubra-btn-label">Notify Driver (Van-03)</span>
+                        <span class="ubra-btn-label">Notify Driver</span>
                         <span class="ubra-btn-arrow"><i class="bi bi-chevron-right"></i></span>
                     </button>
-                    <button class="ubra-btn" onclick="notifyCleaning()">
+                    <button class="ubra-btn" onclick="openNotifyPicker('cleaning')">
                         <span class="ubra-btn-icon"><i class="bi bi-brush"></i></span>
                         <span class="ubra-btn-label">Notify Cleaning Personnel</span>
                         <span class="ubra-btn-arrow"><i class="bi bi-chevron-right"></i></span>
@@ -187,13 +187,13 @@
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label>Event Title <span class="req">*</span></label>
+                <label>Event Title</label>
                 <input type="text" id="evtTitle" placeholder="e.g. Van-03 Inspection">
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Date <span class="req">*</span></label>
-                    <input type="date" id="evtDate">
+                    <label id="evtDateLabel">Date</label>
+                    <input type="date" id="evtDate" onchange="syncCleaningEndMin()">
                 </div>
                 <div class="form-group">
                     <label>Type</label>
@@ -206,8 +206,12 @@
                     </select>
                 </div>
             </div>
+            <div class="form-group" id="evtCleanEndGroup" style="display:none;">
+                <label>End Date</label>
+                <input type="date" id="evtCleanEnd">
+            </div>
             <div class="form-group" id="evtZoneGroup" style="display:none;">
-                <label>Building / Zone <span class="req">*</span></label>
+                <label>Building / Zone</label>
                 <select id="evtZone">
                     <option value="">— Select building —</option>
                     <option>Admin Building</option>
@@ -219,10 +223,10 @@
                     <option>CCS Building</option>
                     <option>Clinic</option>
                 </select>
-                <p class="field-hint">Schedules a real Janitorial Monitoring assignment for this zone and notifies the Janitorial account.</p>
+                <p class="field-hint">Schedules a real Janitorial Monitoring assignment for this zone for every day from Start to End Date, and notifies the Janitorial account.</p>
             </div>
             <div class="form-group" id="evtMaintZoneGroup" style="display:none;">
-                <label>Building <span class="req">*</span></label>
+                <label>Building</label>
                 <select id="evtMaintZone">
                     <option value="">— Select building —</option>
                     <option>Main entrance gate</option>
@@ -264,6 +268,77 @@
         <div class="modal-footer">
             <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
             <button class="btn-submit" onclick="addLocalEvent()"><i class="bi bi-plus-lg"></i> Add Event</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     NOTIFY PICKER MODAL — shared by "Notify Driver" and "Notify Cleaning
+     Personnel"; same popup treatment as Generate Summary instead of an
+     inline dropdown under the button.
+════════════════════════════════════════════════════════════════ -->
+<div id="notifyPickerModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-sm">
+        <div class="modal-header">
+            <h3 id="notifyPickerTitle"><i class="bi bi-person-fill"></i> Notify</h3>
+            <button class="modal-close" onclick="closeNotifyPicker()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="ubra-picker" id="notifyPickerList"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeNotifyPicker()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     GENERATE SUMMARY MODAL — reuses the same export engine as
+     Records, Archiving & Reports (records/export/{format}), so the
+     output format, filtering, and download behavior are identical;
+     this just gives a quick weekly-by-default shortcut from Mr. UBRA.
+════════════════════════════════════════════════════════════════ -->
+<div id="summaryModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-sm">
+        <div class="modal-header">
+            <h3><i class="bi bi-file-earmark-text"></i> Generate Summary</h3>
+            <button class="modal-close" onclick="closeSummaryModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Format</label>
+                <select id="sumFormat">
+                    <option value="pdf">PDF — formatted report table</option>
+                    <option value="excel">Excel (.xls) — spreadsheet</option>
+                    <option value="csv">CSV — plain data</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>From</label>
+                    <input type="date" id="sumDateFrom">
+                </div>
+                <div class="form-group">
+                    <label>To</label>
+                    <input type="date" id="sumDateTo">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Module</label>
+                <select id="sumModule">
+                    <option value="">All Modules</option>
+                    <option value="tools">Tools</option>
+                    <option value="vehicle">Vehicle</option>
+                    <option value="safety">Safety</option>
+                    <option value="janitorial">Janitorial</option>
+                    <option value="personnel">Personnel</option>
+                </select>
+                <p class="field-hint">Defaults to the last 7 days, all modules — adjust either before generating. Pulls from the same activity log as Records, Archiving &amp; Reports.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeSummaryModal()">Cancel</button>
+            <button class="btn-submit" onclick="confirmGenerateSummary()"><i class="bi bi-download"></i> Generate</button>
         </div>
     </div>
 </div>
@@ -333,6 +408,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Add Event button ─────────────────────────────────────────
     document.getElementById('addEventBtn').addEventListener('click', () => {
         document.getElementById('evtDate').value = new Date().toISOString().split('T')[0];
+        toggleCleaningZone();
         document.getElementById('addEventModal').style.display = 'flex';
     });
 
@@ -413,7 +489,25 @@ function toggleCleaningZone() {
     const type = document.getElementById('evtType').value;
     const isCleaning = type === 'Cleaning' || type === 'Urgent Cleaning';
     document.getElementById('evtZoneGroup').style.display = isCleaning ? 'block' : 'none';
+    document.getElementById('evtCleanEndGroup').style.display = isCleaning ? 'block' : 'none';
     document.getElementById('evtMaintZoneGroup').style.display = type === 'Maintenance' ? 'block' : 'none';
+
+    // The generic "Date" field doubles as the range's Start Date for
+    // Cleaning/Urgent Cleaning — relabel it so that's clear, and keep the
+    // End Date field's minimum in sync with whatever Start Date holds.
+    document.getElementById('evtDateLabel').firstChild.textContent = isCleaning ? 'Start Date ' : 'Date ';
+    if (isCleaning) syncCleaningEndMin();
+}
+
+// Keeps End Date from ever being picked earlier than Start Date, and
+// defaults it to Start Date the first time a range is opened (so a admin
+// who only wants a single day can leave End Date untouched).
+function syncCleaningEndMin() {
+    const start = document.getElementById('evtDate').value;
+    const endInput = document.getElementById('evtCleanEnd');
+    if (!start) return;
+    endInput.min = start;
+    if (!endInput.value || endInput.value < start) endInput.value = start;
 }
 
 // ── Add event ─────────────────────────────────────────────────
@@ -426,7 +520,9 @@ function addLocalEvent() {
     if (!title || !date) { showToast('Title and date are required.', true); return; }
 
     if (type === 'Cleaning' || type === 'Urgent Cleaning') {
-        scheduleCleaning(type === 'Urgent Cleaning', date, notes);
+        const endDate = document.getElementById('evtCleanEnd').value || date;
+        if (endDate < date) { showToast('End date can\'t be before the start date.', true); return; }
+        scheduleCleaning(type === 'Urgent Cleaning', date, endDate, notes);
         return;
     }
 
@@ -451,27 +547,29 @@ function addLocalEvent() {
     document.getElementById('evtNotes').value = '';
 }
 
-// Persists a real Janitorial Monitoring assignment for the chosen zone/date
-// and notifies the Janitorial account — not just a calendar-only note.
-function scheduleCleaning(urgent, date, notes) {
+// Persists a real Janitorial Monitoring assignment for every day from
+// startDate to endDate (inclusive) and notifies the Janitorial account —
+// not just a calendar-only note.
+function scheduleCleaning(urgent, startDate, endDate, notes) {
     const zone = document.getElementById('evtZone').value;
     if (!zone) { showToast('Select a building/zone for the cleaning schedule.', true); return; }
 
     fetch('<?= base_url('calendar/scheduleCleaning') ?>', {
         method: 'POST',
         headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ zone, date, urgent, notes }),
+        body: JSON.stringify({ zone, startDate, endDate, urgent, notes }),
     })
         .then(r => r.json().then(body => ({ ok: r.ok, body })))
         .then(({ ok, body }) => {
             if (!ok || !body.success) throw new Error(body.message || 'Could not schedule cleaning.');
 
-            window._cal.addEvent(body.event);
+            (body.events || []).forEach(evt => window._cal.addEvent(evt));
             showToast(body.message);
             closeAddModal();
             document.getElementById('evtTitle').value = '';
             document.getElementById('evtNotes').value = '';
             document.getElementById('evtZone').value = '';
+            document.getElementById('evtCleanEnd').value = '';
         })
         .catch(err => showToast(err.message, true));
 }
@@ -504,14 +602,122 @@ function scheduleMaintenance(date, issue, notes) {
 
 function openAddModalOnDate(dateStr) {
     document.getElementById('evtDate').value = dateStr;
+    toggleCleaningZone();
     document.getElementById('addEventModal').style.display = 'flex';
 }
 function closeAddModal() { document.getElementById('addEventModal').style.display = 'none'; }
 
 // ── UBRA action stubs ──────────────────────────────────────────
-function notifyDriver()   { showToast('Notification sent to Van-03 driver.'); }
-function notifyCleaning() { showToast('Notification sent to Cleaning Personnel.'); }
-function generateSummary(){ showToast('Weekly summary report is being generated…'); }
+// Real drivers/janitorial staff (with contact number when on file), fed
+// from PersonnelModel::getActiveByPositionLike() via CalendarController —
+// not a hardcoded "Van-03 driver" placeholder.
+const driverList   = <?= $drivers_json ?>;
+const cleaningList = <?= $janitors_json ?>;
+
+// Opens the shared Notify popup instead of an inline dropdown — same
+// modal treatment as Generate Summary.
+function openNotifyPicker(kind) {
+    document.getElementById('notifyPickerTitle').innerHTML = kind === 'driver'
+        ? '<i class="bi bi-person-fill"></i> Notify Driver'
+        : '<i class="bi bi-brush"></i> Notify Cleaning Personnel';
+
+    const list = kind === 'driver' ? driverList : cleaningList;
+    const picker = document.getElementById('notifyPickerList');
+    picker.innerHTML = '';
+
+    if (!list.length) {
+        const empty = document.createElement('div');
+        empty.className = 'ubra-picker-empty';
+        empty.textContent = `No ${kind === 'driver' ? 'drivers' : 'janitorial staff'} on record yet — add them in Personnel Management.`;
+        picker.appendChild(empty);
+    } else {
+        list.forEach(p => {
+            const row = document.createElement('button');
+            row.type = 'button';
+            row.className = 'ubra-picker-row';
+
+            const name = document.createElement('span');
+            name.className = 'upr-name';
+            name.textContent = p.name;
+
+            const num = document.createElement('span');
+            num.className = 'upr-num';
+            num.textContent = p.contactNumber || p.position || '';
+
+            row.appendChild(name);
+            row.appendChild(num);
+            row.addEventListener('click', () => sendUbraNotify(kind, p));
+            picker.appendChild(row);
+        });
+    }
+
+    document.getElementById('notifyPickerModal').style.display = 'flex';
+}
+
+function closeNotifyPicker() {
+    document.getElementById('notifyPickerModal').style.display = 'none';
+}
+
+function sendUbraNotify(kind, person) {
+    closeNotifyPicker();
+
+    const category = kind === 'driver' ? 'Driver' : 'Janitorial';
+    const title = kind === 'driver'
+        ? 'Vehicle/trip reminder from Mr. UBRA'
+        : 'Cleaning schedule reminder from Mr. UBRA';
+
+    fetch('<?= base_url('calendar/notify') ?>', {
+        method: 'POST',
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ recipient: person.name, title, category }),
+    })
+        .then(r => r.json())
+        .then(data => {
+            const suffix = person.contactNumber ? ` (${person.contactNumber})` : '';
+            showToast(data.success ? `Notification sent to ${person.name}${suffix}.` : (data.message || 'Could not send notification.'), !data.success);
+        })
+        .catch(() => showToast('Could not send notification. Please try again.', true));
+}
+
+// "Generate Weekly Summary" — opens a small picker (format/date range/
+// module) pre-filled for the last 7 days, then downloads through the same
+// records/export endpoint Records, Archiving & Reports uses.
+function generateSummary() {
+    const today = new Date();
+    const weekAgo = new Date(today.getTime() - 6 * 86400000);
+    const toIso = d => d.toISOString().split('T')[0];
+
+    document.getElementById('sumFormat').value = 'pdf';
+    document.getElementById('sumDateFrom').value = toIso(weekAgo);
+    document.getElementById('sumDateTo').value = toIso(today);
+    document.getElementById('sumModule').value = '';
+    document.getElementById('summaryModal').style.display = 'flex';
+}
+
+function closeSummaryModal() {
+    document.getElementById('summaryModal').style.display = 'none';
+}
+
+function confirmGenerateSummary() {
+    const format = document.getElementById('sumFormat').value;
+    const dateFrom = document.getElementById('sumDateFrom').value;
+    const dateTo = document.getElementById('sumDateTo').value;
+    const module = document.getElementById('sumModule').value;
+
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+        showToast('"From" date can\'t be after "To" date.', true);
+        return;
+    }
+
+    const params = new URLSearchParams({ module, date_from: dateFrom, date_to: dateTo });
+    const url = `<?= base_url('records/export/') ?>${format}?${params.toString()}`;
+    // Opens in its own tab/window instead of navigating the Calendar page
+    // away — a PDF renders right there for a quick look, and CSV/Excel still
+    // downloads as normal, either way you're never pulled off Calendar.
+    window.open(url, '_blank');
+    closeSummaryModal();
+    showToast('Summary is downloading…');
+}
 
 // ── Utility ────────────────────────────────────────────────────
 function esc(s) {

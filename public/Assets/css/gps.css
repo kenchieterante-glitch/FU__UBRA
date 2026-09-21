@@ -5,10 +5,13 @@
 
 :root {
     --maroon-light: #9B1B1B;
-    --surface: #ffffff;
-    --surface-alt: #f8f4f4;
-    --border: #e0d5d5;
-    --text-muted: #6b6b6b;
+    /* --surface/--surface-alt/--border/--text-muted alias the shared
+       theme tokens (not fixed light-mode colors) so this page's cards
+       still flip correctly under [data-theme="dark"]. */
+    --surface: var(--card);
+    --surface-alt: var(--bg-subtle);
+    --border: var(--line);
+    --text-muted: var(--muted);
     --success: #16a34a;
     --warning: #d97706;
     --danger: #dc2626;
@@ -262,7 +265,7 @@
 .map-placeholder {
     height: 320px;
     position: relative;
-    background: #f0eded;
+    background: var(--surface-alt);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -329,21 +332,25 @@
     pointer-events: auto;
 }
 
+/* Same wide, "crosswise" popup treatment as the Vehicle Management and
+   Personnel Management detail popups — same mechanics too: the box itself
+   only clips corners (overflow:hidden), and .modal-body is what scrolls if
+   it ever needs to, exactly like #personnelDetailModal. */
 .modal-box {
     background: var(--surface);
     border-radius: var(--radius);
-    max-width: 700px;
-    width: 100%;
+    width: 50vw;
+    min-width: 480px;
+    max-width: 900px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
     overflow: hidden;
-    max-height: 400px;
-    overflow-y: auto;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
 }
 
-.modal-box::-webkit-scrollbar {
-    display: none;
+@media (max-width: 720px) {
+    .modal-box {
+        width: 94vw;
+        min-width: 0;
+    }
 }
 
 .modal-header {
@@ -360,6 +367,12 @@
     font-size: 1rem;
     font-weight: 700;
     color: #fdfcfc;
+}
+
+.modal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .modal-close-btn {
@@ -758,7 +771,7 @@
 }
 
 .gps-section {
-    background: #fafafa;
+    background: var(--surface-alt);
 }
 
 .gps-offline-section {
@@ -782,6 +795,68 @@
     color: var(--text-muted);
     flex-shrink: 0;
     margin-right: .5rem;
+}
+
+/* Vehicle Profile popup body — same detail-section/detail-grid/history-table
+   structure as the Vehicle Management and Personnel Management popups. */
+.modal-body {
+    padding: 1.1rem 1.2rem;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
+.detail-section {
+    margin-bottom: 1.2rem;
+}
+
+.detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.detail-section-title {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--maroon);
+    margin-bottom: .6rem;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .3rem 1.5rem;
+}
+
+.history-table-wrap {
+    overflow-x: auto;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .78rem;
+}
+
+.history-table th,
+.history-table td {
+    text-align: left;
+    padding: .4rem .5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.history-table th {
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: .68rem;
+    letter-spacing: .04em;
+}
+
+@media (max-width: 720px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .detail-row strong {

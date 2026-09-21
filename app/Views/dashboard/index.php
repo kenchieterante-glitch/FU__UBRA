@@ -6,6 +6,10 @@
   $activity = $activity ?? [];
   $pending_tools_json = $pending_tools_json ?? '[]';
   $pending_workorders_json = $pending_workorders_json ?? '[]';
+  $active_borrowings_json = $active_borrowings_json ?? '[]';
+  $vehicles_inuse_json = $vehicles_inuse_json ?? '[]';
+  $maintenance_due_json = $maintenance_due_json ?? '[]';
+  $cleaning_incomplete_json = $cleaning_incomplete_json ?? '[]';
   $travel_history = $travel_history ?? [];
 ?>
 
@@ -20,16 +24,21 @@
       <?php $tone = esc($kpi['tone'] ?? 'tone-maroon', 'attr'); ?>
       <?php if (!empty($kpi['expand'])): ?>
         <div class="stat-card stat-card-clickable" onclick="togglePendingPanel()" role="button" tabindex="0">
-          <span class="stat-icon <?= $tone ?>"><i class="fa-solid <?= esc($kpi['icon'] ?? 'fa-chart-simple', 'attr') ?>"></i></span>
+          <span class="stat-icon <?= $tone ?>"><i class="bi <?= esc($kpi['icon'] ?? 'bi-bar-chart-fill', 'attr') ?>"></i></span>
           <h3><?= esc($kpi['label']) ?></h3>
           <div class="value"><?= esc($kpi['value']) ?></div>
         </div>
       <?php else: ?>
-        <a class="stat-card stat-card-clickable" href="<?= esc(site_url($kpi['url'] ?? '#')) ?>">
-          <span class="stat-icon <?= $tone ?>"><i class="fa-solid <?= esc($kpi['icon'] ?? 'fa-chart-simple', 'attr') ?>"></i></span>
+        <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0"
+             data-label="<?= esc($kpi['label'], 'attr') ?>"
+             data-meta="<?= esc($kpi['meta'] ?? '', 'attr') ?>"
+             data-sub="<?= esc($kpi['sub'] ?? '', 'attr') ?>"
+             data-url="<?= esc(site_url($kpi['url'] ?? '#')) ?>"
+             data-list-key="<?= esc($kpi['listKey'] ?? '', 'attr') ?>">
+          <span class="stat-icon <?= $tone ?>"><i class="bi <?= esc($kpi['icon'] ?? 'bi-bar-chart-fill', 'attr') ?>"></i></span>
           <h3><?= esc($kpi['label']) ?></h3>
           <div class="value"><?= esc($kpi['value']) ?></div>
-        </a>
+        </div>
       <?php endif; ?>
     <?php endforeach; ?>
   </section>
@@ -44,15 +53,30 @@
     </div>
     <div class="pending-columns">
       <div class="pending-column">
-        <h3><i class="fa-solid fa-hand-holding"></i> Borrowed Tools</h3>
+        <h3><i class="bi bi-hand-index-thumb-fill"></i> Borrowed Tools</h3>
         <div id="pendingToolsList" class="pending-list"></div>
         <a class="overview-link" href="<?= esc(site_url('tools?filter=borrowed')) ?>">View in Tools Management →</a>
       </div>
       <div class="pending-column">
-        <h3><i class="fa-solid fa-screwdriver-wrench"></i> Open Work Orders</h3>
+        <h3><i class="bi bi-wrench-adjustable"></i> Open Work Orders</h3>
         <div id="pendingWorkOrdersList" class="pending-list"></div>
         <a class="overview-link" href="<?= esc(site_url('safety?filter=duework')) ?>">View in Maintenance →</a>
       </div>
+    </div>
+  </section>
+
+  <!-- Generic KPI detail banner — same click-to-reveal-then-route behavior
+       as the Pending Requests card above, kept consistent across every
+       stat card instead of some cards navigating away instantly. -->
+  <section class="panel-card pending-panel" id="kpiBanner" style="display:none" aria-label="Status detail">
+    <div class="panel-head">
+      <h2 id="kpiBannerTitle"></h2>
+      <p id="kpiBannerSub"></p>
+    </div>
+    <div class="pending-column">
+      <p id="kpiBannerMeta"></p>
+      <div id="kpiBannerList" class="pending-list"></div>
+      <a id="kpiBannerLink" class="overview-link" href="#">View details →</a>
     </div>
   </section>
 
@@ -65,7 +89,7 @@
       <div class="alert-list">
         <?php foreach ($alerts as $alert): ?>
           <a class="alert-item" href="<?= esc(site_url($alert['url'] ?? '#')) ?>">
-            <span class="alert-icon <?= esc($alert['tone']) ?>"><i class="fa-solid <?= esc($alert['icon']) ?>"></i></span>
+            <span class="alert-icon <?= esc($alert['tone']) ?>"><i class="bi <?= esc($alert['icon']) ?>"></i></span>
             <div class="alert-copy">
               <div class="alert-title"><?= esc($alert['title']) ?></div>
               <div class="alert-subtitle"><?= esc($alert['subtitle']) ?></div>
@@ -147,6 +171,15 @@
   const pendingTools = <?= $pending_tools_json ?>;
   const pendingWorkOrders = <?= $pending_workorders_json ?>;
 
+  // Real itemized data behind each non-Pending KPI banner, keyed to match
+  // each card's data-list-key attribute (see Dashboard::index()).
+  const kpiDetailLists = {
+    activeBorrowingsList: <?= $active_borrowings_json ?>,
+    vehiclesInUseList: <?= $vehicles_inuse_json ?>,
+    maintenanceDueList: <?= $maintenance_due_json ?>,
+    cleaningIncompleteList: <?= $cleaning_incomplete_json ?>,
+  };
+
   function esc(s) {
     const d = document.createElement('div');
     d.textContent = String(s ?? '');
@@ -156,11 +189,47 @@
   function togglePendingPanel() {
     const panel = document.getElementById('pendingPanel');
     const opening = panel.style.display === 'none';
+    document.getElementById('kpiBanner').style.display = 'none';
     panel.style.display = opening ? 'block' : 'none';
     if (opening) {
       renderPendingLists();
-      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  }
+
+  // Every non-expanding KPI card opens this same banner instead of
+  // navigating away immediately — consistent with the Pending Requests
+  // card's expand-then-route behavior. Clicking the same card again closes it.
+  function toggleKpiBanner(card) {
+    const panel = document.getElementById('kpiBanner');
+    const alreadyOpenForThisCard = panel.style.display !== 'none' && panel.dataset.forLabel === card.dataset.label;
+
+    document.getElementById('pendingPanel').style.display = 'none';
+
+    if (alreadyOpenForThisCard) {
+      panel.style.display = 'none';
+      panel.dataset.forLabel = '';
+      return;
+    }
+
+    document.getElementById('kpiBannerTitle').textContent = card.dataset.label;
+    document.getElementById('kpiBannerSub').textContent = card.dataset.sub || '';
+    document.getElementById('kpiBannerMeta').textContent = card.dataset.meta || '';
+
+    const items = kpiDetailLists[card.dataset.listKey] || [];
+    document.getElementById('kpiBannerList').innerHTML = items.length
+      ? items.map(item => `
+        <div class="pending-item">
+          <strong>${esc(item.title)}</strong>
+          <span>${esc(item.subtitle)}</span>
+        </div>`).join('')
+      : `<div class="no-data">Nothing here right now.</div>`;
+
+    const link = document.getElementById('kpiBannerLink');
+    link.href = card.dataset.url;
+    link.textContent = 'View in ' + card.dataset.label + ' →';
+
+    panel.dataset.forLabel = card.dataset.label;
+    panel.style.display = 'block';
   }
 
   function renderPendingLists() {

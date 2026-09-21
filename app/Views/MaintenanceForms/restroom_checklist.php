@@ -3,6 +3,7 @@
 <?= $this->section('content') ?>
 
 <?php $checklistList = $checklists ?? []; ?>
+<?php $janitorList = $janitors ?? []; ?>
 
 <div class="page-header">
   <div>
@@ -32,10 +33,10 @@
             <td><?= esc($c['reviewed_by'] ?? '—') ?></td>
             <td>
               <div class="action-buttons">
-                <button type="button" class="icon-btn" onclick="document.getElementById('viewModal<?= $c['id'] ?>').style.display='flex'" title="Open"><i class="fa-solid fa-eye"></i></button>
+                <button type="button" class="icon-btn" onclick="document.getElementById('viewModal<?= $c['id'] ?>').style.display='flex'" title="Open"><i class="bi bi-eye-fill"></i></button>
                 <form method="post" action="<?= base_url('maintenance-forms/restroom/delete/'.$c['id']) ?>" onsubmit="return confirm('Archive this checklist?')" style="display:contents;">
                   <?= csrf_field() ?>
-                  <button type="submit" class="icon-btn delete" title="Archive"><i class="fa-solid fa-archive"></i></button>
+                  <button type="submit" class="icon-btn delete" title="Archive"><i class="bi bi-archive-fill"></i></button>
                 </form>
               </div>
             </td>
@@ -75,10 +76,21 @@
                 <td class="mf-checkbox-cell"><input type="checkbox" name="clean_floor" value="1" <?= !empty($e['clean_floor']) ? 'checked' : '' ?>></td>
                 <td class="mf-checkbox-cell"><input type="checkbox" name="clean_sink" value="1" <?= !empty($e['clean_sink']) ? 'checked' : '' ?>></td>
                 <td class="mf-checkbox-cell"><input type="checkbox" name="clean_toilet" value="1" <?= !empty($e['clean_toilet']) ? 'checked' : '' ?>></td>
-                <td><input type="text" name="cleaned_by" value="<?= esc($e['cleaned_by'] ?? '') ?>" style="width:110px;"></td>
+                <td>
+                  <select name="cleaned_by" style="width:130px;">
+                    <option value="">— Select —</option>
+                    <?php $currentCleaner = $e['cleaned_by'] ?? ''; ?>
+                    <?php if ($currentCleaner !== '' && !in_array($currentCleaner, array_column($janitorList, 'name'), true)): ?>
+                      <option value="<?= esc($currentCleaner) ?>" selected><?= esc($currentCleaner) ?></option>
+                    <?php endif; ?>
+                    <?php foreach ($janitorList as $j): ?>
+                      <option value="<?= esc($j['name']) ?>" <?= $currentCleaner === $j['name'] ? 'selected' : '' ?>><?= esc($j['name']) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </td>
                 <td>
                   <div class="action-buttons">
-                    <button type="submit" class="icon-btn" title="Save"><i class="fa-solid fa-floppy-disk"></i></button>
+                    <button type="submit" class="icon-btn" title="Save"><i class="bi bi-floppy-fill"></i></button>
                   </div>
                 </td>
               </form>
@@ -86,7 +98,7 @@
                 <form method="post" action="<?= base_url('maintenance-forms/restroom/deleteEntry/'.$e['id']) ?>" onsubmit="return confirm('Delete this entry?')" style="display:contents;">
                   <?= csrf_field() ?>
                   <div class="action-buttons">
-                    <button type="submit" class="icon-btn delete" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    <button type="submit" class="icon-btn delete" title="Delete"><i class="bi bi-trash3-fill"></i></button>
                   </div>
                 </form>
               </td>
@@ -110,7 +122,12 @@
         <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" name="clean_sink" value="1"> Clean Sink</label>
         <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" name="clean_toilet" value="1"> Clean Toilet</label>
         <label>Cleaned By</label>
-        <input type="text" name="cleaned_by">
+        <select name="cleaned_by">
+          <option value="">— Select —</option>
+          <?php foreach ($janitorList as $j): ?>
+            <option value="<?= esc($j['name']) ?>"><?= esc($j['name']) ?></option>
+          <?php endforeach; ?>
+        </select>
         <div class="modal-actions">
           <button type="submit" class="btn-maroon">Add Entry</button>
         </div>

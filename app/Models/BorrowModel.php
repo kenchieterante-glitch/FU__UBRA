@@ -22,6 +22,18 @@ class BorrowModel extends Model
         return $builder->findAll();
     }
 
+    // Full borrow history for one tool (current + past, most recent first) —
+    // backs the Tools "View Details" popup's usage count and borrow log,
+    // the same way TravelModel's per-vehicle trip list backs Vehicle
+    // Management's detail popup.
+    public function getForTool(int $toolId): array
+    {
+        return $this->where('tool_id', $toolId)
+                    ->where('is_archived', 0)
+                    ->orderBy('id', 'DESC')
+                    ->findAll();
+    }
+
     // Same as getAllWithDetails() but includes archived rows — used by the Records/Archiving page
     public function getAllWithDetailsForRecords()
     {

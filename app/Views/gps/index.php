@@ -34,28 +34,28 @@
 
     <!-- ── SUMMARY CARDS ────────────────────────────────────────── -->
     <div class="stat-cards">
-        <div class="stat-card">
-            <span class="stat-icon tone-maroon"><i class="fa-solid fa-truck"></i></span>
+        <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('total')" role="button" tabindex="0">
+            <span class="stat-icon tone-maroon"><i class="bi bi-truck"></i></span>
             <h3>Total Vehicles</h3>
             <div class="value"><?= $total ?></div>
         </div>
-        <div class="stat-card">
-            <span class="stat-icon tone-green"><i class="fa-solid fa-signal"></i></span>
+        <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('online')" role="button" tabindex="0">
+            <span class="stat-icon tone-green"><i class="bi bi-reception-4"></i></span>
             <h3>GPS Online</h3>
             <div class="value"><?= $online_count ?></div>
         </div>
-        <div class="stat-card">
-            <span class="stat-icon tone-neutral"><i class="fa-solid fa-satellite-dish"></i></span>
+        <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('offline')" role="button" tabindex="0">
+            <span class="stat-icon tone-neutral"><i class="bi bi-broadcast"></i></span>
             <h3>GPS Offline</h3>
             <div class="value"><?= $offline_count ?></div>
         </div>
-        <div class="stat-card">
-            <span class="stat-icon tone-gold"><i class="fa-solid fa-route"></i></span>
+        <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('transit')" role="button" tabindex="0">
+            <span class="stat-icon tone-gold"><i class="bi bi-signpost-split"></i></span>
             <h3>In Transit</h3>
             <div class="value"><?= $transit_count ?></div>
         </div>
-        <div class="stat-card">
-            <span class="stat-icon tone-red"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+        <div class="stat-card stat-card-clickable" onclick="filterGpsByStat('maintenance')" role="button" tabindex="0">
+            <span class="stat-icon tone-red"><i class="bi bi-wrench-adjustable"></i></span>
             <h3>Under Maintenance</h3>
             <div class="value"><?= $maint_count ?></div>
         </div>
@@ -108,7 +108,7 @@
                             <option value="Available">Available</option>
                             <option value="In Use">In Use</option>
                             <option value="Reserved">Reserved</option>
-                            <option value="Under Maintenance">Maintenance</option>
+                            <option value="Maintenance">Maintenance</option>
                           </select>
                         </div>
                         <div class="filter-row">
@@ -209,10 +209,6 @@
                                 </td>
                                 <td>
                                     <div class="action-btns">
-                                        <button class="icon-btn view" title="View Profile"
-                                            onclick="event.stopPropagation(); openVehicleModal(<?= $v['id'] ?>)">
-                                            <i class="fa-solid fa-eye"></i>
-                                        </button>
                                         <button class="icon-btn sync" title="Sync GPS"
                                             onclick="event.stopPropagation(); syncVehicle(<?= $v['id'] ?>, this)">
                                             <i class="bi bi-arrow-clockwise"></i>
@@ -257,100 +253,94 @@ function openVehicleModal(id) {
 
     content.innerHTML = `<div class="sidebar-loading"><i class="bi bi-hourglass-split"></i> Loading GPS profile...</div>`;
     modal.classList.add('open');
+    // The popup itself already scrolls internally if it needs to (.modal-body)
+    // — without this, the page behind it stays scrollable too, so a second,
+    // confusing scrollbar shows up at the edge of the browser window.
+    document.body.style.overflow = 'hidden';
 
     fetch(GPS_AJAX_BASE + id)
         .then(r => r.json())
         .then(v => renderModalProfile(v))
         .catch(() => {
             content.innerHTML =
-                '<div class="sidebar-error"><i class="bi bi-exclamation-triangle"></i> Failed to load vehicle data.</div>';
+                '<div class="sidebar-error"><i class="bi bi-exclamation-triangle-fill"></i> Failed to load vehicle data.</div>';
         });
 }
 
 function closeVehicleModal() {
     const modal = document.getElementById('vehicleProfileModal');
     modal.classList.remove('open');
+    document.body.style.overflow = '';
 }
 
 function renderModalProfile(v) {
-    const online      = v.gps_status === 'Online';
-    const signalPct   = Math.min(100, parseInt(v.signal || 0));
-    const signalLabel = signalPct >= 70 ? 'Strong' : signalPct >= 40 ? 'Moderate' : 'Weak';
-    const signalClass = signalPct >= 70 ? 'signal-strong' : signalPct >= 40 ? 'signal-mod' : 'signal-weak';
+    const online     = v.gps_status === 'Online';
+    // v.signal already comes formatted (e.g. "Strong (98%)") — it's not a
+    // raw number to re-derive a label/percentage from.
+    const signalText = v.signal || 'No signal data';
 
+    const pings = v.recent_pings || [];
+    const pingRows = pings.length
+        ? pings.map(p => `<tr><td>${p.loggedAt ? timeAgoJS(p.loggedAt) : '—'}</td><td>${esc(p.coords)}</td><td>${esc(p.signal)}</td><td>${esc(p.status)}</td></tr>`).join('')
+        : `<tr><td colspan="4">No GPS pings recorded yet.</td></tr>`;
+
+    // Same wide-popup layout as the Vehicle Management / Personnel Management
+    // detail popups: maroon header + × only, then labeled sections in a
+    // two-column detail grid, plus a history table — kept visually
+    // consistent across all three instead of this page having its own look.
     document.getElementById('vehicleProfileContent').innerHTML = `
     <div class="modal-header">
-        <h3>Vehicle Profile</h3>
-        <button class="modal-close-btn" onclick="closeVehicleModal()">
-            <i class="bi bi-x-lg"></i>
-        </button>
-    </div>
-    <div class="profile-card">
-        <div class="profile-vehicle-icon">
-            <i class="bi bi-truck-front-fill"></i>
-        </div>
-        <div class="profile-name">${esc(v.model || 'Unknown Vehicle')}</div>
-        <div class="profile-plate">${esc(v.plate_no || '—')}</div>
-        <span class="avail-badge ${availClass(v.availability)}" style="margin:0.5rem auto;display:block;width:fit-content;">
-            ${esc(v.availability || 'Available')}
-        </span>
-    </div>
-
-    <div class="sidebar-section">
-        <div class="ss-title">Vehicle Details</div>
-        <div class="detail-row"><span>Assigned Driver</span><strong>${esc(v.driver_name || 'Unassigned')}</strong></div>
-        <div class="detail-row"><span>Insurance Expiry</span><strong>${esc(v.insurance_expiry || '—')}</strong></div>
-        <div class="detail-row"><span>Department</span><strong>${esc(v.department || '—')}</strong></div>
-        <div class="detail-row"><span>Capacity</span><strong>${esc(v.capacity || '—')}</strong></div>
-        <div class="detail-row"><span>Last Service</span><strong>${esc(v.last_service_date || '—')}</strong></div>
-        <div class="detail-row"><span>Registration Expiry</span><strong>${esc(v.registration_expiry || '—')}</strong></div>
-    </div>
-
-    <div class="sidebar-section gps-section ${online ? '' : 'gps-offline-section'}">
-        <div class="ss-title">
-            GPS Live Tracking
-            <span class="gps-badge ${online ? 'gps-online' : 'gps-offline'}" style="margin-left:.5rem;">
-                <span class="${online ? 'pulse-dot' : 'dead-dot'}"></span>
-                ${online ? 'Connected' : 'Offline'}
-            </span>
-        </div>
-        <div class="detail-row"><span>Device ID</span><strong>${esc(v.device_id || 'N/A')}</strong></div>
-        <div class="detail-row"><span>Last Updated</span><strong>${v.logged_at ? timeAgoJS(v.logged_at) : '—'}</strong></div>
-        <div class="detail-row"><span>Current Speed</span><strong>${v.speed || 0} km/h</strong></div>
-        <div class="detail-row"><span>Last Location</span><strong>${esc(v.last_location || 'Unknown')}</strong></div>
-        <div class="detail-row"><span>Coordinates</span><strong>${v.latitude ? v.latitude + ', ' + v.longitude : 'N/A'}</strong></div>
-        <div class="detail-row signal-row">
-            <span>Signal Strength</span>
-            <div class="signal-wrap">
-                <div class="signal-bar-bg">
-                    <div class="signal-bar-fill ${signalClass}" style="width:${signalPct}%"></div>
-                </div>
-                <strong class="${signalClass}">${signalLabel} (${signalPct}%)</strong>
-            </div>
-        </div>
-        <div class="sidebar-btn-row">
-            <a class="btn-outline-sm" href="https://www.google.com/maps?q=${v.latitude || '9.3164'},${v.longitude || '123.2885'}" target="_blank">
-                <i class="bi bi-map"></i> Open GPS App
-            </a>
-            <button class="btn-outline-sm" onclick="syncVehicle(${v.id})">
-                <i class="bi bi-arrow-clockwise"></i> Sync API
+        <h3>${esc(v.model || 'Unknown Vehicle')} (${esc(v.plate_no || '—')})</h3>
+        <div class="modal-header-actions">
+            <button class="modal-close-btn" onclick="window.location.href='<?= base_url('vehicles') ?>?edit=' + ${v.id}" aria-label="Edit vehicle">
+                <i class="bi bi-pencil-fill"></i>
+            </button>
+            <button class="modal-close-btn" onclick="closeVehicleModal()" aria-label="Close">
+                <i class="bi bi-x-lg"></i>
             </button>
         </div>
     </div>
-
-    <div class="ubra-mini">
-        <div class="ubra-header">
-            <span class="ubra-icon">U</span>
-            <div><div class="ubra-name">Mr. UBRA</div><div class="ubra-sub">Fleet Health</div></div>
+    <div class="modal-body">
+        <div class="detail-section">
+            <div class="detail-section-title">Vehicle Details</div>
+            <div class="detail-grid">
+                <div class="detail-row"><span>Plate Number</span><strong>${esc(v.plate_no || '—')}</strong></div>
+                <div class="detail-row"><span>Type</span><strong>${esc(v.type || '—')}</strong></div>
+                <div class="detail-row"><span>Driver</span><strong>${esc(v.driver_name || 'Unassigned')}</strong></div>
+                <div class="detail-row"><span>Department</span><strong>${esc(v.department_name || 'Unassigned')}</strong></div>
+                <div class="detail-row"><span>Availability</span><strong>${esc(v.availability || 'Available')}</strong></div>
+                <div class="detail-row"><span>Inspection</span><strong>${esc(v.inspection_status || '—')}</strong></div>
+                <div class="detail-row"><span>Tire Pressure</span><strong>${v.tire_pressure_psi != null && v.tire_pressure_psi !== '' ? esc(v.tire_pressure_psi) + ' PSI' : 'Not recorded'}</strong></div>
+            </div>
         </div>
-        <div class="ubra-msg">
-            <ul class="ubra-list">
-                ${online ? '<li><i class="bi bi-check-circle-fill text-success"></i> GPS signal is live.</li>' :
-                           '<li><i class="bi bi-exclamation-triangle-fill text-warning"></i> GPS signal lost — check device.</li>'}
-                ${v.availability === 'Under Maintenance' ?
-                    '<li><i class="bi bi-tools text-warning"></i> Vehicle under maintenance.</li>' : ''}
-                <li><i class="bi bi-info-circle"></i> Last known location: ${esc(v.last_location || 'Unknown')}.</li>
-            </ul>
+
+        <div class="detail-section">
+            <div class="detail-section-title">GPS Live Tracking — ${online ? 'Connected' : 'Offline'}</div>
+            <div class="detail-grid">
+                <div class="detail-row"><span>Device ID</span><strong>${esc(v.device_id || 'N/A')}</strong></div>
+                <div class="detail-row"><span>Last Updated</span><strong>${v.logged_at ? timeAgoJS(v.logged_at) : '—'}</strong></div>
+                <div class="detail-row"><span>Current Speed</span><strong>${v.speed || 0} km/h</strong></div>
+                <div class="detail-row"><span>Coordinates</span><strong>${v.latitude ? v.latitude + ', ' + v.longitude : 'N/A'}</strong></div>
+                <div class="detail-row"><span>Signal Strength</span><strong>${esc(signalText)}</strong></div>
+            </div>
+            <div class="sidebar-btn-row" style="margin-top:.7rem;">
+                <a class="btn-outline-sm" href="https://www.google.com/maps?q=${v.latitude || '9.3164'},${v.longitude || '123.2885'}" target="_blank">
+                    <i class="bi bi-map"></i> Open GPS App
+                </a>
+                <button class="btn-outline-sm" onclick="syncVehicle(${v.id})">
+                    <i class="bi bi-arrow-clockwise"></i> Sync API
+                </button>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <div class="detail-section-title">Recent Pings</div>
+            <div class="history-table-wrap">
+                <table class="history-table">
+                    <thead><tr><th>Logged</th><th>Coordinates</th><th>Signal</th><th>Status</th></tr></thead>
+                    <tbody>${pingRows}</tbody>
+                </table>
+            </div>
         </div>
     </div>
     `;
@@ -407,6 +397,31 @@ function toggleGpsFilterMenu() {
     const popup = document.getElementById('gpsFilterPopup');
     popup.classList.toggle('visible');
 }
+
+// Stat cards act as quick filters into the fleet table below — same as
+// Vehicle Management / Tools Management: the cards stay right where they
+// are, the table just filters in place.
+function filterGpsByStat(kind) {
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('availFilter').value = '';
+    document.getElementById('searchInput').value = '';
+
+    if (kind === 'online')      document.getElementById('statusFilter').value = 'Online';
+    if (kind === 'offline')     document.getElementById('statusFilter').value = 'Offline';
+    if (kind === 'transit')     document.getElementById('availFilter').value = 'In Use';
+    if (kind === 'maintenance') document.getElementById('availFilter').value = 'Maintenance';
+
+    filterTable();
+}
+
+document.querySelectorAll('.stat-card-clickable').forEach(card => {
+    card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+        }
+    });
+});
 
 let gpsOriginalOrder = null;
 

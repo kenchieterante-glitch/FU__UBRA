@@ -4,10 +4,13 @@
 ════════════════════════════════════════════════════════════════ */
 
 :root {
-    --surface: #ffffff;
-    --surface-alt: #f8f4f4;
-    --border: #e0d5d5;
-    --text-muted: #6b6b6b;
+    /* --surface/--surface-alt/--border/--text-muted alias the shared
+       theme tokens (not fixed light-mode colors) so this page's cards,
+       table, and sidebar still flip correctly under [data-theme="dark"]. */
+    --surface: var(--card);
+    --surface-alt: var(--bg-subtle);
+    --border: var(--line);
+    --text-muted: var(--muted);
     --success: #16a34a;
     --warning: #d97706;
     --danger: #dc2626;
@@ -38,8 +41,8 @@
     font-weight: 700;
     padding: 8px 14px;
     border-radius: 999px;
-    border: 1px solid #d8d8d8;
-    background: #fff;
+    border: 1px solid var(--line);
+    background: var(--card);
     color: var(--maroon);
     cursor: pointer;
     transition: box-shadow .15s ease, transform .15s ease;
@@ -55,7 +58,7 @@
 .stat-list-title {
     font-size: 20px;
     font-weight: 800;
-    color: #1a1a1a;
+    color: var(--ink);
     margin: 0;
     padding-left: 12px;
     border-left: 3px solid var(--maroon);
@@ -347,7 +350,7 @@
 
 /* Unread vs read rows */
 .row-unread {
-    background: #fffbf9;
+    background: var(--bg-subtle);
 }
 
 .row-unread .cat-label,
@@ -756,7 +759,7 @@ td .pri-critical {
     gap: 12px;
     padding-bottom: 16px;
     margin-bottom: 6px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--line);
 }
 
 .notif-detail-icon {
@@ -786,7 +789,7 @@ td .pri-critical {
     align-items: baseline;
     gap: 1rem;
     padding: .65rem 0;
-    border-bottom: 1px solid #f1f2f4;
+    border-bottom: 1px solid var(--line);
     font-size: .85rem;
 }
 
@@ -795,7 +798,7 @@ td .pri-critical {
 }
 
 .notif-detail-row span {
-    color: #667085;
+    color: var(--muted);
     text-transform: uppercase;
     letter-spacing: .04em;
     font-size: .72rem;

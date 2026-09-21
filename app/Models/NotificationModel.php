@@ -22,6 +22,7 @@ class NotificationModel extends Model
         'Trip Ticket Request'              => 'vehicles',
         'Trip Ticket Assignment'           => 'vehicles',
         'Inventory Low Stock'              => 'tools',
+        'Tool Borrowed'                    => 'tools',
         'Janitorial Assignment'            => 'janitorial',
         'Cleaning Scheduled'               => 'janitorial',
         'Urgent Cleaning Scheduled'        => 'janitorial',
@@ -40,13 +41,17 @@ class NotificationModel extends Model
     ];
 
     // Only roles with a restricted sidebar are scoped here — everyone else
-    // (Administrator, and any other existing role) keeps seeing everything,
-    // unchanged.
+    // (Administrator — the only "general", unfiltered view of the log — and
+    // any other existing role) keeps seeing everything, unchanged.
     public static function allowedModulesForRole(string $role): ?array
     {
         return match (strtolower($role)) {
             'facilities' => ['tools', 'personnel'],
             'security'   => ['safety', 'vehicles'],
+            // Tools Head = the Tools & Equipment / "Maintenance" office —
+            // only its own inventory/borrow notifications.
+            'tools'      => ['tools'],
+            'janitorial' => ['janitorial'],
             default      => null,
         };
     }

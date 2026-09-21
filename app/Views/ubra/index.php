@@ -14,7 +14,10 @@
         <h1 class="ubra-title">Mr. UBRA</h1>
         <p class="ubra-subtext"><span class="pulse-dot"></span> Operations assistant &middot; online</p>
       </div>
-      <button type="button" class="ubra-clear-btn" onclick="clearChat()">Clear</button>
+      <div class="ubra-header-actions">
+        <button type="button" class="ubra-clear-btn" onclick="openChatHistory()">History</button>
+        <button type="button" class="ubra-clear-btn" onclick="clearChat()">Clear</button>
+      </div>
     </div>
 
     <!-- ── BODY: rail + conversation ─────────────────────────── -->
@@ -65,6 +68,18 @@
   </div>
 </div>
 
+<!-- CHAT HISTORY MODAL — same wide "crosswise" popup treatment used
+     elsewhere (Vehicle Management, Personnel Management, GPS Tracker). -->
+<div class="modal" id="ubraHistoryModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Chat History</h3>
+      <button type="button" class="modal-close-btn" onclick="closeChatHistory()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body" id="ubraHistoryBody"></div>
+  </div>
+</div>
+
 <script>
 // ── State ──────────────────────────────────────────────────────
 let chatHistory = [];
@@ -102,7 +117,7 @@ async function sendMessage(overrideText = null) {
         const data = await res.json();
         const reply = data.reply || data.error || 'Sorry, something went wrong.';
 
-        appendMessage('assistant', reply);
+        appendMessage('assistant', reply, data.download || null);
         chatHistory.push({ role: 'assistant', content: reply });
 
     } catch (err) {
@@ -130,12 +145,19 @@ function clearInputError() {
 }
 
 // ── DOM: Append message bubble ─────────────────────────────────
-function appendMessage(role, text) {
+// Every bubble gets a stable, ever-increasing data-msg-index so the History
+// popup (which lists the same persisted turns) can point back at the exact
+// bubble in the live thread — that's what lets "click a history row" jump
+// you back into the live conversation instead of just reading a flat log.
+let msgIndex = 0;
+
+function appendMessage(role, text, download = null) {
     const container = document.getElementById('chatMessages');
     const time = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
 
     const row = document.createElement('div');
     row.className = 'ubra-msg-row ' + role;
+    row.dataset.msgIndex = msgIndex++;
 
     if (role === 'assistant') {
         row.innerHTML = `
@@ -150,6 +172,18 @@ function appendMessage(role, text) {
                 <div class="ubra-bubble user">${renderMarkdown(text)}</div>
                 <div class="ubra-msg-time">${time}</div>
             </div>`;
+    }
+
+    // A real, working file link (report requests) — opens in its own tab,
+    // same "pop up" treatment as the Calendar's Generate Summary, instead of
+    // navigating the chat away.
+    if (download && download.url) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ubra-download-btn';
+        btn.innerHTML = `<i class="bi bi-download"></i> ${esc(download.label || 'Download report')}`;
+        btn.addEventListener('click', () => window.open(download.url, '_blank'));
+        row.querySelector('.ubra-msg-col').appendChild(btn);
     }
 
     container.appendChild(row);
@@ -183,21 +217,108 @@ function setLoading(state) {
 }
 
 // ── Chat history (persisted server-side) ───────────────────────
+// Cache of the last rows fetched from the server, keyed in the same order
+// used to assign data-msg-index — resumeFromHistory() uses this to rebuild
+// the live thread on demand if it isn't populated yet (e.g. History gets
+// opened before the page's own initial load finishes), instead of silently
+// failing to find a bubble to jump to.
+let historyRowsCache = [];
+
+function renderLiveThreadFromRows(rows) {
+    document.getElementById('chatMessages').querySelectorAll('.ubra-msg-row').forEach(el => el.remove());
+    msgIndex = 0;
+    chatHistory = [];
+    rows.forEach(row => {
+        appendMessage(row.role, row.message);
+        chatHistory.push({ role: row.role, content: row.message });
+    });
+}
+
 async function loadChatHistory() {
     try {
         const res  = await fetch(HISTORY_URL, { headers: csrfHeaders() });
         const data = await res.json();
         const rows = data.history || [];
+        historyRowsCache = rows;
         if (rows.length === 0) return;
-
-        document.getElementById('chatMessages').querySelectorAll('.ubra-msg-row').forEach(el => el.remove());
-        rows.forEach(row => {
-            appendMessage(row.role, row.message);
-            chatHistory.push({ role: row.role, content: row.message });
-        });
+        renderLiveThreadFromRows(rows);
     } catch (err) {
         // Leave the default greeting in place if history can't load.
     }
+}
+
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = String(s ?? '');
+    return d.innerHTML;
+}
+
+// ── Chat History popup — the full persisted log with timestamps, as
+// its own reviewable list instead of just whatever's currently scrolled
+// into view in the live conversation above. ─────────────────────
+async function openChatHistory() {
+    const body = document.getElementById('ubraHistoryBody');
+    body.innerHTML = `<div class="no-data">Loading chat history...</div>`;
+    document.getElementById('ubraHistoryModal').style.display = 'flex';
+
+    try {
+        const res  = await fetch(HISTORY_URL, { headers: csrfHeaders() });
+        const data = await res.json();
+        const rows = data.history || [];
+        historyRowsCache = rows;
+
+        body.innerHTML = rows.length
+            ? `<div class="history-table-wrap">
+                 <table class="history-table">
+                   <thead><tr><th>Time</th><th>Speaker</th><th>Message</th></tr></thead>
+                   <tbody>${rows.map((r, i) => `
+                     <tr onclick="resumeFromHistory(${i})" title="Click to jump back to this point in the conversation">
+                       <td>${esc(r.created_at)}</td>
+                       <td>${r.role === 'assistant' ? 'Mr. UBRA' : 'You'}</td>
+                       <td>${esc(r.message)}</td>
+                     </tr>`).join('')}</tbody>
+                 </table>
+               </div>`
+            : `<div class="no-data">No chat history yet.</div>`;
+    } catch (err) {
+        body.innerHTML = `<div class="no-data">Could not load chat history. Please try again.</div>`;
+    }
+}
+
+function closeChatHistory() {
+    document.getElementById('ubraHistoryModal').style.display = 'none';
+}
+
+// ── Resume from a History row — closes the popup, scrolls the live thread
+// (which already holds the full persisted conversation) to that exact
+// bubble, flashes it, and hands focus back to the input so typing continues
+// right where you stopped instead of starting over. ─────────────────────
+function resumeFromHistory(index) {
+    closeChatHistory();
+
+    // The live thread may not be populated yet (History opened before the
+    // page's own initial load finished) or may be out of sync — rebuild it
+    // from the same rows History just showed before trying to jump, instead
+    // of silently giving up when the bubble isn't found.
+    const liveCount = document.querySelectorAll('#chatMessages .ubra-msg-row').length;
+    if (liveCount !== historyRowsCache.length) {
+        renderLiveThreadFromRows(historyRowsCache);
+    }
+
+    const target = document.querySelector(`#chatMessages [data-msg-index="${index}"]`);
+    if (!target) {
+        document.getElementById('chatInput').focus();
+        return;
+    }
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const bubble = target.querySelector('.ubra-bubble');
+    if (bubble) {
+        bubble.classList.remove('resume-highlight');
+        void bubble.offsetWidth; // restart animation if clicked again
+        bubble.classList.add('resume-highlight');
+    }
+    document.getElementById('chatInput').focus();
 }
 
 // ── Clear chat — resets back to the initial greeting state ─────

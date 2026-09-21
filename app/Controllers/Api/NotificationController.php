@@ -3,6 +3,7 @@
 namespace App\Controllers\Api;
 
 use App\Models\NotificationModel;
+use App\Libraries\ApiAuth;
 
 class NotificationController extends BaseApiController
 {
@@ -13,14 +14,24 @@ class NotificationController extends BaseApiController
         $this->notifModel = new NotificationModel();
     }
 
+    // Same role field ApiAuthFilter resolved onto the bearer token's user —
+    // scoping here has to match the web side (NotificationController::index()
+    // / getUnreadCountForRole()) exactly, or a Facilities/Security-restricted
+    // account sees a different unread count on mobile than on web for the
+    // same underlying rows.
+    private function role(): string
+    {
+        return (string) (ApiAuth::user()['role'] ?? '');
+    }
+
     public function index()
     {
-        $notifications = $this->notifModel->getAllSorted();
+        $notifications = NotificationModel::scopeToRole($this->notifModel->getAllSorted(), $this->role());
         $today = date('Y-m-d');
 
         return $this->ok([
             'notifications' => $notifications,
-            'unread_count'  => $this->notifModel->getUnreadCount(),
+            'unread_count'  => count(array_filter($notifications, fn ($n) => (int) ($n['is_read'] ?? 0) === 0)),
             'today_count'   => count(array_filter($notifications, fn ($n) => substr($n['created_at'], 0, 10) === $today)),
         ]);
     }
@@ -52,6 +63,6 @@ class NotificationController extends BaseApiController
 
     public function unreadCount()
     {
-        return $this->ok(['count' => $this->notifModel->getUnreadCount()]);
+        return $this->ok(['count' => $this->notifModel->getUnreadCountForRole($this->role())]);
     }
 }

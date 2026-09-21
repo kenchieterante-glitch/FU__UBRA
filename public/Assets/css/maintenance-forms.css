@@ -4,17 +4,29 @@
     overflow-x: auto;
 }
 
-/* Wider modal for the two big checklists (Facility: 21 items, Vehicle: 26) —
-   the default .modal-box width is too narrow to read a rating row cleanly. */
+/* Wider modal for the two big checklists (Facility: 21 items, Vehicle: 26)
+   and the log-book forms' entries table (Equipment/Aircon/Restroom, up to
+   10 columns) — the default .modal-box width forced the entries table into
+   its own horizontal scrollbar even though the modal itself had room to
+   grow. */
 .mf-big-box {
-    width: 100%;
-    max-width: 760px;
+    width: 92vw;
+    max-width: 1000px;
     max-height: 88vh;
     overflow-y: auto;
 }
 
+/* Save/Cancel (and the single "Add Entry" button) shouldn't stretch full
+   width — same fix applied elsewhere (Tools, Vehicles) for .btn-maroon's
+   default width:100%. These modals use a per-row id (viewModal<id>), so a
+   prefix match is used instead of one fixed id. */
+[id^="viewModal"] .modal-actions .btn-maroon {
+    width: auto;
+    margin-top: 0;
+}
+
 .mf-meta {
-    color: #666;
+    color: var(--muted);
     font-size: 13px;
     margin: -8px 0 16px;
 }
@@ -35,13 +47,13 @@
     gap: 14px;
     align-items: flex-start;
     padding: 8px 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--line);
 }
 
 .mf-item-label {
     flex: 1 1 55%;
     font-size: 13.5px;
-    color: #333;
+    color: var(--text);
 }
 
 .mf-item-controls {
@@ -53,14 +65,14 @@
 .mf-item-controls select {
     flex: 0 0 70px;
     padding: 6px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--line);
     border-radius: 6px;
 }
 
 .mf-item-controls input[type="text"] {
     flex: 1;
     padding: 6px 8px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--line);
     border-radius: 6px;
     font-size: 13px;
 }
@@ -74,14 +86,14 @@
 
 .mf-entries-table th,
 .mf-entries-table td {
-    border: 1px solid #e2e2e2;
+    border: 1px solid var(--line);
     padding: 6px 8px;
     font-size: 12.5px;
     text-align: left;
 }
 
 .mf-entries-table th {
-    background: #f5f5f5;
+    background: var(--bg-subtle);
 }
 
 .mf-checkbox-cell {

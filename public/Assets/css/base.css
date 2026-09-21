@@ -14,6 +14,7 @@
   --bg: #f4f4f6;
   --card: #ffffff;
   --line: #ececf0;
+  --bg-subtle: #f7f7f9;
   --muted: #8a8a94;
   --text: #383838;
   --green: #2e7d32;
@@ -45,6 +46,22 @@
   --fw-bold: 700;
 }
 
+/* Dark mode — toggled via the Settings > General "Dark Mode" switch, which
+   sets data-theme="dark" on <html> and persists the choice in localStorage
+   (see layouts/main.php). Brand colors (maroon topbar, dark sidebar) stay
+   the same in both themes; only the neutral surface/text tokens flip. */
+:root[data-theme="dark"] {
+  --bg: #121218;
+  --card: #1c1c24;
+  --line: #33333e;
+  --bg-subtle: #26262f;
+  --muted: #9a9aa8;
+  --ink: #e8e8ee;
+  --text: #e8e8ee;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 24px -6px rgba(0, 0, 0, 0.55), 0 4px 8px -4px rgba(0, 0, 0, 0.4);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -74,8 +91,6 @@ img {
 }
 
 .icon-action,
-.card,
-.stat-card,
 .sidebar-nav a,
 .nav-submenu a,
 .filter-btn,
@@ -84,9 +99,12 @@ img {
   transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
 }
 
+.card,
+.stat-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
+}
+
 .icon-action:hover,
-.card:hover,
-.stat-card:hover,
 .sidebar-nav a:hover,
 .nav-submenu a:hover,
 .filter-btn:hover,
@@ -94,6 +112,46 @@ img {
   transform: translateY(-1px);
   color: var(--maroon);
   border-color: var(--maroon);
+}
+
+.card:hover,
+.stat-card:hover {
+  transform: translateY(-1px);
+  color: var(--maroon);
+  border-color: var(--maroon);
+}
+
+/* Click-to-reveal KPI detail banner (originally dashboard.css-only for the
+   "Pending Requests" card) — promoted here so every dashboard variant
+   (main, facilities, security, tools) can show the same banner-then-route
+   behavior on every stat card, not just the one page that had it first. */
+.panel-head {
+  margin-bottom: 10px;
+}
+.panel-head h2 {
+  font-size: 16px;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.panel-head p {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.pending-panel {
+  margin-bottom: 18px;
+}
+.pending-column {
+  display: grid;
+  gap: 8px;
+}
+.overview-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--maroon);
+  text-decoration: none;
 }
 
 .attention-text {
@@ -136,7 +194,7 @@ img {
   background: radial-gradient(circle at 30% 20%, #8f2533, var(--maroon-deep));
 }
 .login-card {
-  background: #fff;
+  background: var(--card);
   padding: 44px;
   border-radius: 18px;
   width: 380px;
@@ -172,7 +230,7 @@ img {
   width: 100%;
   padding: 11px 12px;
   margin-top: 5px;
-  border: 1px solid #dcdce2;
+  border: 1px solid var(--line);
   border-radius: 9px;
   font-size: 14px;
 }
@@ -213,6 +271,169 @@ img {
   border-radius: 9px;
   font-size: 13px;
   margin-bottom: 16px;
+}
+
+/* Flash message toast — same "Personnel updated successfully" style
+   message as .alert-success/.alert-error, but as a floating, auto-dismissing
+   toast under the topbar's date/notification icons instead of a banner that
+   sits at the top of the page content until the next reload. */
+.flash-toast-stack {
+  position: fixed;
+  top: 76px;
+  right: 26px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 360px;
+}
+
+.flash-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+.flash-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.flash-toast-success {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.flash-toast-error {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+.flash-toast span {
+  flex: 1;
+}
+
+.flash-toast-close {
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: .6;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.flash-toast-close:hover {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .flash-toast-stack {
+    left: 16px;
+    right: 16px;
+    max-width: none;
+  }
+}
+
+/* Live notification toasts — popped in from the topbar bell whenever
+   notifications/unread-count polling detects a notification id it hasn't
+   shown yet (see the poller script near the bottom of layouts/main.php). */
+.notif-toast-stack {
+  position: fixed;
+  top: 76px;
+  right: 26px;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 360px;
+}
+
+.notif-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--border-color, #e5e5ea);
+  border-left: 4px solid var(--maroon, #7a1f2b);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  opacity: 0;
+  transform: translateX(24px);
+  transition: opacity .25s ease, transform .25s ease;
+  cursor: pointer;
+}
+
+.notif-toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.notif-toast.notif-toast-critical { border-left-color: var(--red, #c0392b); }
+.notif-toast.notif-toast-moderate { border-left-color: var(--yellow, #d4a017); }
+.notif-toast.notif-toast-routine  { border-left-color: var(--green, #2e8b57); }
+
+.notif-toast-icon {
+  font-size: 1.1rem;
+  color: var(--maroon, #7a1f2b);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notif-toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-toast-cat {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #222;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.notif-toast-desc {
+  font-size: 0.8rem;
+  color: #555;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.notif-toast-close {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.85rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.notif-toast-close:hover {
+  color: #333;
+}
+
+@media (max-width: 640px) {
+  .notif-toast-stack {
+    left: 16px;
+    right: 16px;
+    max-width: none;
+  }
 }
 
 /*LAYOUT*/
@@ -488,11 +709,11 @@ img {
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  background: #fff;
+  background: var(--card);
 }
 .page-content .table-panel {
   overflow: hidden;
-  background: #fff;
+  background: var(--card);
   padding: 0.85rem;
 }
 .page-content .panel-card > * {
@@ -525,7 +746,7 @@ img {
 .page-content .summary-card,
 .page-content .panel-card,
 .page-content .sidebar-card {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .page-content .summary-card:hover,
 .page-content .panel-card:hover,
@@ -569,6 +790,18 @@ img {
 .sidebar-footer a:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.1);
+}
+.sidebar-footer .sidebar-logout-link {
+  margin-top: 8px;
+}
+.sidebar-footer .sidebar-logout-link:hover {
+  background: rgba(179, 38, 30, 0.18);
+  border-color: rgba(179, 38, 30, 0.35);
+}
+.sidebar-footer .av-logout {
+  background: transparent;
+  color: #d6534a;
+  font-size: 18px;
 }
 .sidebar-footer .av {
   width: 34px;
@@ -711,9 +944,9 @@ img {
 .search-box {
   width: 100%;
   padding: 9px 40px 9px 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: #f9fafb;
+  background: var(--bg-subtle);
   font-size: 13px;
   color: var(--text);
   outline: none;
@@ -722,7 +955,7 @@ img {
 }
 .search-box:focus {
   border-color: var(--maroon);
-  background: #fff;
+  background: var(--card);
   box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.08);
 }
 .search-icon {
@@ -859,7 +1092,7 @@ img {
   gap: 8px;
   padding: 14px 26px;
   border-top: 1px solid var(--line);
-  background: #fff;
+  background: var(--card);
   color: #9a9aa2;
   font-size: 12px;
 }
@@ -1054,11 +1287,11 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
      instead of resizing. */
   flex: 0 0 165px;
   min-width: 0;
-  background: #ffffff;
+  background: var(--card);
   border-radius: 12px;
   padding: 13px 14px;
   box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04);
-  border: 1px solid #eaecf0;
+  border: 1px solid var(--line);
   position: relative;
   overflow: hidden;
   min-height: 92px;
@@ -1172,7 +1405,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 }
 .stat-card-clickable {
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .stat-card-clickable:hover,
 .stat-card-clickable:focus-visible {
@@ -1243,7 +1476,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   margin-bottom: 18px;
   padding: 18px 20px;
   border-radius: var(--radius);
-  background: #fff;
+  background: var(--card);
   border: 1px solid rgba(150, 150, 160, 0.15);
   box-shadow: 0 10px 30px rgba(0,0,0,0.04);
 }
@@ -1265,12 +1498,12 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .table-toolbar input,
 .table-toolbar select {
   min-width: 180px;
-  border: 1px solid #d8d8de;
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 9px 12px;
   font-size: 13px;
   color: #222;
-  background: #fff;
+  background: var(--card);
   box-shadow: inset 0 1px 2px rgba(15, 15, 30, 0.05);
 }
 .table-toolbar .filter-field {
@@ -1295,7 +1528,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .table-toolbar .filter-popup {
   border: 1px solid rgba(150, 150, 160, 0.15);
   border-radius: 14px;
-  background: #fff;
+  background: var(--card);
 }
 .table-toolbar .toolbar-search {
   position: relative;
@@ -1305,10 +1538,10 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .table-toolbar .toolbar-search .toolbar-search-input,
 .table-toolbar .toolbar-search .search-box {
   width: 260px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--line);
   border-radius: 999px;
   padding: 9px 40px 9px 16px;
-  background: #f9fafb;
+  background: var(--bg-subtle);
   color: var(--text);
   font-size: 13px;
   outline: none;
@@ -1320,7 +1553,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .table-toolbar .toolbar-search .search-box:focus {
   outline: none;
   border-color: var(--maroon);
-  background: #fff;
+  background: var(--card);
   box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.08);
 }
 .table-toolbar .toolbar-search .search-icon {
@@ -1428,7 +1661,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   box-shadow: inset 0 0 0 1px var(--maroon);
 }
 .data-table tbody tr:hover {
-  background: #f9fafb;
+  background: var(--bg-subtle);
 }
 .data-table td small {
   color: var(--muted);
@@ -1443,7 +1676,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #f2f4f7;
+  background: var(--bg-subtle);
   color: var(--maroon);
   display: flex;
   align-items: center;
@@ -1478,26 +1711,26 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .toolbar .search input {
   width: 100%;
   padding: 9px 10px 9px 32px;
-  border: 1px solid #e3e3e8;
+  border: 1px solid var(--line);
   border-radius: 9px;
-  background: #fff;
+  background: var(--card);
   font-size: 13px;
 }
 .filter-select,
 .toolbar select {
   padding: 9px 12px;
-  border: 1px solid #e3e3e8;
+  border: 1px solid var(--line);
   border-radius: 9px;
-  background: #fff;
+  background: var(--card);
   font-size: 12.5px;
   color: #555;
   cursor: pointer;
 }
 .btn-ghost {
   padding: 9px 14px;
-  border: 1px solid #e3e3e8;
+  border: 1px solid var(--line);
   border-radius: 9px;
-  background: #fff;
+  background: var(--card);
   font-size: 12.5px;
   color: #555;
   cursor: pointer;
@@ -1506,7 +1739,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   gap: 7px;
 }
 .btn-ghost:hover {
-  background: #f6f6f8;
+  background: var(--bg-subtle);
 }
 .btn-ghost.gold {
   border-color: var(--gold);
@@ -1544,7 +1777,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   text-decoration: none;
 }
 .action-buttons .icon-btn:hover {
-  background: #f9fafb;
+  background: var(--bg-subtle);
   color: var(--maroon);
 }
 .action-buttons .icon-btn.delete:hover {
@@ -1561,7 +1794,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   border-radius: 7px;
 }
 .btn-outline {
-  background: #fff;
+  background: var(--card);
   color: var(--maroon);
   border: 1px solid var(--maroon);
   padding: 9px 16px;
@@ -1599,9 +1832,9 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 /* Standard secondary/dismiss action — neutral outline, never competes
    with whichever button is the actual primary action beside it. */
 .btn-secondary {
-  background: #fff;
+  background: var(--card);
   color: #475467;
-  border: 1px solid #d0d5dd;
+  border: 1px solid var(--line);
   padding: 10px 18px;
   border-radius: 9px;
   cursor: pointer;
@@ -1610,7 +1843,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .btn-secondary:hover {
-  background: #f9fafb;
+  background: var(--bg-subtle);
   border-color: #98a2b3;
 }
 .icon-action {
@@ -1618,7 +1851,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   height: 30px;
   border-radius: 7px;
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--card);
   color: #7a7a82;
   display: inline-flex;
   align-items: center;
@@ -1718,7 +1951,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   color: var(--blue);
 }
 .badge.dept {
-  background: #f2f4f7;
+  background: var(--bg-subtle);
   color: var(--maroon);
 }
 
@@ -1902,7 +2135,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   display: flex;
 }
 .modal-box {
-  background: #fff;
+  background: var(--card);
   border-radius: 14px;
   padding: 26px;
   width: 100%;
@@ -1941,7 +2174,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   width: 100%;
   padding: 10px 12px;
   margin-top: 5px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--line);
   border-radius: 8px;
   font-size: 13.5px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -1952,6 +2185,18 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   outline: none;
   border-color: var(--maroon);
   box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.08);
+}
+/* The rule above targets every <input>, which stretched checkboxes into
+   full-width bordered boxes instead of small tick boxes (seen on the
+   Restroom Checklist "Add Entry" form) — checkboxes/radios opt back out
+   of that sizing here instead. */
+.modal-box input[type="checkbox"],
+.modal-box input[type="radio"] {
+  width: auto;
+  padding: 0;
+  margin-top: 0;
+  border: none;
+  border-radius: 0;
 }
 .modal-actions {
   display: flex;
@@ -1999,7 +2244,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   align-items: center;
   justify-content: center;
   color: #666;
-  background: #fff;
+  background: var(--card);
 }
 .pagination .pages a.active {
   background: var(--maroon);
@@ -2233,10 +2478,10 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   max-width: calc(100vw - 40px);
   height: 460px;
   max-height: calc(100vh - 120px);
-  background: #fff;
+  background: var(--card);
   border-radius: 16px;
   box-shadow: 0 12px 40px rgba(16, 24, 40, 0.18), 0 4px 12px rgba(16, 24, 40, 0.08);
-  border: 1px solid #eaecf0;
+  border: 1px solid var(--line);
   display: none;
   flex-direction: column;
   overflow: hidden;
@@ -2304,7 +2549,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: #faf9f8;
+  background: var(--bg-subtle);
 }
 .ai-fab-msg {
   max-width: 85%;
@@ -2315,8 +2560,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   white-space: pre-wrap;
 }
 .ai-fab-msg-bot {
-  background: #fff;
-  border: 1px solid #eaecf0;
+  background: var(--card);
+  border: 1px solid var(--line);
   color: #1a1a1a;
   align-self: flex-start;
   border-bottom-left-radius: 3px;
@@ -2333,17 +2578,35 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   font-size: 12px;
   font-style: italic;
 }
+.ai-fab-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--maroon);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s ease;
+}
+.ai-fab-download-btn:hover {
+  opacity: .88;
+}
 .ai-fab-input-row {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  border-top: 1px solid #eaecf0;
+  border-top: 1px solid var(--line);
   flex-shrink: 0;
 }
 .ai-fab-input-row input {
   flex: 1;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--line);
   border-radius: 999px;
   padding: 9px 14px;
   font-size: 13px;
@@ -2375,7 +2638,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   font-size: 11.5px;
   color: var(--maroon);
   text-decoration: none;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--line);
   flex-shrink: 0;
 }
 .ai-fab-fullview:hover {

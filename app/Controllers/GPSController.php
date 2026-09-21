@@ -75,10 +75,24 @@ class GPSController extends BaseController
             return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
         }
 
-        $vehicle = $this->vehicleModel->find($id);
+        // Joined the same way as Vehicle Management's own list so this popup
+        // agrees with it (driver_name/department_name resolved from their
+        // FK ids, not read off columns that don't exist on vehicles).
+        $vehicle = $this->vehicleModel
+            ->select('vehicles.*, d.name as department_name, p.full_name as driver_name')
+            ->join('departments d', 'd.id = vehicles.department_id', 'left')
+            ->join('personnel p', 'p.id = vehicles.driver_id', 'left')
+            ->where('vehicles.id', $id)
+            ->first();
         if (!$vehicle) return $this->response->setStatusCode(404)->setJSON(['error' => 'Not found']);
 
         $latestGPS = $this->gpsModel->where('vehicle_id', $id)->orderBy('id', 'DESC')->first();
+        $recentPings = array_map(fn($p) => [
+            'loggedAt' => $p['logged_at'],
+            'coords'   => ($p['latitude'] !== null && $p['longitude'] !== null) ? "{$p['latitude']}, {$p['longitude']}" : '—',
+            'signal'   => $p['signal_strength'] ?? '—',
+            'status'   => $p['status'] ?? '—',
+        ], $this->gpsModel->getHistory((int) $id, 5));
 
         return $this->response->setJSON(array_merge($vehicle, [
             'gps_status'    => $vehicle['gps_status']        ?? 'Offline',
@@ -87,10 +101,11 @@ class GPSController extends BaseController
             'speed'         => 0,
             'signal'        => $latestGPS['signal_strength'] ?? 0,
             'last_location' => '—',
-            'logged_at'     => null,
+            'logged_at'     => $latestGPS['logged_at']       ?? null,
             'device_id'     => $latestGPS['device_id']       ?? 'N/A',
             'model'         => $vehicle['vehicle_name']      ?? '—',
-            'driver_name'   => $vehicle['driver']            ?? 'Unassigned',
+            'driver_name'   => $vehicle['driver_name']       ?? 'Unassigned',
+            'recent_pings'  => $recentPings,
         ]));
     }
 

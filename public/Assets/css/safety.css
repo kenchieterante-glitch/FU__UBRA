@@ -7,11 +7,16 @@
     --m: #800000;
     --md: #5e1620;
     --gs: #d6d6d6;
-    --surf: #ffffff;
+    /* --surf/--bdr/--txt alias the shared theme tokens (not fixed
+       light-mode colors) so this page's cards and text still flip
+       correctly under [data-theme="dark"]. --muted is intentionally NOT
+       redeclared here (it used to shadow the shared --muted with a fixed
+       #6b7280) — removing the shadow lets base.css's theme-aware --muted
+       (and its dark-mode flip) cascade through instead. */
+    --surf: var(--card);
     --bg: #f4f2f2;
-    --bdr: #e2d8d8;
-    --txt: #1a1a1a;
-    --muted: #6b7280;
+    --bdr: var(--line);
+    --txt: var(--ink);
     --ok: #16a34a;
     --warn: #d97706;
     --dang: #dc2626;
@@ -88,13 +93,13 @@
 .kpi-value {
     font-size: 24px;
     font-weight: 700;
-    color: #111827;
+    color: var(--txt);
 }
 
 .kpi-label {
     font-size: 13px;
     font-weight: 600;
-    color: #374151;
+    color: var(--muted);
 }
 
 .kpi-sub a {
@@ -368,7 +373,7 @@
 .overview-card .card-value {
     font-size: 1.45rem;
     font-weight: 800;
-    color: #111827;
+    color: var(--txt);
 }
 
 .overview-card-clickable {
@@ -542,7 +547,7 @@
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    background: #fff;
+    background: var(--surf);
     border: 1px solid var(--bdr);
     border-radius: 10px;
     padding: 8px 14px;
@@ -599,7 +604,7 @@
     width: 188px;
     font-size: 12.5px;
     color: var(--txt);
-    background: #fff;
+    background: var(--surf);
     border: 1px solid var(--bdr);
     border-radius: 12px;
     padding: 8px;
@@ -863,8 +868,6 @@
     border-left: 3px solid var(--m);
     border-radius: var(--r);
     padding: 1rem;
-    overflow-y: auto;
-    max-height: 600px;
     box-shadow: var(--shad-lg);
     animation: slideIn .25s ease;
     min-width: 0;
@@ -938,6 +941,112 @@
     color: var(--m);
 }
 
+/* Search + Building/Department/Status filter row for the overdue/status
+   list panel — its own row below the title/close header instead of being
+   crammed into that header as a third flex item (which rendered the filter
+   icon oddly centered between the title and the × button). */
+.fe-toolbar-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .8rem;
+    margin-bottom: .9rem;
+}
+
+.fe-toolbar-row .toolbar-search {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 1;
+    max-width: 360px;
+}
+
+.fe-toolbar-row .toolbar-search .search-box {
+    width: 100%;
+}
+
+/* Vehicles/GPS get this same look for free by nesting it inside
+   .table-toolbar (see base.css) — this row isn't a .table-toolbar, so the
+   popup positioning/visibility has to be re-declared here or it renders as
+   a plain, always-visible inline block. */
+.fe-toolbar-row .filter-menu-wrapper {
+    position: relative;
+}
+
+.fe-toolbar-row .filter-btn {
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--bdr);
+    border-radius: 7px;
+    background: var(--bg);
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+}
+
+.fe-toolbar-row .filter-btn:hover {
+    border-color: var(--m);
+    color: var(--m);
+}
+
+.fe-toolbar-row .filter-popup {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 240px;
+    padding: 14px;
+    border: 1px solid var(--bdr);
+    border-radius: 10px;
+    background: var(--bg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+    display: none;
+    z-index: 20;
+}
+
+.fe-toolbar-row .filter-popup.visible {
+    display: block;
+}
+
+.fe-toolbar-row .filter-popup-title {
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+
+.fe-toolbar-row .filter-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.fe-toolbar-row .filter-row:last-child {
+    margin-bottom: 0;
+}
+
+.fe-toolbar-row .filter-row label {
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--muted);
+}
+
+.fe-toolbar-row .filter-popup select {
+    width: 100%;
+    border: 1px solid var(--bdr);
+    border-radius: 7px;
+    padding: 7px 8px;
+    font-size: .78rem;
+    background: var(--card, #fff);
+    color: var(--text);
+}
+
 .dp-status-box {
     border: 1px solid var(--bdr);
     border-left: 4px solid var(--muted);
@@ -955,7 +1064,9 @@
     color: var(--m);
 }
 
-/* FE card grid */
+/* FE card grid — shared by the always-expanded Overdue/Work Order grids
+   (which should stretch to a uniform row height) and the collapsible
+   status-list grid (which should not: see #statusListGrid below). */
 .dp-fe-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -963,6 +1074,22 @@
     margin-bottom: 1rem;
     min-width: 0;
     width: 100%;
+}
+
+/* Only the status-list grid holds collapsible cards — grid items stretch to
+   the row's tallest cell by default, so without this, expanding one card
+   here also stretches every other card sharing its row, even though
+   they're still collapsed. The Overdue/Work Order grids don't have this
+   toggle at all, so they keep the default stretch for even card heights. */
+#statusListGrid.dp-fe-grid {
+    align-items: start;
+}
+
+/* Floor-grouped lists (Aircon) — fixed-width, left-aligned cards so every
+   floor's row matches regardless of how many cards are in it. */
+#statusListGrid.dp-fe-grid.by-floor-grid {
+    grid-template-columns: repeat(auto-fill, 240px);
+    justify-content: start;
 }
 
 .fe-card {
@@ -974,10 +1101,94 @@
     min-width: 0;
     width: 100%;
     overflow-wrap: break-word;
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+
+.fe-card:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .1);
+    transform: translateY(-1px);
+}
+
+.fe-card-clickable {
+    cursor: pointer;
+}
+
+.fe-card-clickable:hover {
+    border-color: var(--maroon);
+}
+
+.fe-card-clickable:focus-visible {
+    outline: 2px solid var(--maroon);
+    outline-offset: 2px;
 }
 
 .fe-card:has(.fe-card-close) .fec-id {
     padding-right: 1.6rem;
+}
+
+.fe-card:has(.fe-card-toggle) .fec-id {
+    padding-right: 1.6rem;
+}
+
+.fe-card-toggle {
+    position: absolute;
+    top: .5rem;
+    right: .5rem;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, .06);
+    color: var(--muted);
+    font-size: .65rem;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+}
+
+.fe-card-toggle:hover,
+.fe-card-toggle:focus-visible {
+    background: var(--maroon);
+    color: #fff;
+    outline: none;
+}
+
+.fe-card.fe-collapsed .fec-body {
+    display: none;
+}
+
+.fec-body {
+    margin-top: .3rem;
+}
+
+.dp-fe-floor-divider {
+    grid-column: 1 / -1;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+    padding: .5rem 0 .25rem;
+    border-bottom: 1px solid var(--bdr);
+    margin-bottom: .2rem;
+}
+
+.dp-fe-floor-divider:first-child {
+    padding-top: 0;
+}
+
+.fe-view-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px dashed var(--bdr);
+    border-radius: 10px;
+    padding: .7rem;
+    background: none;
+    cursor: pointer;
+    width: 100%;
 }
 
 .fe-card-close {
@@ -1286,7 +1497,7 @@
 }
 
 .sj-table tbody tr:hover {
-    background: #fdf8f8;
+    background: var(--bg-subtle);
 }
 
 .sj-table tbody td {
@@ -1823,11 +2034,13 @@
     font-size: .78rem;
     padding: .35rem .4rem;
     border-radius: 7px;
-    cursor: pointer;
+    cursor: default;
 }
 
-.jcl-item:hover {
-    background: var(--bg);
+/* Checklist here just mirrors what staff mark done on the mobile app —
+   the checkbox is disabled, so no hover/click affordance either. */
+.jcl-item input[type="checkbox"] {
+    cursor: default;
 }
 
 .jcl-item.done {
@@ -2145,7 +2358,7 @@
     height: 38px;
     border-radius: 10px;
     border: 1px solid var(--line);
-    background: #f5f5f5;
+    background: var(--bg-subtle);
     color: var(--ink);
     font-size: 18px;
     font-weight: 700;
@@ -2154,7 +2367,7 @@
 }
 
 .refill-stepper button:hover {
-    background: #ebebeb;
+    background: var(--line);
 }
 
 .refill-stepper input {
@@ -2163,7 +2376,7 @@
     font-size: 16px;
     font-weight: 700;
     color: var(--ink);
-    background: #fff;
+    background: var(--card);
     border: 1px solid var(--line);
     border-radius: 10px;
     padding: 9px 6px;

@@ -6,10 +6,13 @@
 
 :root {
     --maroon-light: #9B1B1B;
-    --surface: #ffffff;
-    --surface-alt: #f8f4f4;
-    --border: #e0d5d5;
-    --text-muted: #6b6b6b;
+    /* --surface/--surface-alt/--border/--text-muted alias the shared
+       theme tokens (not fixed light-mode colors) so this page's cards
+       still flip correctly under [data-theme="dark"]. */
+    --surface: var(--card);
+    --surface-alt: var(--bg-subtle);
+    --border: var(--line);
+    --text-muted: var(--muted);
     --success: #16a34a;
     --warning: #d97706;
     --danger: #dc2626;

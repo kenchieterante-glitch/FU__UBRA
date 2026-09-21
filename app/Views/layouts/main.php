@@ -85,13 +85,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    // Applied before any CSS paints, so the page never flashes light-then-dark.
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  </script>
   <title>UBRA | <?= esc($title ?? 'Dashboard') ?></title>
   <meta name="csrf-token-name" content="<?= esc(csrf_token(), 'attr') ?>">
   <meta name="csrf-token-value" content="<?= esc(csrf_hash(), 'attr') ?>">
   <meta name="csrf-header-name" content="<?= esc(csrf_header(), 'attr') ?>">
   <link rel="preload" href="<?= assetVer('fonts/bebas-neue/bebas-neue-latin.woff2') ?>" as="font" type="font/woff2">
   <link rel="stylesheet" href="<?= assetVer('fonts/bebas-neue/bebas-neue.css') ?>">
-  <link rel="stylesheet" href="<?= assetVer('icons/fontawesome/css/all.min.css') ?>">
   <link rel="stylesheet" href="<?= assetVer('icons/bootstrap-icons/bootstrap-icons.css') ?>">
   <link rel="stylesheet" href="<?= assetVer('Assets/css/base.css') ?>">
   <?php if (!empty($pageCss)): ?><link rel="stylesheet" href="<?= assetVer('Assets/css/'.$pageCss) ?>"><?php endif; ?>
@@ -123,10 +128,12 @@
       $isSecurityHead        = $userRole === 'security';
       $isToolsHead           = $userRole === 'tools';
       $isFacilitiesSupervisor = $userRole === 'facilities';
-      $isFullAccess          = !$isSecurityHead && !$isToolsHead && !$isFacilitiesSupervisor;
+      $isJanitorialSupervisor = $userRole === 'janitorial';
+      $isFullAccess          = !$isSecurityHead && !$isToolsHead && !$isFacilitiesSupervisor && !$isJanitorialSupervisor;
       $dashboardUrl          = $isSecurityHead ? 'security-dashboard'
         : ($isToolsHead ? 'tools-dashboard'
-        : ($isFacilitiesSupervisor ? 'facilities-dashboard' : 'dashboard'));
+        : ($isFacilitiesSupervisor ? 'facilities-dashboard'
+        : ($isJanitorialSupervisor ? 'janitorial-dashboard' : 'dashboard')));
     ?>
     <nav class="sidebar-nav">
       <a href="<?= base_url($dashboardUrl) ?>" class="<?= navActive($dashboardUrl) ?>" data-tooltip="Dashboard"><i class="bi bi-grid-1x2"></i> <span class="nav-label">Dashboard</span></a>
@@ -140,16 +147,12 @@
           <i class="bi bi-chevron-down nav-parent-caret"></i>
         </a>
         <div class="nav-submenu" id="personnel-submenu">
-          <a href="<?= base_url('personnel') ?>" class="<?= navActive('personnel') ?>"><i class="fa-solid fa-users"></i> <span class="nav-label">All Personnel</span></a>
-          <a href="<?= base_url('personnel/drivers') ?>" class="<?= navActive('personnel/drivers') ?>"><i class="fa-solid fa-id-badge"></i> <span class="nav-label">Drivers</span></a>
-          <a href="<?= base_url('personnel/janitors') ?>" class="<?= navActive('personnel/janitors') ?>"><i class="fa-solid fa-broom"></i> <span class="nav-label">Janitors</span></a>
-          <a href="<?= base_url('personnel/carpentries') ?>" class="<?= navActive('personnel/carpentries') ?>"><i class="fa-solid fa-hammer"></i> <span class="nav-label">Carpentries Shop</span></a>
-          <a href="<?= base_url('personnel/maintenance') ?>" class="<?= navActive('personnel/maintenance') ?>"><i class="fa-solid fa-wrench"></i> <span class="nav-label">Maintenance</span></a>
-          <a href="<?= base_url('personnel/construction-workers') ?>" class="<?= navActive('personnel/construction-workers') ?>"><i class="fa-solid fa-helmet-safety"></i> <span class="nav-label">Construction Workers</span></a>
-          <a href="<?= base_url('personnel/on-job-order') ?>" class="<?= navActive('personnel/on-job-order') ?>"><i class="fa-solid fa-file-contract"></i> <span class="nav-label">Job Order Personnel</span></a>
-          <div class="nav-sep"></div>
-          <a href="<?= base_url('personnel/job-orders') ?>" class="<?= navActive('personnel/job-orders') ?>"><i class="fa-solid fa-file-contract"></i> <span class="nav-label">Job Orders</span></a>
-          <a href="<?= base_url('personnel/monitoring') ?>" class="<?= navActive('personnel/monitoring') ?>"><i class="fa-solid fa-chart-line"></i> <span class="nav-label">Job Order Monitoring</span></a>
+          <a href="<?= base_url('personnel') ?>" class="<?= navActive('personnel') ?>"><i class="bi bi-people-fill"></i> <span class="nav-label">All Personnel</span></a>
+          <a href="<?= base_url('personnel/drivers') ?>" class="<?= navActive('personnel/drivers') ?>"><i class="bi bi-person-vcard-fill"></i> <span class="nav-label">Drivers</span></a>
+          <a href="<?= base_url('personnel/janitors') ?>" class="<?= navActive('personnel/janitors') ?>"><i class="bi bi-brush"></i> <span class="nav-label">Janitors</span></a>
+          <a href="<?= base_url('personnel/carpentries') ?>" class="<?= navActive('personnel/carpentries') ?>"><i class="bi bi-hammer"></i> <span class="nav-label">Carpentries Shop</span></a>
+          <a href="<?= base_url('personnel/maintenance') ?>" class="<?= navActive('personnel/maintenance') ?>"><i class="bi bi-wrench"></i> <span class="nav-label">Maintenance</span></a>
+          <a href="<?= base_url('personnel/construction-workers') ?>" class="<?= navActive('personnel/construction-workers') ?>"><i class="bi bi-cone-striped"></i> <span class="nav-label">Construction Workers</span></a>
         </div>
       </div>
       <?php endif; ?>
@@ -163,9 +166,9 @@
           <i class="bi bi-chevron-down nav-parent-caret"></i>
         </a>
         <div class="nav-submenu" id="vehicle-submenu">
-          <a href="<?= base_url('vehicles') ?>" class="<?= navActive('vehicles') ?>"><i class="fa-solid fa-truck"></i> <span class="nav-label">Vehicle Management</span></a>
-          <a href="<?= base_url('gps') ?>" class="<?= navActive('gps') ?>"><i class="fa-solid fa-location-dot"></i> <span class="nav-label">GPS Tracker</span></a>
-          <a href="<?= base_url('travel') ?>" class="<?= navActive('travel') ?>"><i class="fa-solid fa-ticket"></i> <span class="nav-label">Trip Ticket</span></a>
+          <a href="<?= base_url('vehicles') ?>" class="<?= navActive('vehicles') ?>"><i class="bi bi-truck"></i> <span class="nav-label">Vehicle Management</span></a>
+          <a href="<?= base_url('gps') ?>" class="<?= navActive('gps') ?>"><i class="bi bi-geo-alt-fill"></i> <span class="nav-label">GPS Tracker</span></a>
+          <a href="<?= base_url('travel') ?>" class="<?= navActive('travel') ?>"><i class="bi bi-ticket-perforated"></i> <span class="nav-label">Trip Ticket</span></a>
         </div>
       </div>
       <?php endif; ?>
@@ -179,11 +182,11 @@
           <i class="bi bi-chevron-down nav-parent-caret"></i>
         </a>
         <div class="nav-submenu" id="tools-submenu">
-          <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="fa-solid fa-boxes-stacked"></i> <span class="nav-label">All Tools</span></a>
-          <a href="<?= base_url('tools/power-tools') ?>" class="<?= navActive('tools/power-tools') ?>"><i class="fa-solid fa-bolt"></i> <span class="nav-label">Power Tools</span></a>
-          <a href="<?= base_url('tools/consumable') ?>" class="<?= navActive('tools/consumable') ?>"><i class="fa-solid fa-box"></i> <span class="nav-label">Consumable</span></a>
-          <a href="<?= base_url('tools/sports-equipment') ?>" class="<?= navActive('tools/sports-equipment') ?>"><i class="fa-solid fa-futbol"></i> <span class="nav-label">Sports Equipment</span></a>
-          <a href="<?= base_url('tools/borrowing') ?>" class="<?= navActive('tools/borrowing') ?>"><i class="fa-solid fa-hand-holding"></i> <span class="nav-label">Borrowing</span></a>
+          <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="bi bi-boxes"></i> <span class="nav-label">All Tools</span></a>
+          <a href="<?= base_url('tools/power-tools') ?>" class="<?= navActive('tools/power-tools') ?>"><i class="bi bi-lightning-fill"></i> <span class="nav-label">Power Tools</span></a>
+          <a href="<?= base_url('tools/consumable') ?>" class="<?= navActive('tools/consumable') ?>"><i class="bi bi-box-seam-fill"></i> <span class="nav-label">Consumable</span></a>
+          <a href="<?= base_url('tools/sports-equipment') ?>" class="<?= navActive('tools/sports-equipment') ?>"><i class="bi bi-trophy-fill"></i> <span class="nav-label">Sports Equipment</span></a>
+          <a href="<?= base_url('tools/borrowing') ?>" class="<?= navActive('tools/borrowing') ?>"><i class="bi bi-hand-index-thumb-fill"></i> <span class="nav-label">Borrowing</span></a>
         </div>
       </div>
       <?php endif; ?>
@@ -193,15 +196,15 @@
       <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>" data-tooltip="Guard"><i class="bi bi-shield-check"></i> <span class="nav-label">Guard</span></a>
       <?php endif; ?>
 
-      <?php if ($isFullAccess): ?>
+      <?php if ($isFullAccess || $isJanitorialSupervisor): ?>
       <a href="<?= base_url('janitorial') ?>" class="<?= navActive('janitorial') ?>" data-tooltip="Janitorial Monitoring"><i class="bi bi-brush"></i> <span class="nav-label">Janitorial Monitoring</span></a>
       <?php endif; ?>
 
-      <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor): ?>
+      <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor || $isJanitorialSupervisor): ?>
       <a href="<?= base_url('calendar') ?>" class="<?= navActive('calendar') ?>" data-tooltip="Calendar"><i class="bi bi-calendar3"></i> <span class="nav-label">Calendar</span></a>
       <?php endif; ?>
 
-      <a href="<?= base_url('notifications') ?>" class="<?= navActive('notifications') ?>" data-tooltip="Notifications"><i class="bi bi-bell"></i> <span class="nav-label">Notifications</span><?php if ($topbarUnreadCount > 0): ?><span class="nav-count"><?= $topbarUnreadCount > 99 ? '99+' : (int) $topbarUnreadCount ?></span><?php endif; ?></a>
+      <a href="<?= base_url('notifications') ?>" class="<?= navActive('notifications') ?>" data-tooltip="Notifications"><i class="bi bi-bell"></i> <span class="nav-label">Notifications</span><span class="nav-count" id="navBellCount" <?= $topbarUnreadCount > 0 ? '' : 'style="display:none"' ?>><?= $topbarUnreadCount > 99 ? '99+' : (int) $topbarUnreadCount ?></span></a>
       <?php $isInfoHubSection = $currentUri === 'reports' || strpos($currentUri, 'maintenance-forms/') === 0; ?>
       <div class="nav-parent-group <?= $isInfoHubSection ? 'open' : '' ?>">
         <a href="<?= base_url('reports') ?>" class="nav-parent-link <?= $isInfoHubSection ? 'active open' : '' ?>" data-infohub-toggle data-tooltip="Information Hub">
@@ -210,17 +213,19 @@
           <i class="bi bi-chevron-down nav-parent-caret"></i>
         </a>
         <div class="nav-submenu" id="infohub-submenu">
-          <a href="<?= base_url('reports') ?>" class="<?= navActive('reports') ?>"><i class="fa-solid fa-table-list"></i> <span class="nav-label">All Records</span></a>
-          <a href="<?= base_url('maintenance-forms/facility') ?>" class="<?= navActive('maintenance-forms/facility') ?>"><i class="fa-solid fa-clipboard-check"></i> <span class="nav-label">Facility Checklist</span></a>
-          <a href="<?= base_url('maintenance-forms/equipment-log') ?>" class="<?= navActive('maintenance-forms/equipment-log') ?>"><i class="fa-solid fa-screwdriver-wrench"></i> <span class="nav-label">Equipment Log</span></a>
-          <a href="<?= base_url('maintenance-forms/aircon-log') ?>" class="<?= navActive('maintenance-forms/aircon-log') ?>"><i class="fa-solid fa-snowflake"></i> <span class="nav-label">Aircon Inspection Log</span></a>
-          <a href="<?= base_url('maintenance-forms/vehicle-checklist') ?>" class="<?= navActive('maintenance-forms/vehicle-checklist') ?>"><i class="fa-solid fa-truck"></i> <span class="nav-label">Vehicle Checklist</span></a>
-          <a href="<?= base_url('maintenance-forms/restroom') ?>" class="<?= navActive('maintenance-forms/restroom') ?>"><i class="fa-solid fa-broom"></i> <span class="nav-label">Restroom Checklist</span></a>
+          <a href="<?= base_url('reports') ?>" class="<?= navActive('reports') ?>"><i class="bi bi-list-task"></i> <span class="nav-label">All Records</span></a>
+          <?php if (!$isJanitorialSupervisor): ?>
+          <a href="<?= base_url('maintenance-forms/facility') ?>" class="<?= navActive('maintenance-forms/facility') ?>"><i class="bi bi-clipboard2-check"></i> <span class="nav-label">Facility Checklist</span></a>
+          <a href="<?= base_url('maintenance-forms/equipment-log') ?>" class="<?= navActive('maintenance-forms/equipment-log') ?>"><i class="bi bi-wrench-adjustable"></i> <span class="nav-label">Equipment Log</span></a>
+          <a href="<?= base_url('maintenance-forms/aircon-log') ?>" class="<?= navActive('maintenance-forms/aircon-log') ?>"><i class="bi bi-snow2"></i> <span class="nav-label">Aircon Inspection Log</span></a>
+          <a href="<?= base_url('maintenance-forms/vehicle-checklist') ?>" class="<?= navActive('maintenance-forms/vehicle-checklist') ?>"><i class="bi bi-truck"></i> <span class="nav-label">Vehicle Checklist</span></a>
+          <?php endif; ?>
+          <a href="<?= base_url('maintenance-forms/restroom') ?>" class="<?= navActive('maintenance-forms/restroom') ?>"><i class="bi bi-brush"></i> <span class="nav-label">Restroom Checklist</span></a>
         </div>
       </div>
       <div class="nav-sep"></div>
       <a href="<?= base_url('ubra') ?>" class="ai-link <?= navActive('ubra') ?>" data-tooltip="Mr. UBRA AI"><i class="bi bi-robot"></i> <span class="nav-label">Mr. UBRA AI</span> <span class="dot"></span></a>
-      <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor): ?>
+      <?php if ($isFullAccess || $isSecurityHead): ?>
       <a href="<?= base_url('settings') ?>" class="<?= navActive('settings') ?>" data-tooltip="Settings"><i class="bi bi-gear"></i> <span class="nav-label">Settings</span></a>
       <?php endif; ?>
     </nav>
@@ -234,6 +239,14 @@
           <span class="av"><?= esc($initials) ?></span>
         <?php endif; ?>
         <span class="nav-label"><?= esc($fullName) ?><small>View Profile</small></span>
+      </a>
+      <!-- Always visible regardless of role — previously logout only lived
+           inside Settings' System tab, which restricted roles (Tools Head,
+           Janitorial Supervisor) can't reach, leaving them with no way to
+           sign out at all. -->
+      <a href="<?= site_url('logout') ?>" class="sidebar-logout-link" data-tooltip="Logout">
+        <span class="av av-logout"><i class="bi bi-box-arrow-right"></i></span>
+        <span class="nav-label">Logout</span>
       </a>
     </div>
   </aside>
@@ -260,34 +273,48 @@
     <header class="topbar">
       <div class="topbar-left">
         <button type="button" class="mobile-nav-toggle" onclick="toggleMobileNav()" aria-label="Open navigation menu">
-          <i class="fa-solid fa-bars"></i>
+          <i class="bi bi-list"></i>
         </button>
       </div>
       <div class="topbar-right">
         <div class="topbar-date-group">
-          <span class="date"><i class="fa-regular fa-calendar"></i> <?= date('l, F d, Y') ?></span>
+          <span class="date"><i class="bi bi-calendar3"></i> <?= date('l, F d, Y') ?></span>
           <?php if (isset($last_updated)): ?>
             <span class="topbar-last-updated">Last updated: <?= esc($last_updated) ?></span>
           <?php endif; ?>
         </div>
         <a href="<?= base_url('notifications') ?>" class="icon-btn" title="Notifications">
-          <i class="fa-regular fa-bell"></i>
-          <?php if ($topbarUnreadCount > 0): ?>
-            <span class="badge-dot" id="topbarBellBadge"><?= $topbarUnreadCount > 99 ? '99+' : (int) $topbarUnreadCount ?></span>
-          <?php endif; ?>
+          <i class="bi bi-bell"></i>
+          <span class="badge-dot" id="topbarBellBadge" <?= $topbarUnreadCount > 0 ? '' : 'style="display:none"' ?>><?= $topbarUnreadCount > 99 ? '99+' : (int) $topbarUnreadCount ?></span>
         </a>
       </div>
     </header>
     <?php endif; ?>
 
-    <main class="page-content">
-      <?php if (session()->getFlashdata('success')): ?>
-        <div class="alert-success"><i class="fa-solid fa-circle-check"></i> <?= esc(session()->getFlashdata('success')) ?></div>
-      <?php endif; ?>
-      <?php if (session()->getFlashdata('error')): ?>
-        <div class="alert-error"><i class="fa-solid fa-circle-exclamation"></i> <?= esc(session()->getFlashdata('error')) ?></div>
-      <?php endif; ?>
+    <?php if (session()->getFlashdata('success') || session()->getFlashdata('error')): ?>
+      <div class="flash-toast-stack">
+        <?php if (session()->getFlashdata('success')): ?>
+          <div class="flash-toast flash-toast-success" id="flashToastSuccess">
+            <i class="bi bi-check-circle-fill"></i>
+            <span><?= esc(session()->getFlashdata('success')) ?></span>
+            <button type="button" class="flash-toast-close" onclick="this.closest('.flash-toast').remove()" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
+          </div>
+        <?php endif; ?>
+        <?php if (session()->getFlashdata('error')): ?>
+          <div class="flash-toast flash-toast-error" id="flashToastError">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span><?= esc(session()->getFlashdata('error')) ?></span>
+            <button type="button" class="flash-toast-close" onclick="this.closest('.flash-toast').remove()" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
+          </div>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
 
+    <?php if (session()->get('isLoggedIn')): ?>
+      <div class="notif-toast-stack" id="notifToastStack"></div>
+    <?php endif; ?>
+
+    <main class="page-content">
       <?= $this->renderSection('content') ?>
     </main>
 
@@ -348,6 +375,138 @@ function csrfHeaders(extra) {
   const token = document.querySelector('meta[name="csrf-token-value"]')?.content || '';
   return Object.assign({}, extra || {}, { [headerName]: token });
 }
+
+// Flash message toasts (redirect-based "Personnel updated successfully"
+// style messages) fade in, then auto-dismiss on their own after a few
+// seconds instead of sitting on screen until the page is reloaded again.
+document.querySelectorAll('.flash-toast').forEach(toast => {
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+});
+
+<?php if (session()->get('isLoggedIn')): ?>
+// Live notification popups — polls notifications/unread-count every 25s and
+// pops a toast on the right side for any unread notification id it hasn't
+// shown yet. "Already shown" ids are kept in localStorage so a page reload
+// (or navigating between tabs) doesn't re-pop the same notification, and the
+// very first poll on a fresh browser only primes the seen-list rather than
+// dumping every existing unread notification as toasts at once.
+(function () {
+  const POLL_MS   = 25000;
+  const SEEN_KEY  = 'ubra_notif_seen_ids';
+  const stack     = document.getElementById('notifToastStack');
+  const bellBadge = document.getElementById('topbarBellBadge');
+  const navBadge  = document.getElementById('navBellCount');
+  let primed = false;
+
+  function getSeen() {
+    try { return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]')); }
+    catch (e) { return new Set(); }
+  }
+  function saveSeen(set) {
+    try { localStorage.setItem(SEEN_KEY, JSON.stringify(Array.from(set)).slice(-2000)); }
+    catch (e) {}
+  }
+
+  function updateBadge(el, count) {
+    if (!el) return;
+    if (count > 0) {
+      el.textContent = count > 99 ? '99+' : String(count);
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  function iconFor(priority) {
+    if (priority === 'CRITICAL') return 'bi-exclamation-triangle-fill';
+    if (priority === 'MODERATE') return 'bi-exclamation-circle-fill';
+    return 'bi-bell-fill';
+  }
+
+  function popToast(n) {
+    if (!stack) return;
+    const el = document.createElement('div');
+    el.className = 'notif-toast notif-toast-' + (n.priority || 'routine').toLowerCase();
+    el.innerHTML =
+      '<i class="bi ' + iconFor(n.priority) + ' notif-toast-icon"></i>' +
+      '<div class="notif-toast-body">' +
+        '<span class="notif-toast-cat">' + escapeHtml(n.category || 'Notification') + '</span>' +
+        '<span class="notif-toast-desc">' + escapeHtml(n.description || '') + '</span>' +
+      '</div>' +
+      '<button type="button" class="notif-toast-close" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>';
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.notif-toast-close')) { dismiss(); return; }
+      window.location.href = '<?= base_url('notifications') ?>';
+    });
+    function dismiss() {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 250);
+    }
+    stack.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(dismiss, 8000);
+  }
+
+  function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  async function poll() {
+    try {
+      const res = await fetch('<?= base_url('notifications/unreadCount') ?>', { headers: csrfHeaders() });
+      if (!res.ok) return;
+      const data = await res.json();
+      updateBadge(bellBadge, data.count || 0);
+      updateBadge(navBadge, data.count || 0);
+
+      const seen = getSeen();
+      const latest = Array.isArray(data.latest) ? data.latest : [];
+      if (!primed) {
+        // First run on a fresh browser: just remember what's already unread,
+        // don't pop a wall of toasts for notifications that predate this tab.
+        latest.forEach(n => seen.add(n.id));
+        saveSeen(seen);
+        primed = true;
+        return;
+      }
+      latest
+        .filter(n => !seen.has(n.id))
+        .reverse() // oldest of the new batch first, so the newest ends up on top
+        .forEach(n => { popToast(n); seen.add(n.id); });
+      saveSeen(seen);
+    } catch (e) {
+      // Silent — a missed poll just tries again next interval.
+    }
+  }
+
+  poll();
+  setInterval(poll, POLL_MS);
+})();
+<?php endif; ?>
+
+// Site-wide safety net: whenever any .modal popup is open, the page behind
+// it shouldn't also be scrollable — that's what shows up as a second,
+// confusing scrollbar at the edge of the browser window. Pages that toggle
+// their own modals already set this directly, but this covers every other
+// modal (Edit forms, Assign to Job Order, etc.) without editing each one.
+document.addEventListener('click', () => {
+  setTimeout(() => {
+    // Most pages hide a closed modal with display:none; the GPS Tracker's
+    // modal instead stays display:flex permanently and hides via
+    // opacity/pointer-events — checking both conventions covers either.
+    const anyOpen = Array.from(document.querySelectorAll('.modal')).some(m => {
+      const cs = getComputedStyle(m);
+      return cs.display !== 'none' && cs.opacity !== '0';
+    });
+    document.body.style.overflow = anyOpen ? 'hidden' : '';
+  }, 0);
+});
 
 // Sidebar toggle function
 function updateSidebarToggleIcon() {
@@ -415,6 +574,37 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('sidebar-collapsed');
   }
   updateSidebarToggleIcon();
+});
+
+// ── Dark / light mode ────────────────────────────────────────────
+// The <html data-theme="dark"> attribute is what base.css keys off of;
+// it's also set early in <head> (see top of file) to avoid a flash of
+// the light theme on load. Any page can have its own toggle switch —
+// they all call this same function and stay in sync via the shared
+// 'theme' localStorage key plus the 'themechange' event below.
+function isDarkTheme() {
+  return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
+function setTheme(isDark) {
+  if (isDark) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  document.querySelectorAll('[data-theme-toggle]').forEach(el => { el.checked = isDark; });
+}
+
+function toggleTheme() {
+  setTheme(!isDarkTheme());
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-theme-toggle]').forEach(el => {
+    el.checked = isDarkTheme();
+    el.addEventListener('change', () => setTheme(el.checked));
+  });
 });
 
 // generic modal helpers used across pages
@@ -523,10 +713,38 @@ if (safetyLink && safetyGroup) {
   });
   closeBtn.addEventListener('click', () => panel.classList.remove('open'));
 
-  function addMessage(text, role) {
+  // Same lightweight markdown rendering as the full /ubra assistant page —
+  // so **bold**, bullet lists, etc. actually render instead of showing the
+  // raw asterisks/markup in this floating widget.
+  function renderMarkdown(text) {
+    return text
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`(.+?)`/g, '<code>$1</code>')
+        .replace(/^#{1,3} (.+)$/gm, '<strong>$1</strong>')
+        .replace(/^[-•] (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+  }
+
+  function addMessage(text, role, download = null) {
     const div = document.createElement('div');
     div.className = 'ai-fab-msg ' + (role === 'user' ? 'ai-fab-msg-user' : 'ai-fab-msg-bot');
-    div.textContent = text;
+    div.innerHTML = renderMarkdown(text);
+
+    // A real, working file link (report requests) — opens in its own tab
+    // instead of navigating the widget's page away.
+    if (download && download.url) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ai-fab-download-btn';
+      btn.innerHTML = `<i class="bi bi-download"></i> ${(download.label || 'Download report').replace(/</g, '&lt;')}`;
+      btn.addEventListener('click', () => window.open(download.url, '_blank'));
+      div.appendChild(btn);
+    }
+
     messagesEl.appendChild(div);
     messagesEl.scrollTop = messagesEl.scrollHeight;
     return div;
@@ -572,7 +790,7 @@ if (safetyLink && safetyGroup) {
       const data = await res.json();
       const reply = data.reply || data.error || 'Sorry, something went wrong.';
       typing.remove();
-      addMessage(reply, 'assistant');
+      addMessage(reply, 'assistant', data.download || null);
       history.push({ role: 'assistant', content: reply });
     } catch (err) {
       typing.remove();

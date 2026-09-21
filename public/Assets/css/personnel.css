@@ -56,9 +56,9 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    border: 1px solid #e2e2e2;
-    background: #fff;
-    color: #4a4a4a;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -73,11 +73,11 @@
 }
 
 .marquee-nav-left {
-    left: 4px;
+    left: 10px;
 }
 
 .marquee-nav-right {
-    right: 4px;
+    right: 10px;
 }
 
 /* Scoped to just the main personnel listing table. Fixed (not max-) height
@@ -133,9 +133,9 @@
     font-weight: 700;
     padding: 8px 14px;
     border-radius: 999px;
-    border: 1px solid #d8d8d8;
-    background: #fff;
-    color: #4a4a4a;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
     text-decoration: none;
     cursor: pointer;
     transition: box-shadow .15s ease, transform .15s ease;
@@ -151,7 +151,7 @@
 .stat-list-title {
     font-size: 20px;
     font-weight: 800;
-    color: #1a1a1a;
+    color: var(--ink);
     margin: 0;
     padding-left: 12px;
     border-left: 3px solid #800000;
@@ -174,12 +174,200 @@
 }
 
 .modal-box {
-    background: #fff;
+    background: var(--card);
     padding: 24px;
     border-radius: 10px;
     width: 400px;
     max-height: 90vh;
     overflow-y: auto;
+}
+
+.personnel-row {
+    cursor: pointer;
+}
+
+/* Personnel Detail popup and the Edit Personnel form share one visual
+   language — view-only detail and the form that edits it should look like
+   the same feature, not two different UI styles. Closed with the header ×
+   only, roughly half the viewport wide with sane min/max so it stays
+   readable at any screen size. */
+#personnelDetailModal .modal-box,
+.personnel-edit-modal .modal-box {
+    width: 50vw;
+    min-width: 480px;
+    max-width: 900px;
+    padding: 0;
+    overflow: hidden;
+}
+
+#personnelDetailModal .modal-header,
+.personnel-edit-modal .modal-header {
+    background: var(--maroon);
+    color: #fff;
+    padding: .9rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#personnelDetailModal .modal-header h3,
+.personnel-edit-modal .modal-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #fff;
+}
+
+#personnelDetailModal .modal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#personnelDetailModal .modal-close-btn,
+.personnel-edit-modal .modal-close-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px 9px;
+    border-radius: 6px;
+}
+
+#personnelDetailModal .modal-close-btn:hover,
+.personnel-edit-modal .modal-close-btn:hover {
+    background: rgba(255, 255, 255, .15);
+}
+
+#personnelDetailModal .modal-body,
+.personnel-edit-modal .modal-body {
+    padding: 1.1rem 1.2rem;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
+#personnelDetailModal .detail-section,
+.personnel-edit-modal .detail-section {
+    margin-bottom: 1.2rem;
+}
+
+#personnelDetailModal .detail-section:last-child,
+.personnel-edit-modal .detail-section:last-child {
+    margin-bottom: 0;
+}
+
+#personnelDetailModal .detail-section-title,
+.personnel-edit-modal .detail-section-title {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--maroon);
+    margin-bottom: .6rem;
+}
+
+#personnelDetailModal .detail-grid,
+.personnel-edit-modal .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .3rem 1.5rem;
+}
+
+#personnelDetailModal .detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: .5rem;
+    font-size: .82rem;
+    padding: .3rem 0;
+    border-bottom: 1px dashed var(--line);
+}
+
+#personnelDetailModal .detail-row span {
+    color: var(--muted);
+}
+
+#personnelDetailModal .detail-row strong {
+    text-align: right;
+    color: var(--text);
+}
+
+#personnelDetailModal .history-table-wrap {
+    overflow-x: auto;
+}
+
+#personnelDetailModal .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .78rem;
+}
+
+#personnelDetailModal .history-table th,
+#personnelDetailModal .history-table td {
+    text-align: left;
+    padding: .4rem .5rem;
+    border-bottom: 1px solid var(--line);
+}
+
+#personnelDetailModal .history-table th {
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: .68rem;
+    letter-spacing: .04em;
+}
+
+#personnelDetailModal .no-data {
+    font-size: .82rem;
+    color: var(--muted);
+    padding: 1rem 0;
+}
+
+/* Edit form fields, laid out in the same two-column .detail-grid used by
+   the read-only popup — each field keeps its label above its input instead
+   of the detail-row's label-left/value-right arrangement. */
+.personnel-edit-modal .edit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.personnel-edit-modal .edit-field.span-2 {
+    grid-column: 1 / -1;
+}
+
+.personnel-edit-modal .edit-field label {
+    font-size: .75rem;
+    color: var(--muted);
+    margin: 0;
+}
+
+.personnel-edit-modal .edit-field input,
+.personnel-edit-modal .edit-field select {
+    margin: 0;
+}
+
+.personnel-edit-modal .modal-actions {
+    margin-top: 1.2rem;
+}
+
+/* Compact Cancel/Save pair, same as the Add Vehicle / Add Tool modals —
+   .btn-maroon defaults to a full-width banner button, which looks wrong
+   sitting next to a compact Cancel button. */
+.personnel-edit-modal .modal-actions .btn-maroon {
+    width: auto;
+    margin-top: 0;
+}
+
+@media (max-width: 720px) {
+    #personnelDetailModal .modal-box,
+    .personnel-edit-modal .modal-box {
+        width: 94vw;
+        min-width: 0;
+    }
+    #personnelDetailModal .detail-grid,
+    .personnel-edit-modal .detail-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .modal-box h3 {
@@ -192,7 +380,7 @@
     display: block;
     margin-top: 10px;
     font-size: 13px;
-    color: #444;
+    color: var(--muted);
 }
 
 .modal-box input,
@@ -200,7 +388,7 @@
     width: 100%;
     padding: 8px;
     margin-top: 4px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--line);
     border-radius: 6px;
 }
 

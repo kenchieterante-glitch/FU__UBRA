@@ -32,36 +32,17 @@ function moStatusClass($status) {
 </div>
 
 <div class="stat-back-bar">
-  <a href="<?= base_url('personnel/job-orders') ?>" class="stat-back-btn"><i class="fa-solid fa-file-contract"></i> Manage Job Orders</a>
+  <a href="<?= base_url('personnel/job-orders') ?>" class="stat-back-btn"><i class="bi bi-file-earmark-text"></i> Manage Job Orders</a>
 </div>
 
 <div class="role-dash-panel">
     <div class="role-dash-panel-title"><i class="bi bi-people"></i> Job Order Personnel Monitoring</div>
     <div class="stat-cards">
-        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','assignmentStatus','')"><span class="stat-icon tone-maroon"><i class="fa-solid fa-users"></i></span><h3>Total Job Order Personnel</h3><div class="value"><?= (int) $total_jo_personnel ?></div></div>
-        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','assignmentStatus','ACTIVE')"><span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span><h3>Active</h3><div class="value"><?= (int) $active_assignments ?></div></div>
-        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','contractStatus','EXPIRING_SOON')"><span class="stat-icon tone-gold"><i class="fa-solid fa-hourglass-half"></i></span><h3>Expiring Soon</h3><div class="value"><?= (int) $contract_counts['EXPIRING_SOON'] ?></div></div>
-        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','contractStatus','EXPIRED')"><span class="stat-icon tone-red"><i class="fa-solid fa-triangle-exclamation"></i></span><h3>Expired</h3><div class="value"><?= (int) $contract_counts['EXPIRED'] ?></div></div>
-        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','assignmentStatus','INACTIVE')"><span class="stat-icon tone-neutral"><i class="fa-solid fa-user-slash"></i></span><h3>Inactive</h3><div class="value"><?= (int) $inactive_assignments ?></div></div>
-    </div>
-</div>
-
-<div class="role-dash-panel">
-    <div class="role-dash-panel-title"><i class="bi bi-file-earmark-text"></i> Job Order Monitoring</div>
-    <div class="stat-cards">
-        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('jobOrdersTable','status','')"><span class="stat-icon tone-maroon"><i class="fa-solid fa-file-contract"></i></span><h3>Total Job Orders</h3><div class="value"><?= (int) $total_job_orders ?></div></div>
-        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('jobOrdersTable','status','ACTIVE')"><span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span><h3>Active</h3><div class="value"><?= (int) $job_order_counts['ACTIVE'] ?></div></div>
-        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('jobOrdersTable','status','EXPIRING_SOON')"><span class="stat-icon tone-gold"><i class="fa-solid fa-hourglass-half"></i></span><h3>Expiring Soon</h3><div class="value"><?= (int) $job_order_counts['EXPIRING_SOON'] ?></div></div>
-        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('jobOrdersTable','status','EXPIRED')"><span class="stat-icon tone-red"><i class="fa-solid fa-triangle-exclamation"></i></span><h3>Expired</h3><div class="value"><?= (int) $job_order_counts['EXPIRED'] ?></div></div>
-    </div>
-</div>
-
-<div class="role-dash-panel">
-    <div class="role-dash-panel-title"><i class="bi bi-file-earmark-check"></i> Document Monitoring</div>
-    <div class="stat-cards">
-        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','docStatus','COMPLETE')"><span class="stat-icon tone-green"><i class="fa-solid fa-circle-check"></i></span><h3>Complete</h3><div class="value"><?= (int) $complete_docs ?></div></div>
-        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','docStatus','INCOMPLETE')"><span class="stat-icon tone-gold"><i class="fa-solid fa-file-circle-exclamation"></i></span><h3>Incomplete</h3><div class="value"><?= (int) $incomplete_docs ?></div></div>
-        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','hasExpiredDoc','1')"><span class="stat-icon tone-red"><i class="fa-solid fa-file-circle-xmark"></i></span><h3>Expired</h3><div class="value"><?= (int) $expired_docs ?></div></div>
+        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','assignmentStatus','')"><span class="stat-icon tone-maroon"><i class="bi bi-people-fill"></i></span><h3>Total Job Order Personnel</h3><div class="value"><?= (int) $total_jo_personnel ?></div></div>
+        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','assignmentStatus','ACTIVE')"><span class="stat-icon tone-green"><i class="bi bi-check-circle-fill"></i></span><h3>Active</h3><div class="value"><?= (int) $active_assignments ?></div></div>
+        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','contractStatus','EXPIRING_SOON')"><span class="stat-icon tone-gold"><i class="bi bi-hourglass-split"></i></span><h3>Expiring Soon</h3><div class="value"><?= (int) $contract_counts['EXPIRING_SOON'] ?></div></div>
+        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','contractStatus','EXPIRED')"><span class="stat-icon tone-red"><i class="bi bi-exclamation-triangle-fill"></i></span><h3>Expired</h3><div class="value"><?= (int) $contract_counts['EXPIRED'] ?></div></div>
+        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','assignmentStatus','INACTIVE')"><span class="stat-icon tone-neutral"><i class="bi bi-person-dash-fill"></i></span><h3>Inactive</h3><div class="value"><?= (int) $inactive_assignments ?></div></div>
     </div>
 </div>
 
@@ -104,6 +85,16 @@ function moStatusClass($status) {
   </div>
 </div>
 
+<div class="role-dash-panel">
+    <div class="role-dash-panel-title"><i class="bi bi-file-earmark-text"></i> Job Order Monitoring</div>
+    <div class="stat-cards">
+        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('jobOrdersTable','status','')"><span class="stat-icon tone-maroon"><i class="bi bi-file-earmark-text"></i></span><h3>Total Job Orders</h3><div class="value"><?= (int) $total_job_orders ?></div></div>
+        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('jobOrdersTable','status','ACTIVE')"><span class="stat-icon tone-green"><i class="bi bi-check-circle-fill"></i></span><h3>Active</h3><div class="value"><?= (int) $job_order_counts['ACTIVE'] ?></div></div>
+        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('jobOrdersTable','status','EXPIRING_SOON')"><span class="stat-icon tone-gold"><i class="bi bi-hourglass-split"></i></span><h3>Expiring Soon</h3><div class="value"><?= (int) $job_order_counts['EXPIRING_SOON'] ?></div></div>
+        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('jobOrdersTable','status','EXPIRED')"><span class="stat-icon tone-red"><i class="bi bi-exclamation-triangle-fill"></i></span><h3>Expired</h3><div class="value"><?= (int) $job_order_counts['EXPIRED'] ?></div></div>
+    </div>
+</div>
+
 <div class="table-card" id="jobOrdersTableCard">
   <div class="table-toolbar">
     <div class="toolbar-left"><h3 style="margin:0;">Job Orders</h3></div>
@@ -133,6 +124,15 @@ function moStatusClass($status) {
   </div>
 </div>
 
+<div class="role-dash-panel">
+    <div class="role-dash-panel-title"><i class="bi bi-file-earmark-check"></i> Document Monitoring</div>
+    <div class="stat-cards">
+        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','docStatus','COMPLETE')"><span class="stat-icon tone-green"><i class="bi bi-check-circle-fill"></i></span><h3>Complete</h3><div class="value"><?= (int) $complete_docs ?></div></div>
+        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','docStatus','INCOMPLETE')"><span class="stat-icon tone-gold"><i class="bi bi-file-earmark-break"></i></span><h3>Incomplete</h3><div class="value"><?= (int) $incomplete_docs ?></div></div>
+        <div class="stat-card stat-card-clickable" role="button" tabindex="0" onclick="filterMonitoringTable('personnelDetailTable','hasExpiredDoc','1')"><span class="stat-icon tone-red"><i class="bi bi-file-earmark-x"></i></span><h3>Expired</h3><div class="value"><?= (int) $expired_docs ?></div></div>
+    </div>
+</div>
+
 <script>
 // Every stat card above targets one of the two tables here and filters its
 // rows by a single data-* facet (assignment status, contract status,
@@ -148,7 +148,6 @@ function filterMonitoringTable(tableId, field, value) {
   if (label) {
     label.textContent = value === '' ? 'Showing all' : 'Filtered: ' + value.replace(/_/g, ' ');
   }
-  document.getElementById(tableId + 'Card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 

@@ -12,6 +12,7 @@ $aircon_total = $aircon_total ?? 0;
 $aircon_attention = $aircon_attention ?? 0;
 $work_order_registry_json = $work_order_registry_json ?? '[]';
 $work_order_total = $work_order_total ?? 0;
+$departments = $departments ?? [];
 ?>
 
 <link rel="stylesheet" href="<?= base_url('Assets/css/safety.css') . '?v=' . @filemtime(FCPATH.'Assets/css/safety.css') ?>">
@@ -26,27 +27,32 @@ $work_order_total = $work_order_total ?? 0;
 
   <div class="stat-cards" id="overviewGrid">
     <div class="stat-card stat-card-clickable" onclick="showStatusList('coverage')" role="button" tabindex="0">
-      <span class="stat-icon tone-maroon"><i class="fa-solid fa-fire-extinguisher"></i></span>
+      <span class="stat-icon tone-maroon"><i class="bi bi-fire"></i></span>
       <h3>Fire Safety Coverage</h3>
       <div class="value"><?= (int) $coverage_total ?> units</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="showStatusList('readiness')" role="button" tabindex="0">
-      <span class="stat-icon tone-green"><i class="fa-solid fa-clipboard-check"></i></span>
+      <span class="stat-icon tone-green"><i class="bi bi-clipboard2-check"></i></span>
       <h3>Inspection Readiness</h3>
       <div class="value"><?= (int) $inspection_readiness ?>%</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="showStatusList('critical')" role="button" tabindex="0">
-      <span class="stat-icon tone-red"><i class="fa-solid fa-triangle-exclamation"></i></span>
+      <span class="stat-icon tone-red"><i class="bi bi-exclamation-triangle-fill"></i></span>
       <h3>Critical Alerts</h3>
       <div class="value" id="criticalAlertsValue">0 active</div>
     </div>
     <div class="stat-card stat-card-clickable" onclick="showStatusList('aircon')" role="button" tabindex="0">
-      <span class="stat-icon tone-neutral"><i class="fa-solid fa-snowflake"></i></span>
+      <span class="stat-icon tone-neutral"><i class="bi bi-snow2"></i></span>
       <h3>Aircon</h3>
       <div class="value"><?= (int) $aircon_total ?> units</div>
     </div>
+    <div class="stat-card stat-card-clickable" onclick="showStatusList('aircon-attention')" role="button" tabindex="0">
+      <span class="stat-icon tone-red"><i class="bi bi-fan"></i></span>
+      <h3>Aircon Not Working</h3>
+      <div class="value"><?= (int) $aircon_attention ?> units</div>
+    </div>
     <div class="stat-card stat-card-clickable" onclick="scrollToMaintenance()" role="button" tabindex="0" style="display:none">
-      <span class="stat-icon tone-gold"><i class="fa-solid fa-clipboard-list"></i></span>
+      <span class="stat-icon tone-gold"><i class="bi bi-clipboard2-check"></i></span>
       <h3>Work Orders</h3>
       <div class="value" id="workOrderCount"><?= (int) $work_order_total ?> open</div>
     </div>
@@ -58,6 +64,45 @@ $work_order_total = $work_order_total ?? 0;
       <div class="dp-section-title" id="statusListTitle"><i class="bi bi-list-ul"></i> List</div>
       <button class="dp-close" onclick="closeStatusList()"><i class="bi bi-x-lg"></i></button>
     </div>
+    <div class="fe-toolbar-row">
+      <div class="toolbar-search">
+        <input type="text" id="feSearchInput" class="search-box" placeholder="Search unit ID or location…" oninput="renderStatusList()">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+      <div class="filter-menu-wrapper" id="feFilterWrapper" style="display:none">
+        <button type="button" class="filter-btn" onclick="toggleFeFilterMenu()" aria-label="Open filters">
+          <i class="bi bi-funnel"></i>
+        </button>
+        <div class="filter-popup" id="feFilterPopup">
+          <div class="filter-popup-title">Filter</div>
+          <div class="filter-row">
+            <label for="feFilterBuilding">Department</label>
+            <select id="feFilterBuilding" onchange="applyFeFilters()">
+              <option value="">All Departments</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <label for="feFilterDept">Installed by</label>
+            <!-- Options are filled in from the actual fire extinguisher
+                 registry (populateFeDeptOptions) — only departments that
+                 really appear on this map, not the full company-wide list. -->
+            <select id="feFilterDept" onchange="applyFeFilters()">
+              <option value="">All (Installed by)</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <label for="feFilterStatus">Status</label>
+            <select id="feFilterStatus" onchange="applyFeFilters()">
+              <option value="">All Statuses</option>
+              <option value="New">New</option>
+              <option value="Refillable">Refillable</option>
+              <option value="Defective">Defective</option>
+              <option value="Missing">Missing</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="statusListGrid" class="dp-fe-grid"></div>
   </div>
 
@@ -68,7 +113,7 @@ $work_order_total = $work_order_total ?? 0;
       <div id="workOrderGrid" class="dp-fe-grid"></div>
     </div>
 
-    <div class="dp-section-title"><i class="bi bi-exclamation-triangle"></i> Overdue Fire Extinguishers</div>
+    <div class="dp-section-title"><i class="bi bi-exclamation-triangle-fill"></i> Overdue Fire Extinguishers</div>
     <div id="overdueFeGrid" class="dp-fe-grid"></div>
   </div>
 
@@ -131,7 +176,7 @@ $work_order_total = $work_order_total ?? 0;
       <div class="missing-alert" id="missingAlert" style="display:none">
         <i class="bi bi-exclamation-octagon-fill"></i>
         <span id="missingAlertMsg"></span>
-        <button onclick="document.getElementById('missingAlert').style.display='none'"><i class="bi bi-x"></i></button>
+        <button onclick="document.getElementById('missingAlert').style.display='none'"><i class="bi bi-x-lg"></i></button>
       </div>
 
       <div class="drill-panel" id="drillPanel" style="display:none">
@@ -161,7 +206,7 @@ $work_order_total = $work_order_total ?? 0;
 <div class="modal" id="installerModal">
   <div class="modal-box">
     <h3>Set Installer</h3>
-    <label>Installed By</label>
+    <label>Installer</label>
     <select id="installerSelect">
       <option value="">— Unassigned —</option>
     </select>
@@ -397,7 +442,7 @@ $work_order_total = $work_order_total ?? 0;
           <div class="fec-row"><span>Floor</span><strong>${esc(u.floor || 'Ground Floor')}</strong></div>
           <div class="fec-row"><span>Weight</span><strong>${u.kg} kg</strong></div>
           <div class="fec-row"><span>Installed</span><strong>${esc(u.year)}</strong></div>
-          <div class="fec-row"><span>Installed by</span><strong>${esc(u.inspector)} <button type="button" class="fec-edit-btn" title="Change installer" onclick="openInstallerModal('fe', ${u.dbId}, '${esc(u.inspector).replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen"></i></button></strong></div>
+          <div class="fec-row"><span>Installed by</span><strong>${esc(u.inspector)} <button type="button" class="fec-edit-btn" title="Change installed by" onclick="openInstallerModal('fe', ${u.dbId}, '${esc(u.inspector).replace(/'/g, "\\'")}')"><i class="bi bi-pencil-fill"></i></button></strong></div>
           <div class="fec-row"><span>Assigned Guard</span><strong>${esc(u.assigned)}</strong></div>
           <div class="fec-row"><span>Last Insp.</span><strong>${esc(u.lastInsp)}</strong></div>
           <div class="fec-row"><span>Next Due</span><strong class="${daysLeft < 0 ? 'text-danger' : daysLeft < 30 ? 'text-warn' : ''}">${esc(u.nextDue)} (${daysLeft < 0 ? 'OVERDUE' : daysLeft + 'd'})</strong></div>
@@ -413,7 +458,7 @@ $work_order_total = $work_order_total ?? 0;
           <div class="fec-row"><span>Last Cleaning</span><strong>${esc(u.lastClean) || '—'}</strong></div>
           <div class="fec-row"><span>Next Schedule</span><strong>${esc(u.nextDue) || '—'}</strong></div>
           <div class="fec-row"><span>Assigned Tech</span><strong>${esc(u.tech)}</strong></div>
-          <div class="fec-row"><span>Installed By</span><strong>${esc(u.installedBy)} <button type="button" class="fec-edit-btn" title="Change installer" onclick="openInstallerModal('aircon', ${u.id}, '${esc(u.installedBy).replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen"></i></button></strong></div>
+          <div class="fec-row"><span>Installer</span><strong>${esc(u.installedBy)} <button type="button" class="fec-edit-btn" title="Change installer" onclick="openInstallerModal('aircon', ${u.id}, '${esc(u.installedBy).replace(/'/g, "\\'")}')"><i class="bi bi-pencil-fill"></i></button></strong></div>
           <div class="fec-row"><span>Checklist</span><strong>${done}/${total} done</strong></div>
         </div>`;
     }
@@ -526,6 +571,11 @@ $work_order_total = $work_order_total ?? 0;
   // Computed client-side from the same feRegistry already loaded for the
   // campus map — no separate query needed, this is just the subset that's
   // past its next_due date, flattened across all buildings.
+  // Only previews the first few overdue units so this overview box doesn't
+  // grow without bound — "View more" hands off to the full, filterable list
+  // already built for the Inspection Readiness KPI card.
+  const OVERDUE_FE_PREVIEW_LIMIT = 6;
+
   function renderOverdueFe() {
     const grid = document.getElementById('overdueFeGrid');
     const today = new Date();
@@ -534,36 +584,99 @@ $work_order_total = $work_order_total ?? 0;
       grid.innerHTML = `<div class="no-data" style="padding:1rem;">No overdue fire extinguishers.</div>`;
       return;
     }
-    grid.innerHTML = overdue.map(u => {
+    const preview = overdue.slice(0, OVERDUE_FE_PREVIEW_LIMIT);
+    grid.innerHTML = preview.map(u => {
       const daysLeft = Math.ceil((new Date(u.nextDue) - today) / 86400000);
       return `
-      <div class="fe-card fe-urgent">
+      <div class="fe-card fe-urgent fe-card-clickable" role="button" tabindex="0" title="View ${esc(u.id)} on the campus map" onclick="openOverdueFeDetail('${esc(u.id).replace(/'/g, "\\'")}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
         <div class="fec-id">${esc(u.id)}</div>
         <div class="fec-status status-${u.status.toLowerCase().replace(' ','')}">${esc(u.status)}</div>
-        <div class="fec-row"><span>Location</span><strong>${esc(u.loc)}</strong></div>
+        <div class="fec-row"><span>Department</span><strong>${esc(u.loc)}</strong></div>
         <div class="fec-row"><span>Next Due</span><strong class="text-danger">${esc(u.nextDue)} (${Math.abs(daysLeft)}d overdue)</strong></div>
         <div class="fec-row"><span>Assigned Guard</span><strong>${esc(u.assigned)}</strong></div>
       </div>`;
     }).join('');
+
+    if (overdue.length > OVERDUE_FE_PREVIEW_LIMIT) {
+      grid.insertAdjacentHTML('beforeend', `
+        <button type="button" class="overview-link fe-view-more" onclick="showStatusList('readiness')">
+          View all ${overdue.length} overdue →
+        </button>`);
+    }
+  }
+
+  // Jump straight from an overdue-extinguisher card to its exact spot on the
+  // campus map, with that unit's detail already open in the drill panel —
+  // saves hunting for the right building/floor manually.
+  function openOverdueFeDetail(id) {
+    const u = feRegistry.find(x => x.id === id);
+    if (!u) return;
+
+    if (activeSafetyTab !== 'fe') switchSafetyTab('fe');
+
+    zoomToBuilding(u.loc);
+
+    // zoomToBuilding/selectMapBuilding auto-pick whichever floor has any
+    // unit, which isn't necessarily this unit's floor — pin it explicitly.
+    currentFloor = u.floor || 'Ground Floor';
+    renderFloorTabs();
+    renderFloorDiagram();
+
+    const unitsOnFloor = getUnitsForCurrentBuilding().filter(x => (x.floor || 'Ground Floor') === currentFloor);
+    const idx = unitsOnFloor.findIndex(x => x.id === id);
+    if (idx > -1) selectFloorUnit(idx);
+
+    document.getElementById('mapLayout').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function scrollToMaintenance() {
     document.getElementById('maintenanceSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  // Cards render collapsed by default (header only) — click the chevron to
+  // expand the details. Keeps a long list of units scannable instead of
+  // always showing every field for every card.
   function feUnitCardHtml(u) {
     const today = new Date();
     const daysLeft = u.nextDue ? Math.ceil((new Date(u.nextDue) - today) / 86400000) : null;
     const sev = daysLeft === null ? 'fe-ok' : daysLeft < 0 ? 'fe-urgent' : daysLeft < 30 ? 'fe-warn' : 'fe-ok';
     return `
-      <div class="fe-card ${sev}">
+      <div class="fe-card ${sev} fe-collapsed">
+        <button type="button" class="fe-card-toggle" title="Expand/collapse" onclick="toggleFeCard(this)"><i class="bi bi-chevron-down"></i></button>
         <div class="fec-id">${esc(u.id)}</div>
         <div class="fec-status status-${u.status.toLowerCase().replace(' ', '')}">${esc(u.status)}</div>
-        <div class="fec-row"><span>Location</span><strong>${esc(u.loc)} (${esc(u.floor || 'Ground Floor')})</strong></div>
-        <div class="fec-row"><span>Type</span><strong>${esc(u.type)}</strong></div>
-        <div class="fec-row"><span>Installed by</span><strong>${esc(u.inspector)}</strong></div>
-        <div class="fec-row"><span>Next Due</span><strong class="${daysLeft !== null && daysLeft < 0 ? 'text-danger' : daysLeft !== null && daysLeft < 30 ? 'text-warn' : ''}">${esc(u.nextDue) || '—'}${daysLeft !== null ? ` (${daysLeft < 0 ? 'OVERDUE' : daysLeft + 'd'})` : ''}</strong></div>
+        <div class="fec-body">
+          <div class="fec-row"><span>Department</span><strong>${esc(u.loc)} (${esc(u.floor || 'Ground Floor')})</strong></div>
+          <div class="fec-row"><span>Type</span><strong>${esc(u.type)}</strong></div>
+          <div class="fec-row"><span>Installed by</span><strong>${esc(u.inspector)}</strong></div>
+          <div class="fec-row"><span>Next Due</span><strong class="${daysLeft !== null && daysLeft < 0 ? 'text-danger' : daysLeft !== null && daysLeft < 30 ? 'text-warn' : ''}">${esc(u.nextDue) || '—'}${daysLeft !== null ? ` (${daysLeft < 0 ? 'OVERDUE' : daysLeft + 'd'})` : ''}</strong></div>
+        </div>
       </div>`;
+  }
+
+  // Accordion behavior: expanding a card collapses whichever other card in
+  // the same grid was open, so at most one is expanded at a time.
+  function toggleFeCard(btn) {
+    const card = btn.closest('.fe-card');
+    const willExpand = card.classList.contains('fe-collapsed');
+
+    if (willExpand) {
+      const container = card.closest('.dp-fe-grid') || card.parentElement;
+      container.querySelectorAll('.fe-card').forEach(other => {
+        if (other !== card) setFeCardCollapsed(other, true);
+      });
+    }
+
+    setFeCardCollapsed(card, !willExpand);
+  }
+
+  function setFeCardCollapsed(card, collapsed) {
+    card.classList.toggle('fe-collapsed', collapsed);
+    const icon = card.querySelector('.fe-card-toggle i');
+    if (icon) {
+      icon.classList.toggle('bi-chevron-down', collapsed);
+      icon.classList.toggle('bi-chevron-up', !collapsed);
+    }
   }
 
   function airconUnitCardHtml(u) {
@@ -571,52 +684,159 @@ $work_order_total = $work_order_total ?? 0;
     const total = u.checklist.length;
     const sev = u.condition === 'Operational' ? 'fe-ok' : u.condition === 'Needs Cleaning' ? 'fe-warn' : 'fe-urgent';
     return `
-      <div class="fe-card ${sev}">
+      <div class="fe-card ${sev} fe-collapsed">
+        <button type="button" class="fe-card-toggle" title="Expand/collapse" onclick="toggleFeCard(this)"><i class="bi bi-chevron-down"></i></button>
         <div class="fec-id">${esc(u.unit)}</div>
         <div class="fec-status">${esc(u.condition)}</div>
-        <div class="fec-row"><span>Location</span><strong>${esc(u.loc)} (${esc(u.floor || 'Ground Floor')})</strong></div>
-        <div class="fec-row"><span>Assigned Tech</span><strong>${esc(u.tech)}</strong></div>
-        <div class="fec-row"><span>Checklist</span><strong>${done}/${total} done</strong></div>
+        <div class="fec-body">
+          <div class="fec-row"><span>Location</span><strong>${esc(u.loc)} (${esc(u.floor || 'Ground Floor')})</strong></div>
+          <div class="fec-row"><span>Assigned Tech</span><strong>${esc(u.tech)}</strong></div>
+          <div class="fec-row"><span>Checklist</span><strong>${done}/${total} done</strong></div>
+        </div>
       </div>`;
   }
 
   // Overview cards open a flat list of matching units below them — reuses
   // the same fe-card look as the floor drill-down and the maintenance grids.
-  function showStatusList(kind) {
-    const today = new Date();
-    let title, units, cardFn;
+  let currentStatusKind = null;
 
-    if (kind === 'coverage') {
-      title = 'All Fire Extinguishers';
-      units = feRegistry;
-      cardFn = feUnitCardHtml;
-    } else if (kind === 'readiness') {
-      title = 'Overdue Fire Extinguishers';
-      units = feRegistry.filter(u => u.nextDue && new Date(u.nextDue) < today);
-      cardFn = feUnitCardHtml;
-    } else if (kind === 'critical') {
-      title = 'Critical Fire Extinguishers';
-      units = feRegistry.filter(u => u.status === 'Missing' || u.status === 'Defective' || (u.nextDue && new Date(u.nextDue) < today));
-      cardFn = feUnitCardHtml;
-    } else {
-      title = 'All Aircon Units';
-      units = airconRegistry;
-      cardFn = airconUnitCardHtml;
+  function baseUnitsForKind(kind) {
+    const today = new Date();
+    if (kind === 'coverage') return { title: 'All Fire Extinguishers', units: feRegistry, cardFn: feUnitCardHtml, isFe: true };
+    if (kind === 'readiness') return { title: 'Overdue Fire Extinguishers', units: feRegistry.filter(u => u.nextDue && new Date(u.nextDue) < today), cardFn: feUnitCardHtml, isFe: true };
+    if (kind === 'critical') return { title: 'Critical Fire Extinguishers', units: feRegistry.filter(u => u.status === 'Missing' || u.status === 'Defective' || (u.nextDue && new Date(u.nextDue) < today)), cardFn: feUnitCardHtml, isFe: true };
+    if (kind === 'aircon-attention') return { title: 'Aircon Units Not Working', units: airconRegistry.filter(u => u.condition !== 'Operational' || (u.nextDue && new Date(u.nextDue) < today)), cardFn: airconUnitCardHtml, isFe: false, byFloor: true };
+    return { title: 'All Aircon Units', units: airconRegistry, cardFn: airconUnitCardHtml, isFe: false, byFloor: true };
+  }
+
+  // Clicking the same KPI card that's already open closes it — clicking a
+  // different one switches the panel to that card's list instead.
+  function showStatusList(kind) {
+    const panel = document.getElementById('statusListSection');
+    if (panel.style.display === 'block' && currentStatusKind === kind) {
+      closeStatusList();
+      return;
     }
 
-    document.getElementById('statusListTitle').innerHTML = `<i class="bi bi-list-ul"></i> ${title}`;
-    document.getElementById('statusListGrid').innerHTML = units.length
-      ? units.map(cardFn).join('')
-      : '<div class="no-data" style="padding:1rem;">No matching units.</div>';
+    currentStatusKind = kind;
+    const { isFe } = baseUnitsForKind(kind);
 
-    const section = document.getElementById('statusListSection');
-    section.style.display = 'block';
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('feSearchInput').value = '';
+    document.getElementById('feFilterWrapper').style.display = isFe ? '' : 'none';
+    document.getElementById('feFilterPopup').classList.remove('visible');
+    if (isFe) {
+      document.getElementById('feFilterBuilding').value = '';
+      document.getElementById('feFilterDept').value = '';
+      document.getElementById('feFilterStatus').value = '';
+      populateFeBuildingOptions();
+      populateFeDeptOptions();
+    }
+
+    renderStatusList();
+
+    panel.style.display = 'block';
   }
 
   function closeStatusList() {
     document.getElementById('statusListSection').style.display = 'none';
   }
+
+  // Re-renders the currently open status list, applying the search box plus
+  // (for fire extinguishers) the Building/Department/Status filters on top
+  // of whichever KPI card was clicked.
+  function renderStatusList() {
+    const { title, units, cardFn, isFe, byFloor } = baseUnitsForKind(currentStatusKind);
+
+    let filtered = units;
+    if (isFe) {
+      const building = document.getElementById('feFilterBuilding').value;
+      const installedBy = document.getElementById('feFilterDept').value;
+      const status = document.getElementById('feFilterStatus').value;
+      filtered = units.filter(u =>
+        (!building || u.loc === building)
+        && (!installedBy || u.inspector === installedBy)
+        && (!status || u.status === status)
+      );
+    }
+
+    const search = (document.getElementById('feSearchInput')?.value || '').trim().toLowerCase();
+    if (search) {
+      filtered = filtered.filter(u => {
+        const idText = String(u.id ?? u.unit ?? '').toLowerCase();
+        const locText = String(u.loc ?? '').toLowerCase();
+        const floorText = String(u.floor ?? '').toLowerCase();
+        return idText.includes(search) || locText.includes(search) || floorText.includes(search);
+      });
+    }
+
+    document.getElementById('statusListTitle').innerHTML = `<i class="bi bi-list-ul"></i> ${title}`;
+
+    const grid = document.getElementById('statusListGrid');
+    // Floor-grouped lists break into several short per-floor rows, and the
+    // auto-fit column sizing used for a single flat row would stretch each
+    // row's cards to a different width depending on how many are in it —
+    // fixed-width columns here keep every card the same size regardless.
+    grid.classList.toggle('by-floor-grid', !!byFloor);
+
+    if (!filtered.length) {
+      grid.innerHTML = '<div class="no-data" style="padding:1rem;">No matching units.</div>';
+      return;
+    }
+
+    grid.innerHTML = byFloor
+      ? groupedByFloorHtml(filtered, cardFn)
+      : filtered.map(cardFn).join('');
+  }
+
+  // Groups units into per-floor sections with a divider header, so a long
+  // aircon list reads floor-by-floor instead of as one flat wall of cards.
+  function groupedByFloorHtml(units, cardFn) {
+    const floors = [...new Set(units.map(u => u.floor || 'Ground Floor'))];
+    floors.sort((a, b) => {
+      if (a === 'Ground Floor') return -1;
+      if (b === 'Ground Floor') return 1;
+      const na = parseInt(a, 10), nb = parseInt(b, 10);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      return a.localeCompare(b);
+    });
+    return floors.map(floor => `
+      <div class="dp-fe-floor-divider">${esc(floor)}</div>
+      ${units.filter(u => (u.floor || 'Ground Floor') === floor).map(cardFn).join('')}
+    `).join('');
+  }
+
+  function applyFeFilters() {
+    renderStatusList();
+  }
+
+  function populateFeBuildingOptions() {
+    const select = document.getElementById('feFilterBuilding');
+    const buildings = [...new Set(feRegistry.map(u => u.loc))].sort();
+    select.innerHTML = '<option value="">All Departments</option>'
+      + buildings.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+  }
+
+  // Only "Installed by" (installer) names actually recorded on a fire
+  // extinguisher on the map — not the full Maintenance roster, which would
+  // include people who haven't actually installed anything yet.
+  function populateFeDeptOptions() {
+    const select = document.getElementById('feFilterDept');
+    const installers = [...new Set(feRegistry.map(u => u.inspector).filter(name => name && name !== '—'))].sort();
+    select.innerHTML = '<option value="">All (Installed by)</option>'
+      + installers.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
+  }
+
+  function toggleFeFilterMenu() {
+    document.getElementById('feFilterPopup').classList.toggle('visible');
+  }
+
+  document.addEventListener('click', e => {
+    const wrapper = document.getElementById('feFilterWrapper');
+    const popup = document.getElementById('feFilterPopup');
+    if (wrapper && !wrapper.contains(e.target)) {
+      popup.classList.remove('visible');
+    }
+  });
 
   renderWorkOrders();
   renderOverdueFe();

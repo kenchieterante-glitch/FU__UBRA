@@ -103,9 +103,9 @@ function pvStatusClass($status) {
                 <div class="action-buttons">
                   <form method="post" action="<?= base_url('personnel/documents/verify/' . $d['id']) ?>" style="display:contents;">
                     <?= csrf_field() ?>
-                    <button type="submit" class="icon-btn" title="Verify"><i class="fa-solid fa-check"></i></button>
+                    <button type="submit" class="icon-btn" title="Verify"><i class="bi bi-check-lg"></i></button>
                   </form>
-                  <button class="icon-btn delete" title="Reject" onclick="document.getElementById('rejectDocModal<?= $d['id'] ?>').style.display='flex'"><i class="fa-solid fa-xmark"></i></button>
+                  <button class="icon-btn delete" title="Reject" onclick="document.getElementById('rejectDocModal<?= $d['id'] ?>').style.display='flex'"><i class="bi bi-x-lg"></i></button>
                 </div>
                 <div class="modal" id="rejectDocModal<?= $d['id'] ?>">
                   <div class="modal-box">
