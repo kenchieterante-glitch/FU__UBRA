@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\JanitorialAssignmentModel;
 use App\Models\JanitorialTaskModel;
+use App\Models\JanitorialTaskHistoryModel;
 use App\Models\ConsumableInventoryModel;
 use App\Models\RefillLogModel;
 
@@ -41,6 +42,8 @@ class JanitorialController extends BaseController
         if (!$this->session->get('isLoggedIn')) {
             return redirect()->to('/login');
         }
+
+        $this->resetStaleCompletedTasks();
 
         $assignments = $this->assignmentModel->findAll();
         $allTasks    = $this->taskModel->findAll();
@@ -168,6 +171,48 @@ class JanitorialController extends BaseController
     public function checklists()
     {
         return $this->index();
+    }
+
+    /**
+     * Daily maintenance tasks reset once finished so staff see a clean
+     * checklist next shift — but pending/missed tasks must NOT reset; they
+     * stay open until someone actually completes them. Only tasks marked
+     * done on a previous day are touched, and each is archived into
+     * janitorial_task_history first so activity history keeps the record.
+     */
+    private function resetStaleCompletedTasks(): void
+    {
+        $today = date('Y-m-d');
+
+        $staleTasks = array_filter(
+            $this->taskModel->where('is_done', 1)->findAll(),
+            fn($t) => !empty($t['completed_at']) && substr($t['completed_at'], 0, 10) !== $today
+        );
+
+        if (empty($staleTasks)) return;
+
+        $assignmentsById = [];
+        foreach ($this->assignmentModel->findAll() as $a) {
+            $assignmentsById[$a['id']] = $a;
+        }
+
+        $historyModel = new JanitorialTaskHistoryModel();
+
+        foreach ($staleTasks as $t) {
+            $a = $assignmentsById[$t['assignment_id']] ?? null;
+
+            $historyModel->insert([
+                'assignment_id' => $t['assignment_id'],
+                'zone'          => $a['assigned_zone'] ?? 'Unknown',
+                'task_name'     => $t['task_name'],
+                'status'        => 'done',
+                'completed_at'  => $t['completed_at'],
+                'performed_by'  => $a['staff_name'] ?? null,
+                'archived_at'   => date('Y-m-d H:i:s'),
+            ]);
+
+            $this->taskModel->update($t['id'], ['is_done' => 0, 'completed_at' => null]);
+        }
     }
 
     public function refillInventory($id)

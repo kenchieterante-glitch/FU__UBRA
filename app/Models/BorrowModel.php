@@ -8,7 +8,7 @@ class BorrowModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [
-        'tool_id','borrower','department','borrowed_date','expected_return',
+        'tool_id','quantity','borrower','department','borrowed_date','expected_return',
         'status','is_archived','archived_at','last_activity_at','created_at',
         'disposal_status','disposal_date','disposal_authorized_by','disposal_signature',
     ];

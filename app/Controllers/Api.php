@@ -16,6 +16,9 @@ use App\Models\AirconUnitModel;
 use App\Models\AirconChecklistItemModel;
 use App\Models\JanitorialAssignmentModel;
 use App\Models\JanitorialTaskModel;
+use App\Models\JanitorialTaskHistoryModel;
+use App\Models\ConsumableInventoryModel;
+use App\Models\ConsumableStockReportModel;
 use App\Models\KeyBorrowLogModel;
 use App\Models\NotificationModel;
 use App\Models\ReportModel;
@@ -206,13 +209,36 @@ class Api extends BaseController
         }
         $rows = $builder->orderBy('id', 'DESC')->findAll();
 
+        // A stock-tracked item stays "Available" as long as any units remain,
+        // even after a partial borrow — so surface how much is actively out
+        // on loan per tool, otherwise a successful borrow on a consumable
+        // looks like nothing happened (status doesn't flip, only qty drops).
+        $borrowedByTool = [];
+        $borrowRows = (new BorrowModel())
+            ->select('tool_id, SUM(quantity) as total')
+            ->where('status', 'Borrowed')
+            ->groupBy('tool_id')
+            ->findAll();
+        foreach ($borrowRows as $b) {
+            $borrowedByTool[$b['tool_id']] = (float) $b['total'];
+        }
+
         return $this->response->setJSON([
             'tools' => array_map(fn($t) => [
-                'asset_id'  => $t['asset_code'],
-                'tool_name' => $t['asset_name'],
-                'condition' => $t['condition_status'],
-                'status'    => $t['availability'],
-                'qty'       => 1,
+                'asset_id'      => $t['asset_code'],
+                'tool_name'     => $t['asset_name'],
+                'category'      => $t['category'],
+                'condition'     => $t['condition_status'],
+                'status'        => $t['availability'],
+                // Consumables (current_stock not null) can be borrowed in a
+                // quantity; everything else is one physical unit.
+                'qty'           => $t['current_stock'] !== null ? (float) $t['current_stock'] : 1,
+                'stock_tracked' => $t['current_stock'] !== null,
+                // Only meaningful for stock-tracked items — a single-unit
+                // tool's true borrow state is its `status`, not this sum
+                // (which some legacy rows still carry as stale "Borrowed"
+                // borrow_records left over from before status was reset).
+                'borrowed_qty'  => $t['current_stock'] !== null ? ($borrowedByTool[$t['id']] ?? 0) : 0,
             ], $rows),
             'category' => $category,
         ]);
@@ -243,13 +269,65 @@ class Api extends BaseController
             return $this->response->setStatusCode(404)->setJSON(['message' => 'No tool found for that code.']);
         }
 
+        $stockTracked = $tool['current_stock'] !== null;
+        $borrowedQty = 0;
+        if ($stockTracked) {
+            $sum = (new BorrowModel())->where('tool_id', $tool['id'])->where('status', 'Borrowed')
+                ->selectSum('quantity')->first();
+            $borrowedQty = (float) ($sum['quantity'] ?? 0);
+        }
+
+        return $this->response->setJSON([
+            'asset_id'      => $tool['asset_code'],
+            'tool_name'     => $tool['asset_name'],
+            'category'      => $tool['category'],
+            'condition'     => $tool['condition_status'],
+            'status'        => $tool['availability'],
+            'available'     => $tool['availability'] === 'Available',
+            'qty'           => $tool['current_stock'] !== null ? (float) $tool['current_stock'] : 1,
+            'stock_tracked' => $stockTracked,
+            'borrowed_qty'  => $borrowedQty,
+        ]);
+    }
+
+    // Full borrow/return log for one tool — who has (or had) it, and who
+    // brought it back. Pulls from the same borrow_records/return_records
+    // tables the web Tools Management "Records" page reads, so mobile and
+    // web always show the same history for a given asset.
+    public function toolHistory($code = null)
+    {
+        $code = trim((string) ($code ?? ''));
+        if ($code === '') {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'No code provided.']);
+        }
+
+        $tool = (new ToolsModel())->where('asset_code', $code)->where('is_archived', 0)->first();
+        if (!$tool) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'No tool found for that code.']);
+        }
+
+        $borrows = (new BorrowModel())->where('tool_id', $tool['id'])->orderBy('id', 'DESC')->findAll();
+
+        $returnModel = new ReturnModel();
+        $history = array_map(function ($b) use ($returnModel) {
+            $return = $returnModel->where('borrow_id', $b['id'])->orderBy('id', 'DESC')->first();
+            return [
+                'borrower'         => $b['borrower'],
+                'department'       => $b['department'] ?: null,
+                'borrowed_date'    => $b['borrowed_date'],
+                'expected_return'  => $b['expected_return'],
+                'status'           => $b['status'],
+                'returned_date'    => $return['return_date'] ?? null,
+                'returned_by'      => $return['returned_by'] ?? null,
+                'condition_status' => $return['condition_status'] ?? null,
+                'remarks'          => $return['remarks'] ?? null,
+            ];
+        }, $borrows);
+
         return $this->response->setJSON([
             'asset_id'  => $tool['asset_code'],
             'tool_name' => $tool['asset_name'],
-            'category'  => $tool['category'],
-            'condition' => $tool['condition_status'],
-            'status'    => $tool['availability'],
-            'available' => $tool['availability'] === 'Available',
+            'history'   => $history,
         ]);
     }
 
@@ -269,11 +347,27 @@ class Api extends BaseController
             return $this->response->setStatusCode(409)->setJSON(['message' => "{$tool['asset_name']} is not available to borrow right now."]);
         }
 
+        // Consumables (current_stock not null) can be borrowed in a chosen
+        // quantity, capped at what's left; everything else is one physical
+        // unit and always borrows exactly 1.
+        $stockTracked = $tool['current_stock'] !== null;
+        $quantity = $stockTracked && isset($body['quantity']) ? (float) $body['quantity'] : 1;
+
+        if ($quantity <= 0) {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'Quantity must be greater than zero.']);
+        }
+        if ($stockTracked && $quantity > (float) $tool['current_stock']) {
+            return $this->response->setStatusCode(409)->setJSON([
+                'message' => "Only {$tool['current_stock']} {$tool['asset_name']} left in stock.",
+            ]);
+        }
+
         $borrowerName = $body['borrower_name'] ?? ($body['employee_id'] ?? 'Unknown');
         $department   = $body['department'] ?? '';
 
         $borrowModel->insert([
             'tool_id'         => $tool['id'],
+            'quantity'        => $quantity,
             'borrower'        => $borrowerName,
             'department'      => $department,
             'borrowed_date'   => date('Y-m-d'),
@@ -283,16 +377,20 @@ class Api extends BaseController
             'last_activity_at'=> date('Y-m-d H:i:s'),
         ]);
 
-        $toolsModel->update($tool['id'], [
-            'availability'      => 'Borrowed',
+        $remainingStock = $stockTracked ? (float) $tool['current_stock'] - $quantity : null;
+
+        $toolsModel->update($tool['id'], array_filter([
+            'availability'      => (!$stockTracked || $remainingStock <= 0) ? 'Borrowed' : 'Available',
+            'current_stock'     => $stockTracked ? $remainingStock : null,
             'last_activity_at'  => date('Y-m-d H:i:s'),
-        ]);
+        ], fn($v) => $v !== null));
 
         return $this->response->setJSON([
             'action'        => 'borrow confirmed',
             'borrower_name' => $borrowerName,
             'tool_name'     => $tool['asset_name'],
             'asset_id'      => $tool['asset_code'],
+            'quantity'      => $quantity,
             'timestamp'     => date('M j, Y — h:i A'),
         ]);
     }
@@ -334,9 +432,13 @@ class Api extends BaseController
             'remarks'          => $remarks,
         ]);
 
+        $stockTracked = $tool['current_stock'] !== null;
+        $returnedQty  = (float) ($borrowRecord['quantity'] ?? 1);
+
         $toolsModel->update($tool['id'], [
             'availability'      => 'Available',
             'condition_status'  => $condition,
+            'current_stock'     => $stockTracked ? (float) $tool['current_stock'] + $returnedQty : $tool['current_stock'],
             'last_activity_at'  => date('Y-m-d H:i:s'),
         ]);
 
@@ -345,6 +447,7 @@ class Api extends BaseController
             'borrower_name' => $borrowRecord['borrower'],
             'tool_name'     => $tool['asset_name'],
             'asset_id'      => $tool['asset_code'],
+            'quantity'      => $returnedQty,
             'timestamp'     => date('M j, Y — h:i A'),
         ]);
     }
@@ -361,6 +464,11 @@ class Api extends BaseController
                 'plate'             => $v['plate_no'],
                 'name'              => $v['vehicle_name'],
                 'type'              => $v['type'],
+                // `type` is free text ("Motorcycle", "4 Wheels", "Automatic Car ",
+                // "V2-4Wheels", ...) with no dedicated wheel-count column, so
+                // classify it: anything naming a motorcycle/scooter is 2-wheel,
+                // everything else (car/van/truck/bus/etc.) defaults to 4-wheel.
+                'wheels'            => $this->classifyVehicleWheels($v['type']),
                 'driver'            => $v['driver_name'] ?? null,
                 'department'        => $v['department_name'] ?? null,
                 'availability'      => $v['availability'],
@@ -368,6 +476,14 @@ class Api extends BaseController
                 'inspection_status' => $v['inspection_status'],
             ], $rows),
         ]);
+    }
+
+    private function classifyVehicleWheels(?string $type): int
+    {
+        $t = strtolower((string) $type);
+        $isTwoWheeled = str_contains($t, 'motor') || str_contains($t, 'scooter')
+            || str_contains($t, 'tricycle') || str_contains($t, 'bike');
+        return $isTwoWheeled ? 2 : 4;
     }
 
     public function vehiclesMeta()
@@ -408,6 +524,12 @@ class Api extends BaseController
     // system actually records (gps_logs has lat/lng/signal/status/logged_at) —
     // there's no speed, ignition, or battery telemetry anywhere in this app,
     // including the web GPS Tracker, which hardcodes speed to 0.
+    // Sinotrack ST-901L trackers report to our Traccar server (credentials in
+    // .env, gitignored — see TRACCAR_URL/USER/PASS); a vehicle opts into live
+    // tracking by having vehicles.gps_device_id set to that tracker's Traccar
+    // identifier. Vehicles without one fall back to whatever was last logged
+    // locally in gps_logs (legacy/manual entries), so this stays backward
+    // compatible with vehicles that don't have a physical tracker yet.
     public function vehicleLocation($plate)
     {
         $vehicle = (new VehicleModel())->where('plate_no', $plate)->first();
@@ -415,19 +537,99 @@ class Api extends BaseController
             return $this->response->setStatusCode(404)->setJSON(['message' => 'No vehicle found for that plate number.']);
         }
 
+        // Static/manually-tracked vehicle info, not something any tracker
+        // reports — merged into both the live and fallback responses so the
+        // tracking screen always has the full picture in one call.
+        $vehicleStatus = [
+            'tire_pressure_psi' => $vehicle['tire_pressure_psi'] !== null ? (float) $vehicle['tire_pressure_psi'] : null,
+            'inspection_status' => $vehicle['inspection_status'],
+            'availability'      => $vehicle['availability'],
+        ];
+
+        if (!empty($vehicle['gps_device_id'])) {
+            $live = $this->traccarLatestPosition($vehicle['gps_device_id']);
+            if ($live) {
+                return $this->response->setJSON(array_merge($live, $vehicleStatus));
+            }
+            // Tracker assigned but Traccar has no fix yet (just installed,
+            // out of signal, etc.) — fall through to any local log instead
+            // of a hard failure.
+        }
+
         $log = (new GPSModel())->where('vehicle_id', $vehicle['id'])->orderBy('id', 'DESC')->first();
         if (!$log || $log['latitude'] === null || $log['longitude'] === null) {
             return $this->response->setStatusCode(404)->setJSON(['message' => 'No GPS location recorded for this vehicle yet.']);
         }
 
-        return $this->response->setJSON([
+        return $this->response->setJSON(array_merge([
             'lat'             => (float) $log['latitude'],
             'lng'             => (float) $log['longitude'],
             'gps_status'      => $log['status'] ?? $vehicle['gps_status'],
             'signal_strength' => $log['signal_strength'],
             'device_id'       => $log['device_id'],
             'last_update'     => $log['logged_at'],
-        ]);
+        ], $vehicleStatus));
+    }
+
+    /** Fetch a Traccar device's latest position by its identifier (uniqueId). Returns null on any failure. */
+    private function traccarLatestPosition(string $identifier): ?array
+    {
+        $baseUrl = env('TRACCAR_URL');
+        $user    = env('TRACCAR_USER');
+        $pass    = env('TRACCAR_PASS');
+        if (!$baseUrl || !$user || !$pass) {
+            return null;
+        }
+
+        $auth = base64_encode("{$user}:{$pass}");
+        $opts = [
+            'http' => [
+                'method'        => 'GET',
+                'header'        => "Authorization: Basic {$auth}\r\nAccept: application/json\r\n",
+                'timeout'       => 5,
+                'ignore_errors' => true,
+            ],
+        ];
+        $context = stream_context_create($opts);
+
+        $devicesJson = @file_get_contents(
+            $baseUrl . '/api/devices?uniqueId=' . urlencode($identifier),
+            false,
+            $context
+        );
+        $devices = json_decode((string) $devicesJson, true);
+        if (empty($devices[0]['id'])) {
+            return null;
+        }
+
+        $positionsJson = @file_get_contents(
+            $baseUrl . '/api/positions?deviceId=' . (int) $devices[0]['id'],
+            false,
+            $context
+        );
+        $positions = json_decode((string) $positionsJson, true);
+        if (empty($positions[0])) {
+            return null;
+        }
+        $p = $positions[0];
+        $attrs = $p['attributes'] ?? [];
+
+        return [
+            'lat'             => (float) $p['latitude'],
+            'lng'             => (float) $p['longitude'],
+            'gps_status'      => $devices[0]['status'] === 'online' ? 'Online' : 'Offline',
+            'signal_strength' => null,
+            'device_id'       => $identifier,
+            'last_update'     => $p['fixTime'],
+            'speed_kmh'       => round(((float) $p['speed']) * 1.852, 1), // knots -> km/h
+            'course'          => $p['course'] ?? null,
+            // Decoded straight from the tracker's own protocol — real
+            // telemetry, not guessed from the device's undocumented raw I/O
+            // fields (those vary per firmware and aren't safe to assume).
+            'ignition'        => array_key_exists('ignition', $attrs) ? (bool) $attrs['ignition'] : null,
+            'motion'          => array_key_exists('motion', $attrs) ? (bool) $attrs['motion'] : null,
+            'odometer_km'     => isset($attrs['totalDistance']) ? round(((float) $attrs['totalDistance']) / 1000, 1) : null,
+        ];
     }
 
     // ---------- TRIP TICKETS ----------
@@ -507,10 +709,29 @@ class Api extends BaseController
 
     public function safetyBuildings()
     {
-        $model  = new FireExtinguisherModel();
-        $counts = [];
-        foreach ($model->getBuildingCounts() as $row) {
-            $counts[$row['location']] = (int) $row['count'];
+        $today = date('Y-m-d');
+        $units = (new FireExtinguisherModel())->findAll();
+
+        // Per-building breakdown, matching the same status logic safetySummary()
+        // uses for the dashboard totals — so the "Needs attention"/"Due for
+        // refill"/readiness stat cards can filter this same building list down
+        // to exactly the buildings contributing to each number.
+        $total = [];
+        $attention = [];
+        $refill = [];
+        $overdue = [];
+        foreach ($units as $u) {
+            $loc = $u['location'];
+            $total[$loc] = ($total[$loc] ?? 0) + 1;
+            if (in_array($u['status'], ['Defective', 'Missing'], true)) {
+                $attention[$loc] = ($attention[$loc] ?? 0) + 1;
+            }
+            if ($u['status'] === 'Refillable') {
+                $refill[$loc] = ($refill[$loc] ?? 0) + 1;
+            }
+            if (!empty($u['next_due']) && $u['next_due'] < $today) {
+                $overdue[$loc] = ($overdue[$loc] ?? 0) + 1;
+            }
         }
 
         $buildings = [];
@@ -518,7 +739,10 @@ class Api extends BaseController
             $buildings[] = [
                 'key'                => $slug,
                 'name'               => $name,
-                'extinguisher_count' => $counts[$name] ?? 0,
+                'extinguisher_count' => $total[$name] ?? 0,
+                'needs_attention'    => $attention[$name] ?? 0,
+                'due_for_refill'     => $refill[$name] ?? 0,
+                'overdue_inspection' => $overdue[$name] ?? 0,
             ];
         }
 
@@ -613,10 +837,10 @@ class Api extends BaseController
                 'condition'      => $unit['condition_status'],
                 'assigned_tech'  => $unit['assigned_tech'],
                 'checklist'      => array_map(fn($t) => [
-                    'id'   => $t['id'],
-                    'task' => $t['task_name'],
-                    'done' => (bool) $t['is_done'],
-                    'time' => $t['completed_at'] ? date('h:i A', strtotime($t['completed_at'])) : null,
+                    'id'           => $t['id'],
+                    'task'         => $t['task_name'],
+                    'done'         => (bool) $t['is_done'],
+                    'completed_at' => $this->toIso($t['completed_at']),
                 ], $tasks),
             ],
         ]);
@@ -672,10 +896,23 @@ class Api extends BaseController
 
         foreach (($data['tasks'] ?? []) as $t) {
             if (empty($t['id'])) continue;
-            $checklistModel->update($t['id'], [
-                'is_done'      => !empty($t['done']) ? 1 : 0,
-                'completed_at' => !empty($t['done']) ? date('Y-m-d H:i:s') : null,
-            ]);
+
+            $current = $checklistModel->find($t['id']);
+            if (!$current) continue;
+
+            $nowDone = !empty($t['done']);
+            $wasDone = (int) $current['is_done'] === 1;
+
+            $update = ['is_done' => $nowDone ? 1 : 0];
+            // Only stamp/clear completed_at when the checkbox state actually
+            // changes — the app resends the whole checklist on every single
+            // toggle, so unconditionally re-stamping here would reset every
+            // already-completed task's time to "now" each time.
+            if ($nowDone !== $wasDone) {
+                $update['completed_at'] = $nowDone ? date('Y-m-d H:i:s') : null;
+            }
+
+            $checklistModel->update($t['id'], $update);
         }
 
         $tasks = $checklistModel->getForUnit((int) $unitId);
@@ -698,7 +935,7 @@ class Api extends BaseController
             'message'   => "Aircon checklist for unit {$unitId} saved",
             'checklist' => array_map(fn($t) => [
                 'id' => $t['id'], 'task' => $t['task_name'], 'done' => (bool) $t['is_done'],
-                'time' => $t['completed_at'] ? date('h:i A', strtotime($t['completed_at'])) : null,
+                'completed_at' => $this->toIso($t['completed_at']),
             ], $tasks),
         ]);
     }
@@ -770,6 +1007,8 @@ class Api extends BaseController
 
     public function janitorialZones()
     {
+        $this->resetStaleCompletedJanitorialTasks();
+
         $assignmentModel = new JanitorialAssignmentModel();
         $taskModel       = new JanitorialTaskModel();
 
@@ -805,15 +1044,17 @@ class Api extends BaseController
 
     public function janitorialChecklist($assignmentId)
     {
+        $this->resetStaleCompletedJanitorialTasks();
+
         $taskModel = new JanitorialTaskModel();
         $tasks = $taskModel->getForAssignment((int) $assignmentId);
 
         return $this->response->setJSON([
             'tasks' => array_map(fn($t) => [
-                'id'   => $t['id'],
-                'task' => $t['task_name'],
-                'done' => (bool) $t['is_done'],
-                'time' => $t['completed_at'] ? date('h:i A', strtotime($t['completed_at'])) : null,
+                'id'           => $t['id'],
+                'task'         => $t['task_name'],
+                'done'         => (bool) $t['is_done'],
+                'completed_at' => $this->toIso($t['completed_at']),
             ], $tasks),
         ]);
     }
@@ -825,10 +1066,23 @@ class Api extends BaseController
 
         foreach (($data['tasks'] ?? []) as $t) {
             if (empty($t['id'])) continue;
-            $taskModel->update($t['id'], [
-                'is_done'      => !empty($t['done']) ? 1 : 0,
-                'completed_at' => !empty($t['done']) ? date('Y-m-d H:i:s') : null,
-            ]);
+
+            $current = $taskModel->find($t['id']);
+            if (!$current) continue;
+
+            $nowDone = !empty($t['done']);
+            $wasDone = (int) $current['is_done'] === 1;
+
+            $update = ['is_done' => $nowDone ? 1 : 0];
+            // Only stamp/clear completed_at when the checkbox state actually
+            // changes — the app resends the whole checklist on every save,
+            // so unconditionally re-stamping here would reset every
+            // already-completed task's time to "now" each time.
+            if ($nowDone !== $wasDone) {
+                $update['completed_at'] = $nowDone ? date('Y-m-d H:i:s') : null;
+            }
+
+            $taskModel->update($t['id'], $update);
         }
 
         $tasks = $taskModel->getForAssignment((int) $assignmentId);
@@ -837,9 +1091,192 @@ class Api extends BaseController
             'message' => "Checklist for zone {$assignmentId} saved",
             'tasks'   => array_map(fn($t) => [
                 'id' => $t['id'], 'task' => $t['task_name'], 'done' => (bool) $t['is_done'],
-                'time' => $t['completed_at'] ? date('h:i A', strtotime($t['completed_at'])) : null,
+                'completed_at' => $this->toIso($t['completed_at']),
             ], $tasks),
         ]);
+    }
+
+    public function janitorialHistory()
+    {
+        $this->resetStaleCompletedJanitorialTasks();
+
+        $assignmentModel = new JanitorialAssignmentModel();
+        $taskModel       = new JanitorialTaskModel();
+        $historyModel    = new JanitorialTaskHistoryModel();
+
+        $assignmentsById = [];
+        foreach ($assignmentModel->findAll() as $a) {
+            $assignmentsById[$a['id']] = $a;
+        }
+
+        $history = [];
+
+        // Completions from earlier days are archived here before the daily
+        // reset clears them off the live checklist — pull those in too so
+        // the activity trail isn't lost once a task resets.
+        foreach ($historyModel->findAll() as $h) {
+            $history[] = [
+                'zone'         => $h['zone'],
+                'task'         => $h['task_name'],
+                'status'       => $h['status'],
+                'completed_at' => $this->toIso($h['completed_at']),
+                'performed_by' => $h['performed_by'],
+            ];
+        }
+
+        // Today's completions, plus anything still pending/missed on the live checklist.
+        foreach ($taskModel->findAll() as $t) {
+            $a = $assignmentsById[$t['assignment_id']] ?? null;
+            if (!$a) continue;
+
+            $isDone = (int) $t['is_done'] === 1;
+            if ($isDone) {
+                $status = 'done';
+            } elseif (strtotime($a['date_assigned'] . ' ' . $a['shift_end']) < time()) {
+                $status = 'missed';
+            } else {
+                $status = 'pending';
+            }
+
+            $history[] = [
+                'zone'         => $a['assigned_zone'],
+                'task'         => $t['task_name'],
+                'status'       => $status,
+                'completed_at' => $this->toIso($t['completed_at']),
+                'performed_by' => $isDone ? ($a['staff_name'] ?? null) : null,
+            ];
+        }
+
+        usort($history, fn($x, $y) => strcmp($y['completed_at'] ?? '', $x['completed_at'] ?? ''));
+
+        return $this->response->setJSON(['history' => $history]);
+    }
+
+    /**
+     * Daily maintenance tasks should reset once finished so staff see a
+     * clean checklist next shift — but pending/missed tasks must NOT reset;
+     * they stay open until someone actually completes them. So this only
+     * touches tasks marked done on a previous day, archiving each one into
+     * janitorial_task_history first so "activity history" keeps the record.
+     */
+    private function resetStaleCompletedJanitorialTasks(): void
+    {
+        $taskModel = new JanitorialTaskModel();
+        $today = date('Y-m-d');
+
+        $staleTasks = array_filter(
+            $taskModel->where('is_done', 1)->findAll(),
+            fn($t) => !empty($t['completed_at']) && substr($t['completed_at'], 0, 10) !== $today
+        );
+
+        if (empty($staleTasks)) return;
+
+        $assignmentModel = new JanitorialAssignmentModel();
+        $historyModel    = new JanitorialTaskHistoryModel();
+        $assignmentsById = [];
+        foreach ($assignmentModel->findAll() as $a) {
+            $assignmentsById[$a['id']] = $a;
+        }
+
+        foreach ($staleTasks as $t) {
+            $a = $assignmentsById[$t['assignment_id']] ?? null;
+
+            $historyModel->insert([
+                'assignment_id' => $t['assignment_id'],
+                'zone'          => $a['assigned_zone'] ?? 'Unknown',
+                'task_name'     => $t['task_name'],
+                'status'        => 'done',
+                'completed_at'  => $t['completed_at'],
+                'performed_by'  => $a['staff_name'] ?? null,
+                'archived_at'   => date('Y-m-d H:i:s'),
+            ]);
+
+            $taskModel->update($t['id'], ['is_done' => 0, 'completed_at' => null]);
+        }
+    }
+
+    public function janitorialConsumables()
+    {
+        $inventoryModel = new ConsumableInventoryModel();
+        $items = $inventoryModel->orderBy('item_name', 'ASC')->findAll();
+
+        return $this->response->setJSON([
+            'items' => array_map(fn($i) => [
+                'id'                => $i['id'],
+                'item_name'         => $i['item_name'],
+                'category'          => $i['category'],
+                'unit'              => $i['unit'],
+                'current_stock'     => (float) $i['current_stock'],
+                'reorder_threshold' => (float) $i['reorder_threshold'],
+                'low_stock'         => (float) $i['current_stock'] <= (float) $i['reorder_threshold'],
+            ], $items),
+        ]);
+    }
+
+    // POST /api/janitorial/consumables/:id/report — a janitor reports how much
+    // of a consumable is left after cleaning a zone (an absolute stock reading,
+    // not a delta like refillInventory()). Notifies Facilities via the
+    // Notification Center whenever the reported level is at/below the
+    // item's reorder threshold.
+    public function reportConsumableStock($id)
+    {
+        $data = $this->request->getJSON(true) ?? [];
+        $qty  = array_key_exists('quantity_left', $data) ? (float) $data['quantity_left'] : null;
+
+        if ($qty === null || $qty < 0) {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'Enter a valid remaining quantity (0 or more).']);
+        }
+
+        $inventoryModel = new ConsumableInventoryModel();
+        $item = $inventoryModel->find($id);
+        if (!$item) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Consumable item not found.']);
+        }
+
+        $inventoryModel->update($id, ['current_stock' => $qty]);
+
+        $apiUser     = $this->currentApiUser();
+        $performedBy = trim((string) ($apiUser['name'] ?? $data['performed_by'] ?? '')) ?: 'Janitorial Staff';
+        $zone        = trim((string) ($data['zone'] ?? ''));
+
+        (new ConsumableStockReportModel())->insert([
+            'inventory_item_id' => $id,
+            'item_name'         => $item['item_name'],
+            'zone'              => $zone !== '' ? $zone : null,
+            'quantity_left'     => $qty,
+            'unit'              => $item['unit'],
+            'reported_by'       => $performedBy,
+            'reported_at'       => date('Y-m-d H:i:s'),
+        ]);
+
+        $threshold = (float) $item['reorder_threshold'];
+        $isLow = $qty <= $threshold;
+
+        if ($isLow) {
+            $zoneText = $zone !== '' ? " (reported from {$zone})" : '';
+            (new NotificationModel())->insert([
+                'category'    => 'Consumable Low Stock',
+                'description' => "{$item['item_name']} is running low{$zoneText} — {$qty} {$item['unit']} left, reorder threshold is {$threshold} {$item['unit']}. Reported by {$performedBy}.",
+                'recipient'   => 'Facilities Team',
+                'priority'    => $qty <= 0 ? 'CRITICAL' : 'MODERATE',
+                'status'      => 'Unread',
+                'channel'     => 'system',
+                'is_read'     => 0,
+                'created_at'  => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'message'   => 'Stock level updated.',
+            'item'      => ['id' => (int) $id, 'current_stock' => $qty, 'reorder_threshold' => $threshold],
+            'low_stock' => $isLow,
+        ]);
+    }
+
+    /** Normalize a 'Y-m-d H:i:s' MySQL datetime to ISO 8601 so JS can parse it reliably. */
+    private function toIso(?string $datetime): ?string
+    {
+        return $datetime ? str_replace(' ', 'T', $datetime) : null;
     }
 
     // ---------- GUARD ----------

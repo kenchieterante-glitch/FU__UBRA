@@ -10,7 +10,7 @@ class VehicleModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
     protected $allowedFields = [
-        'vehicle_name', 'plate_no', 'type', 'driver_id',
+        'vehicle_name', 'plate_no', 'gps_device_id', 'type', 'driver_id',
         'department_id', 'gps_status', 'inspection_status', 'availability',
         'is_archived', 'archived_at', 'last_activity_at'
     ];

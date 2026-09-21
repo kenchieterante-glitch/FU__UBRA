@@ -269,6 +269,7 @@ $routes->group('api', function ($routes) {
     $routes->get('tools', 'Api::tools');
     $routes->get('tools/categories', 'Api::toolCategories');
     $routes->get('tools/lookup/(:any)', 'Api::toolLookup/$1');
+    $routes->get('tools/history/(:any)', 'Api::toolHistory/$1');
     $routes->post('tools/scan-borrow', 'Api::toolsScanBorrow');
     $routes->post('tools/scan-return', 'Api::toolsScanReturn');
 
@@ -297,6 +298,9 @@ $routes->group('api', function ($routes) {
     $routes->get('janitorial/zones', 'Api::janitorialZones');
     $routes->get('janitorial/checklist/(:num)', 'Api::janitorialChecklist/$1');
     $routes->post('janitorial/checklist/(:num)', 'Api::saveJanitorialChecklist/$1');
+    $routes->get('janitorial/history', 'Api::janitorialHistory');
+    $routes->get('janitorial/consumables', 'Api::janitorialConsumables');
+    $routes->post('janitorial/consumables/(:num)/report', 'Api::reportConsumableStock/$1');
 
     $routes->get('guard/keylog', 'Api::guardKeylog');
     $routes->post('guard/keylog/scan-borrow', 'Api::guardScanBorrow');

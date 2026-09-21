@@ -25,6 +25,7 @@ class NotificationModel extends Model
         'Janitorial Assignment'            => 'janitorial',
         'Cleaning Scheduled'               => 'janitorial',
         'Urgent Cleaning Scheduled'        => 'janitorial',
+        'Consumable Low Stock'             => 'janitorial',
         'Air-Con Cleaning'                 => 'safety',
         'Fire Extinguisher Installed'      => 'safety',
         'Fire Extinguisher Expiring Soon'  => 'safety',
