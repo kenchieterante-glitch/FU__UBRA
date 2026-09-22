@@ -726,14 +726,7 @@ function esc(s) {
     return d.innerHTML;
 }
 
-function showToast(msg, isError = false) {
-    const t = document.createElement('div');
-    t.className = 'cal-toast' + (isError ? ' toast-error' : '');
-    t.innerHTML = `<i class="bi bi-${isError ? 'exclamation-triangle' : 'check-circle-fill'}"></i> ${msg}`;
-    document.body.appendChild(t);
-    setTimeout(() => t.classList.add('toast-show'), 10);
-    setTimeout(() => { t.classList.remove('toast-show'); setTimeout(() => t.remove(), 400); }, 3500);
-}
+function showToast(msg, isError = false) { uiToast(msg, isError); }
 
 // Flash auto-hide
 setTimeout(() => {

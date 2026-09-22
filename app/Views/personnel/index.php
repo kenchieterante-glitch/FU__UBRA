@@ -45,33 +45,38 @@ $personnelStatCards = [
   ['tone' => 'tone-green',   'icon' => 'bi-check-circle-fill','label' => 'Active',             'value' => (int) ($active_count ?? 0),          'onclick' => "filterPersonnelByStat('Active')"],
   ['tone' => 'tone-gold',    'icon' => 'bi-calendar-day',     'label' => 'On Leave',           'value' => (int) ($on_leave_count ?? 0),        'onclick' => "filterPersonnelByStat('On Leave')"],
 ];
+$personnelMainCards  = array_slice($personnelStatCards, 0, 7);
+$personnelExtraCards = array_slice($personnelStatCards, 7);
 ?>
-<!-- Continuous horizontal auto-scroll ("marquee") of the status boxes —
-     the card set is rendered twice back-to-back and the track animates
-     exactly one set-width (-50%) on a loop, so the seam is invisible.
-     Hovering pauses via animation-play-state (native browser behavior
-     resumes from the same position, not a restart). The second copy is
-     aria-hidden/untabbable since it's a purely visual duplicate. -->
-<div class="stat-marquee" id="personnelStatCards">
-  <button type="button" id="personnelMarqueeLeft" class="marquee-nav marquee-nav-left" onclick="marqueeStep(-1)" aria-label="Scroll status cards left" style="display:none"><i class="bi bi-chevron-left"></i></button>
-  <button type="button" class="marquee-nav marquee-nav-right" onclick="marqueeStep(1)" aria-label="Scroll status cards right"><i class="bi bi-chevron-right"></i></button>
-  <div class="stat-marquee-track">
-    <?php foreach ($personnelStatCards as $card): ?>
-      <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" role="button" tabindex="0">
-        <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="bi <?= esc($card['icon'], 'attr') ?>"></i></span>
-        <h3><?= esc($card['label']) ?></h3>
-        <div class="value"><?= esc((string) $card['value']) ?></div>
-      </div>
-    <?php endforeach; ?>
-    <?php foreach ($personnelStatCards as $card): ?>
-      <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" aria-hidden="true" tabindex="-1">
-        <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="bi <?= esc($card['icon'], 'attr') ?>"></i></span>
-        <h3><?= esc($card['label']) ?></h3>
-        <div class="value"><?= esc((string) $card['value']) ?></div>
-      </div>
-    <?php endforeach; ?>
-  </div>
+<!-- No animation — the adviser didn't like the old auto-scrolling marquee.
+     Box size is unchanged (165px, same as every other page's stat cards).
+     The first row's worth of cards always show; the rest (Active, On
+     Leave) sit behind a "Show more" toggle, collapsed every time this
+     page loads, instead of always wrapping onto a half-empty second line. -->
+<div class="stat-cards personnel-stat-grid">
+  <?php foreach ($personnelMainCards as $card): ?>
+    <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" role="button" tabindex="0">
+      <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="bi <?= esc($card['icon'], 'attr') ?>"></i></span>
+      <h3><?= esc($card['label']) ?></h3>
+      <div class="value"><?= esc((string) $card['value']) ?></div>
+    </div>
+  <?php endforeach; ?>
 </div>
+
+<?php if (!empty($personnelExtraCards)): ?>
+<div class="stat-cards personnel-stat-grid" id="personnelExtraStats" style="display:none">
+  <?php foreach ($personnelExtraCards as $card): ?>
+    <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" role="button" tabindex="0">
+      <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="bi <?= esc($card['icon'], 'attr') ?>"></i></span>
+      <h3><?= esc($card['label']) ?></h3>
+      <div class="value"><?= esc((string) $card['value']) ?></div>
+    </div>
+  <?php endforeach; ?>
+</div>
+<button type="button" class="personnel-stat-more-btn" id="personnelStatMoreBtn" onclick="togglePersonnelExtraStats()">
+  <i class="bi bi-chevron-down"></i> Show <?= count($personnelExtraCards) ?> more
+</button>
+<?php endif; ?>
 
 <?php endif; ?>
 
@@ -522,37 +527,21 @@ function filterPersonnelByStat(kind) {
   }
 }
 
-// Left/right arrows for the status-card marquee. Rather than pausing or
-// swapping out .stat-marquee-track's CSS animation, this seeks the SAME
-// running animation forward/back by one card's worth of time (Web
-// Animations API — Animation.currentTime) — the loop never stops, it just
-// jumps to a different point in its own cycle and keeps playing from there.
-// Tracks how many steps forward (right) the user has moved from the
-// starting position, purely to decide whether the back arrow should be
-// shown — the marquee animation itself still loops continuously.
-let marqueeStepsFromStart = 0;
-
-function marqueeStep(direction) {
-  const wrap = document.getElementById('personnelStatCards');
-  const track = wrap?.querySelector('.stat-marquee-track');
-  const anim = track?.getAnimations()[0];
-  if (!anim) return;
-
-  const cardStep = 179; // 165px card width + 14px gap, per .stat-marquee-track .stat-card
-  const totalDistance = (track.scrollWidth / 2) + 7; // matches translateX(calc(-50% - 7px))
-  const duration = Number(anim.effect.getTiming().duration); // ms
-  const timeStep = (cardStep / totalDistance) * duration;
-
-  anim.currentTime = (Number(anim.currentTime) + (direction * timeStep) + duration) % duration;
-
-  marqueeStepsFromStart = Math.max(0, marqueeStepsFromStart + direction);
-  const leftArrow = document.getElementById('personnelMarqueeLeft');
-  if (leftArrow) leftArrow.style.display = marqueeStepsFromStart > 0 ? '' : 'none';
-}
-
 function togglePersonnelFilterMenu() {
   const popup = document.getElementById('personnelFilterPopup');
   popup.classList.toggle('visible');
+}
+
+// Collapsed every time this page loads — no state remembered between
+// visits, just a plain show/hide (no slide/animation) toggle.
+function togglePersonnelExtraStats() {
+  const extra = document.getElementById('personnelExtraStats');
+  const btn = document.getElementById('personnelStatMoreBtn');
+  if (!extra || !btn) return;
+  const opening = extra.style.display === 'none';
+  extra.style.display = opening ? '' : 'none';
+  btn.querySelector('i').className = opening ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
+  btn.lastChild.textContent = opening ? ' Show fewer' : ` Show ${extra.querySelectorAll('.stat-card').length} more`;
 }
 
 document.addEventListener('click', e => {

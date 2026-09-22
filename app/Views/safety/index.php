@@ -66,7 +66,7 @@ $departments = $departments ?? [];
     </div>
     <div class="fe-toolbar-row">
       <div class="toolbar-search">
-        <input type="text" id="feSearchInput" class="search-box" placeholder="Search unit ID or location…" oninput="renderStatusList()">
+        <input type="text" id="feSearchInput" class="search-box" placeholder="Search ID, department, date, installer…" oninput="renderStatusList()">
         <i class="bi bi-search search-icon"></i>
       </div>
       <div class="filter-menu-wrapper" id="feFilterWrapper" style="display:none">
@@ -705,7 +705,7 @@ $departments = $departments ?? [];
     if (kind === 'coverage') return { title: 'All Fire Extinguishers', units: feRegistry, cardFn: feUnitCardHtml, isFe: true };
     if (kind === 'readiness') return { title: 'Overdue Fire Extinguishers', units: feRegistry.filter(u => u.nextDue && new Date(u.nextDue) < today), cardFn: feUnitCardHtml, isFe: true };
     if (kind === 'critical') return { title: 'Critical Fire Extinguishers', units: feRegistry.filter(u => u.status === 'Missing' || u.status === 'Defective' || (u.nextDue && new Date(u.nextDue) < today)), cardFn: feUnitCardHtml, isFe: true };
-    if (kind === 'aircon-attention') return { title: 'Aircon Units Not Working', units: airconRegistry.filter(u => u.condition !== 'Operational' || (u.nextDue && new Date(u.nextDue) < today)), cardFn: airconUnitCardHtml, isFe: false, byFloor: true };
+    if (kind === 'aircon-attention') return { title: 'Aircon Units Not Working', units: airconRegistry.filter(u => u.condition === 'Not Working'), cardFn: airconUnitCardHtml, isFe: false, byFloor: true };
     return { title: 'All Aircon Units', units: airconRegistry, cardFn: airconUnitCardHtml, isFe: false, byFloor: true };
   }
 
@@ -761,12 +761,7 @@ $departments = $departments ?? [];
 
     const search = (document.getElementById('feSearchInput')?.value || '').trim().toLowerCase();
     if (search) {
-      filtered = filtered.filter(u => {
-        const idText = String(u.id ?? u.unit ?? '').toLowerCase();
-        const locText = String(u.loc ?? '').toLowerCase();
-        const floorText = String(u.floor ?? '').toLowerCase();
-        return idText.includes(search) || locText.includes(search) || floorText.includes(search);
-      });
+      filtered = filtered.filter(u => unitSearchBlob(u).includes(search));
     }
 
     document.getElementById('statusListTitle').innerHTML = `<i class="bi bi-list-ul"></i> ${title}`;
@@ -786,6 +781,37 @@ $departments = $departments ?? [];
     grid.innerHTML = byFloor
       ? groupedByFloorHtml(filtered, cardFn)
       : filtered.map(cardFn).join('');
+
+    // A search that narrows to exactly one unit opens its card straight
+    // away — no extra click on the chevron to see the details you just
+    // searched for. Several matches stay collapsed so the list doesn't jump.
+    if (search && filtered.length === 1) {
+      const card = grid.querySelector('.fe-card');
+      if (card) setFeCardCollapsed(card, false);
+    }
+  }
+
+  // Everything a unit card shows (ID, department/location, floor, type,
+  // status/condition, installer/tech, and dates in ISO plus written-out
+  // forms like "oct 11, 2026" / "october 2026") lowercased into one string,
+  // so the search box can match any of it — not just ID and location.
+  function unitSearchBlob(u) {
+    const dateForms = d => {
+      if (!d) return '';
+      const dt = new Date(d);
+      if (isNaN(dt)) return String(d);
+      return [
+        String(d),
+        dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        dt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      ].join(' ');
+    };
+    return [
+      u.id, u.unit, u.loc, u.floor, u.type, u.status, u.condition,
+      u.inspector, u.tech, u.assigned, u.installedBy,
+      dateForms(u.nextDue), dateForms(u.lastInsp), dateForms(u.lastClean),
+    ].filter(v => v !== undefined && v !== null).join(' ').toLowerCase();
   }
 
   // Groups units into per-floor sections with a divider header, so a long
@@ -1193,16 +1219,6 @@ $departments = $departments ?? [];
     document.getElementById('mapLegendBtn').classList.toggle('active');
   }
 
-  function showToast(msg, isError = false) {
-    const t = document.createElement('div');
-    t.className = 'sj-toast' + (isError ? ' sj-toast-error' : '');
-    t.innerHTML = `<i class="bi bi-${isError?'exclamation-triangle':'check-circle-fill'}"></i> ${msg}`;
-    document.body.appendChild(t);
-    requestAnimationFrame(() => t.classList.add('show'));
-    setTimeout(() => {
-      t.classList.remove('show');
-      setTimeout(() => t.remove(), 400);
-    }, 3500);
-  }
+  function showToast(msg, isError = false) { uiToast(msg, isError); }
 </script>
 <?= $this->endSection() ?>

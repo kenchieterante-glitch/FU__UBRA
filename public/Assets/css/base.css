@@ -2748,3 +2748,119 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
     right: -8px;
   }
 }
+
+/* Custom confirmation dialog — replaces the browser's native black
+   "localhost says" confirm() box (see uiConfirm() in layouts/main.php). */
+.ui-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 10, 10, 0.5);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 5000;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.ui-confirm-overlay.show { opacity: 1; }
+.ui-confirm-box {
+  background: #fff;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 14px;
+  padding: 26px 24px 20px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  transform: translateY(10px) scale(0.97);
+  transition: transform 0.15s ease;
+}
+.ui-confirm-overlay.show .ui-confirm-box { transform: none; }
+.ui-confirm-icon {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+.ui-confirm-box.is-danger .ui-confirm-icon { background: var(--red-bg); color: var(--red); }
+.ui-confirm-title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink, #222);
+}
+.ui-confirm-msg {
+  margin: 0 0 20px;
+  font-size: 13.5px;
+  color: #666;
+  line-height: 1.5;
+}
+.ui-confirm-actions { display: flex; gap: 10px; justify-content: center; }
+.ui-confirm-actions button {
+  flex: 1;
+  max-width: 150px;
+  padding: 10px 16px;
+  border-radius: 9px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.ui-confirm-cancel { background: #eee; color: #555; }
+.ui-confirm-cancel:hover { background: #e2e2e2; }
+.ui-confirm-ok { background: var(--maroon); color: #fff; }
+.ui-confirm-ok:hover { background: var(--maroon-dark); }
+.ui-confirm-box.is-danger .ui-confirm-ok { background: var(--red); }
+.ui-confirm-box.is-danger .ui-confirm-ok:hover { filter: brightness(0.9); }
+
+/* Column titles centered on every main list table (Personnel, Tools,
+   Vehicles, Trip Tickets, GPS, Records, Notifications, Janitorial, …).
+   Data cells keep their own alignment. Element+class selectors so this
+   wins over page CSS that sets a plain `.xyz-table th { text-align:left }`. */
+table.data-table thead th,
+table.sj-table thead th,
+table.travel-table thead th,
+table.rec-table thead th,
+table.notif-table thead th,
+table.gps-table thead th,
+table.stg-table thead th {
+  text-align: center;
+}
+
+/* Data cells centered to match the centered column titles above them, so
+   every column reads as one aligned stack (title over its values). */
+table.data-table tbody td,
+table.sj-table tbody td,
+table.travel-table tbody td,
+table.rec-table tbody td,
+table.notif-table tbody td,
+table.gps-table tbody td,
+table.stg-table tbody td {
+  text-align: center;
+}
+table.data-table tbody td.action-cell,
+table.gps-table tbody td .vehicle-cell,
+table.data-table tbody td .cell-user {
+  justify-content: center;
+}
+
+/* Save/Cancel pairs in every modal: .btn-maroon defaults to a full-width
+   banner button with a top margin (built for the login form), which
+   stretched the primary button and made Cancel tall. Fixed once here
+   instead of per modal/page. */
+.modal-actions .btn-maroon,
+.modal-actions .btn-approve {
+  width: auto;
+  margin-top: 0;
+}
+.modal-actions {
+  align-items: center;
+}

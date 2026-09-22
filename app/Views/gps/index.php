@@ -486,14 +486,7 @@ function timeAgoJS(dateStr) {
     return Math.floor(diff / 86400) + 'd ago';
 }
 
-function showToast(msg, isError = false) {
-    const t = document.createElement('div');
-    t.className = 'gps-toast' + (isError ? ' toast-error' : '');
-    t.innerHTML = `<i class="bi bi-${isError ? 'exclamation-triangle' : 'check-circle-fill'}"></i> ${msg}`;
-    document.body.appendChild(t);
-    setTimeout(() => t.classList.add('toast-show'), 10);
-    setTimeout(() => { t.classList.remove('toast-show'); setTimeout(() => t.remove(), 400); }, 3000);
-}
+function showToast(msg, isError = false) { uiToast(msg, isError); }
 
 // Flash auto-hide
 setTimeout(() => {

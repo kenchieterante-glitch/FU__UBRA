@@ -72,9 +72,12 @@ class SafetyController extends BaseController
         // register its unit) — this just displays what's already there,
         // same read-only relationship the web side has with fire extinguishers.
         $airconUnits = $this->airconUnitModel->findAll();
+        // "Aircon Not Working" means exactly that — condition Not Working.
+        // It used to also count Needs Cleaning units and Operational ones
+        // merely past their cleaning schedule, so the card said 5 while
+        // only 1 unit was actually broken.
         $airconNeedsAttention = count(array_filter($airconUnits, fn($u) =>
-            $u['condition_status'] !== 'Operational'
-            || (!empty($u['next_schedule']) && $u['next_schedule'] < $today)
+            $u['condition_status'] === 'Not Working'
         ));
 
         $airconRegistry = array_map(function ($u) {

@@ -645,8 +645,8 @@ document.getElementById('composeForm').addEventListener('submit', function (e) {
         .catch(err => showToast(err.message || 'Could not save that draft.', true));
 });
 
-function sendDraftMsg(id, btn) {
-    if (!confirm('Send this message now? It will appear as a new notification.')) return;
+async function sendDraftMsg(id, btn) {
+    if (!(await uiConfirm('Send this message now? It will appear as a new notification.', { title: 'Send message?', okLabel: 'Send', danger: false }))) return;
     btn.disabled = true;
     fetch(SEND_DRAFT_URL + id, { method: 'POST', headers: csrfHeaders() })
         .then(r => r.json())
@@ -661,8 +661,8 @@ function sendDraftMsg(id, btn) {
         });
 }
 
-function deleteDraftMsg(id, btn) {
-    if (!confirm('Delete this draft? This cannot be undone.')) return;
+async function deleteDraftMsg(id, btn) {
+    if (!(await uiConfirm('Delete this draft? This cannot be undone.'))) return;
     btn.disabled = true;
     fetch(DELETE_DRAFT_URL + id, { method: 'POST', headers: csrfHeaders() })
         .then(r => r.json())
@@ -682,14 +682,7 @@ function deleteDraftMsg(id, btn) {
 
 function generateWeeklySummary() { showToast('Weekly summary is being compiled…'); }
 
-function showToast(msg, isError = false) {
-    const t = document.createElement('div');
-    t.className = 'notif-toast' + (isError ? ' toast-error' : '');
-    t.innerHTML = `<i class="bi bi-${isError ? 'exclamation-triangle' : 'check-circle'}-fill"></i> ${msg}`;
-    document.body.appendChild(t);
-    setTimeout(() => t.classList.add('toast-show'), 10);
-    setTimeout(() => { t.classList.remove('toast-show'); setTimeout(() => t.remove(), 400); }, 3500);
-}
+function showToast(msg, isError = false) { uiToast(msg, isError); }
 
 setTimeout(() => {
     document.querySelectorAll('.flash').forEach(el => el.style.opacity = '0');

@@ -259,6 +259,14 @@ function getJanStatusDisplay(areaKey) {
   return { label: 'Needs to Clean', value: 'needs' };
 }
 
+// Full reload after a save (data is server-rendered JSON), but come back to the
+// same tab and show the success toast there — a plain reload dropped the user
+// on the default Campus Map tab.
+function reloadOnTab(tab, message) {
+  try { sessionStorage.setItem('janAfterReload', JSON.stringify({ tab, message })); } catch (e) {}
+  window.location.reload();
+}
+
 function switchJanTab(id) {
   document.querySelectorAll('.sub-tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick').includes("'"+id+"'")));
   document.querySelectorAll('.sub-pane').forEach(p => p.classList.toggle('active', p.id === 'janitorial-'+id));
@@ -821,8 +829,7 @@ function confirmRestock() {
     .then(r => {
       if (!r.ok) throw new Error('Refill failed');
       document.getElementById('restockModal').style.display = 'none';
-      showToast(`"${item.name}" refilled successfully — added ${qty} ${item.unit || ''}.`);
-      setTimeout(() => window.location.reload(), 900);
+      reloadOnTab('inventory', `"${item.name}" refilled successfully — added ${qty} ${item.unit || ''}.`);
     })
     .catch(() => showToast('Could not refill this item. Please try again.', true));
 }
@@ -839,7 +846,11 @@ function saveInventoryItem() {
   fd.append('reorder_threshold', document.getElementById('invReorder').value || 0);
 
   fetch('<?= base_url('janitorial/addInventoryItem') ?>', { method: 'POST', headers: csrfHeaders(), body: fd })
-    .then(() => window.location.reload());
+    .then(r => {
+      if (!r.ok) throw new Error('Add failed');
+      reloadOnTab('inventory', `"${name}" added to inventory.`);
+    })
+    .catch(() => showToast('Could not add this item. Please try again.', true));
 }
 
 function openAddShiftModal() {
@@ -872,8 +883,7 @@ function saveAssignStaff() {
     .then(r => {
       if (!r.ok) throw new Error('Assign failed');
       document.getElementById('assignStaffModal').style.display = 'none';
-      showToast(`${staffName} assigned to ${zone}.`);
-      setTimeout(() => window.location.reload(), 900);
+      reloadOnTab('shifts', `${staffName} assigned to ${zone}.`);
     })
     .catch(() => showToast('Could not assign staff. Please try again.', true));
 }
@@ -901,20 +911,28 @@ function toggleJanMapLegend() {
   document.getElementById('janMapLegendBtn').classList.toggle('active');
 }
 
-function showToast(msg, isError=false) {
-  const t = document.createElement('div');
-  t.className = 'sj-toast' + (isError?' sj-toast-error':'');
-  t.innerHTML = `<i class="bi bi-${isError?'exclamation-triangle':'check-circle-fill'}"></i> ${msg}`;
-  document.body.appendChild(t);
-  requestAnimationFrame(()=>t.classList.add('show'));
-  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),400); }, 3500);
-}
+function showToast(msg, isError = false) { uiToast(msg, isError); }
 
 renderJanitorialSummary();
 renderShiftCards();
+
 renderInventory();
 renderRefillLog();
 document.querySelector('#shiftFilterRow .shift-filter-chip[data-kind=""]')?.classList.add('active');
+
+// Returning from reloadOnTab(): restore the tab and show the toast.
+// Deferred to DOMContentLoaded: uiToast() lives in the layout's script block,
+// which is parsed after this page script, so it doesn't exist yet at this point.
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const after = JSON.parse(sessionStorage.getItem('janAfterReload') || 'null');
+    if (after) {
+      sessionStorage.removeItem('janAfterReload');
+      switchJanTab(after.tab);
+      showToast(after.message);
+    }
+  } catch (e) { console.error(e); }
+});
 
 // Arriving from the Dashboard's "Cleaning Completion" box.
 if (new URLSearchParams(window.location.search).get('filter') === 'pending') {

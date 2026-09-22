@@ -240,14 +240,15 @@
         <?php endif; ?>
         <span class="nav-label"><?= esc($fullName) ?><small>View Profile</small></span>
       </a>
-      <!-- Always visible regardless of role — previously logout only lived
-           inside Settings' System tab, which restricted roles (Tools Head,
-           Janitorial Supervisor) can't reach, leaving them with no way to
-           sign out at all. -->
+      <?php if (!($isFullAccess || $isSecurityHead)): ?>
+      <!-- Only for roles with no Settings page (Facilities, Tools Head,
+           Janitorial Supervisor) — everyone else logs out from
+           Settings → System, so it isn't duplicated under the profile. -->
       <a href="<?= site_url('logout') ?>" class="sidebar-logout-link" data-tooltip="Logout">
         <span class="av av-logout"><i class="bi bi-box-arrow-right"></i></span>
         <span class="nav-label">Logout</span>
       </a>
+      <?php endif; ?>
     </div>
   </aside>
 
@@ -375,6 +376,107 @@ function csrfHeaders(extra) {
   const token = document.querySelector('meta[name="csrf-token-value"]')?.content || '';
   return Object.assign({}, extra || {}, { [headerName]: token });
 }
+
+// One toast look for every page's JS-triggered messages ("refilled
+// successfully", "assigned to…", errors): same top-right green/red card as
+// the redirect flash messages, instead of each page drawing its own
+// bottom-corner black toast.
+function uiToast(msg, isError) {
+  let stack = document.querySelector('.flash-toast-stack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.className = 'flash-toast-stack';
+    document.body.appendChild(stack);
+  }
+  const t = document.createElement('div');
+  t.className = 'flash-toast ' + (isError ? 'flash-toast-error' : 'flash-toast-success');
+  t.innerHTML = '<i class="bi ' + (isError ? 'bi-exclamation-circle-fill' : 'bi-check-circle-fill') + '"></i><span></span>' +
+    '<button type="button" class="flash-toast-close" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>';
+  t.querySelector('span').textContent = msg;
+  const close = () => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); };
+  t.querySelector('button').addEventListener('click', close);
+  stack.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(close, 4000);
+}
+
+// Styled replacement for the browser's native confirm() (the black
+// "localhost says" box). uiConfirm() returns a Promise<boolean>; inline
+// `onsubmit/onclick="return confirm('…')"` attributes across every page are
+// upgraded automatically below, so no view needs to change individually.
+function uiConfirm(message, opts) {
+  opts = opts || {};
+  const word = String(message).trim().split(/\s+/)[0].replace(/[^A-Za-z]/g, '');
+  const danger = opts.danger ?? /^(delete|archive|end|remove)$/i.test(word);
+  const title = opts.title || (word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() + '?' : 'Are you sure?');
+  const okLabel = opts.okLabel || (word && word.length < 10 ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : 'Confirm');
+
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'ui-confirm-overlay';
+    overlay.innerHTML =
+      '<div class="ui-confirm-box' + (danger ? ' is-danger' : '') + '" role="alertdialog" aria-modal="true">' +
+        '<div class="ui-confirm-icon"><i class="bi ' + (danger ? 'bi-exclamation-triangle-fill' : 'bi-question-circle-fill') + '"></i></div>' +
+        '<h3 class="ui-confirm-title"></h3>' +
+        '<p class="ui-confirm-msg"></p>' +
+        '<div class="ui-confirm-actions">' +
+          '<button type="button" class="ui-confirm-cancel">Cancel</button>' +
+          '<button type="button" class="ui-confirm-ok"></button>' +
+        '</div>' +
+      '</div>';
+    overlay.querySelector('.ui-confirm-title').textContent = title;
+    overlay.querySelector('.ui-confirm-msg').textContent = message;
+    overlay.querySelector('.ui-confirm-ok').textContent = okLabel;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('show'));
+
+    const done = result => {
+      document.removeEventListener('keydown', onKey);
+      overlay.classList.remove('show');
+      setTimeout(() => overlay.remove(), 150);
+      resolve(result);
+    };
+    const onKey = e => {
+      if (e.key === 'Escape') done(false);
+      if (e.key === 'Enter') done(true);
+    };
+    document.addEventListener('keydown', onKey);
+    overlay.querySelector('.ui-confirm-ok').addEventListener('click', () => done(true));
+    overlay.querySelector('.ui-confirm-cancel').addEventListener('click', () => done(false));
+    overlay.addEventListener('click', e => { if (e.target === overlay) done(false); });
+    overlay.querySelector('.ui-confirm-ok').focus();
+  });
+}
+
+document.querySelectorAll('[onsubmit*="confirm("], [onclick*="confirm("]').forEach(el => {
+  const attr = el.hasAttribute('onsubmit') ? 'onsubmit' : 'onclick';
+  const m = /confirm\((['"])([\s\S]*?)\1\)/.exec(el.getAttribute(attr));
+  if (!m) return;
+  const message = m[2];
+  el.removeAttribute(attr);
+
+  if (attr === 'onsubmit') {
+    el.addEventListener('submit', e => {
+      if (el.dataset.confirmed) return;
+      e.preventDefault();
+      uiConfirm(message).then(ok => {
+        if (!ok) return;
+        el.dataset.confirmed = '1';
+        el.submit();
+      });
+    });
+  } else {
+    el.addEventListener('click', e => {
+      if (el.dataset.confirmed) return;
+      e.preventDefault();
+      uiConfirm(message).then(ok => {
+        if (!ok) return;
+        el.dataset.confirmed = '1';
+        el.click();
+      });
+    });
+  }
+});
 
 // Flash message toasts (redirect-based "Personnel updated successfully"
 // style messages) fade in, then auto-dismiss on their own after a few
