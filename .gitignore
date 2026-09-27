@@ -46,6 +46,19 @@ $RECYCLE.BIN/
 Vagrantfile
 
 #-------------------------
+# DB backups / dumps
+#-------------------------
+# These are raw SQL exports of the live database — real user emails,
+# bcrypt password hashes, and any API keys stored in system_settings all
+# end up in here. GitHub's push protection blocked a push over exactly
+# this (a GCP API key baked into one of these dumps) on 2026-09-27.
+# Backups should live locally / in a private storage location, not in git
+# history where they're permanent and (on a public repo) world-readable.
+db_backups/
+writable/db_backups/
+writable/backup_*.sql
+
+#-------------------------
 # Temporary Files
 #-------------------------
 /writable/cache/*

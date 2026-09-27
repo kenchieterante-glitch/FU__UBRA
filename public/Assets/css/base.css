@@ -1246,36 +1246,41 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 }
 
 
-/* Personnel only: continuous auto-scrolling marquee instead of a static
-   grid — the card set is duplicated in the view and the track animates
-   exactly one set-width so the loop seam is invisible. Paused on hover
-   via animation-play-state, which resumes from the same spot rather
-   than restarting. */
-.stat-marquee {
+/* Personnel only: static status-card grid that collapses rows beyond the
+   first behind a "Show more" toggle (see setupPersonnelStatCardsCollapse in
+   personnel/index.php) instead of auto-scrolling. The collapsed max-height
+   is set inline by JS from the real first-row height, so it stays correct
+   at any width. A little top padding keeps the ":hover" lift
+   (.stat-card-clickable translateY(-1px)) from being sliced off by this
+   wrapper's overflow: hidden — without it, the card's top border moves
+   1px above the clipping box the instant you hover it. The JS adds this
+   same amount to the collapsed max-height it sets. */
+.stat-cards-wrap {
   overflow: hidden;
-  margin-bottom: 18px;
-  padding: 8px 0;
+  padding-top: 4px;
+  transition: max-height 0.25s ease;
 }
-.stat-marquee-track {
+.stat-cards-wrap .stat-cards {
+  margin-bottom: 0;
+}
+.stat-cards-toggle {
   display: flex;
-  gap: 14px;
-  width: max-content;
-  animation: statMarqueeScroll 50s linear infinite;
-  will-change: transform;
+  align-items: center;
+  gap: 6px;
+  margin: 10px auto 18px;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, color 0.15s ease;
 }
-.stat-marquee:hover .stat-marquee-track {
-  animation-play-state: paused;
-}
-/* Cards inside the marquee must never grow or shrink — only the shared
-   flex-basis is reused. Without shrink:0, the flex track can squeeze
-   cards to fit, which reads as the card sizes randomly changing while
-   the strip scrolls. */
-.stat-marquee-track .stat-card {
-  flex: 0 0 165px;
-}
-@keyframes statMarqueeScroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(calc(-50% - 7px)); }
+.stat-cards-toggle:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  color: #800000;
 }
 .stat-card {
   /* shrink:0 — cards must stay exactly 165px on every page at every
@@ -1306,7 +1311,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   margin: 0;
   font-size: 11px;
   font-weight: 700;
-  color: #000;
+  color: var(--text);
   text-transform: uppercase;
   letter-spacing: 0.4px;
   font-family: var(--subhead-font);
@@ -1334,7 +1339,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 }
 .stat-card .label {
   font-size: 12px;
-  color: #000;
+  color: var(--text);
   text-transform: uppercase;
   letter-spacing: 0.45px;
   font-family: var(--subhead-font);
@@ -1351,7 +1356,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   margin: 0;
   font-size: 22px;
   font-weight: 700;
-  color: #000;
+  color: var(--text);
   line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
@@ -2198,6 +2203,17 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   border: none;
   border-radius: 0;
 }
+/* Same problem as checkboxes above, different symptom: the text-input
+   padding/border/width from .modal-box input badly distorts a native
+   range slider's track and thumb (GPS Tracker's route playback scrubber),
+   making it look stretched and effectively unclickable/undraggable. */
+.modal-box input[type="range"] {
+  width: 100%;
+  padding: 0;
+  margin-top: 0;
+  border: none;
+  border-radius: 0;
+}
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -2215,6 +2231,37 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .modal-actions button[type="button"]:not(.btn-approve):not(.btn-secondary) {
   background: #eee;
   color: #555;
+}
+/* .btn-maroon (below, standalone) is sized for a full-width form submit
+   button — width:100%, a 22px top margin — which nothing above overrides
+   for width/margin-top (.modal-actions button only touches padding/font-
+   size/etc.), so every "Save"/"Assign"/submit action across the app that
+   pairs .btn-maroon with .modal-actions (14+ views: Personnel, Tools,
+   Vehicles, the Maintenance Forms, Safety, Departments…) has been
+   stretching full-width and sitting 22px lower than its Cancel button
+   right next to it. Scoped back down to a normal compact modal button
+   here, in one place, instead of patching every view. */
+.modal-actions .btn-maroon {
+  width: auto;
+  margin-top: 0;
+}
+/* Logout confirm's "Logout" action (layouts/main.php) — an <a>, not a
+   <button>, since it needs to actually navigate, so it can't rely on
+   .modal-actions button above (that selector only matches real buttons).
+   Matches that rule's sizing by hand instead of using .btn-maroon, which
+   is sized for a full-width standalone form button, not a compact
+   side-by-side modal action. */
+.modal-logout-confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--maroon);
+  color: #fff;
 }
 .form-row {
   display: grid;

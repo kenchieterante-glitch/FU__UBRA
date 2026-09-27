@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\TraccarSync;
 use App\Models\VehicleModel;
 use App\Models\GPSModel;
 use App\Models\PersonnelModel;
@@ -33,6 +34,10 @@ class VehicleController extends BaseController
         if (!session()->get('isLoggedIn')) {
             return redirect()->to('/login');
         }
+
+        // Refresh gps_status / gps_logs from the physical trackers first so the
+        // GPS column below agrees with the GPS Tracker page.
+        (new TraccarSync())->run();
 
         $vehicles = $this->vehicleModel->getAllWithDetails();
         $fleetStats = $this->vehicleModel->getFleetStats();

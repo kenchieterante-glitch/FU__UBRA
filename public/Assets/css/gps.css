@@ -246,6 +246,37 @@
     box-shadow: var(--shadow);
 }
 
+/* Live map embedded directly in the vehicle detail modal (renderModalProfile
+   + initGpsMap in gps/index.php) — a real Leaflet map (satellite/hybrid via
+   Esri tiles) that loads with the vehicle automatically, instead of needing
+   an "Open GPS App" click out to a new tab. */
+.gps-embed-wrap {
+    margin-top: .6rem;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+/* Leaflet needs its container to have an explicit height and be a
+   positioning context — without position: relative, its internal panes
+   (tiles, marker, popup) can render outside the rounded/clipped box above. */
+.gps-embed-map {
+    width: 100%;
+    height: 240px;
+    position: relative;
+    background: var(--surface-alt);
+}
+
+/* Now the first thing shown in the modal (above Vehicle Details) instead of
+   sitting inside the GPS Live Tracking section — a bit taller since it's
+   the popup's lead visual now, not a small supporting detail. */
+.gps-embed-wrap-top {
+    margin-top: 0;
+}
+.gps-embed-map-top {
+    height: 320px;
+}
+
 .map-header {
     display: flex;
     align-items: center;
@@ -910,6 +941,137 @@
     gap: .5rem;
     margin-top: .8rem;
     flex-wrap: wrap;
+}
+
+/* Route History controls (showVehicleRoute/clearVehicleRoute in
+   gps/index.php) — the date pickers + Show/Clear buttons above the
+   loaded-route status line in the vehicle detail modal. */
+.route-history-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: .7rem;
+    flex-wrap: wrap;
+}
+
+.route-history-controls label {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    font-size: .72rem;
+    color: var(--muted);
+}
+
+.route-history-controls input[type="date"] {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .35rem .5rem;
+    font-size: .8rem;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.route-history-status {
+    margin-top: .6rem;
+    font-size: .78rem;
+    color: var(--muted);
+}
+
+/* Route playback (toggleRoutePlayback/scrubRoutePlayback in gps/index.php)
+   — Play/Pause + scrubber + speed control shown under the route status
+   once a 2+ point route loads (initRoutePlayback). */
+.route-playback-controls {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-top: .7rem;
+}
+
+/* Fully custom track + thumb instead of relying on the browser's native
+   range styling (even with accent-color) — some other rule on this page
+   was distorting the native thumb into an unclickable, clipped shape, and
+   rather than keep chasing which one, an explicit -webkit-appearance:none
+   rebuild sidesteps it entirely and renders the same in every browser. */
+.route-playback-controls #gpsPlaybackSlider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+.route-playback-controls #gpsPlaybackSlider::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+}
+.route-playback-controls #gpsPlaybackSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #800000;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .35);
+    cursor: pointer;
+    margin-top: -5px; /* centers the 16px thumb on the 6px track */
+}
+.route-playback-controls #gpsPlaybackSlider::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+}
+.route-playback-controls #gpsPlaybackSlider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #800000;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .35);
+    cursor: pointer;
+}
+
+.route-playback-controls select {
+    /* .modal-box select (base.css) forces width: 100% on every <select> in
+       a modal — left unchallenged here, that made this dropdown demand the
+       whole row's width, starving the slider (flex: 1, basis 0%) down to
+       almost nothing to make room for it. flex-shrink: 0 + an explicit
+       width opts this one out of that fight and back to its own content
+       size, matching every other <select> outside a modal. */
+    flex: 0 0 auto;
+    width: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .3rem .4rem;
+    font-size: .75rem;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.route-playback-timestamp {
+    margin-top: .4rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* The moving playback marker itself — a pulsing blue dot, deliberately
+   distinct from the red live-GPS pin and the small maroon/red/green route
+   point markers, so it's obvious which one is "currently scrubbing". */
+.gps-playback-icon span {
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #1c6dd0;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 3px rgba(28, 109, 208, .35);
 }
 
 /* UBRA mini card inside sidebar */

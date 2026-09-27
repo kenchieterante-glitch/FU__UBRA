@@ -13,6 +13,12 @@
 
 <link rel="stylesheet" href="<?= base_url('Assets/css/gps.css') . '?v=' . @filemtime(FCPATH.'Assets/css/gps.css') ?>">
 
+<!-- Leaflet — renders the vehicle detail modal's live map (satellite/hybrid
+     via free Esri tiles, no API key). Same "pull a small library from CDN"
+     pattern this app already uses for Chart.js in layouts/main.php. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <div class="gps-wrapper">
 
     <!-- ── PAGE HEADER ──────────────────────────────────────────── -->
@@ -247,10 +253,18 @@
 const GPS_AJAX_BASE = '<?= base_url('gps/getVehicle/') ?>';
 const SYNC_BASE     = '<?= base_url('gps/sync/') ?>';
 
+// Tracks which vehicle the popup currently shows and its live-refresh timer,
+// so a poll response arriving after the user closed the popup (or opened a
+// different vehicle) knows to discard itself instead of overwriting the
+// wrong content.
+let gpsModalVehicleId = null;
+let gpsModalPollTimer = null;
+
 function openVehicleModal(id) {
     const modal = document.getElementById('vehicleProfileModal');
     const content = document.getElementById('vehicleProfileContent');
 
+    gpsModalVehicleId = id;
     content.innerHTML = `<div class="sidebar-loading"><i class="bi bi-hourglass-split"></i> Loading GPS profile...</div>`;
     modal.classList.add('open');
     // The popup itself already scrolls internally if it needs to (.modal-body)
@@ -258,12 +272,36 @@ function openVehicleModal(id) {
     // confusing scrollbar shows up at the edge of the browser window.
     document.body.style.overflow = 'hidden';
 
+    fetchVehicleProfile(id, false);
+
+    // Keep the map/details current while the popup stays open — a tracker
+    // can come online or send a new fix at any moment, and without this the
+    // popup would just freeze on whatever was true the instant it opened.
+    if (gpsModalPollTimer) clearInterval(gpsModalPollTimer);
+    gpsModalPollTimer = setInterval(() => fetchVehicleProfile(id, true), 15000);
+}
+
+function fetchVehicleProfile(id, isPoll) {
     fetch(GPS_AJAX_BASE + id)
         .then(r => r.json())
-        .then(v => renderModalProfile(v))
+        .then(v => {
+            // The popup may have been closed, or switched to a different
+            // vehicle, while this request was in flight.
+            if (gpsModalVehicleId !== id) return;
+            if (isPoll) {
+                updateModalLiveData(v);
+            } else {
+                renderModalProfile(v);
+            }
+        })
         .catch(() => {
-            content.innerHTML =
-                '<div class="sidebar-error"><i class="bi bi-exclamation-triangle-fill"></i> Failed to load vehicle data.</div>';
+            // A poll tick failing silently is fine — a brief network hiccup
+            // shouldn't blow away an otherwise-working popup with an error
+            // screen. Only the very first load shows the error state.
+            if (!isPoll) {
+                document.getElementById('vehicleProfileContent').innerHTML =
+                    '<div class="sidebar-error"><i class="bi bi-exclamation-triangle-fill"></i> Failed to load vehicle data.</div>';
+            }
         });
 }
 
@@ -271,6 +309,12 @@ function closeVehicleModal() {
     const modal = document.getElementById('vehicleProfileModal');
     modal.classList.remove('open');
     document.body.style.overflow = '';
+    resetRoutePlayback(); // stops its setInterval before the map/layer it points at disappears below
+    if (gpsMapInstance) { gpsMapInstance.remove(); gpsMapInstance = null; }
+    gpsMapMarker = null;
+    gpsRouteLayer = null;
+    if (gpsModalPollTimer) { clearInterval(gpsModalPollTimer); gpsModalPollTimer = null; }
+    gpsModalVehicleId = null;
 }
 
 function renderModalProfile(v) {
@@ -279,10 +323,22 @@ function renderModalProfile(v) {
     // raw number to re-derive a label/percentage from.
     const signalText = v.signal || 'No signal data';
 
+    // Embedded live map — a real Leaflet map (initGpsMap, called after this
+    // HTML is inserted below) rather than an iframe. Both Google's and
+    // OpenStreetMap's *iframe* embeds only offer plain street tiles; getting
+    // satellite/hybrid without an iframe's cross-origin blank-box problems
+    // means drawing our own map instead, so it can layer Esri's free,
+    // keyless "World Imagery" satellite tiles under road/label tiles.
+    const mapLat = parseFloat(v.latitude) || 9.3164;
+    const mapLon = parseFloat(v.longitude) || 123.2885;
+
     const pings = v.recent_pings || [];
     const pingRows = pings.length
         ? pings.map(p => `<tr><td>${p.loggedAt ? timeAgoJS(p.loggedAt) : '—'}</td><td>${esc(p.coords)}</td><td>${esc(p.signal)}</td><td>${esc(p.status)}</td></tr>`).join('')
         : `<tr><td colspan="4">No GPS pings recorded yet.</td></tr>`;
+
+    // Defaults the Route History date pickers to today.
+    const todayStr = new Date().toISOString().slice(0, 10);
 
     // Same wide-popup layout as the Vehicle Management / Personnel Management
     // detail popups: maroon header + × only, then labeled sections in a
@@ -301,6 +357,22 @@ function renderModalProfile(v) {
         </div>
     </div>
     <div class="modal-body">
+        <!-- Embedded live map — loads automatically with the vehicle's
+             last known coordinates every time this modal opens, instead
+             of requiring a click out to a separate Maps tab. Placed first
+             so it's the first thing visible on open, above the detail
+             sections. Defaults to satellite/hybrid (initGpsMap, called
+             right after this HTML is inserted, since Leaflet needs the
+             div to already be in the DOM). -->
+        <div class="gps-embed-wrap gps-embed-wrap-top">
+            <div id="gpsEmbedMap" class="gps-embed-map gps-embed-map-top"></div>
+        </div>
+        <div class="sidebar-btn-row" style="margin:.6rem 0 1rem;">
+            <a id="gpsGoogleMapsLink" class="btn-outline-sm" href="https://www.google.com/maps?q=${mapLat},${mapLon}&t=k" target="_blank">
+                <i class="bi bi-box-arrow-up-right"></i> Open in Google Maps
+            </a>
+        </div>
+
         <div class="detail-section">
             <div class="detail-section-title">Vehicle Details</div>
             <div class="detail-grid">
@@ -315,22 +387,47 @@ function renderModalProfile(v) {
         </div>
 
         <div class="detail-section">
-            <div class="detail-section-title">GPS Live Tracking — ${online ? 'Connected' : 'Offline'}</div>
+            <div class="detail-section-title" id="gpsSectionTitle">GPS Live Tracking — ${online ? 'Connected' : 'Offline'}</div>
             <div class="detail-grid">
                 <div class="detail-row"><span>Device ID</span><strong>${esc(v.device_id || 'N/A')}</strong></div>
-                <div class="detail-row"><span>Last Updated</span><strong>${v.logged_at ? timeAgoJS(v.logged_at) : '—'}</strong></div>
-                <div class="detail-row"><span>Current Speed</span><strong>${v.speed || 0} km/h</strong></div>
-                <div class="detail-row"><span>Coordinates</span><strong>${v.latitude ? v.latitude + ', ' + v.longitude : 'N/A'}</strong></div>
-                <div class="detail-row"><span>Signal Strength</span><strong>${esc(signalText)}</strong></div>
+                <div class="detail-row"><span>Last Updated</span><strong id="gpsLastUpdated">${v.logged_at ? timeAgoJS(v.logged_at) : '—'}</strong></div>
+                <div class="detail-row"><span>Current Speed</span><strong id="gpsCurrentSpeed">${v.speed || 0} km/h</strong></div>
+                <div class="detail-row"><span>Coordinates</span><strong id="gpsCoordinates">${v.latitude ? v.latitude + ', ' + v.longitude : 'N/A'}</strong></div>
+                <div class="detail-row"><span>Signal Strength</span><strong id="gpsSignalStrength">${esc(signalText)}</strong></div>
             </div>
-            <div class="sidebar-btn-row" style="margin-top:.7rem;">
-                <a class="btn-outline-sm" href="https://www.google.com/maps?q=${v.latitude || '9.3164'},${v.longitude || '123.2885'}" target="_blank">
-                    <i class="bi bi-map"></i> Open GPS App
-                </a>
-                <button class="btn-outline-sm" onclick="syncVehicle(${v.id})">
-                    <i class="bi bi-arrow-clockwise"></i> Sync API
+        </div>
+
+        <div class="detail-section">
+            <div class="detail-section-title">Route History</div>
+            <div class="route-history-controls">
+                <label>From <input type="date" id="routeFromDate" value="${todayStr}" max="${todayStr}"></label>
+                <label>To <input type="date" id="routeToDate" value="${todayStr}" max="${todayStr}"></label>
+                <button type="button" class="btn-outline-sm" onclick="showVehicleRoute(${v.id})">
+                    <i class="bi bi-signpost-2"></i> Show Route
+                </button>
+                <button type="button" class="btn-outline-sm" id="gpsRouteClearBtn" onclick="clearVehicleRoute()" style="display:none;">
+                    <i class="bi bi-x-lg"></i> Clear
                 </button>
             </div>
+            <div id="gpsRouteStatus" class="route-history-status"></div>
+
+            <!-- Shown once a route with 2+ points loads (see drawRouteOnMap).
+                 Moves a marker point-to-point along the recorded pings in
+                 order, so you can watch/scrub where the vehicle was at each
+                 exact timestamp instead of just seeing the finished path. -->
+            <div id="gpsPlaybackControls" class="route-playback-controls" style="display:none;">
+                <button type="button" class="icon-btn" id="gpsPlaybackToggleBtn" onclick="toggleRoutePlayback()" title="Play" aria-label="Play route playback">
+                    <i class="bi bi-play-fill"></i>
+                </button>
+                <input type="range" id="gpsPlaybackSlider" min="0" max="0" value="0" step="1" oninput="scrubRoutePlayback(this.value)">
+                <select id="gpsPlaybackSpeed" onchange="setRoutePlaybackSpeed(this.value)" title="Playback speed">
+                    <option value="1400">0.5×</option>
+                    <option value="700" selected>1×</option>
+                    <option value="350">2×</option>
+                    <option value="150">4×</option>
+                </select>
+            </div>
+            <div id="gpsPlaybackTimestamp" class="route-playback-timestamp"></div>
         </div>
 
         <div class="detail-section">
@@ -338,12 +435,406 @@ function renderModalProfile(v) {
             <div class="history-table-wrap">
                 <table class="history-table">
                     <thead><tr><th>Logged</th><th>Coordinates</th><th>Signal</th><th>Status</th></tr></thead>
-                    <tbody>${pingRows}</tbody>
+                    <tbody id="gpsPingRows">${pingRows}</tbody>
                 </table>
             </div>
         </div>
     </div>
     `;
+
+    // The map div above only just got inserted into the DOM by the
+    // innerHTML assignment, so Leaflet can't be initialized until now.
+    initGpsMap(mapLat, mapLon, v.plate_no);
+}
+
+// ── Live map: satellite/hybrid via Leaflet + Esri's free tiles ─────
+// Esri's "World Imagery" service is satellite/aerial imagery with no API
+// key required for this kind of light, non-commercial usage. Stacking
+// CartoDB's OSM-based labels tiles on top adds the roads/labels, which is
+// what turns plain satellite into "hybrid".
+let gpsMapInstance = null;
+let gpsMapMarker = null; // kept so updateModalLiveData() can move the pin on each poll instead of rebuilding the whole map
+let gpsRouteLayer = null; // the currently-drawn Route History path + point markers, if any (see showVehicleRoute)
+
+function initGpsMap(lat, lon, plateNo) {
+    const mapEl = document.getElementById('gpsEmbedMap');
+    if (!mapEl || typeof L === 'undefined') return;
+
+    // Reusing the same #gpsEmbedMap id across modal opens (different
+    // vehicles) — Leaflet throws if you call L.map() on a container that
+    // already has a map, so the previous instance must be torn down first.
+    if (gpsMapInstance) {
+        gpsMapInstance.remove();
+        gpsMapInstance = null;
+    }
+    gpsRouteLayer = null; // belonged to the map instance just destroyed above
+
+    gpsMapInstance = L.map(mapEl, {
+        // Zoom 16, not 17 — Esri's free label layer had virtually no
+        // road/place data around campus at 17 (a rural stretch of Negros
+        // Oriental), so the overlay rendered blank even though it was
+        // loading successfully. 16 is where CartoDB's OSM-based labels
+        // below actually have content.
+        center: [lat, lon],
+        zoom: 16,
+        attributionControl: false,
+    });
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: 'Tiles &copy; Esri',
+    }).addTo(gpsMapInstance);
+
+    // Roads/place-name labels on top of the imagery — this combination is
+    // the "hybrid" look. Uses CartoDB's transparent-background labels
+    // layer (built from OpenStreetMap data) instead of Esri's own
+    // reference layer: OSM's community mapping covers rural areas like
+    // this one far better than Esri's, which was returning empty tiles
+    // here. maxNativeZoom lets Leaflet upscale the zoom-16 tile if the
+    // user zooms in further, instead of requesting nonexistent zoom-17+
+    // tiles and going blank again.
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd',
+        maxZoom: 19,
+        maxNativeZoom: 16,
+        pane: 'overlayPane',
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    }).addTo(gpsMapInstance);
+
+    // Red pin instead of Leaflet's stock blue marker — an inline SVG
+    // teardrop (no external image request, so nothing to fail to load)
+    // styled after Google Maps' classic red pin.
+    const redPinIcon = L.divIcon({
+        className: 'gps-pin-icon',
+        html: '<svg width="27" height="38" viewBox="0 0 27 38" xmlns="http://www.w3.org/2000/svg">'
+            + '<path d="M13.5 0C6.04 0 0 6.04 0 13.5 0 23.6 13.5 38 13.5 38S27 23.6 27 13.5C27 6.04 20.96 0 13.5 0z" fill="#EA4335"/>'
+            + '<circle cx="13.5" cy="13.5" r="5.5" fill="#fff"/>'
+            + '</svg>',
+        iconSize: [27, 38],
+        iconAnchor: [13.5, 38],
+        popupAnchor: [0, -34],
+    });
+
+    gpsMapMarker = L.marker([lat, lon], { icon: redPinIcon }).addTo(gpsMapInstance)
+        .bindPopup(esc(plateNo || 'Vehicle location'));
+
+    // The modal (and this map div) render at 0×0 until the CSS transition
+    // finishes opening it, so Leaflet's first size read is wrong — this
+    // fixes the grey/cut-off tiles that would otherwise show until the
+    // user manually pans or resizes.
+    setTimeout(() => { if (gpsMapInstance) gpsMapInstance.invalidateSize(); }, 200);
+}
+
+// Called every poll tick (see fetchVehicleProfile) instead of
+// renderModalProfile, so an open popup's numbers and pin position stay
+// current without rebuilding the whole modal — that would flash, and would
+// reset the map back to its default zoom/pan if the user had moved it.
+function updateModalLiveData(v) {
+    const online = v.gps_status === 'Online';
+    const signalText = v.signal || 'No signal data';
+    const mapLat = parseFloat(v.latitude) || 9.3164;
+    const mapLon = parseFloat(v.longitude) || 123.2885;
+
+    const sectionTitle = document.getElementById('gpsSectionTitle');
+    if (sectionTitle) sectionTitle.textContent = 'GPS Live Tracking — ' + (online ? 'Connected' : 'Offline');
+
+    const lastUpdatedEl = document.getElementById('gpsLastUpdated');
+    if (lastUpdatedEl) lastUpdatedEl.textContent = v.logged_at ? timeAgoJS(v.logged_at) : '—';
+
+    const speedEl = document.getElementById('gpsCurrentSpeed');
+    if (speedEl) speedEl.textContent = (v.speed || 0) + ' km/h';
+
+    const coordsEl = document.getElementById('gpsCoordinates');
+    if (coordsEl) coordsEl.textContent = v.latitude ? (v.latitude + ', ' + v.longitude) : 'N/A';
+
+    const signalEl = document.getElementById('gpsSignalStrength');
+    if (signalEl) signalEl.textContent = signalText;
+
+    const mapsLink = document.getElementById('gpsGoogleMapsLink');
+    if (mapsLink) mapsLink.href = 'https://www.google.com/maps?q=' + mapLat + ',' + mapLon + '&t=k';
+
+    const pingRowsEl = document.getElementById('gpsPingRows');
+    if (pingRowsEl) {
+        const pings = v.recent_pings || [];
+        pingRowsEl.innerHTML = pings.length
+            ? pings.map(p => `<tr><td>${p.loggedAt ? timeAgoJS(p.loggedAt) : '—'}</td><td>${esc(p.coords)}</td><td>${esc(p.signal)}</td><td>${esc(p.status)}</td></tr>`).join('')
+            : '<tr><td colspan="4">No GPS pings recorded yet.</td></tr>';
+    }
+
+    // Move the pin, rather than recreating the map (which would flash and
+    // undo any zoom/pan the user did by hand). Only auto-pan to it when a
+    // Route History path isn't currently on screen — otherwise every poll
+    // tick would yank the view back to the live pin and undo the route's
+    // fitBounds, right as someone's looking at where the vehicle has been.
+    if (gpsMapInstance && gpsMapMarker && v.latitude) {
+        gpsMapMarker.setLatLng([mapLat, mapLon]);
+        if (!gpsRouteLayer) gpsMapInstance.panTo([mapLat, mapLon], { animate: true });
+    }
+}
+
+// ── Route History: draw a vehicle's past pings as a path on the map ────
+// OSRM's free "driving directions between waypoints, in order" service
+// (not its "map matching" one — that needs a dense, closely-spaced GPS
+// trace to snap well, and pings here are often minutes to days apart).
+// This instead asks "what's the likely road path from ping 1 to ping 2 to
+// ping 3…", which is the sane approximation for sparse historical points —
+// it's a best-guess route between real recorded fixes, not literally the
+// exact road the vehicle drove.
+const OSRM_ROUTE_BASE = 'https://router.project-osrm.org/route/v1/driving/';
+
+function showVehicleRoute(id) {
+    if (!gpsMapInstance) return;
+
+    const fromEl = document.getElementById('routeFromDate');
+    const toEl = document.getElementById('routeToDate');
+    const statusEl = document.getElementById('gpsRouteStatus');
+    const from = fromEl ? fromEl.value : '';
+    const to = toEl ? toEl.value : '';
+
+    if (statusEl) statusEl.innerHTML = '<i class="bi bi-hourglass-split"></i> Loading route…';
+
+    const qs = new URLSearchParams();
+    if (from) qs.set('from', from);
+    if (to) qs.set('to', to);
+
+    fetch('<?= base_url('gps/route/') ?>' + id + '?' + qs.toString())
+        .then(r => r.json())
+        .then(res => {
+            clearVehicleRoute(); // remove any previously-drawn route first
+
+            const points = res.points || [];
+            if (!points.length) {
+                if (statusEl) statusEl.textContent = 'No GPS pings recorded in that range.';
+                return;
+            }
+            if (points.length === 1) {
+                // Nothing to route between a single point — just show it.
+                drawRouteOnMap(points, null, false);
+                return;
+            }
+
+            // OSRM wants "lon,lat;lon,lat;…" (opposite order from ours/
+            // Leaflet's lat,lng), and needs at least 2 waypoints to route.
+            const coordStr = points.map(p => p.lng + ',' + p.lat).join(';');
+
+            fetch(OSRM_ROUTE_BASE + coordStr + '?overview=full&geometries=geojson')
+                .then(r => r.json())
+                .then(osrm => {
+                    const geom = osrm && osrm.code === 'Ok' && osrm.routes && osrm.routes[0]
+                        ? osrm.routes[0].geometry.coordinates
+                        : null;
+                    // GeoJSON is [lng, lat] — flip to Leaflet's [lat, lng].
+                    const roadLatlngs = geom ? geom.map(c => [c[1], c[0]]) : null;
+                    drawRouteOnMap(points, roadLatlngs, !roadLatlngs);
+                })
+                .catch(() => drawRouteOnMap(points, null, true)); // road lookup failed — fall back to straight lines
+        })
+        .catch(() => {
+            if (statusEl) statusEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Failed to load route.';
+        });
+}
+
+// Draws the already-fetched route: roadLatlngs (from OSRM) if available,
+// otherwise a straight line directly between the recorded points. The
+// timestamped circle markers always sit at the real recorded coordinates
+// either way — only the connecting line differs.
+function drawRouteOnMap(points, roadLatlngs, isFallback) {
+    const statusEl = document.getElementById('gpsRouteStatus');
+    const rawLatlngs = points.map(p => [p.lat, p.lng]);
+    const lineLatlngs = roadLatlngs || rawLatlngs;
+
+    gpsRouteLayer = L.layerGroup().addTo(gpsMapInstance);
+
+    if (lineLatlngs.length > 1) {
+        L.polyline(lineLatlngs, { color: '#800000', weight: 3, opacity: 0.85 }).addTo(gpsRouteLayer);
+    }
+
+    // Start = maroon, in-between stops = red, end = green — same
+    // "where did it begin/end" convention as a route on Google/Waze.
+    points.forEach((p, i) => {
+        const isStart = i === 0;
+        const isEnd = i === points.length - 1;
+        L.circleMarker([p.lat, p.lng], {
+            radius: (isStart || isEnd) ? 6 : 4,
+            color: '#fff',
+            weight: 1.5,
+            fillColor: isEnd ? '#2e7d32' : (isStart ? '#800000' : '#EA4335'),
+            fillOpacity: 1,
+        }).bindPopup(
+            '<strong>' + (isStart ? 'Start' : (isEnd ? 'End' : 'Point ' + (i + 1))) + '</strong><br>'
+            + esc(new Date(p.loggedAt).toLocaleString()) + '<br>'
+            + 'Signal: ' + esc(p.signal) + '<br>'
+            + 'Status: ' + esc(p.status)
+        ).addTo(gpsRouteLayer);
+    });
+
+    gpsMapInstance.fitBounds(L.polyline(rawLatlngs).getBounds(), { padding: [24, 24] });
+
+    if (statusEl) {
+        let text = points.length + ' point' + (points.length === 1 ? '' : 's');
+        if (points.length > 1) {
+            text += ', ' + new Date(points[0].loggedAt).toLocaleString() + ' → ' + new Date(points[points.length - 1].loggedAt).toLocaleString();
+        }
+        if (isFallback && points.length > 1) {
+            text += ' (straight-line — road route unavailable)';
+        }
+        statusEl.textContent = text;
+    }
+    const clearBtn = document.getElementById('gpsRouteClearBtn');
+    if (clearBtn) clearBtn.style.display = '';
+
+    initRoutePlayback(points);
+}
+
+function clearVehicleRoute() {
+    if (gpsRouteLayer && gpsMapInstance) {
+        gpsMapInstance.removeLayer(gpsRouteLayer);
+    }
+    gpsRouteLayer = null;
+
+    const statusEl = document.getElementById('gpsRouteStatus');
+    if (statusEl) statusEl.textContent = '';
+    const clearBtn = document.getElementById('gpsRouteClearBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+
+    resetRoutePlayback();
+}
+
+// ── Route playback: step/scrub a marker through the recorded pings ─────
+// gpsPlaybackMarker and gpsPlaybackTraveled are added to gpsRouteLayer (so
+// clearVehicleRoute's removeLayer() above wipes them visually too), but
+// kept in their own variables as well since — unlike the static route
+// markers — these need their position updated on every step.
+let gpsPlaybackPoints = [];
+let gpsPlaybackIndex = 0;
+let gpsPlaybackTimer = null;
+let gpsPlaybackIntervalMs = 700;
+let gpsPlaybackMarker = null;
+let gpsPlaybackTraveled = null;
+
+function initRoutePlayback(points) {
+    const controls = document.getElementById('gpsPlaybackControls');
+    const slider = document.getElementById('gpsPlaybackSlider');
+    const timestampEl = document.getElementById('gpsPlaybackTimestamp');
+    if (!controls || !slider) return;
+
+    gpsPlaybackPoints = points;
+    gpsPlaybackIndex = 0;
+
+    if (points.length < 2) {
+        // Nothing to play through with just one point — hide playback
+        // entirely rather than showing a slider that can't move.
+        controls.style.display = 'none';
+        if (timestampEl) timestampEl.textContent = '';
+        return;
+    }
+
+    slider.min = 0;
+    slider.max = points.length - 1;
+    slider.value = 0;
+    controls.style.display = 'flex';
+
+    const playbackIcon = document.querySelector('#gpsPlaybackToggleBtn i');
+    if (playbackIcon) playbackIcon.className = 'bi bi-play-fill';
+
+    const playbackDot = L.divIcon({
+        className: 'gps-playback-icon',
+        html: '<span></span>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+    });
+    gpsPlaybackMarker = L.marker([points[0].lat, points[0].lng], { icon: playbackDot, zIndexOffset: 1000 }).addTo(gpsRouteLayer);
+    gpsPlaybackTraveled = L.polyline([[points[0].lat, points[0].lng]], { color: '#1c6dd0', weight: 4, opacity: 0.9 }).addTo(gpsRouteLayer);
+
+    updatePlaybackTimestamp(0);
+}
+
+function updatePlaybackTimestamp(index) {
+    const timestampEl = document.getElementById('gpsPlaybackTimestamp');
+    const p = gpsPlaybackPoints[index];
+    if (timestampEl && p) {
+        timestampEl.innerHTML = '<i class="bi bi-clock-history"></i> ' + esc(new Date(p.loggedAt).toLocaleString());
+    }
+}
+
+function toggleRoutePlayback() {
+    if (gpsPlaybackTimer) {
+        pauseRoutePlayback();
+        return;
+    }
+    if (!gpsPlaybackPoints.length) return;
+
+    // Restart from the beginning once it's already run to the end.
+    if (gpsPlaybackIndex >= gpsPlaybackPoints.length - 1) {
+        gpsPlaybackIndex = 0;
+        jumpPlaybackTo(0);
+    }
+
+    const icon = document.querySelector('#gpsPlaybackToggleBtn i');
+    if (icon) icon.className = 'bi bi-pause-fill';
+
+    gpsPlaybackTimer = setInterval(stepRoutePlayback, gpsPlaybackIntervalMs);
+}
+
+function pauseRoutePlayback() {
+    if (gpsPlaybackTimer) { clearInterval(gpsPlaybackTimer); gpsPlaybackTimer = null; }
+    const icon = document.querySelector('#gpsPlaybackToggleBtn i');
+    if (icon) icon.className = 'bi bi-play-fill';
+}
+
+function stepRoutePlayback() {
+    if (gpsPlaybackIndex >= gpsPlaybackPoints.length - 1) {
+        pauseRoutePlayback();
+        return;
+    }
+    gpsPlaybackIndex += 1;
+    jumpPlaybackTo(gpsPlaybackIndex);
+}
+
+// Manual drag of the slider — jumps straight to that point and pauses
+// auto-play, since a scrub is the user taking over control.
+function scrubRoutePlayback(index) {
+    pauseRoutePlayback();
+    gpsPlaybackIndex = parseInt(index, 10) || 0;
+    jumpPlaybackTo(gpsPlaybackIndex);
+}
+
+function setRoutePlaybackSpeed(ms) {
+    gpsPlaybackIntervalMs = parseInt(ms, 10) || 700;
+    if (gpsPlaybackTimer) {
+        // Apply immediately instead of waiting for the current tick.
+        clearInterval(gpsPlaybackTimer);
+        gpsPlaybackTimer = setInterval(stepRoutePlayback, gpsPlaybackIntervalMs);
+    }
+}
+
+function jumpPlaybackTo(index) {
+    const p = gpsPlaybackPoints[index];
+    if (!p) return;
+
+    const slider = document.getElementById('gpsPlaybackSlider');
+    if (slider) slider.value = index;
+
+    if (gpsPlaybackMarker) gpsPlaybackMarker.setLatLng([p.lat, p.lng]);
+    if (gpsPlaybackTraveled) {
+        gpsPlaybackTraveled.setLatLngs(gpsPlaybackPoints.slice(0, index + 1).map(pt => [pt.lat, pt.lng]));
+    }
+    updatePlaybackTimestamp(index);
+}
+
+function resetRoutePlayback() {
+    pauseRoutePlayback();
+    gpsPlaybackPoints = [];
+    gpsPlaybackIndex = 0;
+    gpsPlaybackMarker = null;    // the actual layer was already removed with gpsRouteLayer
+    gpsPlaybackTraveled = null;
+
+    const controls = document.getElementById('gpsPlaybackControls');
+    if (controls) controls.style.display = 'none';
+    const timestampEl = document.getElementById('gpsPlaybackTimestamp');
+    if (timestampEl) timestampEl.textContent = '';
+    const slider = document.getElementById('gpsPlaybackSlider');
+    if (slider) slider.value = 0;
 }
 
 // ── Sync one vehicle ───────────────────────────────────────────
@@ -479,7 +970,9 @@ function esc(s) {
 }
 
 function timeAgoJS(dateStr) {
-    const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+    // Clock skew between the tracker and this browser can make a fresh fix look
+    // slightly "in the future" — clamp so it never shows as e.g. "-2s ago".
+    const diff = Math.max(0, Math.floor((Date.now() - new Date(dateStr)) / 1000));
     if (diff < 60)   return diff + 's ago';
     if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
     if (diff < 86400)return Math.floor(diff / 3600) + 'h ago';
@@ -505,7 +998,9 @@ document.getElementById('vehicleProfileModal').addEventListener('click', (e) => 
 // PHP helper: time-ago for server-side rendering
 function timeAgo(?string $datetime): string {
     if (!$datetime) return '—';
-    $diff = time() - strtotime($datetime);
+    // A tracker's GPS timestamp can be a few seconds ahead of this server's own
+    // clock — never render that as a negative "-2s ago".
+    $diff = max(0, time() - strtotime($datetime));
     if ($diff < 60)    return $diff . 's ago';
     if ($diff < 3600)  return floor($diff / 60) . 'm ago';
     if ($diff < 86400) return floor($diff / 3600) . 'h ago';

@@ -5,10 +5,13 @@
 :root {
     /* --ink-soft and --surface are local aliases for the shared theme
        tokens (not fixed light-mode colors) so this dashboard's panels and
-       secondary text still flip correctly under [data-theme="dark"]. */
+       secondary text still flip correctly under [data-theme="dark"].
+       --bg and --line intentionally NOT overridden here anymore — they
+       used to be a slightly different off-white/border tone than every
+       other page's shared tokens, which just read as an unexplained
+       inconsistency rather than a deliberate "this is the home page"
+       identity. */
     --ink-soft: var(--muted);
-    --line: #DEDAD3;
-    --bg: #F1EFEA;
     --surface: var(--card);
     --maroon-deep: #5A1F24;
     --maroon-tint: #F5E7E8;

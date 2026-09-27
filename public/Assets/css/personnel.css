@@ -19,31 +19,6 @@
     overflow-y: auto;
 }
 
-/* Personnel Management's 9 status boxes — no animation (the adviser didn't
-   like the old auto-scrolling marquee). No column count is forced here:
-   .personnel-stat-grid just inherits base.css's plain .stat-cards behavior
-   (flex-wrap, 165px fixed boxes) — as many boxes as fit sit on one line,
-   and whatever's left wraps to the next line below, same as every other
-   page's stat cards. */
-.personnel-stat-more-btn {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin: -8px 0 18px;
-    padding: 6px 10px;
-    background: none;
-    border: none;
-    color: var(--muted, #888);
-    font-size: 12.5px;
-    font-weight: 600;
-    cursor: pointer;
-}
-.personnel-stat-more-btn:hover {
-    color: #800000;
-}
-
 /* Scoped to just the main personnel listing table. Fixed (not max-) height
    and fixed column widths so the header/table footprint is pixel-identical
    every time you navigate to a different Personnel Management sub-tab

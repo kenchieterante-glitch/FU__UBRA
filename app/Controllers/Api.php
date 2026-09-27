@@ -576,61 +576,23 @@ class Api extends BaseController
     /** Fetch a Traccar device's latest position by its identifier (uniqueId). Returns null on any failure. */
     private function traccarLatestPosition(string $identifier): ?array
     {
-        $baseUrl = env('TRACCAR_URL');
-        $user    = env('TRACCAR_USER');
-        $pass    = env('TRACCAR_PASS');
-        if (!$baseUrl || !$user || !$pass) {
+        $p = (new \App\Libraries\TraccarClient())->latestByIdentifier()[$identifier] ?? null;
+        if (!$p || $p['latitude'] === null) {
             return null;
         }
-
-        $auth = base64_encode("{$user}:{$pass}");
-        $opts = [
-            'http' => [
-                'method'        => 'GET',
-                'header'        => "Authorization: Basic {$auth}\r\nAccept: application/json\r\n",
-                'timeout'       => 5,
-                'ignore_errors' => true,
-            ],
-        ];
-        $context = stream_context_create($opts);
-
-        $devicesJson = @file_get_contents(
-            $baseUrl . '/api/devices?uniqueId=' . urlencode($identifier),
-            false,
-            $context
-        );
-        $devices = json_decode((string) $devicesJson, true);
-        if (empty($devices[0]['id'])) {
-            return null;
-        }
-
-        $positionsJson = @file_get_contents(
-            $baseUrl . '/api/positions?deviceId=' . (int) $devices[0]['id'],
-            false,
-            $context
-        );
-        $positions = json_decode((string) $positionsJson, true);
-        if (empty($positions[0])) {
-            return null;
-        }
-        $p = $positions[0];
-        $attrs = $p['attributes'] ?? [];
 
         return [
-            'lat'             => (float) $p['latitude'],
-            'lng'             => (float) $p['longitude'],
-            'gps_status'      => $devices[0]['status'] === 'online' ? 'Online' : 'Offline',
+            'lat'             => $p['latitude'],
+            'lng'             => $p['longitude'],
+            'gps_status'      => $p['online'] ? 'Online' : 'Offline',
             'signal_strength' => null,
             'device_id'       => $identifier,
-            'last_update'     => $p['fixTime'],
-            'speed_kmh'       => round(((float) $p['speed']) * 1.852, 1), // knots -> km/h
-            'course'          => $p['course'] ?? null,
-            // Decoded straight from the tracker's own protocol — real
-            // telemetry, not guessed from the device's undocumented raw I/O
-            // fields (those vary per firmware and aren't safe to assume).
-            'ignition'        => array_key_exists('ignition', $attrs) ? (bool) $attrs['ignition'] : null,
-            'motion'          => array_key_exists('motion', $attrs) ? (bool) $attrs['motion'] : null,
-            'odometer_km'     => isset($attrs['totalDistance']) ? round(((float) $attrs['totalDistance']) / 1000, 1) : null,
+            'last_update'     => $p['fix_time'],
+            'speed_kmh'       => $p['speed_kmh'],
+            'course'          => $p['course'],
+            'ignition'        => $p['ignition'],
+            'motion'          => $p['motion'],
+            'odometer_km'     => $p['odometer_km'],
         ];
     }
 

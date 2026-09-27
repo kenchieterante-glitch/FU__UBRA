@@ -169,6 +169,7 @@ $routes->post('travel/checkout/(:num)', 'TravelController::checkOut/$1');
 // ============================================================
 $routes->get ('gps',                     'GPSController::index');
 $routes->get ('gps/getVehicle/(:num)',   'GPSController::getVehicle/$1');
+$routes->get ('gps/route/(:num)',        'GPSController::getRoute/$1');
 $routes->get ('gps/sync/(:num)',         'GPSController::sync/$1');
 $routes->post('gps/logPing',             'GPSController::logPing');
 

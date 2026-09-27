@@ -43,4 +43,24 @@ class GPSModel extends Model
             return [];
         }
     }
+
+    /**
+     * All GPS pings for one vehicle within a date/time range, oldest first —
+     * for plotting a route on the map (GPSController::getRoute), unlike
+     * getHistory() above which is newest-first and capped for the popup's
+     * small "Recent Pings" table.
+     */
+    public function getHistoryInRange(int $vehicleId, string $from, string $to, int $limit = 500): array
+    {
+        try {
+            return $this->where('vehicle_id', $vehicleId)
+                        ->where('logged_at >=', $from)
+                        ->where('logged_at <=', $to)
+                        ->orderBy('logged_at', 'ASC')
+                        ->limit($limit)
+                        ->findAll();
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
 }

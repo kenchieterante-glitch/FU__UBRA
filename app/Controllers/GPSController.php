@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\TraccarSync;
 use App\Models\GPSModel;
 use App\Models\VehicleModel;
 
@@ -22,6 +23,10 @@ class GPSController extends BaseController
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
 
+        // Pull fresh data from the physical trackers (via Traccar) into
+        // gps_logs / vehicles.gps_status first, so everything below reads current values.
+        $live = (new TraccarSync())->run();
+
         // gps_status lives on the vehicles table itself — that's the single source of
         // truth for online/offline, matching what Vehicle Management shows for the same field.
         $vehicles = $this->vehicleModel->where('is_archived', 0)->findAll();
@@ -39,7 +44,8 @@ class GPSController extends BaseController
                 'gps_status'    => $v['gps_status']        ?? 'Offline',
                 'latitude'      => $gps['latitude']        ?? null,
                 'longitude'     => $gps['longitude']       ?? null,
-                'speed'         => 0,
+                // Speed isn't stored in gps_logs — only known while Traccar is answering.
+                'speed'         => $live[(int) $v['id']]['speed_kmh'] ?? 0,
                 'signal'        => $gps['signal_strength'] ?? '—',
                 'last_location' => '—',
                 'logged_at'     => $gps['logged_at']       ?? null,
@@ -75,6 +81,8 @@ class GPSController extends BaseController
             return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
         }
 
+        $live = (new TraccarSync())->run((int) $id);
+
         // Joined the same way as Vehicle Management's own list so this popup
         // agrees with it (driver_name/department_name resolved from their
         // FK ids, not read off columns that don't exist on vehicles).
@@ -98,7 +106,7 @@ class GPSController extends BaseController
             'gps_status'    => $vehicle['gps_status']        ?? 'Offline',
             'latitude'      => $latestGPS['latitude']        ?? null,
             'longitude'     => $latestGPS['longitude']       ?? null,
-            'speed'         => 0,
+            'speed'         => $live[(int) $id]['speed_kmh'] ?? 0,
             'signal'        => $latestGPS['signal_strength'] ?? 0,
             'last_location' => '—',
             'logged_at'     => $latestGPS['logged_at']       ?? null,
@@ -109,10 +117,62 @@ class GPSController extends BaseController
         ]));
     }
 
+    /**
+     * The vehicle's travel route for a date range — every logged fix,
+     * oldest first, for drawing as a path on the map (unlike getVehicle()'s
+     * "Recent Pings", which is just the latest 5 for a quick-glance table).
+     * ?from=YYYY-MM-DD&to=YYYY-MM-DD (defaults to the last 24 hours).
+     */
+    public function getRoute($id)
+    {
+        if (!$this->session->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $vehicle = $this->vehicleModel->find($id);
+        if (!$vehicle) return $this->response->setStatusCode(404)->setJSON(['error' => 'Not found']);
+
+        $fromInput = $this->request->getGet('from');
+        $toInput   = $this->request->getGet('to');
+        // A plain "YYYY-MM-DD" from a <input type="date"> means the whole
+        // day — start of day for "from", end of day for "to" — not the
+        // literal midnight instant a bare date would otherwise compare as.
+        $from = $fromInput ? date('Y-m-d 00:00:00', strtotime($fromInput)) : date('Y-m-d H:i:s', strtotime('-24 hours'));
+        $to   = $toInput   ? date('Y-m-d 23:59:59', strtotime($toInput))   : date('Y-m-d H:i:s');
+
+        $logs = $this->gpsModel->getHistoryInRange((int) $id, $from, $to);
+
+        $points = array_values(array_filter(array_map(fn($p) => [
+            'lat'      => $p['latitude']  !== null ? (float) $p['latitude']  : null,
+            'lng'      => $p['longitude'] !== null ? (float) $p['longitude'] : null,
+            'loggedAt' => $p['logged_at'],
+            'signal'   => $p['signal_strength'] ?? '—',
+            'status'   => $p['status'] ?? '—',
+        ], $logs), fn($p) => $p['lat'] !== null && $p['lng'] !== null));
+
+        return $this->response->setJSON([
+            'vehicle_id' => (int) $id,
+            'plate_no'   => $vehicle['plate_no'] ?? '—',
+            'from'       => $from,
+            'to'         => $to,
+            'count'      => count($points),
+            'points'     => $points,
+        ]);
+    }
+
     public function sync($vehicleId)
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
-        return $this->response->setJSON(['success' => true, 'synced_at' => date('Y-m-d H:i:s'), 'vehicle_id' => $vehicleId]);
+
+        $live = (new TraccarSync())->run((int) $vehicleId);
+
+        return $this->response->setJSON([
+            'success'    => true,
+            'synced_at'  => date('Y-m-d H:i:s'),
+            'vehicle_id' => $vehicleId,
+            // false when the vehicle has no tracker linked, or Traccar didn't answer
+            'live'       => isset($live[(int) $vehicleId]),
+        ]);
     }
 
     public function logPing()

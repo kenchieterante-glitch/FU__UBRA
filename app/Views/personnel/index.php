@@ -45,38 +45,26 @@ $personnelStatCards = [
   ['tone' => 'tone-green',   'icon' => 'bi-check-circle-fill','label' => 'Active',             'value' => (int) ($active_count ?? 0),          'onclick' => "filterPersonnelByStat('Active')"],
   ['tone' => 'tone-gold',    'icon' => 'bi-calendar-day',     'label' => 'On Leave',           'value' => (int) ($on_leave_count ?? 0),        'onclick' => "filterPersonnelByStat('On Leave')"],
 ];
-$personnelMainCards  = array_slice($personnelStatCards, 0, 7);
-$personnelExtraCards = array_slice($personnelStatCards, 7);
 ?>
-<!-- No animation — the adviser didn't like the old auto-scrolling marquee.
-     Box size is unchanged (165px, same as every other page's stat cards).
-     The first row's worth of cards always show; the rest (Active, On
-     Leave) sit behind a "Show more" toggle, collapsed every time this
-     page loads, instead of always wrapping onto a half-empty second line. -->
-<div class="stat-cards personnel-stat-grid">
-  <?php foreach ($personnelMainCards as $card): ?>
-    <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" role="button" tabindex="0">
-      <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="bi <?= esc($card['icon'], 'attr') ?>"></i></span>
-      <h3><?= esc($card['label']) ?></h3>
-      <div class="value"><?= esc((string) $card['value']) ?></div>
-    </div>
-  <?php endforeach; ?>
+<!-- Static status-card grid (no more auto-scrolling marquee) — wraps like
+     every other management page's stat cards. Rows beyond the first are
+     collapsed behind a "Show more" toggle (setupPersonnelStatCardsCollapse
+     below) instead of continuously scrolling. -->
+<div class="stat-cards-wrap" id="personnelStatCardsWrap">
+  <div class="stat-cards" id="personnelStatCards">
+    <?php foreach ($personnelStatCards as $card): ?>
+      <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" role="button" tabindex="0">
+        <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="bi <?= esc($card['icon'], 'attr') ?>"></i></span>
+        <h3><?= esc($card['label']) ?></h3>
+        <div class="value"><?= esc((string) $card['value']) ?></div>
+      </div>
+    <?php endforeach; ?>
+  </div>
 </div>
-
-<?php if (!empty($personnelExtraCards)): ?>
-<div class="stat-cards personnel-stat-grid" id="personnelExtraStats" style="display:none">
-  <?php foreach ($personnelExtraCards as $card): ?>
-    <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" role="button" tabindex="0">
-      <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="bi <?= esc($card['icon'], 'attr') ?>"></i></span>
-      <h3><?= esc($card['label']) ?></h3>
-      <div class="value"><?= esc((string) $card['value']) ?></div>
-    </div>
-  <?php endforeach; ?>
-</div>
-<button type="button" class="personnel-stat-more-btn" id="personnelStatMoreBtn" onclick="togglePersonnelExtraStats()">
-  <i class="bi bi-chevron-down"></i> Show <?= count($personnelExtraCards) ?> more
+<button type="button" class="stat-cards-toggle" id="personnelStatCardsToggle" onclick="togglePersonnelStatCards()" style="display:none">
+  <span id="personnelStatCardsToggleLabel">Show more</span>
+  <i class="bi bi-chevron-down"></i>
 </button>
-<?php endif; ?>
 
 <?php endif; ?>
 
@@ -526,6 +514,64 @@ function filterPersonnelByStat(kind) {
     });
   }
 }
+
+// Status cards now sit in a static, wrapping grid instead of an
+// auto-scrolling marquee. Only the first row is shown by default; the rest
+// collapse behind a "Show more" toggle. The collapsed height is measured
+// from the actual first row (not hardcoded), so it stays correct at any
+// screen width and however many cards fit per row.
+function setupPersonnelStatCardsCollapse() {
+  const wrap = document.getElementById('personnelStatCardsWrap');
+  const grid = document.getElementById('personnelStatCards');
+  const toggle = document.getElementById('personnelStatCardsToggle');
+  const label = document.getElementById('personnelStatCardsToggleLabel');
+  const icon = toggle?.querySelector('i');
+  if (!wrap || !grid || !toggle || !label) return;
+
+  let expanded = false;
+  // Must match .stat-cards-wrap's padding-top in base.css — that padding
+  // (and this same amount added to the collapsed height) gives the
+  // ":hover" lift (translateY(-1px)) room so its top border isn't sliced
+  // off by this wrapper's overflow: hidden.
+  const TOP_BUFFER = 4;
+
+  function measureCollapsed() {
+    const cards = Array.from(grid.children);
+    if (!cards.length) {
+      toggle.style.display = 'none';
+      return;
+    }
+    const firstRowTop = cards[0].offsetTop;
+    const rowCards = cards.filter(c => c.offsetTop === firstRowTop);
+    if (rowCards.length >= cards.length) {
+      // Every card already fits on one row — nothing to collapse.
+      wrap.style.maxHeight = '';
+      toggle.style.display = 'none';
+      return;
+    }
+    wrap.style.maxHeight = (rowCards[0].offsetHeight + TOP_BUFFER) + 'px';
+    toggle.style.display = 'flex';
+    label.textContent = 'Show ' + (cards.length - rowCards.length) + ' more';
+    if (icon) icon.className = 'bi bi-chevron-down';
+  }
+
+  window.togglePersonnelStatCards = function () {
+    expanded = !expanded;
+    if (expanded) {
+      wrap.style.maxHeight = grid.scrollHeight + 'px';
+      label.textContent = 'Show less';
+      if (icon) icon.className = 'bi bi-chevron-up';
+    } else {
+      measureCollapsed();
+    }
+  };
+
+  measureCollapsed();
+  window.addEventListener('resize', function () {
+    if (!expanded) measureCollapsed();
+  });
+}
+document.addEventListener('DOMContentLoaded', setupPersonnelStatCardsCollapse);
 
 function togglePersonnelFilterMenu() {
   const popup = document.getElementById('personnelFilterPopup');

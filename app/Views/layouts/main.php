@@ -240,15 +240,17 @@
         <?php endif; ?>
         <span class="nav-label"><?= esc($fullName) ?><small>View Profile</small></span>
       </a>
-      <?php if (!($isFullAccess || $isSecurityHead)): ?>
-      <!-- Only for roles with no Settings page (Facilities, Tools Head,
-           Janitorial Supervisor) — everyone else logs out from
-           Settings → System, so it isn't duplicated under the profile. -->
-      <a href="<?= site_url('logout') ?>" class="sidebar-logout-link" data-tooltip="Logout">
+      <!-- Always visible regardless of role — previously logout only lived
+           inside Settings' System tab, which restricted roles (Tools Head,
+           Janitorial Supervisor) can't reach, leaving them with no way to
+           sign out at all. The Settings-tab copy has since been removed
+           entirely (was redundant for the roles that did have Settings
+           access), so this is now the only logout control in the app —
+           it must stay unconditional. -->
+      <a href="<?= site_url('logout') ?>" class="sidebar-logout-link" data-tooltip="Logout" onclick="event.preventDefault(); document.getElementById('logoutConfirmModal').classList.add('open');">
         <span class="av av-logout"><i class="bi bi-box-arrow-right"></i></span>
         <span class="nav-label">Logout</span>
       </a>
-      <?php endif; ?>
     </div>
   </aside>
 
@@ -265,6 +267,26 @@
       <img id="avatarLightboxImg" src="" alt="">
       <figcaption id="avatarLightboxCaption"></figcaption>
     </figure>
+  </div>
+
+  <!-- Logout confirmation — the site's standard floating .modal/.modal-box
+       popup (same component every "Archive this record?" etc. confirmation
+       uses elsewhere), not the browser's native confirm() dialog. -->
+  <div class="modal" id="logoutConfirmModal">
+    <div class="modal-box" style="max-width:360px;">
+      <h3>Log out?</h3>
+      <p style="color:var(--muted);font-size:13.5px;">Are you sure you want to log out?</p>
+      <div class="modal-actions">
+        <button type="button" onclick="closeLogoutConfirm()">Cancel</button>
+        <!-- Deliberately NOT .btn-maroon — that class is sized for full-
+             width standalone form buttons (width:100%, 12px padding), and
+             being an <a> (not a <button>) it also skips .modal-actions
+             button's compact sizing entirely, since that selector only
+             matches actual <button> elements. Matching Cancel's dimensions
+             by hand here instead of fighting that mismatch. -->
+        <a href="<?= site_url('logout') ?>" class="modal-logout-confirm-btn">Logout</a>
+      </div>
+    </div>
   </div>
 
   <!--MAIN CONTENT  -->
@@ -634,6 +656,7 @@ function toggleMobileNav(open) {
   document.body.classList.toggle('mobile-nav-open', shouldOpen);
 }
 
+
 // Avatar preview lightbox — sidebar profile photo click
 function openAvatarPreview(src, name) {
   document.getElementById('avatarLightboxImg').src = src;
@@ -644,8 +667,21 @@ function openAvatarPreview(src, name) {
 function closeAvatarPreview() {
   document.getElementById('avatarLightbox').classList.remove('open');
 }
+
+function closeLogoutConfirm() {
+  document.getElementById('logoutConfirmModal').classList.remove('open');
+}
+// Click outside the box (on the dark backdrop) also dismisses it, same as
+// every other .modal-box popup in the app.
+document.getElementById('logoutConfirmModal').addEventListener('click', function (e) {
+  if (e.target === this) closeLogoutConfirm();
+});
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeAvatarPreview();
+  if (e.key === 'Escape') {
+    closeAvatarPreview();
+    closeLogoutConfirm();
+  }
 });
 
 // Floating tooltip for the collapsed icon-rail sidebar
