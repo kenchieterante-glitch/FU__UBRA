@@ -43,6 +43,50 @@ class JanitorialController extends BaseController
             return redirect()->to('/login');
         }
 
+        $raw = $this->buildDashboardData();
+
+        // The view embeds these directly into a <script> block as literal
+        // JS source ("const janStaff = " followed by this value), so they
+        // need to already be JSON-encoded strings here — unlike
+        // refreshData(), which hands buildDashboardData()'s raw arrays
+        // straight to setJSON() instead.
+        $data = [
+            'title'           => $raw['title'],
+            'pageCss'         => $raw['pageCss'],
+            'areas_json'      => $this->jsonForScript($raw['areas']),
+            'checklists_json' => $this->jsonForScript($raw['checklists']),
+            'staff_json'      => $this->jsonForScript($raw['staff']),
+            'inventory_json'  => $this->jsonForScript($raw['inventory']),
+            'refill_log_json' => $this->jsonForScript($raw['refill_log']),
+            'zone_total'      => $raw['zone_total'],
+            'zone_cleaned'    => $raw['zone_cleaned'],
+            'summary'         => $raw['summary'],
+            'flash_success'   => $this->session->getFlashdata('success'),
+            'flash_error'     => $this->session->getFlashdata('error'),
+        ];
+
+        return view('janitorial/index', $data);
+    }
+
+    /**
+     * GET /janitorial/refresh — same data as index() but as JSON, so the
+     * Active Shifts / Consumable Inventory tabs can pick up whatever the
+     * mobile app (janitors checking off tasks, reporting stock levels via
+     * the /api/janitorial/* endpoints — same tables, same rows) has changed
+     * since page load, without a full browser reload. Polled automatically
+     * and on-demand via the page's "Refresh" button (see janitorial/index.php).
+     */
+    public function refreshData()
+    {
+        if (!$this->session->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        return $this->response->setJSON($this->buildDashboardData());
+    }
+
+    private function buildDashboardData(): array
+    {
         $this->resetStaleCompletedTasks();
 
         $assignments = $this->assignmentModel->findAll();
@@ -102,6 +146,7 @@ class JanitorialController extends BaseController
                 $staff[] = [
                     'name'  => $a['staff_name'],
                     'zone'  => $zoneName,
+                    'floor' => $a['floor'] ?? null,
                     'tasks' => $total,
                     'done'  => $done,
                     'photo' => strtoupper(substr($a['staff_name'], 0, 1)),
@@ -132,13 +177,18 @@ class JanitorialController extends BaseController
         $lowStock      = count(array_filter($inventory, fn($i) => (float) $i['current_stock'] <= (float) $i['reorder_threshold'] && (float) $i['current_stock'] > 0));
         $outOfStock    = count(array_filter($inventory, fn($i) => (float) $i['current_stock'] <= 0));
 
-        $data = [
+        // Raw arrays here — index() below turns the fields the view embeds
+        // directly into <script> (areas/checklists/staff/inventory/
+        // refill_log) into pre-encoded *_json strings via jsonForScript();
+        // refreshData() instead hands this same array straight to
+        // setJSON(), which encodes it once, cleanly, as real JSON.
+        return [
             'title'       => 'Janitorial Monitoring',
             'pageCss'     => 'safety.css',
-            'areas_json'      => $this->jsonForScript($areas),
-            'checklists_json' => $this->jsonForScript($checklists),
-            'staff_json'      => $this->jsonForScript(array_values($staff)),
-            'inventory_json'  => $this->jsonForScript(array_map(fn($i) => [
+            'areas'       => $areas,
+            'checklists'  => $checklists,
+            'staff'       => array_values($staff),
+            'inventory'   => array_map(fn($i) => [
                 'id'         => $i['id'],
                 'name'       => $i['item_name'],
                 'cat'        => $i['category'],
@@ -146,14 +196,14 @@ class JanitorialController extends BaseController
                 'stock'      => (float) $i['current_stock'],
                 'reorder'    => (float) $i['reorder_threshold'],
                 'lastRefill' => $i['last_refill'],
-            ], $inventory)),
-            'refill_log_json' => $this->jsonForScript(array_map(fn($l) => [
+            ], $inventory),
+            'refill_log'  => array_map(fn($l) => [
                 'item'      => $l['item_name'],
                 'qty'       => (float) $l['quantity_added'],
                 'unit'      => $l['unit'],
                 'by'        => $l['performed_by'],
                 'at'        => $l['performed_at'],
-            ], $this->refillLogModel->getRecent(50))),
+            ], $this->refillLogModel->getRecent(50)),
             'zone_total'   => $totalZones,
             'zone_cleaned' => $cleanedZones,
             'summary' => [
@@ -164,11 +214,7 @@ class JanitorialController extends BaseController
                 'low_stock'     => $lowStock,
                 'out_of_stock'  => $outOfStock,
             ],
-            'flash_success' => $this->session->getFlashdata('success'),
-            'flash_error'   => $this->session->getFlashdata('error'),
         ];
-
-        return view('janitorial/index', $data);
     }
 
     public function checklists()
@@ -274,6 +320,7 @@ class JanitorialController extends BaseController
 
         $staffName  = trim((string) $this->request->getPost('staff_name'));
         $zone       = trim((string) $this->request->getPost('assigned_zone'));
+        $floor      = trim((string) $this->request->getPost('floor'));
         $shiftStart = (string) $this->request->getPost('shift_start');
         $shiftEnd   = (string) $this->request->getPost('shift_end');
 
@@ -284,6 +331,7 @@ class JanitorialController extends BaseController
         $assignmentId = $this->assignmentModel->insert([
             'staff_name'    => $staffName,
             'assigned_zone' => $zone,
+            'floor'         => $floor !== '' ? $floor : null,
             'shift_start'   => $shiftStart,
             'shift_end'     => $shiftEnd,
             'date_assigned' => date('Y-m-d'),

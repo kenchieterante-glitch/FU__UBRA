@@ -1246,41 +1246,73 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 }
 
 
-/* Personnel only: static status-card grid that collapses rows beyond the
-   first behind a "Show more" toggle (see setupPersonnelStatCardsCollapse in
-   personnel/index.php) instead of auto-scrolling. The collapsed max-height
-   is set inline by JS from the real first-row height, so it stays correct
-   at any width. A little top padding keeps the ":hover" lift
-   (.stat-card-clickable translateY(-1px)) from being sliced off by this
-   wrapper's overflow: hidden — without it, the card's top border moves
-   1px above the clipping box the instant you hover it. The JS adds this
-   same amount to the collapsed max-height it sets. */
-.stat-cards-wrap {
-  overflow: hidden;
-  padding-top: 4px;
-  transition: max-height 0.25s ease;
+/* Personnel only: static single-row carousel (setupPersonnelStatCarousel in
+   personnel/index.php) — it never auto-scrolls (that was the old marquee
+   this replaced); Prev/Next float over the row's left/right edges (not a
+   control row above the dashboard) and page it manually, one view's worth
+   of cards at a time via native scrollBy(), snapping cleanly to a card
+   boundary each time (scroll-snap-align on .stat-card below). Prev starts
+   hidden (display:none inline in the view) and is only ever revealed by
+   JS once you've scrolled off the very start. */
+.stat-carousel {
+  position: relative;
+  margin-bottom: 18px;
 }
-.stat-cards-wrap .stat-cards {
-  margin-bottom: 0;
-}
-.stat-cards-toggle {
+.carousel-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 10px auto 18px;
-  background: none;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 6px 16px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text);
+  justify-content: center;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: box-shadow 0.15s ease, color 0.15s ease;
 }
-.stat-cards-toggle:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+.carousel-nav-btn:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
   color: #800000;
+}
+.carousel-nav-left {
+  left: -4px;
+}
+.carousel-nav-right {
+  right: -4px;
+}
+.stat-carousel-track {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  /* Vertical padding, not just horizontal — setting overflow-x alone still
+     makes the browser clip vertically too (overflow-y computes to auto to
+     match), and without this buffer the ":hover" lift
+     (.stat-card-clickable's translateY(-1px)) gets its top border sliced
+     off the instant you hover a card, same bug as the old collapse
+     wrapper had before this replaced it. Left/right padding is separate —
+     that's clearance so the floating Prev/Next buttons (positioned just
+     outside the track via negative offsets) don't sit on top of the
+     first/last card's content. */
+  padding: 6px 36px 10px;
+  /* Prev/Next are the intended way to page through — a native scrollbar
+     sitting under the cards as well would look like a stray leftover
+     control. Trackpad/touch/click-drag scrolling still works regardless;
+     this only hides the visual bar. */
+  scrollbar-width: none;
+}
+.stat-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+.stat-carousel-track .stat-card {
+  scroll-snap-align: start;
 }
 .stat-card {
   /* shrink:0 — cards must stay exactly 165px on every page at every
@@ -1951,6 +1983,7 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .status-routine,
 .status-in-transit,
 .status-intransit,
+.status-consumed,
 .badge.blue {
   background: var(--blue-bg);
   color: var(--blue);

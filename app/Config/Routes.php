@@ -371,6 +371,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes)
 
     $routes->get('janitorial', 'JanitorialController::index');
     $routes->get('janitorial/checklists', 'JanitorialController::checklists');
+    $routes->get('janitorial/refresh', 'JanitorialController::refreshData');
     $routes->get('janitorial/my', 'JanitorialController::my');
     $routes->post('janitorial/tasks/(:num)/toggle', 'JanitorialController::toggleTask/$1');
     $routes->post('janitorial/refillInventory/(:num)', 'JanitorialController::refillInventory/$1');

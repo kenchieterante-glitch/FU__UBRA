@@ -15,7 +15,7 @@ class BorrowModel extends Model
 
     public function getAllWithDetails()
     {
-        $builder = $this->select('borrow_records.*, t.asset_name, t.asset_code')
+        $builder = $this->select('borrow_records.*, t.asset_name, t.asset_code, t.current_stock, t.unit, t.category')
                         ->join('tools t', 't.id = borrow_records.tool_id', 'left')
                         ->where('borrow_records.is_archived', 0)
                         ->orderBy('borrow_records.id', 'DESC');

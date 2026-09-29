@@ -8,7 +8,7 @@ class JanitorialAssignmentModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [
-        'staff_name', 'assigned_zone', 'shift_start', 'shift_end',
+        'staff_name', 'assigned_zone', 'floor', 'shift_start', 'shift_end',
         'date_assigned', 'status', 'priority',
     ];
 

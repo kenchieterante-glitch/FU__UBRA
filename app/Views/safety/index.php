@@ -134,7 +134,7 @@ $departments = $departments ?? [];
           <div class="map-search-box map-search-dropdown">
             <i class="bi bi-building"></i>
             <select id="mapBuildingSelect" onchange="onMapBuildingSelect(this.value)">
-              <option value="">Jump to a building…</option>
+              <option value="">Select a building…</option>
             </select>
           </div>
         </div>

@@ -271,12 +271,32 @@ class Api extends BaseController
             return $this->response->setStatusCode(404)->setJSON(['message' => 'No tool found for that code.']);
         }
 
-        $stockTracked = $tool['current_stock'] !== null;
+        $isConsumable = $tool['category'] === 'Consumable';
         $borrowedQty = 0;
-        if ($stockTracked) {
+        // What a return scan would actually target — the single most
+        // recently borrowed still-outstanding record (toolsScanReturn()
+        // always acts on that one), net of any partial returns already
+        // made against it. Lets the app cap/prefill a return-quantity
+        // stepper correctly instead of offering the tool-wide borrowed
+        // total, which can span several different borrowers.
+        //
+        // A consumable is never returnable (it's used up when borrowed),
+        // so this always reads 0 for one regardless of what borrow_records
+        // says — including any pre-existing "Borrowed" rows left over from
+        // before consumables stopped going through the return lifecycle.
+        $returnableQty = 0;
+        if ($tool['current_stock'] !== null && !$isConsumable) {
             $sum = (new BorrowModel())->where('tool_id', $tool['id'])->where('status', 'Borrowed')
                 ->selectSum('quantity')->first();
             $borrowedQty = (float) ($sum['quantity'] ?? 0);
+
+            $latestBorrow = (new BorrowModel())->where('tool_id', $tool['id'])->where('status', 'Borrowed')
+                ->orderBy('id', 'DESC')->first();
+            if ($latestBorrow) {
+                $alreadyReturned = (new ReturnModel())->where('borrow_id', $latestBorrow['id'])
+                    ->selectSum('quantity_returned')->first();
+                $returnableQty = (float) $latestBorrow['quantity'] - (float) ($alreadyReturned['quantity_returned'] ?? 0);
+            }
         }
 
         return $this->response->setJSON([
@@ -287,8 +307,10 @@ class Api extends BaseController
             'status'        => $tool['availability'],
             'available'     => $tool['availability'] === 'Available',
             'qty'           => $tool['current_stock'] !== null ? (float) $tool['current_stock'] : 1,
-            'stock_tracked' => $stockTracked,
+            'stock_tracked' => $tool['current_stock'] !== null,
+            'returnable'    => !$isConsumable,
             'borrowed_qty'  => $borrowedQty,
+            'returnable_qty'=> $returnableQty,
         ]);
     }
 
@@ -312,23 +334,33 @@ class Api extends BaseController
 
         $returnModel = new ReturnModel();
         $history = array_map(function ($b) use ($returnModel) {
-            $return = $returnModel->where('borrow_id', $b['id'])->orderBy('id', 'DESC')->first();
+            // A borrow can now be returned across more than one scan (see
+            // toolsScanReturn()) — sum every return_records row against it
+            // for the true total returned so far, and use the latest one
+            // for who/when/condition since that's the most recent activity.
+            $returns = $returnModel->where('borrow_id', $b['id'])->orderBy('id', 'DESC')->findAll();
+            $latestReturn = $returns[0] ?? null;
+            $returnedQty = array_sum(array_column($returns, 'quantity_returned'));
+
             return [
                 'borrower'         => $b['borrower'],
                 'department'       => $b['department'] ?: null,
                 'borrowed_date'    => $b['borrowed_date'],
                 'expected_return'  => $b['expected_return'],
                 'status'           => $b['status'],
-                'returned_date'    => $return['return_date'] ?? null,
-                'returned_by'      => $return['returned_by'] ?? null,
-                'condition_status' => $return['condition_status'] ?? null,
-                'remarks'          => $return['remarks'] ?? null,
+                'quantity'         => (float) ($b['quantity'] ?? 1),
+                'returned_date'    => $latestReturn['return_date'] ?? null,
+                'returned_by'      => $latestReturn['returned_by'] ?? null,
+                'returned_quantity'=> $returns ? (float) $returnedQty : null,
+                'condition_status' => $latestReturn['condition_status'] ?? null,
+                'remarks'          => $latestReturn['remarks'] ?? null,
             ];
         }, $borrows);
 
         return $this->response->setJSON([
             'asset_id'  => $tool['asset_code'],
             'tool_name' => $tool['asset_name'],
+            'unit'      => $tool['unit'] ?? null,
             'history'   => $history,
         ]);
     }
@@ -367,32 +399,47 @@ class Api extends BaseController
         $borrowerName = $body['borrower_name'] ?? ($body['employee_id'] ?? 'Unknown');
         $department   = $body['department'] ?? '';
 
+        // A consumable is used up, not checked out — it's never expected
+        // back, so its record goes straight to a terminal "Consumed" status
+        // instead of "Borrowed" (which everywhere else in the app implies
+        // a pending return). This is also what keeps toolsScanReturn()/
+        // returnTool() from ever finding a "Borrowed" consumable to act on.
+        $isConsumable = $tool['category'] === 'Consumable';
+
         $borrowModel->insert([
             'tool_id'         => $tool['id'],
             'quantity'        => $quantity,
             'borrower'        => $borrowerName,
             'department'      => $department,
             'borrowed_date'   => date('Y-m-d'),
-            'expected_return' => date('Y-m-d', strtotime('+7 days')),
-            'status'          => 'Borrowed',
+            'expected_return' => $isConsumable ? null : date('Y-m-d', strtotime('+7 days')),
+            'status'          => $isConsumable ? 'Consumed' : 'Borrowed',
             'created_at'      => date('Y-m-d H:i:s'),
             'last_activity_at'=> date('Y-m-d H:i:s'),
         ]);
 
         $remainingStock = $stockTracked ? (float) $tool['current_stock'] - $quantity : null;
 
+        // A depleted consumable is out of stock, not "Borrowed" — that word
+        // implies something checked out pending return, which a consumable
+        // never is. Only non-consumables ever flip to "Borrowed".
+        $availability = $isConsumable
+            ? (($remainingStock !== null && $remainingStock <= 0) ? 'Consumed' : 'Available')
+            : ((!$stockTracked || $remainingStock <= 0) ? 'Borrowed' : 'Available');
+
         $toolsModel->update($tool['id'], array_filter([
-            'availability'      => (!$stockTracked || $remainingStock <= 0) ? 'Borrowed' : 'Available',
+            'availability'      => $availability,
             'current_stock'     => $stockTracked ? $remainingStock : null,
             'last_activity_at'  => date('Y-m-d H:i:s'),
         ], fn($v) => $v !== null));
 
         return $this->response->setJSON([
-            'action'        => 'borrow confirmed',
+            'action'        => $isConsumable ? 'item consumed' : 'borrow confirmed',
             'borrower_name' => $borrowerName,
             'tool_name'     => $tool['asset_name'],
             'asset_id'      => $tool['asset_code'],
             'quantity'      => $quantity,
+            'consumed'      => $isConsumable,
             'timestamp'     => date('M j, Y — h:i A'),
         ]);
     }
@@ -411,31 +458,72 @@ class Api extends BaseController
             return $this->response->setStatusCode(404)->setJSON(['message' => 'No tool found for that code.']);
         }
 
+        // Consumables are used up when borrowed, not checked out — there's
+        // nothing to bring back. Checked explicitly (not just relying on no
+        // "Borrowed" record existing) so this also catches any leftover
+        // rows from before consumables stopped going through the return
+        // lifecycle, with a message that actually explains why.
+        if ($tool['category'] === 'Consumable') {
+            return $this->response->setStatusCode(409)->setJSON([
+                'message' => "{$tool['asset_name']} is a consumable — it's used up when borrowed and can't be returned.",
+            ]);
+        }
+
         $borrowRecord = $borrowModel->where('tool_id', $tool['id'])->where('status', 'Borrowed')
                                      ->orderBy('id', 'DESC')->first();
         if (!$borrowRecord) {
             return $this->response->setStatusCode(409)->setJSON(['message' => "{$tool['asset_name']} isn't currently marked as borrowed."]);
         }
 
+        $stockTracked = $tool['current_stock'] !== null;
+
+        // A consumable can be returned across more than one scan (borrow 10,
+        // return 4 now and 6 later) — work out what's still outstanding on
+        // THIS borrow record net of any earlier partial returns against it,
+        // rather than assuming the whole original quantity is coming back.
+        $alreadyReturned = $returnModel->where('borrow_id', $borrowRecord['id'])
+            ->selectSum('quantity_returned')->first();
+        $outstanding = (float) $borrowRecord['quantity'] - (float) ($alreadyReturned['quantity_returned'] ?? 0);
+
+        $returnedQty = $stockTracked && isset($body['quantity']) ? (float) $body['quantity'] : $outstanding;
+
+        if ($returnedQty <= 0) {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'Quantity must be greater than zero.']);
+        }
+        if ($returnedQty > $outstanding) {
+            return $this->response->setStatusCode(409)->setJSON([
+                'message' => "Only {$outstanding} {$tool['asset_name']} currently borrowed on this record.",
+            ]);
+        }
+
         $condition = $body['condition_status'] ?? 'Good';
         $remarks   = $body['remarks'] ?? null;
+        $isFullReturn = $returnedQty >= $outstanding;
 
-        $borrowModel->update($borrowRecord['id'], [
-            'status'            => 'Returned',
-            'last_activity_at'  => date('Y-m-d H:i:s'),
-        ]);
+        // Only flip the borrow record to Returned once nothing is left
+        // outstanding on it — a partial return keeps it Borrowed (with its
+        // own `quantity` column left untouched as the historical record of
+        // what was originally borrowed) so a later scan can return the rest.
+        if ($isFullReturn) {
+            $borrowModel->update($borrowRecord['id'], [
+                'status'            => 'Returned',
+                'last_activity_at'  => date('Y-m-d H:i:s'),
+            ]);
+        } else {
+            $borrowModel->update($borrowRecord['id'], [
+                'last_activity_at'  => date('Y-m-d H:i:s'),
+            ]);
+        }
 
         $returnModel->insert([
-            'borrow_id'        => $borrowRecord['id'],
-            'tool_id'          => $tool['id'],
-            'returned_by'      => $borrowRecord['borrower'],
-            'return_date'      => date('Y-m-d'),
-            'condition_status' => $condition,
-            'remarks'          => $remarks,
+            'borrow_id'         => $borrowRecord['id'],
+            'tool_id'           => $tool['id'],
+            'quantity_returned' => $returnedQty,
+            'returned_by'       => $borrowRecord['borrower'],
+            'return_date'       => date('Y-m-d'),
+            'condition_status'  => $condition,
+            'remarks'           => $remarks,
         ]);
-
-        $stockTracked = $tool['current_stock'] !== null;
-        $returnedQty  = (float) ($borrowRecord['quantity'] ?? 1);
 
         $toolsModel->update($tool['id'], [
             'availability'      => 'Available',
@@ -450,6 +538,7 @@ class Api extends BaseController
             'tool_name'     => $tool['asset_name'],
             'asset_id'      => $tool['asset_code'],
             'quantity'      => $returnedQty,
+            'partial'       => !$isFullReturn,
             'timestamp'     => date('M j, Y — h:i A'),
         ]);
     }
@@ -512,8 +601,8 @@ class Api extends BaseController
             'vehicle_name'      => $data['vehicle_name'],
             'plate_no'          => $data['plate_no'],
             'type'              => $data['type'] ?? null,
-            'driver_id'         => $data['driver_id'] ?: null,
-            'department_id'     => $data['department_id'] ?: null,
+            'driver_id'         => ($data['driver_id'] ?? null) ?: null,
+            'department_id'     => ($data['department_id'] ?? null) ?: null,
             'gps_status'        => 'Offline',
             'inspection_status' => 'Due Soon',
             'availability'      => 'Available',
@@ -832,10 +921,10 @@ class Api extends BaseController
         $id = $model->insert([
             'location'          => $locationName,
             'unit_name'         => $unitName,
-            'last_cleaning'     => $data['last_cleaning'] ?: null,
-            'next_schedule'     => $data['next_schedule'] ?: null,
-            'condition_status'  => $data['condition'] ?: 'Operational',
-            'assigned_tech'     => $data['assigned_tech'] ?: null,
+            'last_cleaning'     => ($data['last_cleaning'] ?? null) ?: null,
+            'next_schedule'     => ($data['next_schedule'] ?? null) ?: null,
+            'condition_status'  => ($data['condition'] ?? null) ?: 'Operational',
+            'assigned_tech'     => ($data['assigned_tech'] ?? null) ?: null,
         ]);
 
         (new AirconChecklistItemModel())->seedDefaultTasks((int) $id);
@@ -1000,7 +1089,13 @@ class Api extends BaseController
                 $status = 'pending';
             }
 
-            $zones[] = ['id' => $a['id'], 'name' => $a['assigned_zone'], 'status' => $status];
+            $zones[] = [
+                'id'         => $a['id'],
+                'name'       => $a['assigned_zone'],
+                'department' => $a['assigned_zone'],
+                'floor'      => $a['floor'] ?? null,
+                'status'     => $status,
+            ];
         }
 
         return $this->response->setJSON(['zones' => $zones]);
