@@ -191,6 +191,7 @@ $routes->post('safety/setDepartment/(:num)',      'SafetyController::setDepartme
 // ============================================================
 $routes->get('janitorial',            'JanitorialController::index');
 $routes->get('janitorial/checklists', 'JanitorialController::checklists');
+$routes->get('janitorial/refresh',    'JanitorialController::refreshData');
 $routes->post('janitorial/refillInventory/(:num)', 'JanitorialController::refillInventory/$1');
 $routes->post('janitorial/addInventoryItem',       'JanitorialController::addInventoryItem');
 $routes->post('janitorial/assignStaff',            'JanitorialController::assignStaff');

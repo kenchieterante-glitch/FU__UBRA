@@ -90,12 +90,25 @@
   <div id="janitorial-shifts" class="sub-pane">
     <div class="pane-header">
       <h2 class="pane-title"><i class="bi bi-people-fill"></i> Active Shift Assignments</h2>
-      <button class="btn-add-record" onclick="openAddShiftModal()"><i class="bi bi-plus-lg"></i> Assign Staff</button>
+      <div class="pane-header-actions">
+        <!-- Janitors check off tasks from their phones (the FU-UBRA mobile
+             app's /api/janitorial/* endpoints) straight into the same
+             janitorial_assignments/janitorial_tasks rows this page reads —
+             this just re-fetches them without a full page reload. Also
+             polled automatically; see refreshJanitorialData() below. -->
+        <button type="button" class="btn-refresh-record" id="janShiftsRefreshBtn" onclick="refreshJanitorialData(false)" title="Refresh from the mobile app">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+        <button class="btn-add-record" onclick="openAddShiftModal()"><i class="bi bi-plus-lg"></i> Assign Staff</button>
+      </div>
     </div>
     <div class="shift-filter-row" id="shiftFilterRow">
       <button class="shift-filter-chip" data-kind="" onclick="filterShiftsByStat('')">All</button>
       <button class="shift-filter-chip" data-kind="done" onclick="filterShiftsByStat('done')">Completed</button>
       <button class="shift-filter-chip" data-kind="pending" onclick="filterShiftsByStat('pending')">Pending</button>
+      <select id="shiftFloorFilter" class="shift-floor-filter" onchange="filterShiftsByFloor(this.value)">
+        <option value="">All floors</option>
+      </select>
     </div>
     <div class="shift-cards" id="shiftCards"></div>
   </div>
@@ -104,7 +117,15 @@
   <div id="janitorial-inventory" class="sub-pane">
     <div class="pane-header">
       <h2 class="pane-title"><i class="bi bi-box-seam-fill"></i> Consumable Inventory & Refill Log</h2>
-      <button class="btn-add-record" onclick="openAddInventoryModal()"><i class="bi bi-plus-lg"></i> Add Item</button>
+      <div class="pane-header-actions">
+        <!-- Janitors report remaining stock from the mobile app straight
+             into consumable_inventory — see the note on the Active Shifts
+             Refresh button above; same mechanism, same endpoint. -->
+        <button type="button" class="btn-refresh-record" id="janInventoryRefreshBtn" onclick="refreshJanitorialData(false)" title="Refresh from the mobile app">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+        <button class="btn-add-record" onclick="openAddInventoryModal()"><i class="bi bi-plus-lg"></i> Add Item</button>
+      </div>
     </div>
     <div class="table-wrap">
       <table class="sj-table">
@@ -156,9 +177,11 @@
             <option>Clinic</option>
           </select>
         </div>
-        <div class="fg"><label>Floor</label>
+        <div class="fg"><label>Floor <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
           <select id="asFloor">
+            <option value="">— Unspecified —</option>
             <option>Ground Floor</option>
+            <option>1st Floor</option>
             <option>2nd Floor</option>
             <option>3rd Floor</option>
             <option>4th Floor</option>
@@ -237,17 +260,70 @@ function esc(s) {
 // All zone, staff, checklist, and inventory data below comes straight from the
 // database (janitorial_assignments, janitorial_tasks, consumable_inventory) —
 // see JanitorialController::index(). No hardcoded demo values.
-const AREAS = <?= $areas_json ?>;
+// let, not const, on the ones refreshJanitorialData() below replaces
+// wholesale on each refresh/poll — AREAS is the exception since the zone
+// list itself essentially never changes, only what's assigned within it.
+let AREAS = <?= $areas_json ?>;
 const janAreaStatuses = {};
-const janStaff = <?= $staff_json ?>;
-const janAreaChecklists = <?= $checklists_json ?>;
+let janStaff = <?= $staff_json ?>;
+let janAreaChecklists = <?= $checklists_json ?>;
 let inventoryItems = <?= $inventory_json ?>;
-const refillLogEntries = <?= $refill_log_json ?>;
+let refillLogEntries = <?= $refill_log_json ?>;
 // Zone counts (not per-shift) — a zone with two staff assigned counts as
 // "cleaned" once at least one of them finishes all of their own tasks. See
 // JanitorialController::index() for the aggregation.
-const zoneTotal = <?= (int) $zone_total ?>;
-const zoneCleaned = <?= (int) $zone_cleaned ?>;
+let zoneTotal = <?= (int) $zone_total ?>;
+let zoneCleaned = <?= (int) $zone_cleaned ?>;
+
+// ── Sync with the mobile app ────────────────────────────────────────
+// Janitors check off tasks and report consumable stock from their phones
+// via the FU-UBRA mobile app's own /api/janitorial/* endpoints — those
+// write straight into the same janitorial_assignments/janitorial_tasks/
+// consumable_inventory rows this page reads. So there's nothing to
+// literally "import" — the fix is just re-fetching what's already in the
+// database, since a plain page load only reads it once. Polled
+// automatically, plus the Refresh buttons on both tabs for an instant check.
+let janitorialRefreshInFlight = false;
+
+function refreshJanitorialData(isPoll) {
+  if (janitorialRefreshInFlight) return;
+  janitorialRefreshInFlight = true;
+
+  const btns = [document.getElementById('janShiftsRefreshBtn'), document.getElementById('janInventoryRefreshBtn')];
+  if (!isPoll) btns.forEach(b => b && b.classList.add('spinning'));
+
+  fetch('<?= base_url('janitorial/refresh') ?>')
+    .then(r => r.json())
+    .then(data => {
+      AREAS = data.areas || AREAS;
+      janStaff = data.staff || [];
+      janAreaChecklists = data.checklists || {};
+      inventoryItems = data.inventory || [];
+      refillLogEntries = data.refill_log || [];
+      zoneTotal = data.zone_total || 0;
+      zoneCleaned = data.zone_cleaned || 0;
+
+      renderShiftCards();
+      renderInventory();
+      renderRefillLog();
+      renderJanitorialSummary();
+
+      if (!isPoll) showToast('Synced with the mobile app.');
+    })
+    .catch(() => {
+      if (!isPoll) showToast('Could not refresh — check your connection.', true);
+    })
+    .finally(() => {
+      janitorialRefreshInFlight = false;
+      if (!isPoll) btns.forEach(b => b && b.classList.remove('spinning'));
+    });
+}
+
+// Auto-poll every 20s while this page stays open, same idea as GPS
+// Tracker's live-tracking poll — a silent background refresh, not a
+// full page reload, so it never disturbs whatever you're doing (typing
+// in a modal, mid-scroll, etc).
+setInterval(() => refreshJanitorialData(true), 20000);
 
 function getJanStatusValue(areaKey) {
   const explicit = janAreaStatuses[areaKey];
@@ -717,6 +793,7 @@ function clearMapFilter() {
 }
 
 let shiftsFilter = null;
+let shiftsFloorFilter = null;
 
 // Called from the Dashboard's "Cleaning Completion" box and the filter chips
 // on the Active Shifts tab — 'done' shows only fully-completed shifts,
@@ -729,10 +806,31 @@ function filterShiftsByStat(kind) {
   });
 }
 
+// Populates/refreshes the floor dropdown from whatever floors are actually
+// present in janStaff right now, so it never drifts from real assignments
+// (and keeps the previously selected value if it's still valid).
+function refreshShiftFloorOptions() {
+  const select = document.getElementById('shiftFloorFilter');
+  if (!select) return;
+  const floors = Array.from(new Set(janStaff.map(s => s.floor).filter(Boolean))).sort();
+  const current = select.value;
+  select.innerHTML = '<option value="">All floors</option>' +
+    floors.map(f => `<option value="${f}">${f}</option>`).join('');
+  select.value = floors.includes(current) ? current : '';
+  shiftsFloorFilter = select.value || null;
+}
+
+function filterShiftsByFloor(floor) {
+  shiftsFloorFilter = floor || null;
+  renderShiftCards();
+}
+
 function renderShiftCards() {
-  const list = shiftsFilter === 'pending' ? janStaff.filter(s => s.done !== s.tasks)
-             : shiftsFilter === 'done'    ? janStaff.filter(s => s.tasks > 0 && s.done === s.tasks)
-             : janStaff;
+  refreshShiftFloorOptions();
+  let list = shiftsFilter === 'pending' ? janStaff.filter(s => s.done !== s.tasks)
+           : shiftsFilter === 'done'    ? janStaff.filter(s => s.tasks > 0 && s.done === s.tasks)
+           : janStaff;
+  if (shiftsFloorFilter) list = list.filter(s => s.floor === shiftsFloorFilter);
   if (!list.length) {
     const msg = shiftsFilter === 'pending' ? 'All shifts are fully completed.'
               : shiftsFilter === 'done'    ? 'No shifts are fully completed yet.'
@@ -940,7 +1038,7 @@ function openAddShiftModal() {
   document.getElementById('asTasksField').style.display = '';
   document.getElementById('asStaffName').value = '';
   document.getElementById('asZone').value = '';
-  document.getElementById('asFloor').value = 'Ground Floor';
+  document.getElementById('asFloor').value = '';
   document.getElementById('asPriority').value = 'Routine';
   document.getElementById('asShiftStart').value = '';
   document.getElementById('asShiftEnd').value = '';

@@ -7,6 +7,7 @@ use App\Models\BorrowModel;
 use App\Models\NotificationModel;
 use App\Models\PersonnelModel;
 use App\Models\ToolsRefillLogModel;
+use App\Models\ReturnModel;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -74,10 +75,18 @@ class ToolsController extends BaseController
         }
 
         $today = date('Y-m-d');
-        $records = array_map(function ($r) use ($today) {
+        $returnModel = new ReturnModel();
+        $records = array_map(function ($r) use ($today, $returnModel) {
             $r['computed_status'] = ($r['status'] === 'Borrowed' && !empty($r['expected_return']) && $r['expected_return'] < $today)
                 ? 'Overdue'
                 : $r['status'];
+
+            // How much of this borrow record is still out, net of any
+            // partial returns already made against it — bounds the "Mark
+            // Returned" quantity stepper so it can't return more than that.
+            $alreadyReturned = $returnModel->where('borrow_id', $r['id'])->selectSum('quantity_returned')->first();
+            $r['outstanding_qty'] = (float) ($r['quantity'] ?? 1) - (float) ($alreadyReturned['quantity_returned'] ?? 0);
+
             return $r;
         }, $this->borrowModel->getAllWithDetails());
 
@@ -124,6 +133,7 @@ class ToolsController extends BaseController
     // many times it's been borrowed and by whom, not just its current status.
     private function buildToolDetails(array $tools): array
     {
+        $returnModel = new ReturnModel();
         $details = [];
         foreach ($tools as $t) {
             $history = $this->borrowModel->getForTool((int) $t['id']);
@@ -139,13 +149,26 @@ class ToolsController extends BaseController
                     ? ((float) ($t['current_stock'] ?? 0) . ' ' . ($t['unit'] ?: 'pcs') . ' in stock')
                     : null,
                 'timesBorrowed' => count($history),
-                'history' => array_map(fn($h) => [
-                    'borrower'   => $h['borrower'] ?: 'Not on record',
-                    'department' => $h['department'] ?: '—',
-                    'borrowed'   => !empty($h['borrowed_date']) ? date('M j, Y', strtotime($h['borrowed_date'])) : '—',
-                    'due'        => !empty($h['expected_return']) ? date('M j, Y', strtotime($h['expected_return'])) : '—',
-                    'status'     => $h['status'],
-                ], array_slice($history, 0, 20)),
+                'history' => array_map(function ($h) use ($t, $returnModel) {
+                    // A borrow can be returned across more than one "Mark
+                    // Returned" click — sum every return against it for the
+                    // true quantity returned so far, rather than assuming
+                    // it always equals the full borrowed amount.
+                    $returnedSum = $returnModel->where('borrow_id', $h['id'])
+                        ->selectSum('quantity_returned')->first();
+                    $returnedQty = (float) ($returnedSum['quantity_returned'] ?? 0);
+
+                    return [
+                        'borrower'        => $h['borrower'] ?: 'Not on record',
+                        'department'      => $h['department'] ?: '—',
+                        'borrowed'        => !empty($h['borrowed_date']) ? date('M j, Y', strtotime($h['borrowed_date'])) : '—',
+                        'due'             => !empty($h['expected_return']) ? date('M j, Y', strtotime($h['expected_return'])) : '—',
+                        'status'          => $h['status'],
+                        'quantity'        => (float) ($h['quantity'] ?? 1),
+                        'returnedQuantity'=> $returnedQty > 0 ? $returnedQty : null,
+                        'unit'            => $t['unit'] ?: 'pcs',
+                    ];
+                }, array_slice($history, 0, 20)),
             ];
         }
         return $details;
@@ -294,26 +317,72 @@ class ToolsController extends BaseController
     // --- RETURN ---
     public function returnTool($toolId)
     {
+        $tool = $this->toolsModel->find($toolId);
+        if (!$tool) {
+            return redirect()->to('/tools')->with('error', 'Tool not found.');
+        }
+
+        // Consumables are used up when borrowed, not checked out — see the
+        // matching guard in Api::toolsScanReturn() for the mobile app.
+        if ($tool['category'] === 'Consumable') {
+            return redirect()->to('/tools/borrowing')->with('error', "{$tool['asset_name']} is a consumable — it's used up when borrowed and can't be returned.");
+        }
+
         $borrowRecord = $this->borrowModel
             ->where('tool_id', $toolId)
             ->where('status', 'Borrowed')
             ->orderBy('id', 'DESC')
             ->first();
 
-        if ($borrowRecord) {
-            $this->borrowModel->update($borrowRecord['id'], [
-                'actual_return'       => date('Y-m-d'),
-                'status'              => 'Returned',
-                'condition_on_return' => $this->request->getPost('condition_on_return') ?? 'Excellent',
-                'remarks'             => $this->request->getPost('remarks'),
-                'last_activity_at'    => date('Y-m-d H:i:s'),
-            ]);
+        if (!$borrowRecord) {
+            return redirect()->to('/tools')->with('error', "{$tool['asset_name']} isn't currently marked as borrowed.");
         }
 
+        $returnModel = new ReturnModel();
+        $stockTracked = $tool['current_stock'] !== null;
+
+        // Same "return across more than one scan" support as the mobile
+        // app's toolsScanReturn() — work out what's still outstanding on
+        // this borrow record net of any earlier partial returns against it.
+        $alreadyReturned = $returnModel->where('borrow_id', $borrowRecord['id'])
+            ->selectSum('quantity_returned')->first();
+        $outstanding = (float) $borrowRecord['quantity'] - (float) ($alreadyReturned['quantity_returned'] ?? 0);
+
+        $returnedQty = $stockTracked && $this->request->getPost('quantity') !== null
+            ? (float) $this->request->getPost('quantity')
+            : $outstanding;
+
+        if ($returnedQty <= 0) {
+            return redirect()->to('/tools/borrowing')->with('error', 'Quantity must be greater than zero.');
+        }
+        if ($returnedQty > $outstanding) {
+            return redirect()->to('/tools/borrowing')->with('error', "Only {$outstanding} {$tool['asset_name']} currently borrowed on this record.");
+        }
+
+        $condition = $this->request->getPost('condition_on_return') ?? 'Excellent';
+        $remarks   = $this->request->getPost('remarks');
+        $isFullReturn = $returnedQty >= $outstanding;
+
+        $this->borrowModel->update($borrowRecord['id'], [
+            'status'            => $isFullReturn ? 'Returned' : 'Borrowed',
+            'last_activity_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        $returnModel->insert([
+            'borrow_id'         => $borrowRecord['id'],
+            'tool_id'           => $toolId,
+            'quantity_returned' => $returnedQty,
+            'returned_by'       => $borrowRecord['borrower'],
+            'return_date'       => date('Y-m-d'),
+            'condition_status'  => $condition,
+            'remarks'           => $remarks,
+        ]);
+
         $this->toolsModel->update($toolId, [
-            'availability'       => 'Available',
-            'condition_status'   => $this->request->getPost('condition_on_return') ?? 'Excellent',
-            'last_activity_at'   => date('Y-m-d H:i:s'),
+            'availability'      => 'Available',
+            'condition_status'  => $condition,
+            'current_stock'     => $stockTracked ? (float) $tool['current_stock'] + $returnedQty : $tool['current_stock'],
+            'last_activity_at'  => date('Y-m-d H:i:s'),
         ]);
 
         return redirect()->to('/tools')->with('success', 'Asset marked as returned.');

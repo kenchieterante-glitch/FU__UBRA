@@ -46,12 +46,22 @@ $personnelStatCards = [
   ['tone' => 'tone-gold',    'icon' => 'bi-calendar-day',     'label' => 'On Leave',           'value' => (int) ($on_leave_count ?? 0),        'onclick' => "filterPersonnelByStat('On Leave')"],
 ];
 ?>
-<!-- Static status-card grid (no more auto-scrolling marquee) — wraps like
-     every other management page's stat cards. Rows beyond the first are
-     collapsed behind a "Show more" toggle (setupPersonnelStatCardsCollapse
-     below) instead of continuously scrolling. -->
-<div class="stat-cards-wrap" id="personnelStatCardsWrap">
-  <div class="stat-cards" id="personnelStatCards">
+<!-- Static carousel — a single row that no longer auto-scrolls (that's
+     the old marquee this replaced, twice over now). Paging is entirely
+     manual: Prev/Next float over the row's left/right edges (not a
+     separate control row above it) and scroll one view's worth of cards
+     at a time. Prev starts hidden — there's nothing behind you at the
+     start — and only appears once Next has been clicked at least once
+     (personnelCarouselStep below). Uses native horizontal scroll +
+     scroll-snap under the hood, not a hand-rolled transform/animation. -->
+<div class="stat-carousel" id="personnelStatCarousel">
+  <button type="button" class="carousel-nav-btn carousel-nav-left" id="personnelCarouselPrev" onclick="personnelCarouselStep(-1)" aria-label="Scroll status cards left" style="display:none">
+    <i class="bi bi-chevron-left"></i>
+  </button>
+  <button type="button" class="carousel-nav-btn carousel-nav-right" id="personnelCarouselNext" onclick="personnelCarouselStep(1)" aria-label="Scroll status cards right">
+    <i class="bi bi-chevron-right"></i>
+  </button>
+  <div class="stat-carousel-track" id="personnelStatCarouselTrack">
     <?php foreach ($personnelStatCards as $card): ?>
       <div class="stat-card stat-card-clickable" onclick="<?= esc($card['onclick'], 'attr') ?>" role="button" tabindex="0">
         <span class="stat-icon <?= esc($card['tone'], 'attr') ?>"><i class="bi <?= esc($card['icon'], 'attr') ?>"></i></span>
@@ -61,10 +71,6 @@ $personnelStatCards = [
     <?php endforeach; ?>
   </div>
 </div>
-<button type="button" class="stat-cards-toggle" id="personnelStatCardsToggle" onclick="togglePersonnelStatCards()" style="display:none">
-  <span id="personnelStatCardsToggleLabel">Show more</span>
-  <i class="bi bi-chevron-down"></i>
-</button>
 
 <?php endif; ?>
 
@@ -515,63 +521,40 @@ function filterPersonnelByStat(kind) {
   }
 }
 
-// Status cards now sit in a static, wrapping grid instead of an
-// auto-scrolling marquee. Only the first row is shown by default; the rest
-// collapse behind a "Show more" toggle. The collapsed height is measured
-// from the actual first row (not hardcoded), so it stays correct at any
-// screen width and however many cards fit per row.
-function setupPersonnelStatCardsCollapse() {
-  const wrap = document.getElementById('personnelStatCardsWrap');
-  const grid = document.getElementById('personnelStatCards');
-  const toggle = document.getElementById('personnelStatCardsToggle');
-  const label = document.getElementById('personnelStatCardsToggleLabel');
-  const icon = toggle?.querySelector('i');
-  if (!wrap || !grid || !toggle || !label) return;
+// Status cards are back to a single-row carousel — but static this time,
+// not the old auto-scrolling marquee. It never moves on its own; Prev/Next
+// (grouped at the right, above the row) page it via native horizontal
+// scrolling (scrollBy), one visible-width's worth of cards at a time.
+// Scroll-snap (base.css) means it always settles on a clean card boundary
+// rather than stopping mid-card.
+function setupPersonnelStatCarousel() {
+  const track = document.getElementById('personnelStatCarouselTrack');
+  const prevBtn = document.getElementById('personnelCarouselPrev');
+  const nextBtn = document.getElementById('personnelCarouselNext');
+  if (!track || !prevBtn || !nextBtn) return;
 
-  let expanded = false;
-  // Must match .stat-cards-wrap's padding-top in base.css — that padding
-  // (and this same amount added to the collapsed height) gives the
-  // ":hover" lift (translateY(-1px)) room so its top border isn't sliced
-  // off by this wrapper's overflow: hidden.
-  const TOP_BUFFER = 4;
-
-  function measureCollapsed() {
-    const cards = Array.from(grid.children);
-    if (!cards.length) {
-      toggle.style.display = 'none';
-      return;
-    }
-    const firstRowTop = cards[0].offsetTop;
-    const rowCards = cards.filter(c => c.offsetTop === firstRowTop);
-    if (rowCards.length >= cards.length) {
-      // Every card already fits on one row — nothing to collapse.
-      wrap.style.maxHeight = '';
-      toggle.style.display = 'none';
-      return;
-    }
-    wrap.style.maxHeight = (rowCards[0].offsetHeight + TOP_BUFFER) + 'px';
-    toggle.style.display = 'flex';
-    label.textContent = 'Show ' + (cards.length - rowCards.length) + ' more';
-    if (icon) icon.className = 'bi bi-chevron-down';
+  function updateArrowState() {
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    const atStart = track.scrollLeft <= 0;
+    const atEnd = track.scrollLeft >= maxScroll - 1; // -1: fractional scroll rounding
+    // Hidden at the very start (nothing behind you yet), appears the
+    // moment Next moves you off position 0, hides again if you scroll
+    // back to the start — driven purely by scroll position, so it stays
+    // correct regardless of whether Next was clicked or the row was
+    // dragged/scrolled by hand.
+    prevBtn.style.display = atStart ? 'none' : 'flex';
+    nextBtn.style.display = atEnd ? 'none' : 'flex';
   }
 
-  window.togglePersonnelStatCards = function () {
-    expanded = !expanded;
-    if (expanded) {
-      wrap.style.maxHeight = grid.scrollHeight + 'px';
-      label.textContent = 'Show less';
-      if (icon) icon.className = 'bi bi-chevron-up';
-    } else {
-      measureCollapsed();
-    }
+  window.personnelCarouselStep = function (direction) {
+    track.scrollBy({ left: direction * track.clientWidth, behavior: 'smooth' });
   };
 
-  measureCollapsed();
-  window.addEventListener('resize', function () {
-    if (!expanded) measureCollapsed();
-  });
+  track.addEventListener('scroll', updateArrowState);
+  window.addEventListener('resize', updateArrowState);
+  updateArrowState();
 }
-document.addEventListener('DOMContentLoaded', setupPersonnelStatCardsCollapse);
+document.addEventListener('DOMContentLoaded', setupPersonnelStatCarousel);
 
 function togglePersonnelFilterMenu() {
   const popup = document.getElementById('personnelFilterPopup');

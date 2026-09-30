@@ -87,6 +87,7 @@ $isConsumablePage = ($title === 'Consumable');
               <option value="">All Availability</option>
               <option value="Available">Available</option>
               <option value="Borrowed">Borrowed</option>
+              <option value="Consumed">Consumed</option>
               <option value="Maintenance">Maintenance</option>
               <option value="Disposal">Disposal</option>
             </select>
@@ -280,8 +281,13 @@ function openToolDetail(id) {
   document.getElementById('tdTitle').textContent = t.name;
 
   const historyRows = t.history.length
-    ? t.history.map(h => `<tr><td>${esc(h.borrowed)}</td><td>${esc(h.borrower)}</td><td>${esc(h.department)}</td><td>${esc(h.due)}</td><td>${esc(h.status)}</td></tr>`).join('')
-    : `<tr><td colspan="5">No borrow history recorded yet.</td></tr>`;
+    ? t.history.map(h => {
+        const qtyCell = h.returnedQuantity != null && h.returnedQuantity !== h.quantity
+          ? `${esc(h.quantity)} ${esc(h.unit)} (${esc(h.returnedQuantity)} returned)`
+          : `${esc(h.quantity)} ${esc(h.unit)}`;
+        return `<tr><td>${esc(h.borrowed)}</td><td>${esc(h.borrower)}</td><td>${esc(h.department)}</td><td>${esc(h.due)}</td><td>${qtyCell}</td><td>${esc(h.status)}</td></tr>`;
+      }).join('')
+    : `<tr><td colspan="6">No borrow history recorded yet.</td></tr>`;
 
   document.getElementById('tdBody').innerHTML = `
     <div class="detail-section">
@@ -308,7 +314,7 @@ function openToolDetail(id) {
       <div class="detail-section-title">Borrow History</div>
       <div class="history-table-wrap">
         <table class="history-table">
-          <thead><tr><th>Date Borrowed</th><th>Borrower</th><th>Department</th><th>Due Back</th><th>Status</th></tr></thead>
+          <thead><tr><th>Date Borrowed</th><th>Borrower</th><th>Department</th><th>Due Back</th><th>Quantity</th><th>Status</th></tr></thead>
           <tbody>${historyRows}</tbody>
         </table>
       </div>

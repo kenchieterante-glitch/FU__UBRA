@@ -1432,6 +1432,42 @@
     background: var(--md);
 }
 
+/* Active Shifts / Consumable Inventory "Refresh" button — pulls whatever
+   janitors have logged from the mobile app (refreshJanitorialData() in
+   Janitorial/index.php) without a full page reload. Grouped with
+   .btn-add-record inside .pane-header-actions so both sit together on
+   the right of the pane header. */
+.pane-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+.btn-refresh-record {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    background: none;
+    color: var(--m);
+    border: 1px solid var(--m);
+    border-radius: 8px;
+    padding: .4rem .9rem;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+}
+.btn-refresh-record:hover {
+    background: var(--m);
+    color: #fff;
+}
+.btn-refresh-record.spinning i {
+    animation: pane-refresh-spin 0.6s linear infinite;
+}
+@keyframes pane-refresh-spin {
+    to { transform: rotate(360deg); }
+}
+
 .btn-scan {
     display: flex;
     background: var(--ok);
@@ -1836,6 +1872,19 @@
     background: var(--m);
     border-color: var(--m);
     color: #fff;
+}
+
+.shift-floor-filter {
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 700;
+    padding: .4rem .9rem;
+    border-radius: 999px;
+    border: 1px solid var(--bdr);
+    background: var(--surf);
+    color: var(--muted);
+    cursor: pointer;
+    margin-left: auto;
 }
 
 /* ── Shift Cards ─────────────────────────────────────────────── */

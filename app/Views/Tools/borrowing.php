@@ -9,6 +9,10 @@ $badgeClassFor = fn($status) => match ($status) {
     'Overdue'           => 'badge red',
     'Pending approval'  => 'badge amber',
     'Returned'          => 'badge green',
+    // A consumable's terminal state — used up, never returned — reads as
+    // informational rather than a warning, so it gets its own neutral look
+    // instead of falling into the same amber as "Pending approval".
+    'Consumed'          => 'badge dept',
     default             => 'badge amber',
 };
 $borrowDetails = [];
@@ -21,6 +25,15 @@ foreach ($recordList as $r) {
         'department' => $r['department'] ?: '—',
         'borrowed'   => !empty($r['borrowed_date']) ? date('M j, Y', strtotime($r['borrowed_date'])) : '—',
         'due'        => !empty($r['expected_return']) ? date('M j, Y', strtotime($r['expected_return'])) : '—',
+        // A consumable can be returned across more than one "Mark Returned"
+        // click — quantity is the original amount borrowed, outstanding is
+        // what's still out right now (net of any earlier partial returns).
+        'quantity'      => (float) ($r['quantity'] ?? 1),
+        'outstanding'   => (float) ($r['outstanding_qty'] ?? $r['quantity'] ?? 1),
+        'stockTracked'  => $r['current_stock'] !== null,
+        'unit'          => $r['unit'] ?: 'pcs',
+        'toolId'        => $r['tool_id'],
+        'category'      => $r['category'] ?? null,
         'status'     => $status,
         'statusBadgeClass' => $badgeClassFor($status),
     ];
@@ -53,6 +66,7 @@ foreach ($recordList as $r) {
         <th>Borrower</th>
         <th>Date Borrowed</th>
         <th>Due Date</th>
+        <th>Quantity</th>
         <th>Status</th>
         <th>Actions</th>
       </tr>
@@ -77,14 +91,16 @@ foreach ($recordList as $r) {
             <td><?= esc($r['borrower'] ?? 'Not on record') ?></td>
             <td><?= !empty($r['borrowed_date']) ? esc(date('M j, Y', strtotime($r['borrowed_date']))) : '—' ?></td>
             <td><?= !empty($r['expected_return']) ? esc(date('M j, Y', strtotime($r['expected_return']))) : '—' ?></td>
+            <td><?= esc((string) (float) ($r['quantity'] ?? 1)) ?></td>
             <td><span class="status-badge <?= $badgeClass ?>"><?= esc($computedStatus) ?></span></td>
             <td>
               <div class="action-buttons">
                 <button type="button" class="icon-btn" onclick="openBorrowDetail(<?= (int) $r['id'] ?>)" title="View Details" aria-label="View borrow details for <?= esc($r['asset_name'] ?? 'tool') ?>"><i class="bi bi-eye-fill"></i></button>
-                <?php if ($r['status'] === 'Borrowed'): ?>
+                <?php if ($r['status'] === 'Borrowed' && ($r['category'] ?? null) !== 'Consumable'): ?>
                   <form id="returnForm<?= $r['id'] ?>" method="post" action="<?= base_url('tools/returnTool/' . $r['tool_id']) ?>" style="display:contents;">
                     <?= csrf_field() ?>
-                    <button type="button" class="icon-btn" onclick="confirmReturnTool('returnForm<?= $r['id'] ?>', '<?= esc($r['asset_name'] ?? 'this tool', 'js') ?>')" title="Mark Returned" aria-label="Mark <?= esc($r['asset_name'] ?? 'tool') ?> as returned"><i class="bi bi-arrow-counterclockwise"></i></button>
+                    <input type="hidden" name="quantity" id="returnQtyInput<?= $r['id'] ?>" value="<?= esc((string) (float) ($r['outstanding_qty'] ?? $r['quantity'] ?? 1)) ?>">
+                    <button type="button" class="icon-btn" onclick="confirmReturnTool(<?= (int) $r['id'] ?>, '<?= esc($r['asset_name'] ?? 'this tool', 'js') ?>')" title="Mark Returned" aria-label="Mark <?= esc($r['asset_name'] ?? 'tool') ?> as returned"><i class="bi bi-arrow-counterclockwise"></i></button>
                   </form>
                 <?php endif; ?>
               </div>
@@ -92,7 +108,7 @@ foreach ($recordList as $r) {
           </tr>
         <?php endforeach; ?>
       <?php else: ?>
-        <tr><td colspan="7">No borrowing records yet.</td></tr>
+        <tr><td colspan="8">No borrowing records yet.</td></tr>
       <?php endif; ?>
     </tbody>
   </table>
@@ -116,6 +132,12 @@ foreach ($recordList as $r) {
   <div class="modal-box">
     <h3>Mark as Returned</h3>
     <p>Mark <strong id="confirmReturnToolName"></strong> as returned?</p>
+    <div class="refill-stepper" id="confirmReturnQtyRow" style="display:none;">
+      <button type="button" onclick="stepReturnQty(-1)" aria-label="Decrease quantity">&minus;</button>
+      <input type="number" id="confirmReturnQtyInput" value="1" min="1">
+      <button type="button" onclick="stepReturnQty(1)" aria-label="Increase quantity">+</button>
+    </div>
+    <p class="refill-subtitle" id="confirmReturnQtyHint" style="display:none;"></p>
     <div class="modal-actions">
       <button type="button" onclick="document.getElementById('confirmReturnModal').style.display='none'">Cancel</button>
       <button type="button" class="btn-approve" onclick="submitReturnTool()">Yes, Mark Returned</button>
@@ -147,6 +169,7 @@ function openBorrowDetail(id) {
         <div class="detail-row"><span>Department</span><strong>${esc(r.department)}</strong></div>
         <div class="detail-row"><span>Date Borrowed</span><strong>${esc(r.borrowed)}</strong></div>
         <div class="detail-row"><span>Due Date</span><strong>${esc(r.due)}</strong></div>
+        <div class="detail-row"><span>Quantity</span><strong>${esc(r.quantity)}</strong></div>
         <div class="detail-row"><span>Status</span><strong><span class="status-badge ${r.statusBadgeClass}">${esc(r.status)}</span></strong></div>
       </div>
     </div>`;
@@ -165,16 +188,43 @@ function filterBorrowingTable() {
   });
 }
 
-let pendingReturnFormId = null;
+let pendingReturnId = null;
 
-function confirmReturnTool(formId, toolName) {
-  pendingReturnFormId = formId;
+function confirmReturnTool(id, toolName) {
+  pendingReturnId = id;
+  const r = borrowDetails[id] || {};
   document.getElementById('confirmReturnToolName').textContent = toolName;
+
+  const qtyRow = document.getElementById('confirmReturnQtyRow');
+  const qtyHint = document.getElementById('confirmReturnQtyHint');
+  const qtyInput = document.getElementById('confirmReturnQtyInput');
+  const showStepper = r.stockTracked && r.outstanding > 1;
+
+  qtyRow.style.display = showStepper ? 'flex' : 'none';
+  qtyHint.style.display = showStepper ? 'block' : 'none';
+  if (showStepper) {
+    qtyInput.value = r.outstanding;
+    qtyInput.max = r.outstanding;
+    qtyHint.textContent = `${r.outstanding} ${r.unit} currently borrowed on this record.`;
+  }
+
   document.getElementById('confirmReturnModal').style.display = 'flex';
 }
 
+function stepReturnQty(delta) {
+  const input = document.getElementById('confirmReturnQtyInput');
+  const max = Number(input.max) || 1;
+  const next = (parseInt(input.value, 10) || 0) + delta;
+  input.value = Math.min(Math.max(1, next), max);
+}
+
 function submitReturnTool() {
-  if (pendingReturnFormId) document.getElementById(pendingReturnFormId).submit();
+  if (!pendingReturnId) return;
+  const r = borrowDetails[pendingReturnId] || {};
+  if (r.stockTracked && r.outstanding > 1) {
+    document.getElementById('returnQtyInput' + pendingReturnId).value = document.getElementById('confirmReturnQtyInput').value;
+  }
+  document.getElementById('returnForm' + pendingReturnId).submit();
 }
 </script>
 
