@@ -7,6 +7,7 @@ use App\Models\JanitorialTaskModel;
 use App\Models\JanitorialTaskHistoryModel;
 use App\Models\ConsumableInventoryModel;
 use App\Models\RefillLogModel;
+use App\Models\NotificationModel;
 
 class JanitorialController extends BaseController
 {
@@ -78,6 +79,13 @@ class JanitorialController extends BaseController
             $shiftLabels  = [];
             $anyStaffDone = false;
 
+            // Grouped alongside the zone-wide merge below (not instead of
+            // it) — this only feeds the drill-down panel's per-floor tabs.
+            // The zone-level "cleaned" rule above (any one shift fully
+            // done) and everywhere it's used (Dashboard, mobile API) stays
+            // exactly as it was before floors existed.
+            $assignmentsByFloor = [];
+
             foreach ($zoneAssignments as $a) {
                 $tasks = $tasksByAssignment[$a['id']] ?? [];
                 $done  = count(array_filter($tasks, fn($t) => (int) $t['is_done'] === 1));
@@ -100,24 +108,38 @@ class JanitorialController extends BaseController
                 }
 
                 $staff[] = [
-                    'name'  => $a['staff_name'],
-                    'zone'  => $zoneName,
+                    'id'          => (int) $a['id'],
+                    'name'        => $a['staff_name'],
+                    'zone'        => $zoneName,
+                    'floor'       => $a['floor'] ?: 'Ground Floor',
+                    'priority'    => $a['priority'] ?? 'Routine',
+                    'shiftStart'  => substr($a['shift_start'], 0, 5),
+                    'shiftEnd'    => substr($a['shift_end'], 0, 5),
                     'tasks' => $total,
                     'done'  => $done,
                     'photo' => strtoupper(substr($a['staff_name'], 0, 1)),
                     'shift' => $shift,
                     'area'  => $slug,
                 ];
+
+                $assignmentsByFloor[$a['floor'] ?: 'Ground Floor'][] = $a;
             }
 
             // Completed tasks are listed before pending ones (adviser feedback).
             usort($mergedTasks, fn($a, $b) => (int) $b['done'] <=> (int) $a['done']);
+
+            $byFloor = [];
+            foreach ($assignmentsByFloor as $floorName => $floorAssignments) {
+                $byFloor[$floorName] = $this->buildMergedChecklist($floorAssignments, $tasksByAssignment);
+            }
+            uksort($byFloor, [$this, 'compareFloorNames']);
 
             $checklists[$slug] = [
                 'staff'       => implode(' & ', $staffNames),
                 'shift'       => implode(' / ', array_unique($shiftLabels)),
                 'tasks'       => $mergedTasks,
                 'anyStaffDone' => $anyStaffDone,
+                'byFloor'     => $byFloor,
             ];
         }
 
@@ -169,6 +191,52 @@ class JanitorialController extends BaseController
         ];
 
         return view('janitorial/index', $data);
+    }
+
+    // Same merge rule used for a whole zone (see index()), just scoped to
+    // whichever assignments are passed in — reused per-floor so a
+    // building's drill-down panel can show one floor's staff/shift/tasks
+    // without duplicating the merge logic a second time.
+    private function buildMergedChecklist(array $assignments, array $tasksByAssignment): array
+    {
+        $multiStaff = count($assignments) > 1;
+        $tasks = [];
+        $staffNames = [];
+        $shiftLabels = [];
+
+        foreach ($assignments as $a) {
+            $myTasks = $tasksByAssignment[$a['id']] ?? [];
+            $shift = date('gA', strtotime($a['shift_start'])) . '-' . date('gA', strtotime($a['shift_end']));
+            $staffNames[] = $a['staff_name'];
+            $shiftLabels[] = $shift;
+
+            foreach ($myTasks as $t) {
+                $tasks[] = [
+                    't'    => $multiStaff ? "{$t['task_name']} ({$a['staff_name']})" : $t['task_name'],
+                    'done' => (bool) $t['is_done'],
+                    'time' => $t['completed_at'] ? date('H:i', strtotime($t['completed_at'])) : null,
+                ];
+            }
+        }
+
+        usort($tasks, fn($a, $b) => (int) $b['done'] <=> (int) $a['done']);
+
+        return [
+            'staff' => implode(' & ', $staffNames),
+            'shift' => implode(' / ', array_unique($shiftLabels)),
+            'tasks' => $tasks,
+        ];
+    }
+
+    // "Ground Floor" always first, then numeric floors in order (2nd, 3rd,
+    // …) — plain string sort would put "2nd Floor" after "Ground Floor"
+    // but before "3rd Floor" is fine alphabetically, this just guarantees it.
+    private function compareFloorNames(string $a, string $b): int
+    {
+        if ($a === $b) return 0;
+        if ($a === 'Ground Floor') return -1;
+        if ($b === 'Ground Floor') return 1;
+        return ((int) $a) <=> ((int) $b);
     }
 
     public function checklists()
@@ -274,6 +342,8 @@ class JanitorialController extends BaseController
 
         $staffName  = trim((string) $this->request->getPost('staff_name'));
         $zone       = trim((string) $this->request->getPost('assigned_zone'));
+        $floor      = trim((string) $this->request->getPost('floor')) ?: 'Ground Floor';
+        $priority   = $this->request->getPost('priority') === 'Urgent' ? 'Urgent' : 'Routine';
         $shiftStart = (string) $this->request->getPost('shift_start');
         $shiftEnd   = (string) $this->request->getPost('shift_end');
 
@@ -284,11 +354,12 @@ class JanitorialController extends BaseController
         $assignmentId = $this->assignmentModel->insert([
             'staff_name'    => $staffName,
             'assigned_zone' => $zone,
+            'floor'         => $floor,
             'shift_start'   => $shiftStart,
             'shift_end'     => $shiftEnd,
             'date_assigned' => date('Y-m-d'),
             'status'        => 'Active',
-            'priority'      => 'Routine',
+            'priority'      => $priority,
         ], true);
 
         // Each line becomes one checklist task for this assignment — without
@@ -298,13 +369,97 @@ class JanitorialController extends BaseController
         foreach ($taskNames as $taskName) {
             $this->taskModel->insert([
                 'assignment_id' => $assignmentId,
-                'task_name'     => $taskName,
+                'task_name'     => ($priority === 'Urgent' ? 'URGENT: ' : '') . $taskName,
                 'is_done'       => 0,
             ]);
         }
 
-        $this->logActivity('Janitorial', "Assigned {$staffName} to {$zone}");
+        // Same "Urgent Cleaning Scheduled" notification category the
+        // Calendar's urgent-cleaning shortcut already uses, so an urgent
+        // zone assigned here shows up the same way everywhere else in the
+        // system that reads notifications.
+        if ($priority === 'Urgent') {
+            (new NotificationModel())->insert([
+                'category'    => 'Urgent Cleaning Scheduled',
+                'description' => "Urgent cleaning assigned to {$staffName} for {$zone} ({$floor}) — needs cleaning ASAP.",
+                'recipient'   => $staffName,
+                'priority'    => 'CRITICAL',
+                'status'      => 'Pending',
+                'is_read'     => 0,
+                'created_at'  => date('Y-m-d H:i:s'),
+            ]);
+        }
 
-        return redirect()->to('/janitorial')->with('success', $staffName . ' assigned to ' . $zone . '.');
+        $this->logActivity('Janitorial', "Assigned {$staffName} to {$zone} ({$floor})" . ($priority === 'Urgent' ? ' — URGENT' : ''));
+
+        return redirect()->to('/janitorial')->with('success', $staffName . ' assigned to ' . $zone . ' (' . $floor . ').');
+    }
+
+    public function updateAssignment($id)
+    {
+        if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
+
+        $assignment = $this->assignmentModel->find($id);
+        if (!$assignment) {
+            return redirect()->to('/janitorial')->with('error', 'Shift assignment not found.');
+        }
+
+        $staffName  = trim((string) $this->request->getPost('staff_name'));
+        $zone       = trim((string) $this->request->getPost('assigned_zone'));
+        $floor      = trim((string) $this->request->getPost('floor')) ?: 'Ground Floor';
+        $priority   = $this->request->getPost('priority') === 'Urgent' ? 'Urgent' : 'Routine';
+        $shiftStart = (string) $this->request->getPost('shift_start');
+        $shiftEnd   = (string) $this->request->getPost('shift_end');
+
+        if ($staffName === '' || $zone === '' || $shiftStart === '' || $shiftEnd === '') {
+            return redirect()->to('/janitorial')->with('error', 'Staff name, zone, and shift times are all required.');
+        }
+
+        $wasUrgent = ($assignment['priority'] ?? 'Routine') === 'Urgent';
+
+        $this->assignmentModel->update($id, [
+            'staff_name'    => $staffName,
+            'assigned_zone' => $zone,
+            'floor'         => $floor,
+            'shift_start'   => $shiftStart,
+            'shift_end'     => $shiftEnd,
+            'priority'      => $priority,
+        ]);
+
+        if ($priority === 'Urgent' && !$wasUrgent) {
+            (new NotificationModel())->insert([
+                'category'    => 'Urgent Cleaning Scheduled',
+                'description' => "Shift for {$staffName} at {$zone} ({$floor}) was marked urgent — needs cleaning ASAP.",
+                'recipient'   => $staffName,
+                'priority'    => 'CRITICAL',
+                'status'      => 'Pending',
+                'is_read'     => 0,
+                'created_at'  => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        $this->logActivity('Janitorial', "Updated {$staffName}'s assignment at {$zone} ({$floor})" . ($priority === 'Urgent' ? ' — URGENT' : ''));
+
+        return redirect()->to('/janitorial')->with('success', 'Shift assignment updated.');
+    }
+
+    public function deleteAssignment($id)
+    {
+        if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
+
+        $assignment = $this->assignmentModel->find($id);
+        if (!$assignment) {
+            return redirect()->to('/janitorial')->with('error', 'Shift assignment not found.');
+        }
+
+        // No FK cascade on janitorial_tasks, so its rows are removed
+        // explicitly first — otherwise they'd be orphaned (still pointing
+        // at an assignment_id that no longer exists).
+        $this->taskModel->where('assignment_id', $id)->delete();
+        $this->assignmentModel->delete($id);
+
+        $this->logActivity('Janitorial', "Removed {$assignment['staff_name']}'s assignment at {$assignment['assigned_zone']}");
+
+        return redirect()->to('/janitorial')->with('success', 'Shift assignment removed.');
     }
 }

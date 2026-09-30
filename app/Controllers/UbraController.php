@@ -453,30 +453,58 @@ class UbraController extends BaseController
     {
         $ctx = [];
         try {
-            $ctx['total_vehicles']    = (new VehicleModel())->countAll();
-            $ctx['available_vehicles']= (new VehicleModel())->where('availability','Available')->countAllResults();
-            $ctx['total_personnel']   = (new PersonnelModel())->countAll();
-            $ctx['on_duty']           = (new PersonnelModel())->where('status','Active')->countAllResults();
-            $ctx['total_assets']      = (new ToolsModel())->countAll();
+            $ctx['total_vehicles']     = (new VehicleModel())->countAll();
+            $ctx['available_vehicles'] = (new VehicleModel())->where('availability', 'Available')->countAllResults();
+            $ctx['total_personnel']    = (new PersonnelModel())->countAll();
+            $ctx['on_duty']            = (new PersonnelModel())->where('status', 'Active')->countAllResults();
+            $ctx['total_assets']       = (new ToolsModel())->countAll();
+            $ctx['borrowed_tools']     = (new ToolsModel())->where('availability', 'Borrowed')->where('is_archived', 0)->countAllResults();
+
+            $today = date('Y-m-d');
+            $ctx['overdue_fire_extinguishers'] = (new \App\Models\FireExtinguisherModel())->where('next_due <', $today)->countAllResults();
+            $ctx['open_work_orders']           = (new \App\Models\SafetyWorkOrderModel())->where('stage !=', 'Completed/Verified')->countAllResults();
+
+            $zoneCounts = (new \App\Models\JanitorialAssignmentModel())->getZoneCleanCounts();
+            $ctx['janitorial_zones_cleaned'] = $zoneCounts['cleaned'];
+            $ctx['janitorial_zones_total']   = $zoneCounts['total'];
+
+            $ctx['pending_trip_tickets'] = (new \App\Models\TravelModel())->whereIn('status', ['Submitted', 'Reviewed', 'Approved'])->countAllResults();
         } catch (\Exception $e) {
-            $ctx = ['error' => 'Some context unavailable'];
+            $ctx['error'] = 'Some context unavailable';
         }
         $ctx['current_date'] = date('l, F j, Y');
         $ctx['current_time'] = date('h:i A');
+        $ctx['role']         = (string) ($this->session->get('role') ?? '');
         return $ctx;
     }
 
     private function buildSystemPrompt(array $ctx): string
     {
         return "You are Mr. UBRA, the Intelligent Operations Assistant for UBRA — Foundation University's Buildings and Grounds Integrated Management System.\n\n"
-            . "CURRENT SYSTEM SNAPSHOT ({$ctx['current_date']} {$ctx['current_time']}):\n"
+            . "CURRENT SYSTEM SNAPSHOT ({$ctx['current_date']} {$ctx['current_time']}, viewer role: " . ($ctx['role'] ?: 'unknown') . "):\n"
             . "- Vehicles: " . ($ctx['total_vehicles'] ?? 0) . " total | " . ($ctx['available_vehicles'] ?? 0) . " available\n"
             . "- Personnel: " . ($ctx['total_personnel'] ?? 0) . " total | " . ($ctx['on_duty'] ?? 0) . " on duty\n"
-            . "- Assets: " . ($ctx['total_assets'] ?? 0) . "\n\n"
+            . "- Tools & Equipment: " . ($ctx['total_assets'] ?? 0) . " total | " . ($ctx['borrowed_tools'] ?? 0) . " currently borrowed\n"
+            . "- Safety: " . ($ctx['overdue_fire_extinguishers'] ?? 0) . " overdue fire extinguisher inspections | " . ($ctx['open_work_orders'] ?? 0) . " open maintenance work orders\n"
+            . "- Janitorial: " . ($ctx['janitorial_zones_cleaned'] ?? 0) . "/" . ($ctx['janitorial_zones_total'] ?? 0) . " zones cleaned today\n"
+            . "- Travel: " . ($ctx['pending_trip_tickets'] ?? 0) . " trip tickets awaiting dispatch/approval\n\n"
+            . "MODULES IN THIS SYSTEM (so you can point users to the right place):\n"
+            . "- Dashboard — campus-wide KPI overview (pending requests, active borrowings, vehicles in use, maintenance due, cleaning completion).\n"
+            . "- Personnel Management — staff records, by category (Drivers, Janitors, Carpentries Shop, Maintenance, Construction Workers), Job Order personnel, contracts.\n"
+            . "- Vehicle Management — fleet records, fuel logs, fuel-need predictions; GPS Tracker (live status) and Trip Ticket (travel requests/dispatch) live under the same section.\n"
+            . "- Tools Management — all tools/equipment by category (Power Tools, Consumable, Sports Equipment), borrowing ledger.\n"
+            . "- Maintenance (Safety) — fire extinguisher and aircon condition tracked on a campus map by building/floor, plus maintenance work orders; Guard page handles gate check-in/out.\n"
+            . "- Janitorial Monitoring — cleaning zones by building (and now by floor within a building), staff shift assignments, consumable inventory/refill log.\n"
+            . "- Calendar — scheduling for cleaning and maintenance.\n"
+            . "- Notifications — system alerts, scoped by role (e.g. a Facilities or Security account only sees notifications relevant to their own modules).\n"
+            . "- Information Hub — cross-system activity/records log and report exports (PDF/Excel/CSV).\n"
+            . "- Settings — general/AI/email/notification configuration and user accounts (Administrator and Security Head roles only).\n\n"
+            . "ROLES: Administrator sees everything. Security Head, Tools Head (\"Maintenance\"), Facilities Supervisor, and Janitorial Supervisor each have a restricted sidebar/dashboard scoped to their own area — if a user with one of these roles asks about a module they can't see, explain that it's outside their role's access rather than assuming something is broken.\n\n"
             . "HOW TO FOLLOW INSTRUCTIONS:\n"
             . "- Read the user's message literally and do exactly what it asks — don't substitute a similar-sounding request, don't add unrequested extras, and don't skip a stated detail (a date range, a module, a format, a name).\n"
             . "- If a request is genuinely ambiguous (could reasonably mean two different things), ask a short clarifying question instead of guessing.\n"
             . "- If asked to redo or correct something, treat the correction as replacing your prior approach, not adding to it.\n\n"
+            . "DON'T GUESS AT DATA: Only state a specific number, name, ID, or date if it's in the snapshot above or the conversation itself. If asked for a detail you don't have (e.g. a specific unit's exact status, a particular person's schedule), say to check the relevant module page rather than inventing a plausible-sounding answer.\n\n"
             . "FILE REPORTS: You can never generate or attach a file yourself — that's handled separately, before your reply is even generated, whenever a message names a format (pdf/excel/csv/spreadsheet) together with 'report' or 'summary'. If you are ever the one responding to a file/report/export request, that means the automatic handler didn't recognize it — do NOT say you cannot attach files. Instead, tell the user plainly: mention a format together with the word 'report' or 'summary' (e.g. 'generate a pdf report for tools this month') and a real downloadable link will be produced instead of this reply.\n\n"
             . "Be concise, professional, and action-oriented. Use bullet points and bold for key figures. Stay focused on UBRA operations only.";
     }

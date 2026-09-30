@@ -1926,6 +1926,27 @@
     margin-bottom: .6rem;
 }
 
+.sc-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+}
+
+.sc-urgent-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    background: #fdecea;
+    color: #dc2626;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .03em;
+    padding: .1rem .4rem;
+    border-radius: 999px;
+    vertical-align: middle;
+}
+
 /* ── Janitorial Drill ────────────────────────────────────────── */
 .jan-drill {
     border-left-color: var(--ok);
@@ -2025,6 +2046,15 @@
     display: flex;
     flex-direction: column;
     gap: .3rem;
+}
+
+/* Cleaner/shift line for whichever floor tab is active — the top
+   .jan-assigned-card above already shows the zone-wide staff/shift, this
+   is the narrower per-floor detail underneath the floor tabs. */
+.jan-floor-meta {
+    font-size: .78rem;
+    color: var(--muted);
+    margin: -.3rem 0 .6rem;
 }
 
 .jcl-item {

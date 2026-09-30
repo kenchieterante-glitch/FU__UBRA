@@ -194,6 +194,8 @@ $routes->get('janitorial/checklists', 'JanitorialController::checklists');
 $routes->post('janitorial/refillInventory/(:num)', 'JanitorialController::refillInventory/$1');
 $routes->post('janitorial/addInventoryItem',       'JanitorialController::addInventoryItem');
 $routes->post('janitorial/assignStaff',            'JanitorialController::assignStaff');
+$routes->post('janitorial/updateAssignment/(:num)', 'JanitorialController::updateAssignment/$1');
+$routes->post('janitorial/deleteAssignment/(:num)', 'JanitorialController::deleteAssignment/$1');
 
 // ============================================================
 // CALENDAR

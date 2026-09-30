@@ -41,7 +41,7 @@
           <div class="map-search-box map-search-dropdown">
             <i class="bi bi-building"></i>
             <select id="janMapBuildingSelect" onchange="onJanMapBuildingSelect(this.value)">
-              <option value="">Jump to a building…</option>
+              <option value="">— Select a Building —</option>
             </select>
           </div>
         </div>
@@ -130,12 +130,17 @@
 </div>
 
 <!-- ── MODALS ───────────────────────────────────────────────────────── -->
+<!-- Shared Create/Edit popup — asEditId is empty for a brand-new assignment
+     (POSTs to assignStaff) or holds an assignment id when editing an
+     existing one (POSTs to updateAssignment/<id> instead). Same pattern as
+     Tools/Vehicles' shared view+edit modals elsewhere in the app. -->
 <div id="assignStaffModal" class="sj-modal-overlay" style="display:none">
   <div class="sj-modal">
     <div class="sj-modal-header">
-      <h3><i class="bi bi-person-plus-fill"></i> Assign Staff</h3>
+      <h3 id="asModalTitle"><i class="bi bi-person-plus-fill"></i> Assign Staff</h3>
     </div>
     <div class="sj-modal-body">
+      <input type="hidden" id="asEditId" value="">
       <div class="form-grid2">
         <div class="fg"><label>Staff Name</label><input type="text" id="asStaffName" placeholder="e.g. Dela Cruz, J."></div>
         <div class="fg"><label>Zone</label>
@@ -151,17 +156,31 @@
             <option>Clinic</option>
           </select>
         </div>
+        <div class="fg"><label>Floor</label>
+          <select id="asFloor">
+            <option>Ground Floor</option>
+            <option>2nd Floor</option>
+            <option>3rd Floor</option>
+            <option>4th Floor</option>
+          </select>
+        </div>
+        <div class="fg"><label>Priority</label>
+          <select id="asPriority">
+            <option value="Routine">Routine</option>
+            <option value="Urgent">Urgent — clean ASAP</option>
+          </select>
+        </div>
         <div class="fg"><label>Shift Start</label><input type="time" id="asShiftStart"></div>
         <div class="fg"><label>Shift End</label><input type="time" id="asShiftEnd"></div>
       </div>
-      <div class="fg" style="margin-top:.6rem">
+      <div class="fg" id="asTasksField" style="margin-top:.6rem">
         <label>Checklist Tasks <span style="font-weight:400;color:var(--muted)">(one per line)</span></label>
         <textarea id="asTasks" rows="4" placeholder="Sweep corridors&#10;Mop hallway&#10;Empty trash bins"></textarea>
       </div>
     </div>
     <div class="sj-modal-footer">
       <button class="btn-cancel" onclick="closeInventoryModal('assignStaffModal')">Cancel</button>
-      <button class="btn-maroon-sm" onclick="saveAssignStaff()"><i class="bi bi-floppy-fill"></i> Assign</button>
+      <button class="btn-maroon-sm" id="asSaveBtn" onclick="saveAssignStaff()"><i class="bi bi-floppy-fill"></i> Assign</button>
     </div>
   </div>
 </div>
@@ -209,6 +228,12 @@
 </div>
 
 <script>
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = String(s ?? '');
+  return d.innerHTML;
+}
+
 // All zone, staff, checklist, and inventory data below comes straight from the
 // database (janitorial_assignments, janitorial_tasks, consumable_inventory) —
 // see JanitorialController::index(). No hardcoded demo values.
@@ -274,6 +299,12 @@ function switchJanTab(id) {
   if (id==='inventory') { renderInventory(); renderRefillLog(); }
 }
 
+// Which floor tab is currently showing per area — reset to the first
+// floor (Ground Floor, when present) every time a different area is
+// drilled into.
+let currentJanArea = null;
+let currentJanFloor = null;
+
 function janDrillDown(area) {
   document.querySelectorAll('.jan-area').forEach(g => g.classList.remove('area-selected'));
   const el = document.querySelector(`.jan-area[data-area-key="${area}"]`);
@@ -284,14 +315,31 @@ function janDrillDown(area) {
   const data = janAreaChecklists[area];
   if (!data) return;
 
+  currentJanArea = area;
+  currentJanFloor = Object.keys(data.byFloor || {})[0] || null;
+
+  renderJanDrillPanel(area);
+}
+
+// Re-renders the whole drill panel (assigned-staff summary card, floor
+// tabs, and the checklist for currentJanFloor) — called on first drill-in
+// and again whenever a floor tab is clicked.
+function renderJanDrillPanel(area) {
+  const data = janAreaChecklists[area];
+  if (!data) return;
+
   const name = AREAS[area]?.name || area;
   const status = getJanStatusDisplay(area);
   document.getElementById('janDpTitle').textContent = name;
 
-  const done   = data.tasks.filter(t=>t.done).length;
-  const total  = data.tasks.length;
-  const pct    = Math.round((done/total)*100);
-  const barCol = pct===100?'#16a34a':pct>=50?'#c8963e':'#9ca3af';
+  const floors = Object.keys(data.byFloor || {});
+  const floorData = currentJanFloor && data.byFloor ? data.byFloor[currentJanFloor] : null;
+  // A zone with only one floor (or no floor breakdown at all) skips the
+  // tabs entirely and just shows the zone's merged checklist — no point
+  // showing a single-item tab row.
+  const tasks = floorData ? floorData.tasks : data.tasks;
+  const cleanerLabel = floorData ? floorData.staff : data.staff;
+  const shiftLabel = floorData ? floorData.shift : data.shift;
 
   let html = `
   <div class="jan-assigned-card">
@@ -303,10 +351,26 @@ function janDrillDown(area) {
       <div class="jac-meta">Shift: ${data.shift} &nbsp;|&nbsp; Zone: ${name}</div>
       <div class="jac-meta"><i class="bi bi-calendar3"></i> ${new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})} &nbsp;|&nbsp; <i class="bi bi-clock"></i> ${new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}</div>
     </div>
-  </div>
-  <div class="jan-checklist">`;
+  </div>`;
 
-  data.tasks.forEach((t,i) => {
+  if (floors.length > 1) {
+    // Same .floor-tabs/.floor-tab/.floor-count classes the Safety map's
+    // building drill-down already uses (safety.css) — this page shares
+    // that stylesheet, so the floor tabs look identical in both places.
+    html += `<div class="floor-tabs">` + floors.map(f => {
+      const fTasks = data.byFloor[f].tasks;
+      const fDone = fTasks.filter(t => t.done).length;
+      return `<button type="button" class="floor-tab ${f === currentJanFloor ? 'active' : ''}" onclick="selectJanFloor('${f}')">${esc(f)} <span class="floor-count">${fDone}/${fTasks.length}</span></button>`;
+    }).join('') + `</div>`;
+  }
+
+  if (floorData) {
+    html += `<div class="jan-floor-meta">Cleaner: <strong>${esc(cleanerLabel)}</strong> &nbsp;|&nbsp; Shift: ${esc(shiftLabel)}</div>`;
+  }
+
+  html += `<div class="jan-checklist">`;
+
+  tasks.forEach((t,i) => {
     html += `
     <label class="jcl-item ${t.done?'done':''}" title="Marked ${t.done ? 'done' : 'pending'} by the assigned staff via the mobile app — read-only here">
       <input type="checkbox" ${t.done?'checked':''} disabled>
@@ -315,12 +379,21 @@ function janDrillDown(area) {
     </label>`;
   });
 
+  if (!tasks.length) {
+    html += `<div class="no-data">No checklist tasks recorded${floorData ? ' for this floor' : ''} yet.</div>`;
+  }
+
   html += `</div>`;
   document.getElementById('janDpContent').innerHTML = html;
   const drillPanel = document.getElementById('janDrillPanel');
   drillPanel.classList.remove('st-clean', 'st-pending', 'st-needs');
   drillPanel.classList.add(`st-${status.value}`);
   drillPanel.style.display = 'block';
+}
+
+function selectJanFloor(floor) {
+  currentJanFloor = floor;
+  renderJanDrillPanel(currentJanArea);
 }
 
 function selectJanMapBuilding(el) {
@@ -670,20 +743,27 @@ function renderShiftCards() {
   document.getElementById('shiftCards').innerHTML = list.map(s => {
     const pct = Math.round((s.done/s.tasks)*100);
     const col = pct===100?'#16a34a':pct>=50?'#c8963e':'#9ca3af';
+    const urgentBadge = s.priority === 'Urgent' ? '<span class="sc-urgent-badge"><i class="bi bi-exclamation-triangle-fill"></i> ASAP</span>' : '';
     return `
     <div class="shift-card">
       <div class="sc-top">
         <div class="sc-av">${s.photo}</div>
         <div class="sc-info">
-          <div class="sc-name">${s.name}</div>
-          <div class="sc-zone"><i class="bi bi-geo-alt-fill"></i> ${s.zone}</div>
+          <div class="sc-name">${esc(s.name)} ${urgentBadge}</div>
+          <div class="sc-zone"><i class="bi bi-geo-alt-fill"></i> ${esc(s.zone)}${s.floor ? ' · ' + esc(s.floor) : ''}</div>
           <div class="sc-shift"><i class="bi bi-clock"></i> ${s.shift}</div>
         </div>
         <span class="sc-pct-badge" style="background:${col}">${pct}%</span>
       </div>
       <div class="sc-bar-bg"><div class="sc-bar-fill" style="width:${pct}%;background:${col}"></div></div>
       <div class="sc-task-count">${s.done} of ${s.tasks} tasks done</div>
-      <button class="tbl-btn" onclick="switchJanTab('janmap');janDrillDown('${s.area}')">View Checklist</button>
+      <div class="sc-actions">
+        <button class="tbl-btn" onclick="switchJanTab('janmap');janDrillDown('${s.area}')">View Checklist</button>
+        <div class="action-buttons">
+          <button class="icon-btn" title="Edit" onclick="openEditShiftModal(${s.id})"><i class="bi bi-pencil-fill"></i></button>
+          <button class="icon-btn delete" title="Remove" onclick="deleteShiftAssignment(${s.id})"><i class="bi bi-trash3-fill"></i></button>
+        </div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -854,17 +934,46 @@ function saveInventoryItem() {
 }
 
 function openAddShiftModal() {
+  document.getElementById('asEditId').value = '';
+  document.getElementById('asModalTitle').innerHTML = '<i class="bi bi-person-plus-fill"></i> Assign Staff';
+  document.getElementById('asSaveBtn').innerHTML = '<i class="bi bi-floppy-fill"></i> Assign';
+  document.getElementById('asTasksField').style.display = '';
   document.getElementById('asStaffName').value = '';
   document.getElementById('asZone').value = '';
+  document.getElementById('asFloor').value = 'Ground Floor';
+  document.getElementById('asPriority').value = 'Routine';
   document.getElementById('asShiftStart').value = '';
   document.getElementById('asShiftEnd').value = '';
   document.getElementById('asTasks').value = '';
   document.getElementById('assignStaffModal').style.display = 'flex';
 }
 
+// Opens the same popup pre-filled for an existing shift — checklist tasks
+// aren't editable here (that field only applies to a brand-new assignment),
+// so it's hidden while editing.
+function openEditShiftModal(id) {
+  const s = janStaff.find(x => x.id === id);
+  if (!s) return;
+
+  document.getElementById('asEditId').value = id;
+  document.getElementById('asModalTitle').innerHTML = '<i class="bi bi-pencil-fill"></i> Edit Shift Assignment';
+  document.getElementById('asSaveBtn').innerHTML = '<i class="bi bi-floppy-fill"></i> Save Changes';
+  document.getElementById('asTasksField').style.display = 'none';
+  document.getElementById('asStaffName').value = s.name;
+  document.getElementById('asZone').value = s.zone;
+  document.getElementById('asFloor').value = s.floor || 'Ground Floor';
+  document.getElementById('asPriority').value = s.priority || 'Routine';
+  document.getElementById('asShiftStart').value = s.shiftStart || '';
+  document.getElementById('asShiftEnd').value = s.shiftEnd || '';
+  document.getElementById('assignStaffModal').style.display = 'flex';
+}
+
 function saveAssignStaff() {
+  const editId    = document.getElementById('asEditId').value;
   const staffName = document.getElementById('asStaffName').value.trim();
   const zone      = document.getElementById('asZone').value;
+  const floor     = document.getElementById('asFloor').value;
+  const priority  = document.getElementById('asPriority').value;
   const start     = document.getElementById('asShiftStart').value;
   const end       = document.getElementById('asShiftEnd').value;
 
@@ -875,17 +984,40 @@ function saveAssignStaff() {
   const fd = new FormData();
   fd.append('staff_name', staffName);
   fd.append('assigned_zone', zone);
+  fd.append('floor', floor);
+  fd.append('priority', priority);
   fd.append('shift_start', start);
   fd.append('shift_end', end);
-  fd.append('tasks', document.getElementById('asTasks').value);
+  if (!editId) fd.append('tasks', document.getElementById('asTasks').value);
 
-  fetch('<?= base_url('janitorial/assignStaff') ?>', { method: 'POST', headers: csrfHeaders(), body: fd })
+  const url = editId
+    ? `<?= base_url('janitorial/updateAssignment/') ?>${editId}`
+    : '<?= base_url('janitorial/assignStaff') ?>';
+
+  fetch(url, { method: 'POST', headers: csrfHeaders(), body: fd })
     .then(r => {
-      if (!r.ok) throw new Error('Assign failed');
+      if (!r.ok) throw new Error('Save failed');
       document.getElementById('assignStaffModal').style.display = 'none';
-      reloadOnTab('shifts', `${staffName} assigned to ${zone}.`);
+      const verb = editId ? 'updated for' : 'assigned to';
+      const urgentNote = priority === 'Urgent' ? ' — URGENT' : '';
+      reloadOnTab('shifts', `${staffName} ${verb} ${zone} (${floor})${urgentNote}.`);
     })
-    .catch(() => showToast('Could not assign staff. Please try again.', true));
+    .catch(() => showToast(editId ? 'Could not save changes. Please try again.' : 'Could not assign staff. Please try again.', true));
+}
+
+async function deleteShiftAssignment(id) {
+  const s = janStaff.find(x => x.id === id);
+  const staffName = s ? s.name : 'This';
+  const zone = s ? s.zone : 'this zone';
+
+  if (!(await uiConfirm(`Remove ${staffName}'s shift assignment at ${zone}? This also deletes its checklist.`, { title: 'Remove assignment?' }))) return;
+
+  fetch(`<?= base_url('janitorial/deleteAssignment/') ?>${id}`, { method: 'POST', headers: csrfHeaders() })
+    .then(r => {
+      if (!r.ok) throw new Error('Delete failed');
+      reloadOnTab('shifts', `${staffName}'s assignment at ${zone} removed.`);
+    })
+    .catch(() => showToast('Could not remove this assignment. Please try again.', true));
 }
 
 function openAddInventoryModal() { document.getElementById('addInventoryModal').style.display = 'flex'; }
