@@ -1664,6 +1664,84 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
   border-radius: 10px;
   padding: 11px 12px;
 }
+
+/* Custom-styled dropdown — a generic replacement for a plain native
+   <select> wherever the OS's own dropdown rendering (a grey "currently
+   selected" bar repeated at the top of the open list) reads as unpolished
+   next to the rest of the app's styling. Markup: .dd-select wraps a
+   .dd-select-trigger button and a .dd-select-menu of .dd-select-option
+   divs (data-value + text = the option's value/label) — see
+   toggleDDSelect()/the option click handler in personnel/index.php. */
+.dd-select {
+  position: relative;
+  width: 100%;
+}
+.dd-select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 100%;
+  border-radius: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.dd-select-trigger:hover {
+  border-color: rgba(122, 31, 43, 0.35);
+}
+.dd-select.open .dd-select-trigger {
+  border-color: var(--maroon);
+  box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.08);
+}
+.dd-select-trigger i {
+  color: #98a2b3;
+  font-size: 12px;
+  transition: transform 0.15s ease;
+}
+.dd-select.open .dd-select-trigger i {
+  transform: rotate(180deg);
+}
+.dd-select-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border: 1px solid rgba(150, 150, 160, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.12);
+  padding: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 30;
+  display: none;
+}
+.dd-select.open .dd-select-menu {
+  display: block;
+}
+.dd-select-option {
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.dd-select-option:hover {
+  background: var(--bg-subtle);
+}
+.dd-select-option.selected {
+  background: rgba(128, 0, 0, 0.08);
+  color: var(--maroon);
+  font-weight: 600;
+}
 .table-toolbar input:focus,
 .table-toolbar select:focus {
   outline: none;

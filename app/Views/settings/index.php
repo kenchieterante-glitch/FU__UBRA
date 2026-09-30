@@ -90,7 +90,7 @@
                         <div class="field-hint">Used for the Google Calendar sync. Mr. UBRA's key is set separately under AI Configuration — GPS doesn't need one, devices POST directly to this system.</div>
                     </div>
                     <button type="submit" class="btn-save">
-                        <i class="bi bi-floppy-fill"></i> Save Changes
+                        Save Changes
                     </button>
                 </form>
             </div>
@@ -299,7 +299,7 @@
                         <div class="field-hint">Set up at <strong>console.cloud.google.com</strong> → APIs & Services → Credentials.</div>
                     </div>
                     <button type="submit" class="btn-save">
-                        <i class="bi bi-floppy-fill"></i> Save Changes
+                        Save Changes
                     </button>
                 </form>
                 <div class="int-note">
@@ -349,7 +349,7 @@
                         <div class="field-hint">Powers Mr. UBRA's responses. Provider is auto-detected from the key: <strong>Anthropic</strong> (console.anthropic.com, starts with <code>sk-ant-</code>, paid), <strong>Groq</strong> (console.groq.com, starts with <code>gsk_</code>, free tier), <strong>OpenRouter</strong> (openrouter.ai/keys, starts with <code>sk-or-</code>, has free models), or <strong>Gemini</strong> (aistudio.google.com/apikey, starts with <code>AIzaSy</code>, free tier). Kept separate from the Google Calendar key on the General tab.</div>
                     </div>
                     <button type="submit" class="btn-save">
-                        <i class="bi bi-floppy-fill"></i> Save Changes
+                        Save Changes
                     </button>
                 </form>
                 <div class="int-note" style="margin-top:1rem;">

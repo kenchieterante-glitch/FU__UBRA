@@ -17,7 +17,10 @@ class SecurityDashboardController extends BaseController
             return redirect()->to('/login');
         }
 
-        $units = (new FireExtinguisherModel())->findAll();
+        $fireModel = new FireExtinguisherModel();
+        $units = $fireModel->findAll();
+        $buildingCoverage = $fireModel->getBuildingCoverage();
+        $floorCoverage    = $fireModel->getFloorCoverage();
         $today = date('Y-m-d');
         $criticalFe = count(array_filter(
             $units,
@@ -45,6 +48,10 @@ class SecurityDashboardController extends BaseController
             'greeting'            => $greeting,
             'last_updated'        => date('l, F j, Y — g:i A'),
             'total_extinguishers' => count($units),
+            'buildings_covered'   => $buildingCoverage['covered'],
+            'buildings_total'     => $buildingCoverage['total'],
+            'floors_covered'      => $floorCoverage['covered'],
+            'floors_total'        => $floorCoverage['total'],
             'critical_fe'         => $criticalFe,
             'active_keys'         => $activeKeys,
             'pending_dispatches'  => $pendingDispatches,

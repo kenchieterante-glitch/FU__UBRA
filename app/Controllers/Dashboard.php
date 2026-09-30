@@ -15,6 +15,27 @@ class Dashboard extends BaseController
 {
     public function index()
     {
+        return view('dashboard/index', $this->buildDashboardData());
+    }
+
+    /**
+     * GET /dashboard/refresh — same data as index() but as JSON, so the KPI
+     * cards, alerts, and activity/travel feeds can pick up whatever's
+     * changed (borrows, work orders, janitorial tasks, trips) since page
+     * load without a full reload. Same pattern as Janitorial Monitoring's
+     * own refreshData() — see JanitorialController.
+     */
+    public function refreshData()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        return $this->response->setJSON($this->buildDashboardData());
+    }
+
+    private function buildDashboardData(): array
+    {
         $vehicleModel     = new VehicleModel();
         $borrowModel      = new BorrowModel();
         $toolsModel       = new ToolsModel();
@@ -66,6 +87,15 @@ class Dashboard extends BaseController
 
         // ── Maintenance Due: open work orders + fire extinguishers overdue for inspection ──
         $overdueFe       = $fireModel->where('next_due <', $today)->countAllResults();
+        // Same shared calculation Security Dashboard's own "Building
+        // Coverage" card uses (FireExtinguisherModel::getBuildingCoverage())
+        // — "every real campus building has at least one fire extinguisher
+        // installed", not just a raw unit total.
+        $buildingCoverage = $fireModel->getBuildingCoverage();
+        // Same idea, one floor finer: a building can already count as
+        // "covered" above from just one Ground Floor unit while its upper
+        // floors have none — this catches that.
+        $floorCoverage    = $fireModel->getFloorCoverage();
         $maintenanceDue  = $openWorkOrders + $overdueFe;
 
         // ── Cleaning Completion: same zones/tasks data used by Janitorial Monitoring ──
@@ -182,6 +212,41 @@ class Dashboard extends BaseController
             'status'        => $t['status'],
         ], array_slice($recentTrips, 0, 6));
 
+        $alerts = [
+            [
+                'icon' => 'bi-exclamation-circle-fill',
+                'tone' => 'urgent',
+                'title' => "{$overdueFe} overdue maintenance tasks",
+                'subtitle' => 'Fire extinguisher inspections past due',
+                'time' => 'Today',
+                'url' => 'safety',
+            ],
+            [
+                'icon' => 'bi-hourglass-split',
+                'tone' => 'pending',
+                'title' => "{$borrowedTools} tools currently borrowed",
+                'subtitle' => 'Tracked in Tools Management',
+                'time' => 'Today',
+                'url' => 'tools',
+            ],
+            [
+                'icon' => 'bi-exclamation-circle-fill',
+                'tone' => 'urgent',
+                'title' => ($totalZones - $cleanedZones) . ' janitorial zones not yet complete',
+                'subtitle' => 'Janitorial Monitoring',
+                'time' => 'Today',
+                'url' => 'janitorial',
+            ],
+            [
+                'icon' => 'bi-hourglass-split',
+                'tone' => 'pending',
+                'title' => "{$openWorkOrders} maintenance work orders open",
+                'subtitle' => 'Maintenance',
+                'time' => 'This week',
+                'url' => 'safety',
+            ],
+        ];
+
         $data = [
             'title' => 'UBRA Monitoring Dashboard',
             'pageCss' => 'dashboard.css',
@@ -239,6 +304,26 @@ class Dashboard extends BaseController
                     'url' => 'janitorial?filter=pending',
                     'listKey' => 'cleaningIncompleteList',
                 ],
+                [
+                    'label' => 'Building Coverage',
+                    'value' => "{$buildingCoverage['covered']}/{$buildingCoverage['total']} buildings",
+                    'meta' => 'Fire extinguisher installed',
+                    'sub' => 'Campus-wide',
+                    'tone' => 'tone-green',
+                    'icon' => 'bi-building-check',
+                    'url' => 'safety',
+                    'listKey' => 'buildingsNotCoveredList',
+                ],
+                [
+                    'label' => 'Floor Coverage',
+                    'value' => "{$floorCoverage['covered']}/{$floorCoverage['total']} floors",
+                    'meta' => ($floorCoverage['total'] - $floorCoverage['covered']) . ' floors need one',
+                    'sub' => 'Per-floor, campus-wide',
+                    'tone' => $floorCoverage['covered'] === $floorCoverage['total'] ? 'tone-green' : 'tone-gold',
+                    'icon' => 'bi-layers-half',
+                    'url' => 'safety',
+                    'listKey' => 'floorsNotCoveredList',
+                ],
             ],
             'pending_tools_json' => $this->jsonForScript($borrowedToolsList),
             'pending_workorders_json' => $this->jsonForScript(array_map(fn($w) => [
@@ -251,44 +336,21 @@ class Dashboard extends BaseController
             'vehicles_inuse_json'      => $this->jsonForScript($vehiclesInUseList),
             'maintenance_due_json'     => $this->jsonForScript($maintenanceDueList),
             'cleaning_incomplete_json' => $this->jsonForScript($cleaningIncompleteList),
-            'alerts' => [
-                [
-                    'icon' => 'bi-exclamation-circle-fill',
-                    'tone' => 'urgent',
-                    'title' => "{$overdueFe} overdue maintenance tasks",
-                    'subtitle' => 'Fire extinguisher inspections past due',
-                    'time' => 'Today',
-                    'url' => 'safety',
-                ],
-                [
-                    'icon' => 'bi-hourglass-split',
-                    'tone' => 'pending',
-                    'title' => "{$borrowedTools} tools currently borrowed",
-                    'subtitle' => 'Tracked in Tools Management',
-                    'time' => 'Today',
-                    'url' => 'tools',
-                ],
-                [
-                    'icon' => 'bi-exclamation-circle-fill',
-                    'tone' => 'urgent',
-                    'title' => ($totalZones - $cleanedZones) . ' janitorial zones not yet complete',
-                    'subtitle' => 'Janitorial Monitoring',
-                    'time' => 'Today',
-                    'url' => 'janitorial',
-                ],
-                [
-                    'icon' => 'bi-hourglass-split',
-                    'tone' => 'pending',
-                    'title' => "{$openWorkOrders} maintenance work orders open",
-                    'subtitle' => 'Maintenance',
-                    'time' => 'This week',
-                    'url' => 'safety',
-                ],
-            ],
+            'buildings_not_covered_json' => $this->jsonForScript(array_map(fn($b) => [
+                'title'    => $b,
+                'subtitle' => 'No fire extinguisher recorded yet',
+            ], array_values(array_diff(FireExtinguisherModel::BUILDINGS, array_unique(array_column($fireModel->getBuildingCounts(), 'location')))))),
+            'floors_not_covered_json' => $this->jsonForScript(array_map(fn($m) => [
+                'title'    => $m['building'],
+                'subtitle' => $m['floor'] . ' — no fire extinguisher recorded yet',
+            ], $floorCoverage['missing'])),
+            'alerts_json' => $this->jsonForScript(array_map(fn($a) => array_merge($a, ['url' => site_url($a['url'])]), $alerts)),
             'activity' => $activity,
+            'activity_json' => $this->jsonForScript($activity),
             'travel_history' => $travelHistory,
+            'travel_history_json' => $this->jsonForScript($travelHistory),
         ];
 
-        return view('dashboard/index', $data);
+        return $data;
     }
 }

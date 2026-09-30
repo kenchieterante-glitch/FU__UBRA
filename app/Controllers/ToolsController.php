@@ -34,17 +34,60 @@ class ToolsController extends BaseController
             return redirect()->to('/login');
         }
 
-        $tools = $this->toolsModel->getAllWithDetails();
+        $data = $this->buildToolsData(null);
+        $data['pageCss'] = 'tools.css';
+
+        return view('tools/index', $data);
+    }
+
+    /**
+     * GET /tools/refresh?category=<name> — same data as index()/
+     * categoryView() but as JSON, with the table rows pre-rendered as HTML
+     * (rows_html) — Tools/_rows.php is the one place that draws a row
+     * (condition/availability/stock badges), shared by both the normal
+     * page load and this endpoint. category is one of 'Power Tools',
+     * 'Consumable', 'Sports Equipment', or omitted for the main All Tools
+     * view — matches whichever tab the polling script is currently on.
+     */
+    public function refreshData()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $category = $this->request->getGet('category') ?: null;
+        $data = $this->buildToolsData($category);
+        $data['rows_html'] = view('Tools/_rows', [
+            'toolList' => $data['tools'],
+            'isConsumablePage' => $category === 'Consumable',
+        ]);
+
+        return $this->response->setJSON($data);
+    }
+
+    private function buildToolsData(?string $category): array
+    {
+        $tools = $category ? $this->toolsModel->getByCategory($category) : $this->toolsModel->getAllWithDetails();
 
         $data = array_merge([
-            'title'   => 'Tools Equipment Management',
-            'pageCss' => 'tools.css',
+            'title'   => $category ?: 'Tools Equipment Management',
             'tools'   => $tools,
             'personnel' => $this->personnelModel->findAll(),
             'tool_details_json' => $this->jsonForScript($this->buildToolDetails($tools)),
         ], $this->getStatCounts());
 
-        return view('tools/index', $data);
+        if ($category === 'Consumable') {
+            $unitByToolId = array_column($tools, 'unit', 'id');
+            $data['refill_log_json'] = $this->jsonForScript(array_map(fn($l) => [
+                'item' => $l['asset_name'],
+                'qty'  => (float) $l['quantity_added'],
+                'unit' => $unitByToolId[$l['tool_id']] ?? 'pcs',
+                'by'   => $l['performed_by'],
+                'at'   => $l['performed_at'],
+            ], $this->refillLogModel->getRecent(50)));
+        }
+
+        return $data;
     }
 
     public function powerTools()
@@ -103,26 +146,8 @@ class ToolsController extends BaseController
             return redirect()->to('/login');
         }
 
-        $categoryTools = $this->toolsModel->getByCategory($category);
-
-        $data = array_merge([
-            'title'   => $category,
-            'pageCss' => 'tools.css',
-            'tools'   => $categoryTools,
-            'personnel' => $this->personnelModel->findAll(),
-            'tool_details_json' => $this->jsonForScript($this->buildToolDetails($categoryTools)),
-        ], $this->getStatCounts());
-
-        if ($category === 'Consumable') {
-            $unitByToolId = array_column($data['tools'], 'unit', 'id');
-            $data['refill_log_json'] = $this->jsonForScript(array_map(fn($l) => [
-                'item' => $l['asset_name'],
-                'qty'  => (float) $l['quantity_added'],
-                'unit' => $unitByToolId[$l['tool_id']] ?? 'pcs',
-                'by'   => $l['performed_by'],
-                'at'   => $l['performed_at'],
-            ], $this->refillLogModel->getRecent(50)));
-        }
+        $data = $this->buildToolsData($category);
+        $data['pageCss'] = 'tools.css';
 
         return view('tools/index', $data);
     }

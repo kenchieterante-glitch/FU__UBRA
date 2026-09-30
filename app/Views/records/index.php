@@ -337,7 +337,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="closeReportEditor()">Cancel</button>
-                <button type="submit" class="btn-submit"><i class="bi bi-floppy"></i> Save Changes</button>
+                <button type="submit" class="btn-submit">Save Changes</button>
             </div>
         </form>
     </div>

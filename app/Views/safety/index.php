@@ -23,6 +23,7 @@ $departments = $departments ?? [];
       <h1><?= esc($title) ?></h1>
       <p class="page-subtitle">Campus fire extinguisher coverage and aircon condition monitoring at a glance.</p>
     </div>
+    <button class="btn-add" id="addUnitBtn" onclick="openAddExtinguisherModal()">+ Add Fire Extinguisher</button>
   </div>
 
   <div class="stat-cards" id="overviewGrid">
@@ -202,6 +203,137 @@ $departments = $departments ?? [];
 
 </div>
 
+<!-- Add Fire Extinguisher modal — previously this could only be registered
+     from the mobile app's scan flow; the web side was read-only. -->
+<div class="modal" id="addExtinguisherModal">
+  <div class="modal-box modal-box-wide">
+    <h3>Add Fire Extinguisher</h3>
+    <form id="addExtinguisherForm" method="post" action="<?= base_url('safety/addExtinguisher') ?>">
+      <?= csrf_field() ?>
+      <div class="form-grid2">
+        <div class="fg fg-full">
+          <label>Unit ID <span class="required-mark">*</span></label>
+          <input type="text" name="unit_id" placeholder="e.g. FE-A1B2C3" required>
+        </div>
+        <div class="fg">
+          <label>Building <span class="required-mark">*</span></label>
+          <select name="location" id="aeBuilding" onchange="populateAeFloors()" required>
+            <option value="">— Select a Building —</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Floor</label>
+          <select name="floor" id="aeFloor"></select>
+        </div>
+        <div class="fg">
+          <label>Type</label>
+          <select name="type">
+            <option>CO2</option>
+            <option>Dry Chemical</option>
+            <option>Foam</option>
+            <option>Water</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Weight (kg)</label>
+          <input type="number" step="0.1" min="0" name="weight_kg" value="6.0">
+        </div>
+        <div class="fg">
+          <label>Year Acquired</label>
+          <input type="number" name="year_acquired" min="1990" max="<?= date('Y') ?>" value="<?= date('Y') ?>">
+        </div>
+        <div class="fg">
+          <label>Status</label>
+          <select name="status">
+            <option>New</option>
+            <option>Refillable</option>
+            <option>Defective</option>
+            <option>Missing</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Last Inspection</label>
+          <input type="date" name="last_inspection">
+        </div>
+        <div class="fg">
+          <label>Next Due</label>
+          <input type="date" name="next_due">
+        </div>
+        <div class="fg">
+          <label>Installed By</label>
+          <select name="inspector" id="aeInstaller">
+            <option value="">— Unassigned —</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" onclick="document.getElementById('addExtinguisherModal').style.display='none'">Cancel</button>
+        <button type="submit" class="btn-maroon">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add Aircon Unit modal — same idea as Add Fire Extinguisher above, just
+     for aircon_units; previously this could only be registered from the
+     mobile app's scan flow. -->
+<div class="modal" id="addAirconModal">
+  <div class="modal-box modal-box-wide">
+    <h3>Add Aircon Unit</h3>
+    <form id="addAirconForm" method="post" action="<?= base_url('safety/addAirconUnit') ?>">
+      <?= csrf_field() ?>
+      <div class="form-grid2">
+        <div class="fg fg-full">
+          <label>Unit Name / Model <span class="required-mark">*</span></label>
+          <input type="text" name="unit_name" placeholder="e.g. Daikin Split-Type 1.5HP" required>
+        </div>
+        <div class="fg">
+          <label>Building <span class="required-mark">*</span></label>
+          <select name="location" id="aaBuilding" onchange="populateAaFloors()" required>
+            <option value="">— Select a Building —</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Floor</label>
+          <select name="floor" id="aaFloor"></select>
+        </div>
+        <div class="fg">
+          <label>Condition</label>
+          <select name="condition">
+            <option>Operational</option>
+            <option>Needs Cleaning</option>
+            <option>Not Working</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Assigned Tech</label>
+          <select name="assigned_tech" id="aaTech">
+            <option value="">— Unassigned —</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Last Cleaning</label>
+          <input type="date" name="last_cleaning">
+        </div>
+        <div class="fg">
+          <label>Next Schedule</label>
+          <input type="date" name="next_schedule">
+        </div>
+        <div class="fg">
+          <label>Installed By</label>
+          <select name="installed_by" id="aaInstaller">
+            <option value="">— Unassigned —</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" onclick="document.getElementById('addAirconModal').style.display='none'">Cancel</button>
+        <button type="submit" class="btn-maroon">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Set Installer modal — shared by fire extinguisher and aircon unit cards -->
 <div class="modal" id="installerModal">
   <div class="modal-box">
@@ -228,6 +360,14 @@ $departments = $departments ?? [];
   let airconRegistry = <?= $aircon_registry_json ?>;
   let workOrderRegistry = <?= $work_order_registry_json ?>;
   const personnelOptions = <?= $personnel_options_json ?>;
+  // Same canonical building list (and per-building floor list) used by
+  // FireExtinguisherModel's Building/Floor Coverage stats — not the full
+  // map shape list (mapBuildings, further down), which also includes
+  // non-building features (gates, the water pump, etc.) that shouldn't be
+  // selectable as a fire extinguisher's location.
+  const aeBuildings = <?= $buildings_json ?? '[]' ?>;
+  const aeBuildingFloors = <?= $building_floors_json ?? '{}' ?>;
+  const aeDefaultFloors = <?= $default_floors_json ?? '[]' ?>;
 
   // Keylogs and Guard data moved to separate Safety pages (sidebar)
 
@@ -267,6 +407,18 @@ $departments = $departments ?? [];
     // The 🧯 / ❄️ markers only make sense for the tab they belong to.
     document.getElementById('extinguishers').style.display = tab === 'fe' ? '' : 'none';
     document.getElementById('airconIcons').style.display = tab === 'aircon' ? '' : 'none';
+
+    // The page-header "+ Add …" button always adds to whichever category
+    // is on screen, instead of always opening Add Fire Extinguisher.
+    const addBtn = document.getElementById('addUnitBtn');
+    if (tab === 'fe') {
+      addBtn.textContent = '+ Add Fire Extinguisher';
+      addBtn.onclick = openAddExtinguisherModal;
+    } else {
+      addBtn.textContent = '+ Add Aircon Unit';
+      addBtn.onclick = openAddAirconModal;
+    }
+
     mapStatusFilter = null;
     closeDrill();
     recolorMap();
@@ -507,6 +659,56 @@ $departments = $departments ?? [];
       + personnelOptions.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
     if (currentName && currentName !== '—') select.value = currentName;
     document.getElementById('installerModal').style.display = 'flex';
+  }
+
+  // Add Fire Extinguisher modal — previously only possible from the mobile
+  // app's scan flow. Building/Floor selects use the same canonical list
+  // the Building/Floor Coverage stats are built from, so a unit added here
+  // can only ever land on a building this app actually tracks coverage for.
+  function openAddExtinguisherModal() {
+    const buildingSelect = document.getElementById('aeBuilding');
+    buildingSelect.innerHTML = '<option value="">— Select a Building —</option>'
+      + [...aeBuildings].sort((a, b) => a.localeCompare(b)).map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+
+    const installerSelect = document.getElementById('aeInstaller');
+    installerSelect.innerHTML = '<option value="">— Unassigned —</option>'
+      + personnelOptions.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
+
+    document.getElementById('addExtinguisherForm').reset();
+    populateAeFloors();
+    document.getElementById('addExtinguisherModal').style.display = 'flex';
+  }
+
+  function populateAeFloors() {
+    const building = document.getElementById('aeBuilding').value;
+    const floors = aeBuildingFloors[building] || aeDefaultFloors;
+    document.getElementById('aeFloor').innerHTML = floors.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
+  }
+
+  // Add Aircon Unit modal — same building/floor coverage list as Add Fire
+  // Extinguisher above, just posting to aircon_units instead.
+  function openAddAirconModal() {
+    const buildingSelect = document.getElementById('aaBuilding');
+    buildingSelect.innerHTML = '<option value="">— Select a Building —</option>'
+      + [...aeBuildings].sort((a, b) => a.localeCompare(b)).map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+
+    const techSelect = document.getElementById('aaTech');
+    techSelect.innerHTML = '<option value="">— Unassigned —</option>'
+      + personnelOptions.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
+
+    const installerSelect = document.getElementById('aaInstaller');
+    installerSelect.innerHTML = '<option value="">— Unassigned —</option>'
+      + personnelOptions.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
+
+    document.getElementById('addAirconForm').reset();
+    populateAaFloors();
+    document.getElementById('addAirconModal').style.display = 'flex';
+  }
+
+  function populateAaFloors() {
+    const building = document.getElementById('aaBuilding').value;
+    const floors = aeBuildingFloors[building] || aeDefaultFloors;
+    document.getElementById('aaFloor').innerHTML = floors.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
   }
 
   function saveInstaller() {

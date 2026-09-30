@@ -93,6 +93,10 @@
             <div class="table-toolbar">
                 <h2 class="panel-title">Fleet GPS Status</h2>
                 <div class="toolbar-right">
+                    <div class="toolbar-search">
+                      <input type="text" id="searchInput" class="search-box" placeholder="Search plate / driver..." oninput="filterTable()">
+                      <i class="bi bi-search search-icon"></i>
+                    </div>
                     <div class="filter-menu-wrapper">
                       <button type="button" class="filter-btn" onclick="toggleGpsFilterMenu()" aria-label="Open filters">
                         <i class="bi bi-funnel"></i>
@@ -118,24 +122,26 @@
                           </select>
                         </div>
                         <div class="filter-row">
-                          <label for="gpsSort">Sort By</label>
-                          <select id="gpsSort" onchange="applyGpsSort()">
-                            <option value="">Default</option>
-                            <option value="vehicle-asc">Vehicle (A&ndash;Z)</option>
-                            <option value="vehicle-desc">Vehicle (Z&ndash;A)</option>
-                            <option value="3-asc">Driver (A&ndash;Z)</option>
-                            <option value="3-desc">Driver (Z&ndash;A)</option>
-                            <option value="5-asc">GPS Status (A&ndash;Z)</option>
-                            <option value="5-desc">GPS Status (Z&ndash;A)</option>
-                            <option value="7-asc">Availability (A&ndash;Z)</option>
-                            <option value="7-desc">Availability (Z&ndash;A)</option>
-                          </select>
+                          <label id="gpsSortLabel">Sort By</label>
+                          <div class="dd-select" id="gpsSortDD" data-onchange="applyGpsSort">
+                            <button type="button" class="dd-select-trigger" onclick="toggleDDSelect('gpsSortDD')" aria-haspopup="listbox" aria-expanded="false">
+                              <span class="dd-select-value">Default</span>
+                              <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="dd-select-menu" role="listbox">
+                              <div class="dd-select-option selected" data-value="" role="option">Default</div>
+                              <div class="dd-select-option" data-value="vehicle-asc" role="option">Vehicle (A&ndash;Z)</div>
+                              <div class="dd-select-option" data-value="vehicle-desc" role="option">Vehicle (Z&ndash;A)</div>
+                              <div class="dd-select-option" data-value="3-asc" role="option">Driver (A&ndash;Z)</div>
+                              <div class="dd-select-option" data-value="3-desc" role="option">Driver (Z&ndash;A)</div>
+                              <div class="dd-select-option" data-value="5-asc" role="option">GPS Status (A&ndash;Z)</div>
+                              <div class="dd-select-option" data-value="5-desc" role="option">GPS Status (Z&ndash;A)</div>
+                              <div class="dd-select-option" data-value="7-asc" role="option">Availability (A&ndash;Z)</div>
+                              <div class="dd-select-option" data-value="7-desc" role="option">Availability (Z&ndash;A)</div>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div class="toolbar-search">
-                      <input type="text" id="searchInput" class="search-box" placeholder="Search plate / driver..." oninput="filterTable()">
-                      <i class="bi bi-search search-icon"></i>
                     </div>
                 </div>
             </div>
@@ -916,7 +922,7 @@ document.querySelectorAll('.stat-card-clickable').forEach(card => {
 
 let gpsOriginalOrder = null;
 
-function applyGpsSort() {
+function applyGpsSort(value) {
     const tbody = document.querySelector('#gpsTable tbody');
     if (!tbody) return;
 
@@ -924,7 +930,9 @@ function applyGpsSort() {
         gpsOriginalOrder = Array.from(tbody.querySelectorAll('.fleet-row'));
     }
 
-    const value = document.getElementById('gpsSort').value;
+    if (value === undefined) {
+        value = document.querySelector('#gpsSortDD .dd-select-option.selected')?.dataset.value ?? '';
+    }
     if (!value) {
         gpsOriginalOrder.forEach(row => tbody.appendChild(row));
         return;

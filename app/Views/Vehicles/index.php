@@ -18,8 +18,6 @@ $vehicle_details_json = $vehicle_details_json ?? '{}';
 
 <?= $this->section('content') ?>
 
-<?php $normalize_status = fn($value) => strtolower(preg_replace('/[^a-z0-9]+/', '-', trim((string)$value))); ?>
-
 <div class="page-header">
   <div>
     <h1><?= esc($title) ?></h1>
@@ -32,22 +30,22 @@ $vehicle_details_json = $vehicle_details_json ?? '{}';
   <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('')" role="button" tabindex="0">
     <span class="stat-icon tone-maroon"><i class="bi bi-truck"></i></span>
     <h3>Total Vehicles</h3>
-    <div class="value"><?= (int) $total_vehicles ?></div>
+    <div class="value" id="statTotalVehicles"><?= (int) $total_vehicles ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('available')" role="button" tabindex="0">
     <span class="stat-icon tone-green"><i class="bi bi-check-circle-fill"></i></span>
     <h3>Available</h3>
-    <div class="value"><?= (int) $available_vehicles ?></div>
+    <div class="value" id="statAvailableVehicles"><?= (int) $available_vehicles ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('inuse')" role="button" tabindex="0">
     <span class="stat-icon tone-neutral"><i class="bi bi-signpost-2"></i></span>
     <h3>In Use</h3>
-    <div class="value"><?= (int) $inuse_vehicles ?></div>
+    <div class="value" id="statInUseVehicles"><?= (int) $inuse_vehicles ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterVehiclesByStat('maintenance')" role="button" tabindex="0">
     <span class="stat-icon tone-red"><i class="bi bi-wrench-adjustable"></i></span>
     <h3>Needs Maintenance</h3>
-    <div class="value"><?= count(array_filter($vehicles, fn($v) => $v['inspection_status'] == 'Expired' || $v['availability'] == 'Maintenance')) ?></div>
+    <div class="value" id="statMaintenanceVehicles"><?= count(array_filter($vehicles, fn($v) => $v['inspection_status'] == 'Expired' || $v['availability'] == 'Maintenance')) ?></div>
   </div>
 </div>
 
@@ -89,18 +87,24 @@ $vehicle_details_json = $vehicle_details_json ?? '{}';
             </select>
           </div>
           <div class="filter-row">
-            <label for="vehiclesSort">Sort By</label>
-            <select id="vehiclesSort" onchange="applyVehiclesSort()">
-              <option value="">Default</option>
-              <option value="0-asc">Vehicle (A&ndash;Z)</option>
-              <option value="0-desc">Vehicle (Z&ndash;A)</option>
-              <option value="3-asc">Driver (A&ndash;Z)</option>
-              <option value="3-desc">Driver (Z&ndash;A)</option>
-              <option value="5-asc">GPS Status (A&ndash;Z)</option>
-              <option value="5-desc">GPS Status (Z&ndash;A)</option>
-              <option value="7-asc">Availability (A&ndash;Z)</option>
-              <option value="7-desc">Availability (Z&ndash;A)</option>
-            </select>
+            <label id="vehiclesSortLabel">Sort By</label>
+            <div class="dd-select" id="vehiclesSortDD" data-onchange="applyVehiclesSort">
+              <button type="button" class="dd-select-trigger" onclick="toggleDDSelect('vehiclesSortDD')" aria-haspopup="listbox" aria-expanded="false">
+                <span class="dd-select-value">Default</span>
+                <i class="bi bi-chevron-down"></i>
+              </button>
+              <div class="dd-select-menu" role="listbox">
+                <div class="dd-select-option selected" data-value="" role="option">Default</div>
+                <div class="dd-select-option" data-value="0-asc" role="option">Vehicle (A&ndash;Z)</div>
+                <div class="dd-select-option" data-value="0-desc" role="option">Vehicle (Z&ndash;A)</div>
+                <div class="dd-select-option" data-value="3-asc" role="option">Driver (A&ndash;Z)</div>
+                <div class="dd-select-option" data-value="3-desc" role="option">Driver (Z&ndash;A)</div>
+                <div class="dd-select-option" data-value="5-asc" role="option">GPS Status (A&ndash;Z)</div>
+                <div class="dd-select-option" data-value="5-desc" role="option">GPS Status (Z&ndash;A)</div>
+                <div class="dd-select-option" data-value="7-asc" role="option">Availability (A&ndash;Z)</div>
+                <div class="dd-select-option" data-value="7-desc" role="option">Availability (Z&ndash;A)</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -123,57 +127,8 @@ $vehicle_details_json = $vehicle_details_json ?? '{}';
       <th>Actions</th>
     </tr>
   </thead>
-  <tbody>
-    <?php if (!empty($vehicles)): ?>
-      <?php foreach ($vehicles as $v): ?>
-        <tr class="vehicle-row" onclick="openVehicleDetail(<?= (int) $v['id'] ?>)">
-          <td><?= esc($v['vehicle_name']) ?><br><small></small></td>
-          <td><?= esc($v['plate_no']) ?></td>
-          <td><?= esc($v['type']) ?></td>
-          <td><?= esc($v['driver_name'] ?? 'Unassigned') ?></td>
-          <td><?= esc($v['department_name'] ?? 'Unassigned') ?></td>
-          <?php $inspectionClass = $normalize_status($v['inspection_status'] ?? 'unknown'); ?>
-          <?php $gpsOnline = ($v['gps_status'] ?? '') === 'Online'; ?>
-          <?php $availClass = match ($v['availability'] ?? 'Available') {
-              'In Use'      => 'avail-inuse',
-              'Reserved'    => 'avail-reserved',
-              'Maintenance' => 'avail-maint',
-              'Inactive'    => 'avail-inactive',
-              default       => 'avail-available',
-          }; ?>
-          <td>
-            <span class="gps-badge <?= $gpsOnline ? 'gps-online' : 'gps-offline' ?>">
-              <span class="<?= $gpsOnline ? 'pulse-dot' : 'dead-dot' ?>"></span>
-              <?= esc($v['gps_status']) ?>
-            </span>
-          </td>
-          <td><span class="status-badge status-<?= esc($inspectionClass) ?>"><?= esc($v['inspection_status']) ?></span></td>
-          <td><span class="avail-badge <?= esc($availClass) ?>"><?= esc($v['availability']) ?></span></td>
-          <?php $prediction = $fuel_predictions[$v['id']] ?? ['hasData' => false]; ?>
-          <td>
-            <?php if (!empty($prediction['hasData'])): ?>
-              <strong><?= esc((string) $prediction['predictedLiters30d']) ?> L</strong> / 30 days
-              <br><small class="page-subtitle" style="margin:0;"><?= esc((string) $prediction['avgLPer100km']) ?> L per 100km avg</small>
-            <?php elseif (($prediction['logsCount'] ?? 0) >= 1): ?>
-              <small class="page-subtitle" style="margin:0;">Log 1 more fill-up to enable predictions</small>
-            <?php else: ?>
-              <small class="page-subtitle" style="margin:0;">No fuel logs yet</small>
-            <?php endif; ?>
-          </td>
-          <td class="action-cell">
-            <div class="action-buttons" onclick="event.stopPropagation()">
-              <button type="button" class="icon-btn" onclick="openFuelLogModal(<?= (int) $v['id'] ?>, '<?= esc($v['vehicle_name'], 'js') ?>')" title="Log Fuel" aria-label="Log fuel for <?= esc($v['vehicle_name']) ?>"><i class="bi bi-fuel-pump-fill"></i></button>
-              <form method="post" action="<?= base_url('vehicles/delete/'.$v['id']) ?>" onsubmit="return confirm('Archive this vehicle?')" style="display:contents;">
-                <?= csrf_field() ?>
-                <button type="submit" class="icon-btn delete" title="Archive" aria-label="Archive <?= esc($v['vehicle_name']) ?>"><i class="bi bi-archive-fill"></i></button>
-              </form>
-            </div>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-    <?php else: ?>
-      <tr><td colspan="10">No vehicles recorded yet.</td></tr>
-    <?php endif; ?>
+  <tbody id="vehiclesTableBody">
+    <?= $this->include('Vehicles/_rows') ?>
   </tbody>
 </table>
 </div>
@@ -292,7 +247,7 @@ function esc(s) {
   return d.innerHTML;
 }
 
-const vehicleDetails = <?= $vehicle_details_json ?? '{}' ?>;
+let vehicleDetails = <?= $vehicle_details_json ?? '{}' ?>;
 
 let currentDetailVehicleId = null;
 
@@ -430,7 +385,7 @@ function filterVehiclesTable() {
 
 let vehiclesOriginalOrder = null;
 
-function applyVehiclesSort() {
+function applyVehiclesSort(value) {
   const tbody = document.querySelector('#vehiclesTable tbody');
   if (!tbody) return;
 
@@ -438,7 +393,11 @@ function applyVehiclesSort() {
     vehiclesOriginalOrder = Array.from(tbody.querySelectorAll('tr'));
   }
 
-  const value = document.getElementById('vehiclesSort').value;
+  // Called with no argument by refreshVehicles() to re-apply whatever sort
+  // is currently active — read it back from the dropdown's own state.
+  if (value === undefined) {
+    value = document.querySelector('#vehiclesSortDD .dd-select-option.selected')?.dataset.value ?? '';
+  }
   if (!value) {
     vehiclesOriginalOrder.forEach(row => tbody.appendChild(row));
     return;
@@ -517,6 +476,43 @@ if (vehiclesUrlEdit) {
   openVehicleDetail(Number(vehiclesUrlEdit));
   toggleVehicleEditMode(true);
 }
+
+// Polls the same data index() renders with, as JSON with the table rows
+// pre-rendered as HTML (VehicleController::refreshData() — see
+// Vehicles/_rows.php for why rows come back as HTML, not raw data). Leaves
+// the detail/edit/fuel-log popups alone if one is open — only the table
+// and stat cards update live.
+async function refreshVehicles() {
+  if (document.getElementById('vehicleDetailModal')?.style.display === 'flex') return;
+  if (document.getElementById('fuelLogModal')?.style.display === 'flex') return;
+
+  try {
+    const res = await fetch('<?= base_url('vehicles/refresh') ?>', { headers: csrfHeaders() });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    document.getElementById('vehiclesTableBody').innerHTML = data.rows_html;
+    // The old cached row order now points at detached nodes — clear it so
+    // the next sort/"Default" recaptures fresh ones from the new rows.
+    vehiclesOriginalOrder = null;
+    vehicleDetails = data.vehicle_details_json ? JSON.parse(data.vehicle_details_json) : vehicleDetails;
+
+    const maintenanceCount = (data.vehicles || []).filter(v => v.inspection_status === 'Expired' || v.availability === 'Maintenance').length;
+    const setStat = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setStat('statTotalVehicles', data.total_vehicles ?? 0);
+    setStat('statAvailableVehicles', data.available_vehicles ?? 0);
+    setStat('statInUseVehicles', data.inuse_vehicles ?? 0);
+    setStat('statMaintenanceVehicles', maintenanceCount);
+
+    // Re-apply whatever search/type/availability filter and sort the user
+    // currently has set — fresh rows would otherwise show unfiltered.
+    filterVehiclesTable();
+    applyVehiclesSort();
+  } catch (e) {
+    // Silent — a missed refresh just tries again next interval.
+  }
+}
+setInterval(refreshVehicles, 20000);
 </script>
 
 <!-- ADD MODAL -->

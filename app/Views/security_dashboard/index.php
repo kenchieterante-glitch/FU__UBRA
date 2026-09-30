@@ -25,6 +25,16 @@
             <h3>Fire Extinguishers</h3>
             <div class="value"><?= (int) $total_extinguishers ?></div>
         </div>
+        <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Building Coverage" data-url="<?= base_url('safety') ?>">
+            <span class="stat-icon tone-green"><i class="bi bi-building-check"></i></span>
+            <h3>Building Coverage</h3>
+            <div class="value"><?= (int) $buildings_covered ?>/<?= (int) $buildings_total ?></div>
+        </div>
+        <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Floor Coverage" data-url="<?= base_url('safety') ?>">
+            <span class="stat-icon <?= $floors_covered === $floors_total ? 'tone-green' : 'tone-gold' ?>"><i class="bi bi-layers-half"></i></span>
+            <h3>Floor Coverage</h3>
+            <div class="value"><?= (int) $floors_covered ?>/<?= (int) $floors_total ?></div>
+        </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Critical Alerts" data-url="<?= base_url('safety') ?>">
             <span class="stat-icon tone-red"><i class="bi bi-exclamation-triangle-fill"></i></span>
             <h3>Critical Alerts</h3>

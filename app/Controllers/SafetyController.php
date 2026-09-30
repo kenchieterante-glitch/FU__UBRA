@@ -141,7 +141,78 @@ class SafetyController extends BaseController
             'personnel_options_json'   => $this->jsonForScript(
                 array_map(fn($p) => $p['name'], $this->personnelModel->getActiveByPositionLike('Maintenance'))
             ),
+            // Same canonical building list (and per-building floor list)
+            'buildings_json'      => $this->jsonForScript(FireExtinguisherModel::BUILDINGS),
+            'building_floors_json' => $this->jsonForScript(FireExtinguisherModel::BUILDING_FLOORS),
+            'default_floors_json'  => $this->jsonForScript(FireExtinguisherModel::DEFAULT_FLOORS),
         ]);
+    }
+
+    // Registers a new fire extinguisher unit — previously this could only
+    // be done from the mobile app's scan flow (Api\SafetyController::
+    // addExtinguisher()); the web side was read-only for this. Same table,
+    // same fields, so a unit added here shows up identically everywhere
+    // else that reads fire_extinguishers.
+    public function addExtinguisher()
+    {
+        if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
+
+        $unitId   = trim((string) $this->request->getPost('unit_id'));
+        $location = trim((string) $this->request->getPost('location'));
+
+        if ($unitId === '' || $location === '') {
+            return redirect()->to('/safety')->with('error', 'Unit ID and building are required.');
+        }
+
+        // unit_id has a real unique constraint — check first so a duplicate
+        // shows a normal flash message instead of a raw DB error page.
+        if ($this->fireExtinguisherModel->where('unit_id', $unitId)->countAllResults() > 0) {
+            return redirect()->to('/safety')->with('error', "Unit ID \"{$unitId}\" is already in use.");
+        }
+
+        $this->fireExtinguisherModel->insert([
+            'unit_id'         => $unitId,
+            'type'            => $this->request->getPost('type') ?: 'CO2',
+            'location'        => $location,
+            'floor'           => $this->request->getPost('floor') ?: 'Ground Floor',
+            'weight_kg'       => $this->request->getPost('weight_kg') ?: 6.0,
+            'last_inspection' => $this->request->getPost('last_inspection') ?: null,
+            'next_due'        => $this->request->getPost('next_due') ?: null,
+            'status'          => $this->request->getPost('status') ?: 'New',
+            'year_acquired'   => $this->request->getPost('year_acquired') ?: date('Y'),
+            'inspector'       => $this->request->getPost('inspector') ?: null,
+        ]);
+        $this->logActivity('Safety', "Registered fire extinguisher {$unitId} at {$location}");
+
+        return redirect()->to('/safety')->with('success', "Fire extinguisher {$unitId} added.");
+    }
+
+    // Same idea as addExtinguisher() above, for aircon_units — previously
+    // this could only be registered from the mobile app's scan flow.
+    public function addAirconUnit()
+    {
+        if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
+
+        $unitName = trim((string) $this->request->getPost('unit_name'));
+        $location = trim((string) $this->request->getPost('location'));
+
+        if ($unitName === '' || $location === '') {
+            return redirect()->to('/safety')->with('error', 'Unit name and building are required.');
+        }
+
+        $this->airconUnitModel->insert([
+            'location'          => $location,
+            'floor'             => $this->request->getPost('floor') ?: 'Ground Floor',
+            'unit_name'         => $unitName,
+            'last_cleaning'     => $this->request->getPost('last_cleaning') ?: null,
+            'next_schedule'     => $this->request->getPost('next_schedule') ?: null,
+            'condition_status'  => $this->request->getPost('condition') ?: 'Operational',
+            'assigned_tech'     => $this->request->getPost('assigned_tech') ?: null,
+            'installed_by'      => $this->request->getPost('installed_by') ?: null,
+        ]);
+        $this->logActivity('Safety', "Registered aircon unit {$unitName} at {$location}");
+
+        return redirect()->to('/safety')->with('success', "Aircon unit {$unitName} added.");
     }
 
     // Sets who installed a specific fire extinguisher unit — picked from

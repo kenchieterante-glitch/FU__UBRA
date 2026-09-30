@@ -39,6 +39,40 @@ class VehicleController extends BaseController
         // GPS column below agrees with the GPS Tracker page.
         (new TraccarSync())->run();
 
+        $data = $this->buildVehicleData();
+        $data['pageCss'] = 'vehicle.css';
+
+        return view('vehicles/index', $data);
+    }
+
+    /**
+     * GET /vehicles/refresh — same data as index() but as JSON, for the
+     * page's polling script to pick up fleet/GPS/fuel changes without a
+     * full reload. Deliberately skips TraccarSync()->run(): that's an
+     * external network call, and every open tab polling it every ~15s
+     * would hammer the GPS provider — index()'s own load (and the GPS
+     * Tracker page) already keep gps_status reasonably fresh.
+     *
+     * The table rows come back pre-rendered HTML (rows_html), not raw JSON
+     * data the page would have to re-template in JS — Vehicles/_rows.php is
+     * the one place that knows how to draw a row (GPS/availability badges,
+     * fuel prediction text), shared by the normal page load and this
+     * endpoint, so there's no second copy of that logic to keep in sync.
+     */
+    public function refreshData()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $data = $this->buildVehicleData();
+        $data['rows_html'] = view('Vehicles/_rows', $data);
+
+        return $this->response->setJSON($data);
+    }
+
+    private function buildVehicleData(): array
+    {
         $vehicles = $this->vehicleModel->getAllWithDetails();
         $fleetStats = $this->vehicleModel->getFleetStats();
 
@@ -90,7 +124,6 @@ class VehicleController extends BaseController
 
         $data = [
             'title'    => 'Vehicle Management',
-            'pageCss'  => 'vehicle.css',
             'vehicles' => $vehicles,
             'total_vehicles'     => $fleetStats['total'],
             'available_vehicles' => $fleetStats['available'],
@@ -102,7 +135,7 @@ class VehicleController extends BaseController
             'vehicle_details_json' => $this->jsonForScript($vehicleDetails),
         ];
 
-        return view('vehicles/index', $data);
+        return $data;
     }
 
     public function add()

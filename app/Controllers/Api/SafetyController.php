@@ -28,12 +28,24 @@ class SafetyController extends BaseApiController
         $total     = count($units);
         $readiness = $total > 0 ? round(($total - count($overdue)) / $total * 100) : 100;
 
+        // Same shared calculation the web Dashboard/Security Dashboard use
+        // (FireExtinguisherModel::getBuildingCoverage()) — real building
+        // coverage ("every campus building has one installed"), which
+        // coverage_total above doesn't actually measure (it's a raw unit
+        // count, kept as-is so nothing already reading it breaks).
+        $buildingCoverage = $this->feModel->getBuildingCoverage();
+        $floorCoverage    = $this->feModel->getFloorCoverage();
+
         return $this->ok([
             'fire_extinguishers'    => $units,
             'coverage_total'        => $total,
             'coverage_attention'    => count($needsAttention),
             'coverage_refill'       => count($dueForRefill),
             'inspection_readiness'  => $readiness,
+            'buildings_covered'     => $buildingCoverage['covered'],
+            'buildings_total'       => $buildingCoverage['total'],
+            'floors_covered'        => $floorCoverage['covered'],
+            'floors_total'          => $floorCoverage['total'],
         ]);
     }
 

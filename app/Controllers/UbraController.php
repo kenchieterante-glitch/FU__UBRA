@@ -126,8 +126,18 @@ class UbraController extends BaseController
 
         if ($reply === null) {
             log_message('error', "UbraController::chat — AI request failed, HTTP {$httpCode}: " . substr((string) $response, 0, 500));
+
+            // A 429 here means the AI PROVIDER's own quota/rate limit was
+            // hit (e.g. Gemini's free tier: 20 requests/day) — telling the
+            // user "trouble connecting" for this is actively misleading,
+            // since retrying immediately just fails again for the same
+            // reason. Say what actually happened instead.
+            $reply = $httpCode === 429
+                ? "⚠️ The AI provider's usage limit has been reached for now (this happens fast on a free-tier key, e.g. Gemini's 20-requests/day cap). Please wait a while and try again, or add a different/paid API key in **Settings → AI Configuration**."
+                : "I'm having trouble connecting right now. Please try again.";
+
             return $this->response->setJSON([
-                'reply' => "I'm having trouble connecting right now. Please try again.",
+                'reply' => $reply,
                 'role'  => 'assistant',
             ]);
         }

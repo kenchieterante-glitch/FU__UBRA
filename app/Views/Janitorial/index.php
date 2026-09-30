@@ -127,10 +127,29 @@
         <button class="btn-add-record" onclick="openAddInventoryModal()"><i class="bi bi-plus-lg"></i> Add Item</button>
       </div>
     </div>
+    <div class="shift-filter-row" id="inventoryFilterRow">
+      <button class="shift-filter-chip" data-kind="" onclick="filterInventoryByStat('')">All</button>
+      <button class="shift-filter-chip" data-kind="low" onclick="filterInventoryByStat('low')">Low Stock</button>
+      <button class="shift-filter-chip" data-kind="out" onclick="filterInventoryByStat('out')">Out of Stock</button>
+      <div class="icon-select-wrap">
+        <i class="bi bi-building"></i>
+        <select id="inventoryBuildingFilter" class="shift-floor-filter icon-select" onchange="filterInventoryByBuilding(this.value)">
+          <option value="">All buildings</option>
+          <option>Admin Building</option>
+          <option>Library</option>
+          <option>Science Building</option>
+          <option>Gymnasium</option>
+          <option>Canteen</option>
+          <option>Engineering</option>
+          <option>CCS Building</option>
+          <option>Clinic</option>
+        </select>
+      </div>
+    </div>
     <div class="table-wrap">
       <table class="sj-table">
         <thead>
-          <tr><th>Item</th><th>Category</th><th>Unit</th><th>Current Stock</th><th>Last Refill</th><th>Status</th><th>Action</th></tr>
+          <tr><th>Item</th><th>Category</th><th>Unit</th><th>Location</th><th>Current Stock</th><th>Last Refill</th><th>Status</th><th>Action</th></tr>
         </thead>
         <tbody id="inventoryBody"></tbody>
       </table>
@@ -215,18 +234,67 @@
     </div>
     <div class="sj-modal-body">
       <div class="form-grid2">
-        <div class="fg"><label>Item Name</label><input type="text" id="invName" placeholder="e.g. Floor Cleaner"></div>
+        <div class="fg"><label>Item Name</label><input type="text" id="invName" placeholder="e.g. Broom"></div>
         <div class="fg"><label>Category</label>
           <select id="invCat"><option>Cleaning Agent</option><option>Tools</option><option>Disposable</option><option>Equipment</option></select>
         </div>
         <div class="fg"><label>Unit</label><input type="text" id="invUnit" placeholder="Liters / Pieces / Rolls"></div>
+        <div class="fg"><label>Building <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+          <select id="invBuilding">
+            <option value="">— Unspecified —</option>
+            <option>Admin Building</option>
+            <option>Library</option>
+            <option>Science Building</option>
+            <option>Gymnasium</option>
+            <option>Canteen</option>
+            <option>Engineering</option>
+            <option>CCS Building</option>
+            <option>Clinic</option>
+          </select>
+        </div>
+        <div class="fg"><label>Floor <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+          <select id="invFloor">
+            <option value="">— Unspecified —</option>
+            <option>Ground Floor</option>
+            <option>1st Floor</option>
+            <option>2nd Floor</option>
+            <option>3rd Floor</option>
+            <option>4th Floor</option>
+          </select>
+        </div>
+        <div class="fg"><label>Specific Place <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+          <input type="text" id="invPlace" placeholder="e.g. Janitor's closet, Storage Room 2"></div>
         <div class="fg"><label>Current Stock</label><input type="number" id="invStock" placeholder="e.g. 20"></div>
         <div class="fg"><label>Reorder Threshold</label><input type="number" id="invReorder" placeholder="e.g. 5"></div>
       </div>
     </div>
     <div class="sj-modal-footer">
       <button class="btn-cancel" onclick="closeInventoryModal('addInventoryModal')">Cancel</button>
-      <button class="btn-maroon-sm" onclick="saveInventoryItem()"><i class="bi bi-floppy-fill"></i> Add Item</button>
+      <button class="btn-maroon-sm" onclick="saveInventoryItem()">Add Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Refill history popup — opened by clicking an item's Last Refill date;
+     shows that item's own entries from refill_log instead of the mixed,
+     all-items log table below the inventory list. -->
+<div id="itemRefillHistoryModal" class="sj-modal-overlay" style="display:none">
+  <div class="sj-modal">
+    <div class="sj-modal-header">
+      <h3 id="rhModalTitle"><i class="bi bi-clock-history"></i> Refill History</h3>
+    </div>
+    <div class="sj-modal-body">
+      <div class="table-wrap">
+        <table class="sj-table">
+          <thead>
+            <tr><th>Quantity Added</th><th>Date &amp; Time</th><th>Performed By</th></tr>
+          </thead>
+          <tbody id="rhModalBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="sj-modal-footer">
+      <button class="btn-cancel" onclick="closeInventoryModal('itemRefillHistoryModal')">Close</button>
     </div>
   </div>
 </div>
@@ -875,20 +943,30 @@ function inventoryStatus(item) {
 }
 
 let inventoryFilter = null;
+let inventoryBuildingFilter = null;
 
-// Called from the summary cards — jump to Consumable Inventory and show
-// only items in that stock status.
+// Called from the summary cards (and the filter chips above the table) —
+// jump to Consumable Inventory and show only items in that stock status.
 function filterInventoryByStat(kind) {
   inventoryFilter = kind || null;
   switchJanTab('inventory');
+  document.querySelectorAll('#inventoryFilterRow .shift-filter-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.getAttribute('data-kind') === (inventoryFilter || ''));
+  });
+}
+
+function filterInventoryByBuilding(building) {
+  inventoryBuildingFilter = building || null;
+  renderInventory();
 }
 
 function renderInventory() {
   const indexed = inventoryItems.map((item, i) => ({ item, i }));
-  const list = inventoryFilter ? indexed.filter(({ item }) => inventoryStatus(item) === inventoryFilter) : indexed;
+  let list = inventoryFilter ? indexed.filter(({ item }) => inventoryStatus(item) === inventoryFilter) : indexed;
+  if (inventoryBuildingFilter) list = list.filter(({ item }) => item.building === inventoryBuildingFilter);
 
   if (!list.length) {
-    document.getElementById('inventoryBody').innerHTML = `<tr><td colspan="7"><div class="no-data">No items match this filter.</div></td></tr>`;
+    document.getElementById('inventoryBody').innerHTML = `<tr><td colspan="8"><div class="no-data">No items match this filter.</div></td></tr>`;
     return;
   }
 
@@ -898,17 +976,21 @@ function renderInventory() {
     const st  = status === 'out' ? '<span class="inv-badge inv-out">Out of Stock</span>'
               : status === 'low' ? '<span class="inv-badge inv-low">Low Stock ⚠</span>'
               : '<span class="inv-badge inv-ok">OK</span>';
+    const loc = item.building
+      ? `${esc(item.building)}${item.floor ? ', ' + esc(item.floor) : ''}${item.place ? `<br><span class="text-muted" style="font-size:.75rem">${esc(item.place)}</span>` : ''}`
+      : '<span class="text-muted">—</span>';
 
-    return `<tr>
+    return `<tr class="inv-row-clickable" onclick="showRefillHistory(${item.id}, '${esc(item.name).replace(/'/g, "\\'")}')" title="View refill history">
       <td><strong>${item.name}</strong></td>
       <td>${item.cat}</td>
       <td>${item.unit}</td>
+      <td>${loc}</td>
       <td class="${col}"><strong>${item.stock}</strong></td>
-      <td>${item.lastRefill}</td>
+      <td>${item.lastRefill || '—'}</td>
       <td>${st}</td>
       <td>
         <div class="action-buttons">
-          <button type="button" class="icon-btn" onclick="refillItem(${i})" title="Refill" aria-label="Refill ${item.name}"><i class="bi bi-upload"></i></button>
+          <button type="button" class="icon-btn" onclick="event.stopPropagation();refillItem(${i})" title="Refill" aria-label="Refill ${item.name}"><i class="bi bi-upload"></i></button>
         </div>
       </td>
     </tr>`;
@@ -979,6 +1061,29 @@ function renderJanitorialSummary() {
   });
 }
 
+// Clicking an item's "Last Refill" date — shows that item's own entries
+// from refillLogEntries instead of the mixed, all-items log table below.
+function showRefillHistory(itemId, itemName) {
+  document.getElementById('rhModalTitle').innerHTML = `<i class="bi bi-clock-history"></i> Refill History — ${esc(itemName)}`;
+  const entries = refillLogEntries.filter(e => e.itemId === itemId);
+
+  if (!entries.length) {
+    document.getElementById('rhModalBody').innerHTML = `<tr><td colspan="3"><div class="no-data">No refills recorded yet for this item.</div></td></tr>`;
+  } else {
+    document.getElementById('rhModalBody').innerHTML = entries.map(entry => {
+      const dt = new Date(entry.at.replace(' ', 'T'));
+      const dateStr = isNaN(dt) ? entry.at : dt.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+      return `<tr>
+        <td>+${entry.qty} ${entry.unit}</td>
+        <td>${dateStr}</td>
+        <td>${esc(entry.by)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('itemRefillHistoryModal').style.display = 'flex';
+}
+
 let restockItemIndex = null;
 
 function refillItem(i) {
@@ -1020,6 +1125,9 @@ function saveInventoryItem() {
   fd.append('item_name', name);
   fd.append('category', document.getElementById('invCat').value);
   fd.append('unit', document.getElementById('invUnit').value);
+  fd.append('building', document.getElementById('invBuilding').value);
+  fd.append('floor', document.getElementById('invFloor').value);
+  fd.append('location_note', document.getElementById('invPlace').value.trim());
   fd.append('current_stock', document.getElementById('invStock').value || 0);
   fd.append('reorder_threshold', document.getElementById('invReorder').value || 0);
 
@@ -1055,7 +1163,7 @@ function openEditShiftModal(id) {
 
   document.getElementById('asEditId').value = id;
   document.getElementById('asModalTitle').innerHTML = '<i class="bi bi-pencil-fill"></i> Edit Shift Assignment';
-  document.getElementById('asSaveBtn').innerHTML = '<i class="bi bi-floppy-fill"></i> Save Changes';
+  document.getElementById('asSaveBtn').innerHTML = 'Save Changes';
   document.getElementById('asTasksField').style.display = 'none';
   document.getElementById('asStaffName').value = s.name;
   document.getElementById('asZone').value = s.zone;
@@ -1118,7 +1226,16 @@ async function deleteShiftAssignment(id) {
     .catch(() => showToast('Could not remove this assignment. Please try again.', true));
 }
 
-function openAddInventoryModal() { document.getElementById('addInventoryModal').style.display = 'flex'; }
+function openAddInventoryModal() {
+  document.getElementById('invName').value = '';
+  document.getElementById('invUnit').value = '';
+  document.getElementById('invBuilding').value = '';
+  document.getElementById('invFloor').value = '';
+  document.getElementById('invPlace').value = '';
+  document.getElementById('invStock').value = '';
+  document.getElementById('invReorder').value = '';
+  document.getElementById('addInventoryModal').style.display = 'flex';
+}
 
 // Named distinctly from layouts/main.php's own closeModal(id) (which
 // toggles an 'open' class) — this modal is shown/hidden via inline
@@ -1149,6 +1266,7 @@ renderShiftCards();
 renderInventory();
 renderRefillLog();
 document.querySelector('#shiftFilterRow .shift-filter-chip[data-kind=""]')?.classList.add('active');
+document.querySelector('#inventoryFilterRow .shift-filter-chip[data-kind=""]')?.classList.add('active');
 
 // Returning from reloadOnTab(): restore the tab and show the toast.
 // Deferred to DOMContentLoaded: uiToast() lives in the layout's script block,

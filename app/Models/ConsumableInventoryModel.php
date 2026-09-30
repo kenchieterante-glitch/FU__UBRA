@@ -8,6 +8,6 @@ class ConsumableInventoryModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [
-        'item_name', 'category', 'unit', 'current_stock', 'reorder_threshold', 'last_refill',
+        'item_name', 'category', 'unit', 'building', 'floor', 'location_note', 'current_stock', 'reorder_threshold', 'last_refill',
     ];
 }

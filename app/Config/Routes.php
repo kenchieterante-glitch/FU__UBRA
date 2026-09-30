@@ -41,6 +41,7 @@ $routes->set404Override();
 // DASHBOARD
 // ============================================================
 $routes->get('dashboard', 'Dashboard::index');
+$routes->get('dashboard/refresh', 'Dashboard::refreshData');
 $routes->get('security-dashboard', 'SecurityDashboardController::index');
 $routes->get('tools-dashboard', 'ToolsDashboardController::index');
 $routes->get('facilities-dashboard', 'FacilitiesDashboardController::index');
@@ -87,6 +88,7 @@ $routes->post('personnel/documents/reject/(:num)', 'PersonnelDocumentController:
 // TOOLS & EQUIPMENT
 // ============================================================
 $routes->get ('tools',                  'ToolsController::index');
+$routes->get ('tools/refresh',          'ToolsController::refreshData');
 $routes->get ('tools/power-tools',      'ToolsController::powerTools');
 $routes->get ('tools/consumable',       'ToolsController::consumable');
 $routes->get ('tools/sports-equipment', 'ToolsController::sportsEquipment');
@@ -143,6 +145,7 @@ $routes->post('maintenance-forms/restroom/updateHeader/(:num)',    'MaintenanceF
 // VEHICLE MANAGEMENT
 // ============================================================
 $routes->get ('vehicles',              'VehicleController::index');
+$routes->get ('vehicles/refresh',      'VehicleController::refreshData');
 $routes->post('vehicles/add',          'VehicleController::add');
 $routes->post('vehicles/edit/(:num)',  'VehicleController::edit/$1');
 $routes->post('vehicles/delete/(:num)','VehicleController::delete/$1');
@@ -182,6 +185,8 @@ $routes->get ('safety/keylogs',                'SafetyController::keylogs');
 $routes->get ('safety/keylogs/lookup/(:any)',  'SafetyController::lookupBorrower/$1');
 $routes->post('safety/keylogs/scan-borrow',    'SafetyController::scanBorrow');
 $routes->post('safety/keylogs/scan-return',    'SafetyController::scanReturn');
+$routes->post('safety/addExtinguisher',           'SafetyController::addExtinguisher');
+$routes->post('safety/addAirconUnit',             'SafetyController::addAirconUnit');
 $routes->post('safety/setInstaller/(:num)',       'SafetyController::setInstaller/$1');
 $routes->post('safety/setAirconInstaller/(:num)', 'SafetyController::setAirconInstaller/$1');
 $routes->post('safety/setDepartment/(:num)',      'SafetyController::setDepartment/$1');

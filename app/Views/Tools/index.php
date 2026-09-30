@@ -23,32 +23,32 @@ $isConsumablePage = ($title === 'Consumable');
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('')" role="button" tabindex="0">
     <span class="stat-icon tone-maroon"><i class="bi bi-tools"></i></span>
     <h3>Total Tools</h3>
-    <div class="value"><?= esc((string) ((int) ($total_tools ?? 0))) ?></div>
+    <div class="value" id="statTotalTools"><?= esc((string) ((int) ($total_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('available')" role="button" tabindex="0">
     <span class="stat-icon tone-green"><i class="bi bi-check-circle-fill"></i></span>
     <h3>Available Tools</h3>
-    <div class="value"><?= esc((string) ((int) ($available_tools ?? 0))) ?></div>
+    <div class="value" id="statAvailableTools"><?= esc((string) ((int) ($available_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('borrowed')" role="button" tabindex="0">
     <span class="stat-icon tone-neutral"><i class="bi bi-hand-index-thumb-fill"></i></span>
     <h3>Borrowed Tools</h3>
-    <div class="value"><?= esc((string) ((int) ($borrowed_tools ?? 0))) ?></div>
+    <div class="value" id="statBorrowedTools"><?= esc((string) ((int) ($borrowed_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('maintenance')" role="button" tabindex="0">
     <span class="stat-icon tone-gold"><i class="bi bi-wrench-adjustable"></i></span>
     <h3>Needs Maintenance</h3>
-    <div class="value"><?= esc((string) ((int) ($maintenance_tools ?? 0))) ?></div>
+    <div class="value" id="statMaintenanceTools"><?= esc((string) ((int) ($maintenance_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('disposal')" role="button" tabindex="0">
     <span class="stat-icon tone-red"><i class="bi bi-trash3-fill"></i></span>
     <h3>Disposal</h3>
-    <div class="value"><?= esc((string) ((int) ($disposal_tools ?? 0))) ?></div>
+    <div class="value" id="statDisposalTools"><?= esc((string) ((int) ($disposal_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('consumable')" role="button" tabindex="0">
     <span class="stat-icon tone-blue"><i class="bi bi-box2"></i></span>
     <h3>Consumable</h3>
-    <div class="value"><?= esc((string) ((int) ($consumable_tools ?? 0))) ?></div>
+    <div class="value" id="statConsumableTools"><?= esc((string) ((int) ($consumable_tools ?? 0))) ?></div>
   </div>
 </div>
 <?php endif; ?>
@@ -103,22 +103,28 @@ $isConsumablePage = ($title === 'Consumable');
             </select>
           </div>
           <div class="filter-row">
-            <label for="toolsSort">Sort By</label>
-            <select id="toolsSort" onchange="applyToolsSort()">
-              <option value="">Default</option>
-              <option value="0-asc">Tool Name (A&ndash;Z)</option>
-              <option value="0-desc">Tool Name (Z&ndash;A)</option>
-              <option value="2-asc">Category (A&ndash;Z)</option>
-              <option value="2-desc">Category (Z&ndash;A)</option>
-              <option value="5-asc">Condition (A&ndash;Z)</option>
-              <option value="5-desc">Condition (Z&ndash;A)</option>
-              <option value="6-asc">Status (A&ndash;Z)</option>
-              <option value="6-desc">Status (Z&ndash;A)</option>
-              <?php if ($isConsumablePage): ?>
-                <option value="8-asc">Stock (Low&ndash;High)</option>
-                <option value="8-desc">Stock (High&ndash;Low)</option>
-              <?php endif; ?>
-            </select>
+            <label id="toolsSortLabel">Sort By</label>
+            <div class="dd-select" id="toolsSortDD" data-onchange="applyToolsSort">
+              <button type="button" class="dd-select-trigger" onclick="toggleDDSelect('toolsSortDD')" aria-haspopup="listbox" aria-expanded="false">
+                <span class="dd-select-value">Default</span>
+                <i class="bi bi-chevron-down"></i>
+              </button>
+              <div class="dd-select-menu" role="listbox">
+                <div class="dd-select-option selected" data-value="" role="option">Default</div>
+                <div class="dd-select-option" data-value="0-asc" role="option">Tool Name (A&ndash;Z)</div>
+                <div class="dd-select-option" data-value="0-desc" role="option">Tool Name (Z&ndash;A)</div>
+                <div class="dd-select-option" data-value="2-asc" role="option">Category (A&ndash;Z)</div>
+                <div class="dd-select-option" data-value="2-desc" role="option">Category (Z&ndash;A)</div>
+                <div class="dd-select-option" data-value="5-asc" role="option">Condition (A&ndash;Z)</div>
+                <div class="dd-select-option" data-value="5-desc" role="option">Condition (Z&ndash;A)</div>
+                <div class="dd-select-option" data-value="6-asc" role="option">Status (A&ndash;Z)</div>
+                <div class="dd-select-option" data-value="6-desc" role="option">Status (Z&ndash;A)</div>
+                <?php if ($isConsumablePage): ?>
+                  <div class="dd-select-option" data-value="8-asc" role="option">Stock (Low&ndash;High)</div>
+                  <div class="dd-select-option" data-value="8-desc" role="option">Stock (High&ndash;Low)</div>
+                <?php endif; ?>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -141,49 +147,8 @@ $isConsumablePage = ($title === 'Consumable');
       <th>Actions</th>
     </tr>
   </thead>
-  <tbody>
-    <?php if (!empty($toolList)): ?>
-      <?php foreach ($toolList as $t): ?>
-        <tr>
-          <td class="tool-name-cell"><?= esc($t['asset_name']) ?></td>
-          <td><?= esc($t['asset_code']) ?></td>
-          <td><?= esc($t['category']) ?></td>
-          <td><?= esc($t['location']) ?></td>
-          <td><?= esc($t['custodian_name'] ?? 'Unassigned') ?></td>
-          <td><span class="status-badge status-<?= strtolower($t['condition_status']) ?>"><?= esc($t['condition_status']) ?></span></td>
-          <td><span class="status-badge status-<?= strtolower($t['availability']) ?>"><?= esc($t['availability']) ?></span></td>
-          <td><?= (($t['availability'] ?? '') === 'Borrowed') ? esc($t['borrower_name'] ?? 'Not on record') : '—' ?></td>
-          <?php if ($isConsumablePage): ?>
-            <?php
-              $stockQty = (float) ($t['current_stock'] ?? 0);
-              $reorderLevel = (float) ($t['reorder_threshold'] ?? 0);
-              $unitLabel = $t['unit'] ?? 'pcs';
-              $stockBadge = $stockQty <= 0 ? ['inv-out', 'Out of Stock'] : ($stockQty <= $reorderLevel ? ['inv-low', 'Low Stock'] : ['inv-ok', 'Full Stock']);
-            ?>
-            <td>
-              <strong><?= esc((string) $stockQty) ?> <?= esc($unitLabel) ?></strong>
-              <span class="inv-badge <?= $stockBadge[0] ?>"><?= $stockBadge[1] ?></span>
-            </td>
-          <?php endif; ?>
-          <td>
-            <div class="action-buttons">
-              <button type="button" class="icon-btn" onclick="openToolDetail(<?= (int) $t['id'] ?>)" title="View Details" aria-label="View details for <?= esc($t['asset_name']) ?>"><i class="bi bi-eye-fill"></i></button>
-              <button type="button" class="icon-btn" onclick="document.getElementById('editModal<?= $t['id'] ?>').style.display='flex'" title="Edit" aria-label="Edit <?= esc($t['asset_name']) ?>"><i class="bi bi-pencil-fill"></i></button>
-              <?php if ($isConsumablePage): ?>
-                <button type="button" class="icon-btn" title="Refill" aria-label="Refill <?= esc($t['asset_name']) ?>" onclick="refillToolStock(<?= (int) $t['id'] ?>, '<?= esc($t['asset_name'], 'js') ?>', '<?= esc($t['unit'] ?? 'pcs', 'js') ?>')"><i class="bi bi-upload"></i></button>
-              <?php else: ?>
-                <form method="post" action="<?= base_url('tools/delete/'.$t['id']) ?>" onsubmit="return confirm('Archive this tool?')" style="display:contents;">
-                  <?= csrf_field() ?>
-                  <button type="submit" class="icon-btn delete" title="Archive" aria-label="Archive <?= esc($t['asset_name']) ?>"><i class="bi bi-archive-fill"></i></button>
-                </form>
-              <?php endif; ?>
-            </div>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-    <?php else: ?>
-      <tr><td colspan="<?= $isConsumablePage ? 10 : 9 ?>">No assets recorded yet.</td></tr>
-    <?php endif; ?>
+  <tbody id="toolsTableBody">
+    <?= $this->include('Tools/_rows') ?>
   </tbody>
 </table>
   </div>
@@ -266,7 +231,8 @@ $isConsumablePage = ($title === 'Consumable');
 </div>
 
 <script>
-const toolDetails = <?= $tool_details_json ?? '{}' ?>;
+let toolDetails = <?= $tool_details_json ?? '{}' ?>;
+const currentToolsCategory = <?= json_encode($isConsumablePage ? 'Consumable' : ($showCategoryTabs ? $title : '')) ?>;
 
 function esc(s) {
   const d = document.createElement('div');
@@ -329,7 +295,7 @@ function closeToolDetail() {
   document.body.style.overflow = '';
 }
 
-const toolsRefillLogEntries = <?= $refill_log_json ?? '[]' ?>;
+let toolsRefillLogEntries = <?= $refill_log_json ?? '[]' ?>;
 
 function renderToolsRefillLog() {
   const body = document.getElementById('toolsRefillLogBody');
@@ -378,7 +344,7 @@ function filterToolsTable() {
 // can restore it without a page reload.
 let toolsOriginalOrder = null;
 
-function applyToolsSort() {
+function applyToolsSort(value) {
   const tbody = document.querySelector('#toolsTable tbody');
   if (!tbody) return;
 
@@ -386,7 +352,11 @@ function applyToolsSort() {
     toolsOriginalOrder = Array.from(tbody.querySelectorAll('tr'));
   }
 
-  const value = document.getElementById('toolsSort').value;
+  // Called with no argument by refreshTools() to re-apply whatever sort is
+  // currently active — read it back from the dropdown's own selected state.
+  if (value === undefined) {
+    value = document.querySelector('#toolsSortDD .dd-select-option.selected')?.dataset.value ?? '';
+  }
   if (!value) {
     toolsOriginalOrder.forEach(row => tbody.appendChild(row));
     return;
@@ -482,6 +452,48 @@ document.addEventListener('click', e => {
 // Arriving from the Dashboard's stat boxes (e.g. tools?filter=borrowed).
 const toolsUrlFilter = new URLSearchParams(window.location.search).get('filter');
 if (toolsUrlFilter) filterToolsByStat(toolsUrlFilter);
+
+// Polls the same data index()/categoryView() render with, as JSON with the
+// table rows pre-rendered as HTML (ToolsController::refreshData() — see
+// Tools/_rows.php). Skipped entirely while any modal is open (Add/Edit/
+// Refill/View Details), so an in-progress form never gets swapped out
+// from under the user.
+async function refreshTools() {
+  if (Array.from(document.querySelectorAll('.modal')).some(m => m.style.display === 'flex')) return;
+
+  try {
+    const params = currentToolsCategory ? `?category=${encodeURIComponent(currentToolsCategory)}` : '';
+    const res = await fetch(`<?= base_url('tools/refresh') ?>${params}`, { headers: csrfHeaders() });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    document.getElementById('toolsTableBody').innerHTML = data.rows_html;
+    toolsOriginalOrder = null; // old cached order now points at detached nodes
+    toolDetails = data.tool_details_json ? JSON.parse(data.tool_details_json) : toolDetails;
+
+    if (data.refill_log_json) {
+      toolsRefillLogEntries = JSON.parse(data.refill_log_json);
+      renderToolsRefillLog();
+    }
+
+    const setStat = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setStat('statTotalTools', data.total_tools ?? 0);
+    setStat('statAvailableTools', data.available_tools ?? 0);
+    setStat('statBorrowedTools', data.borrowed_tools ?? 0);
+    setStat('statMaintenanceTools', data.maintenance_tools ?? 0);
+    setStat('statDisposalTools', data.disposal_tools ?? 0);
+    setStat('statConsumableTools', data.consumable_tools ?? 0);
+
+    // Re-apply whatever search/category/availability/condition filter and
+    // sort the user currently has set — fresh rows would otherwise show
+    // unfiltered.
+    filterToolsTable();
+    applyToolsSort();
+  } catch (e) {
+    // Silent — a missed refresh just tries again next interval.
+  }
+}
+setInterval(refreshTools, 20000);
 </script>
 
 <datalist id="toolUnitOptions">

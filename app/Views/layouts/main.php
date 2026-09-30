@@ -422,6 +422,48 @@ function uiToast(msg, isError) {
   setTimeout(close, 4000);
 }
 
+// Shared custom dropdown — replaces a plain native <select> wherever the
+// OS's own dropdown rendering (a grey "currently selected" bar repeated at
+// the top of the open list) looked unpolished next to the rest of the
+// app's styling. One copy here instead of one per page, so every "Sort By"
+// (Personnel, Tools, Vehicles, GPS, …) looks and behaves identically.
+//
+// Markup: <div class="dd-select" data-onchange="someFunctionName"> wrapping
+// a .dd-select-trigger button (must have a .dd-select-value span and an
+// <i> chevron) and a .dd-select-menu of .dd-select-option divs (each
+// data-value + its text is the option's value/label). data-onchange names
+// a page-defined global function that gets called with the picked value —
+// same as a native <select>'s onchange, but decoupled from this component.
+function toggleDDSelect(id) {
+  const dd = document.getElementById(id);
+  const isOpen = dd.classList.contains('open');
+  document.querySelectorAll('.dd-select.open').forEach(el => el.classList.remove('open'));
+  if (!isOpen) dd.classList.add('open');
+  dd.querySelector('.dd-select-trigger')?.setAttribute('aria-expanded', String(!isOpen));
+}
+
+document.addEventListener('click', e => {
+  const option = e.target.closest('.dd-select-option');
+  if (option) {
+    const dd = option.closest('.dd-select');
+    dd.querySelectorAll('.dd-select-option').forEach(o => o.classList.remove('selected'));
+    option.classList.add('selected');
+    const valueEl = dd.querySelector('.dd-select-value');
+    if (valueEl) valueEl.textContent = option.textContent;
+    dd.classList.remove('open');
+
+    const handlerName = dd.dataset.onchange;
+    if (handlerName && typeof window[handlerName] === 'function') {
+      window[handlerName](option.dataset.value);
+    }
+    return;
+  }
+
+  if (!e.target.closest('.dd-select')) {
+    document.querySelectorAll('.dd-select.open').forEach(el => el.classList.remove('open'));
+  }
+});
+
 // Styled replacement for the browser's native confirm() (the black
 // "localhost says" box). uiConfirm() returns a Promise<boolean>; inline
 // `onsubmit/onclick="return confirm('…')"` attributes across every page are

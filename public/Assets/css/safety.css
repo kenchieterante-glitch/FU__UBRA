@@ -1859,7 +1859,7 @@
     border-radius: 999px;
     border: 1px solid var(--bdr);
     background: var(--surf);
-    color: var(--muted);
+    color: var(--txt);
     cursor: pointer;
     transition: background .15s ease, border-color .15s ease, color .15s ease;
 }
@@ -1882,9 +1882,39 @@
     border-radius: 999px;
     border: 1px solid var(--bdr);
     background: var(--surf);
-    color: var(--muted);
+    color: var(--txt);
     cursor: pointer;
     margin-left: auto;
+}
+
+/* The page-header "+ Add …" button's label swaps between "Fire
+   Extinguisher" and "Aircon Unit" text when switchSafetyTab() runs — fix
+   its width so the button doesn't resize/jump between the two lengths. */
+#addUnitBtn {
+    min-width: 210px;
+    justify-content: center;
+}
+
+/* Building icon inside a filter select — same relative-wrap/absolute-icon
+   pattern as the search boxes elsewhere in the app. */
+.icon-select-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+.icon-select-wrap i {
+    position: absolute;
+    left: .85rem;
+    color: var(--txt);
+    font-size: .85rem;
+    pointer-events: none;
+}
+
+.icon-select-wrap .icon-select {
+    margin-left: 0;
+    padding-left: 2.1rem;
 }
 
 /* ── Shift Cards ─────────────────────────────────────────────── */
@@ -2308,6 +2338,31 @@
 
 .fg-full {
     grid-column: span 2;
+}
+
+/* Clickable Consumable Inventory row — opens that item's own refill
+   history instead of the mixed, all-items log table below the list.
+   Hover background already comes from .sj-table tbody tr:hover. */
+.inv-row-clickable {
+    cursor: pointer;
+}
+
+/* Add Fire Extinguisher modal — wide enough for the two-column form-grid2
+   layout so it doesn't turn into a tall, scrolling single column. */
+.modal-box-wide {
+    max-width: 640px;
+}
+
+@media (max-width: 720px) {
+    .modal-box-wide {
+        max-width: 94vw;
+    }
+    .modal-box-wide .form-grid2 {
+        grid-template-columns: 1fr;
+    }
+    .modal-box-wide .fg-full {
+        grid-column: span 1;
+    }
 }
 
 .fg label {

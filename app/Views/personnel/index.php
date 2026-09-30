@@ -108,16 +108,28 @@ $personnelStatCards = [
           </select>
         </div>
         <div class="filter-row">
-          <label for="personnelSort">Sort By</label>
-          <select id="personnelSort" onchange="applyPersonnelSort()">
-            <option value="">Default</option>
-            <option value="0-asc">Name (A&ndash;Z)</option>
-            <option value="0-desc">Name (Z&ndash;A)</option>
-            <option value="2-asc">Department (A&ndash;Z)</option>
-            <option value="2-desc">Department (Z&ndash;A)</option>
-            <option value="5-asc">Status (A&ndash;Z)</option>
-            <option value="5-desc">Status (Z&ndash;A)</option>
-          </select>
+          <label id="personnelSortLabel">Sort By</label>
+          <!-- Custom-styled dropdown, not a plain native <select> — the OS's
+               own select rendering (grey "currently selected" bar repeated
+               at the top of the list) read as unpolished. Same open/close
+               interaction as the filter popup itself, just one level in. -->
+          <div class="dd-select" id="personnelSortDD" data-onchange="applyPersonnelSort">
+            <button type="button" class="dd-select-trigger" onclick="toggleDDSelect('personnelSortDD')" aria-haspopup="listbox" aria-expanded="false">
+              <span class="dd-select-value">Default</span>
+              <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="dd-select-menu" role="listbox">
+              <div class="dd-select-option selected" data-value="" role="option">Default</div>
+              <div class="dd-select-option" data-value="created-desc" role="option">Newest First</div>
+              <div class="dd-select-option" data-value="created-asc" role="option">Oldest First</div>
+              <div class="dd-select-option" data-value="0-asc" role="option">Name (A&ndash;Z)</div>
+              <div class="dd-select-option" data-value="0-desc" role="option">Name (Z&ndash;A)</div>
+              <div class="dd-select-option" data-value="2-asc" role="option">Department (A&ndash;Z)</div>
+              <div class="dd-select-option" data-value="2-desc" role="option">Department (Z&ndash;A)</div>
+              <div class="dd-select-option" data-value="5-asc" role="option">Status (A&ndash;Z)</div>
+              <div class="dd-select-option" data-value="5-desc" role="option">Status (Z&ndash;A)</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -175,7 +187,8 @@ $personnelStatCards = [
             data-department="<?= esc(strtolower($departmentName)) ?>"
             data-status="<?= esc(strtolower((string) ($statusValue ?? '')) ) ?>"
             data-category="<?= esc($category, 'attr') ?>"
-            data-joborder="<?= $isJobOrder ? '1' : '0' ?>">
+            data-joborder="<?= $isJobOrder ? '1' : '0' ?>"
+            data-created="<?= esc($p['created_at'] ?? '') ?>">
           <td><?= esc($p['full_name']) ?><br><small><?= esc($p['email']) ?></small></td>
           <td><?= esc($p['emp_id']) ?></td>
           <td><?= esc($departmentName) ?></td>
@@ -467,7 +480,7 @@ function filterPersonnelTable() {
 
 let personnelOriginalOrder = null;
 
-function applyPersonnelSort() {
+function applyPersonnelSort(value) {
   const tbody = document.querySelector('#personnelTable tbody');
   if (!tbody) return;
 
@@ -475,9 +488,27 @@ function applyPersonnelSort() {
     personnelOriginalOrder = Array.from(tbody.querySelectorAll('tr[data-search]'));
   }
 
-  const value = document.getElementById('personnelSort').value;
+  if (value === undefined) {
+    value = document.querySelector('#personnelSortDD .dd-select-option.selected')?.dataset.value ?? '';
+  }
   if (!value) {
     personnelOriginalOrder.forEach(row => tbody.appendChild(row));
+    return;
+  }
+
+  const rows = Array.from(tbody.querySelectorAll('tr[data-search]'));
+
+  // "Newest/Oldest First" sorts by the record's actual created_at
+  // (data-created — an ISO datetime, not shown as its own table column),
+  // not by visible column text like every other option here.
+  if (value === 'created-desc' || value === 'created-asc') {
+    const ascending = value === 'created-asc';
+    rows.sort((a, b) => {
+      const aTime = Date.parse(a.dataset.created || 0) || 0;
+      const bTime = Date.parse(b.dataset.created || 0) || 0;
+      return ascending ? aTime - bTime : bTime - aTime;
+    });
+    rows.forEach(row => tbody.appendChild(row));
     return;
   }
 
@@ -485,7 +516,6 @@ function applyPersonnelSort() {
   const colIndex = parseInt(colIndexStr, 10);
   const ascending = direction === 'asc';
 
-  const rows = Array.from(tbody.querySelectorAll('tr[data-search]'));
   rows.sort((a, b) => {
     const aText = a.children[colIndex]?.innerText.trim() ?? '';
     const bText = b.children[colIndex]?.innerText.trim() ?? '';
@@ -533,44 +563,46 @@ function setupPersonnelStatCarousel() {
   const nextBtn = document.getElementById('personnelCarouselNext');
   if (!track || !prevBtn || !nextBtn) return;
 
-  function updateArrowState() {
-    const maxScroll = track.scrollWidth - track.clientWidth;
-    const atStart = track.scrollLeft <= 0;
-    const atEnd = track.scrollLeft >= maxScroll - 1; // -1: fractional scroll rounding
-    // Hidden at the very start (nothing behind you yet), appears the
-    // moment Next moves you off position 0, hides again if you scroll
-    // back to the start — driven purely by scroll position, so it stays
-    // correct regardless of whether Next was clicked or the row was
-    // dragged/scrolled by hand.
-    prevBtn.style.display = atStart ? 'none' : 'flex';
-    nextBtn.style.display = atEnd ? 'none' : 'flex';
+  const cards = Array.from(track.querySelectorAll('.stat-card'));
+  if (!cards.length) return;
+  const firstCard = cards[0];
+  const lastCard = cards[cards.length - 1];
+
+  // scrollLeft-based start/end checks proved unreliable here (arrows stayed
+  // stuck visible regardless of tolerance/resets) — this instead watches
+  // whether the FIRST and LAST cards are actually on screen, using
+  // IntersectionObserver scoped to the track itself as the viewport. That's
+  // a direct answer to "is there anything to scroll back/forward to", not
+  // an indirect one built on scroll-position arithmetic.
+  let firstVisible = true;
+  let lastVisible = false;
+
+  function applyArrowState() {
+    prevBtn.style.display = firstVisible ? 'none' : 'flex';
+    nextBtn.style.display = lastVisible ? 'none' : 'flex';
   }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.target === firstCard) firstVisible = entry.isIntersecting;
+      if (entry.target === lastCard) lastVisible = entry.isIntersecting;
+    });
+    applyArrowState();
+  }, { root: track, threshold: 0.95 });
+
+  observer.observe(firstCard);
+  observer.observe(lastCard);
+  applyArrowState();
 
   window.personnelCarouselStep = function (direction) {
     track.scrollBy({ left: direction * track.clientWidth, behavior: 'smooth' });
   };
-
-  track.addEventListener('scroll', updateArrowState);
-  window.addEventListener('resize', updateArrowState);
-  updateArrowState();
 }
 document.addEventListener('DOMContentLoaded', setupPersonnelStatCarousel);
 
 function togglePersonnelFilterMenu() {
   const popup = document.getElementById('personnelFilterPopup');
   popup.classList.toggle('visible');
-}
-
-// Collapsed every time this page loads — no state remembered between
-// visits, just a plain show/hide (no slide/animation) toggle.
-function togglePersonnelExtraStats() {
-  const extra = document.getElementById('personnelExtraStats');
-  const btn = document.getElementById('personnelStatMoreBtn');
-  if (!extra || !btn) return;
-  const opening = extra.style.display === 'none';
-  extra.style.display = opening ? '' : 'none';
-  btn.querySelector('i').className = opening ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
-  btn.lastChild.textContent = opening ? ' Show fewer' : ` Show ${extra.querySelectorAll('.stat-card').length} more`;
 }
 
 document.addEventListener('click', e => {

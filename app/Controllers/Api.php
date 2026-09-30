@@ -818,6 +818,14 @@ class Api extends BaseController
         $total     = count($units);
         $readiness = $total > 0 ? round(($total - count($overdue)) / $total * 100) : 100;
 
+        // Same shared calculation the web Dashboard and Security Dashboard
+        // use (FireExtinguisherModel::getBuildingCoverage()) — "every real
+        // campus building has at least one fire extinguisher installed",
+        // not just a raw unit total — so the mobile app's own summary can
+        // never disagree with the web side's numbers.
+        $buildingCoverage = $feModel->getBuildingCoverage();
+        $floorCoverage    = $feModel->getFloorCoverage();
+
         $airconModel = new AirconUnitModel();
         $airconUnits = $airconModel->findAll();
         $airconNeedsAttention = array_filter($airconUnits, fn($u) =>
@@ -831,6 +839,10 @@ class Api extends BaseController
                 'inspection_readiness' => $readiness,
                 'needs_attention'      => count($needsAttention),
                 'due_for_refill'       => count($dueForRefill),
+                'buildings_covered'    => $buildingCoverage['covered'],
+                'buildings_total'      => $buildingCoverage['total'],
+                'floors_covered'       => $floorCoverage['covered'],
+                'floors_total'         => $floorCoverage['total'],
             ],
             'aircon' => [
                 'total'           => count($airconUnits),
