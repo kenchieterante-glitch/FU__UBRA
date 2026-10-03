@@ -46,7 +46,7 @@ class ToolsController extends BaseController
      * (rows_html) — Tools/_rows.php is the one place that draws a row
      * (condition/availability/stock badges), shared by both the normal
      * page load and this endpoint. category is one of 'Power Tools',
-     * 'Consumable', 'Sports Equipment', or omitted for the main All Tools
+     * 'Consumable', or omitted for the main All Tools
      * view — matches whichever tab the polling script is currently on.
      */
     public function refreshData()
@@ -72,6 +72,12 @@ class ToolsController extends BaseController
         $data = array_merge([
             'title'   => $category ?: 'Tools Equipment Management',
             'tools'   => $tools,
+            // Tools/_rows.php is included via $this->include(), which re-renders
+            // using this same $data array — not whatever local variables
+            // tools/index.php computes for its own template logic — so both
+            // names it expects have to live here, not just in the view.
+            'toolList'         => $tools,
+            'isConsumablePage' => $category === 'Consumable',
             'personnel' => $this->personnelModel->findAll(),
             'tool_details_json' => $this->jsonForScript($this->buildToolDetails($tools)),
         ], $this->getStatCounts());
@@ -98,11 +104,6 @@ class ToolsController extends BaseController
     public function consumable()
     {
         return $this->categoryView('Consumable');
-    }
-
-    public function sportsEquipment()
-    {
-        return $this->categoryView('Sports Equipment');
     }
 
     // Borrowing ledger — one row per borrow_records transaction (active and
@@ -165,7 +166,7 @@ class ToolsController extends BaseController
             $details[$t['id']] = [
                 'name'        => $t['asset_name'],
                 'code'        => $t['asset_code'] ?: '—',
-                'category'    => $t['category'],
+                'category'    => $t['category'] === 'Consumable' ? 'Supplies & Materials' : $t['category'],
                 'location'    => $t['location'] ?: 'Unassigned',
                 'custodian'   => $t['custodian_name'] ?? 'Unassigned',
                 'condition'   => $t['condition_status'],

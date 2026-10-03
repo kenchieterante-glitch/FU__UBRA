@@ -502,7 +502,7 @@ class UbraController extends BaseController
             . "- Dashboard — campus-wide KPI overview (pending requests, active borrowings, vehicles in use, maintenance due, cleaning completion).\n"
             . "- Personnel Management — staff records, by category (Drivers, Janitors, Carpentries Shop, Maintenance, Construction Workers), Job Order personnel, contracts.\n"
             . "- Vehicle Management — fleet records, fuel logs, fuel-need predictions; GPS Tracker (live status) and Trip Ticket (travel requests/dispatch) live under the same section.\n"
-            . "- Tools Management — all tools/equipment by category (Power Tools, Consumable, Sports Equipment), borrowing ledger.\n"
+            . "- Tools Management — all tools/equipment by category (Power Tools, Supplies & Materials), borrowing ledger.\n"
             . "- Maintenance (Safety) — fire extinguisher and aircon condition tracked on a campus map by building/floor, plus maintenance work orders; Guard page handles gate check-in/out.\n"
             . "- Janitorial Monitoring — cleaning zones by building (and now by floor within a building), staff shift assignments, consumable inventory/refill log.\n"
             . "- Calendar — scheduling for cleaning and maintenance.\n"

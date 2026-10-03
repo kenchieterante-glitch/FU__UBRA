@@ -99,7 +99,7 @@ abstract class BaseController extends Controller
         return match (strtolower($this->userRole())) {
             'security'   => '/security-dashboard',
             'tools'      => '/tools-dashboard',
-            'facilities' => '/facilities-dashboard',
+            'facilities' => '/facilities',
             'janitorial' => '/janitorial-dashboard',
             default      => '/dashboard',
         };

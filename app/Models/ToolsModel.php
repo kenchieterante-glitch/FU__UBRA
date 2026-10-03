@@ -10,7 +10,7 @@ class ToolsModel extends Model
     protected $allowedFields = [
         'asset_name','asset_code','category','location','custodian',
         'condition_status','availability','current_stock','reorder_threshold','unit',
-        'is_archived','archived_at','last_activity_at'
+        'is_facilities','is_archived','archived_at','last_activity_at'
     ];
 
     public function getAvailableTools()

@@ -85,7 +85,16 @@ class AuthController extends BaseController
 
         $this->setNoStoreHeaders();
 
-        return view('auth/login');
+        $portals = [
+            'facilities' => 'Facilities Administration & General Services',
+            'safety'     => 'Safety and Security Department',
+            'asset'      => 'Asset Acquisition and Monitoring Department',
+        ];
+        $portalKey = (string) $this->request->getGet('portal');
+
+        return view('auth/login', [
+            'selectedPortal' => $portals[$portalKey] ?? null,
+        ]);
     }
 
     public function logout()

@@ -641,40 +641,58 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <!-- ADD MODAL -->
 <div class="modal" id="addModal">
-  <div class="modal-box">
+  <div class="modal-box modal-box-wide">
     <h3>Add Personnel</h3>
     <form id="addPersonnelForm" action="<?= site_url('personnel/add') ?>" method="post">
       <?= csrf_field() ?>
       <p class="required-note">Fields marked <span class="required-mark">*</span> are required.</p>
-      <label>Employee ID <span class="required-mark">*</span></label>
-      <input type="text" name="emp_id" placeholder="e.g. EMP-2026-001" required>
-      <label>Full Name <span class="required-mark">*</span></label>
-      <input type="text" name="full_name" placeholder="e.g. Juan Dela Cruz" required>
-      <label>Email</label>
-      <input type="email" name="email" placeholder="e.g. juan.delacruz@foundation.edu.ph">
-      <label>Contact Number</label>
-      <input type="tel" name="contact_number" placeholder="e.g. 0917 123 4567">
-      <label>Department</label>
-      <select name="department_id">
-        <?php foreach ($departments as $d): ?>
-          <option value="<?= $d['id'] ?>"><?= esc($d['name']) ?></option>
-        <?php endforeach; ?>
-      </select>
-      <label>Position</label>
-      <select name="position">
-        <option value="">Select Position</option>
-        <?php foreach ($positionOptions as $positionOption): ?>
-          <option value="<?= esc($positionOption) ?>"><?= esc($positionOption) ?></option>
-        <?php endforeach; ?>
-      </select>
-      <label><?= esc($taskLabel) ?></label>
-      <input type="text" name="assigned_task">
-      <label>Status</label>
-      <select name="status">
-        <option>Active</option>
-        <option>On Leave</option>
-        <option>Inactive</option>
-      </select>
+      <div class="form-grid2">
+        <div class="fg">
+          <label>Employee ID <span class="required-mark">*</span></label>
+          <input type="text" name="emp_id" placeholder="e.g. EMP-2026-001" required>
+        </div>
+        <div class="fg">
+          <label>Full Name <span class="required-mark">*</span></label>
+          <input type="text" name="full_name" placeholder="e.g. Juan Dela Cruz" required>
+        </div>
+        <div class="fg">
+          <label>Email</label>
+          <input type="email" name="email" placeholder="e.g. juan.delacruz@foundation.edu.ph">
+        </div>
+        <div class="fg">
+          <label>Contact Number</label>
+          <input type="tel" name="contact_number" placeholder="e.g. 0917 123 4567">
+        </div>
+        <div class="fg">
+          <label>Department</label>
+          <select name="department_id">
+            <?php foreach ($departments as $d): ?>
+              <option value="<?= $d['id'] ?>"><?= esc($d['name']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Position</label>
+          <select name="position">
+            <option value="">Select Position</option>
+            <?php foreach ($positionOptions as $positionOption): ?>
+              <option value="<?= esc($positionOption) ?>"><?= esc($positionOption) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="fg">
+          <label><?= esc($taskLabel) ?></label>
+          <input type="text" name="assigned_task">
+        </div>
+        <div class="fg">
+          <label>Status</label>
+          <select name="status">
+            <option>Active</option>
+            <option>On Leave</option>
+            <option>Inactive</option>
+          </select>
+        </div>
+      </div>
       <div class="modal-actions">
         <button type="button" onclick="document.getElementById('addModal').style.display='none'">Cancel</button>
         <button type="submit" class="btn-maroon">Save</button>

@@ -55,6 +55,37 @@ foreach ($recordList as $r) {
         <i class="bi bi-search search-icon"></i>
       </div>
     </div>
+    <div class="toolbar-right">
+      <div class="filter-menu-wrapper">
+        <button type="button" class="filter-btn" onclick="toggleBorrowFilterMenu()" aria-label="Open filters">
+          <i class="bi bi-funnel"></i>
+        </button>
+        <div class="filter-popup" id="borrowFilterPopup">
+          <div class="filter-popup-title">Filter</div>
+          <div class="filter-row">
+            <label for="borrowStatusFilter">Status</label>
+            <select id="borrowStatusFilter" onchange="filterBorrowingTable()">
+              <option value="">All Statuses</option>
+              <option value="Borrowed">Borrowed</option>
+              <option value="Overdue">Overdue</option>
+              <option value="Returned">Returned</option>
+              <option value="Pending approval">Pending approval</option>
+              <option value="Consumed">Consumed</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <label for="borrowSort">Sort by</label>
+            <select id="borrowSort" onchange="sortBorrowingRows()">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="latest">Latest borrowed</option>
+              <option value="due">Due date (soonest)</option>
+              <option value="tool">Tool (A–Z)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="tools-table-scroll">
@@ -85,7 +116,7 @@ foreach ($recordList as $r) {
             };
             $rowClass = $computedStatus === 'Overdue' ? 'row-overdue' : '';
           ?>
-          <tr class="<?= $rowClass ?>">
+          <tr class="borrow-row <?= $rowClass ?>" data-id="<?= (int) $r['id'] ?>" data-status="<?= esc($computedStatus) ?>" data-borrowed="<?= esc((string) ($r['borrowed_date'] ?? '')) ?>" data-due="<?= esc((string) ($r['expected_return'] ?? '')) ?>" data-name="<?= esc($r['asset_name'] ?? '') ?>">
             <td class="tool-name-cell"><?= esc($r['asset_name'] ?? 'Unknown tool') ?></td>
             <td><?= esc($r['asset_code'] ?? '—') ?></td>
             <td><?= esc($r['borrower'] ?? 'Not on record') ?></td>
@@ -183,10 +214,37 @@ function closeBorrowDetail() {
 
 function filterBorrowingTable() {
   const search = document.getElementById('borrowingSearch').value.toLowerCase();
+  const status = document.getElementById('borrowStatusFilter').value;
   document.querySelectorAll('#borrowingTable tbody tr').forEach(row => {
-    row.style.display = row.innerText.toLowerCase().includes(search) ? '' : 'none';
+    const okSearch = row.innerText.toLowerCase().includes(search);
+    const okStatus = !status || row.dataset.status === status;
+    row.style.display = okSearch && okStatus ? '' : 'none';
   });
 }
+
+function sortBorrowingRows() {
+  const mode = document.getElementById('borrowSort').value;
+  const body = document.querySelector('#borrowingTable tbody');
+  const rows = Array.from(body.querySelectorAll('.borrow-row'));
+  rows.sort((a, b) => {
+    if (mode === 'latest') return (b.dataset.borrowed || '').localeCompare(a.dataset.borrowed || '');
+    if (mode === 'due') return (a.dataset.due || '9999').localeCompare(b.dataset.due || '9999');
+    if (mode === 'tool') return a.dataset.name.localeCompare(b.dataset.name);
+    const diff = Number(a.dataset.id) - Number(b.dataset.id);
+    return mode === 'oldest' ? diff : -diff;
+  });
+  rows.forEach(r => body.appendChild(r));
+}
+
+function toggleBorrowFilterMenu() {
+  document.getElementById('borrowFilterPopup').classList.toggle('visible');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.filter-menu-wrapper')) {
+    document.getElementById('borrowFilterPopup')?.classList.remove('visible');
+  }
+});
 
 let pendingReturnId = null;
 

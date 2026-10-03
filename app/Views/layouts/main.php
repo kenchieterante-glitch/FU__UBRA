@@ -27,6 +27,9 @@
       if ($seg === 'vehicles') {
           return $uri === 'vehicles' ? 'active' : '';
       }
+      if ($seg === 'facilities') {
+          return $uri === 'facilities' ? 'active' : '';
+      }
       return $uri === $seg || strpos($uri, $seg . '/') === 0 ? 'active' : '';
   }
   $fullName = session()->get('full_name') ?? 'System Admin';
@@ -132,12 +135,28 @@
       $isFullAccess          = !$isSecurityHead && !$isToolsHead && !$isFacilitiesSupervisor && !$isJanitorialSupervisor;
       $dashboardUrl          = $isSecurityHead ? 'security-dashboard'
         : ($isToolsHead ? 'tools-dashboard'
-        : ($isFacilitiesSupervisor ? 'facilities-dashboard'
+        : ($isFacilitiesSupervisor ? 'facilities'
         : ($isJanitorialSupervisor ? 'janitorial-dashboard' : 'dashboard')));
     ?>
     <nav class="sidebar-nav">
       <a href="<?= base_url($dashboardUrl) ?>" class="<?= navActive($dashboardUrl) ?>" data-tooltip="Dashboard"><i class="bi bi-grid-1x2"></i> <span class="nav-label">Dashboard</span></a>
 
+      <?php if ($isFacilitiesSupervisor): ?>
+      <?php $isFacilitiesSection = strpos($currentUri, 'facilities/') === 0; ?>
+      <div class="nav-parent-group <?= $isFacilitiesSection ? 'open' : '' ?>">
+        <a href="<?= base_url('facilities/status') ?>" class="nav-parent-link <?= $isFacilitiesSection ? 'open' : '' ?>" data-facilities-toggle data-tooltip="Facilities">
+          <i class="bi bi-building-gear"></i>
+          <span class="nav-label">Facilities</span>
+          <i class="bi bi-chevron-down nav-parent-caret"></i>
+        </a>
+        <div class="nav-submenu" id="facilities-submenu">
+          <a href="<?= base_url('facilities/work-orders') ?>" class="<?= navActive('facilities/work-orders') ?>"><i class="bi bi-clipboard2-check"></i> <span class="nav-label">Repair Requests</span></a>
+          <a href="<?= base_url('facilities/aircon') ?>" class="<?= navActive('facilities/aircon') ?>"><i class="bi bi-snow2"></i> <span class="nav-label">Aircon Care</span></a>
+          <a href="<?= base_url('facilities/janitorial') ?>" class="<?= navActive('facilities/janitorial') ?>"><i class="bi bi-brush"></i> <span class="nav-label">Cleaning Checks</span></a>
+          <a href="<?= base_url('facilities/buildings') ?>" class="<?= navActive('facilities/buildings') ?>"><i class="bi bi-building-check"></i> <span class="nav-label">Building Check</span></a>
+        </div>
+      </div>
+      <?php endif; ?>
       <?php if ($isFullAccess || $isFacilitiesSupervisor): ?>
       <?php $isPersonnelSection = $currentUri === 'personnel' || strpos($currentUri, 'personnel/') === 0; ?>
       <div class="nav-parent-group <?= $isPersonnelSection ? 'open' : '' ?>">
@@ -184,8 +203,7 @@
         <div class="nav-submenu" id="tools-submenu">
           <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="bi bi-boxes"></i> <span class="nav-label">All Tools</span></a>
           <a href="<?= base_url('tools/power-tools') ?>" class="<?= navActive('tools/power-tools') ?>"><i class="bi bi-lightning-fill"></i> <span class="nav-label">Power Tools</span></a>
-          <a href="<?= base_url('tools/consumable') ?>" class="<?= navActive('tools/consumable') ?>"><i class="bi bi-box-seam-fill"></i> <span class="nav-label">Consumable</span></a>
-          <a href="<?= base_url('tools/sports-equipment') ?>" class="<?= navActive('tools/sports-equipment') ?>"><i class="bi bi-trophy-fill"></i> <span class="nav-label">Sports Equipment</span></a>
+          <a href="<?= base_url('tools/consumable') ?>" class="<?= navActive('tools/consumable') ?>"><i class="bi bi-box-seam-fill"></i> <span class="nav-label">Supplies &amp; Materials</span></a>
           <a href="<?= base_url('tools/borrowing') ?>" class="<?= navActive('tools/borrowing') ?>"><i class="bi bi-hand-index-thumb-fill"></i> <span class="nav-label">Borrowing</span></a>
         </div>
       </div>
@@ -197,7 +215,7 @@
       <?php endif; ?>
 
       <?php if ($isFullAccess || $isJanitorialSupervisor): ?>
-      <a href="<?= base_url('janitorial') ?>" class="<?= navActive('janitorial') ?>" data-tooltip="Janitorial Monitoring"><i class="bi bi-brush"></i> <span class="nav-label">Janitorial Monitoring</span></a>
+      <a href="<?= base_url('janitorial') ?>" class="<?= navActive('janitorial') ?>" data-tooltip="Janitorial Monitoring"><i class="bi bi-brush"></i> <span class="nav-label">Cleaning Checks</span></a>
       <?php endif; ?>
 
       <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor || $isJanitorialSupervisor): ?>
@@ -225,7 +243,7 @@
       </div>
       <div class="nav-sep"></div>
       <a href="<?= base_url('ubra') ?>" class="ai-link <?= navActive('ubra') ?>" data-tooltip="Mr. UBRA AI"><i class="bi bi-robot"></i> <span class="nav-label">Mr. UBRA AI</span> <span class="dot"></span></a>
-      <?php if ($isFullAccess || $isSecurityHead): ?>
+      <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor): ?>
       <a href="<?= base_url('settings') ?>" class="<?= navActive('settings') ?>" data-tooltip="Settings"><i class="bi bi-gear"></i> <span class="nav-label">Settings</span></a>
       <?php endif; ?>
     </nav>
@@ -836,6 +854,20 @@ if (toolsLink && toolsGroup) {
       event.preventDefault();
       toolsGroup.classList.toggle('open');
       toolsLink.classList.toggle('open');
+    }
+  });
+}
+
+const facilitiesLink = document.querySelector('[data-facilities-toggle]');
+const facilitiesGroup = facilitiesLink?.closest('.nav-parent-group');
+if (facilitiesLink && facilitiesGroup) {
+  facilitiesLink.addEventListener('click', (event) => {
+    const clickedCaret = event.target.closest('.nav-parent-caret');
+
+    if (clickedCaret) {
+      event.preventDefault();
+      facilitiesGroup.classList.toggle('open');
+      facilitiesLink.classList.toggle('open');
     }
   });
 }

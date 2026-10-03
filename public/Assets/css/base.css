@@ -2993,8 +2993,7 @@ table.stg-table thead th {
   text-align: center;
 }
 
-/* Data cells centered to match the centered column titles above them, so
-   every column reads as one aligned stack (title over its values). */
+/* Data cells left-aligned; column titles stay centered above them. */
 table.data-table tbody td,
 table.sj-table tbody td,
 table.travel-table tbody td,
@@ -3002,7 +3001,7 @@ table.rec-table tbody td,
 table.notif-table tbody td,
 table.gps-table tbody td,
 table.stg-table tbody td {
-  text-align: center;
+  text-align: left;
 }
 table.data-table tbody td.action-cell,
 table.gps-table tbody td .vehicle-cell,

@@ -17,13 +17,13 @@ class AuthFilter implements FilterInterface
     private const ROLE_LANDING = [
         'security'   => 'security-dashboard',
         'tools'      => 'tools-dashboard',
-        'facilities' => 'facilities-dashboard',
+        'facilities' => 'facilities',
     ];
 
     private const ROLE_ALLOWED_PREFIXES = [
         'security'   => ['security-dashboard', 'safety', 'vehicles', 'gps', 'travel', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
         'tools'      => ['tools-dashboard', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile'],
-        'facilities' => ['facilities-dashboard', 'personnel', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
+        'facilities' => ['facilities', 'facilities-dashboard', 'personnel', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
     ];
 
     private function roleLanding(string $role): string
@@ -71,7 +71,8 @@ class AuthFilter implements FilterInterface
             }
         }
 
-        if ($isPublicPath || str_starts_with($currentPath, 'auth/') || str_starts_with($currentPath, 'api/')) {
+        if ($isPublicPath || str_starts_with($currentPath, 'auth/') || str_starts_with($currentPath, 'api/')
+            || $currentPath === 'portals' || str_starts_with($currentPath, 'portals/')) {
             return;
         }
 

@@ -46,6 +46,17 @@ $routes->get('security-dashboard', 'SecurityDashboardController::index');
 $routes->get('tools-dashboard', 'ToolsDashboardController::index');
 $routes->get('facilities-dashboard', 'FacilitiesDashboardController::index');
 $routes->get('janitorial-dashboard', 'JanitorialDashboardController::index');
+$routes->get('portals', 'PortalController::index');
+$routes->get('portals/(:segment)', 'PortalController::show/$1');
+$routes->get('facilities', 'FacilitiesController::overview');
+$routes->get('facilities/status', 'FacilitiesController::status');
+$routes->get('facilities/(:segment)', 'FacilitiesController::index/$1');
+$routes->post('facilities/work-orders', 'FacilitiesController::store');
+$routes->post('facilities/work-orders/(:num)/status', 'FacilitiesController::updateStatus/$1');
+$routes->post('facilities/tools/(:num)/toggle', 'FacilitiesController::toggleFacilitiesTool/$1');
+$routes->post('facilities/inspections', 'FacilitiesController::storeInspection');
+$routes->post('facilities/supplies', 'FacilitiesController::storeSupply');
+$routes->post('facilities/aircon-units', 'FacilitiesController::storeAircon');
 
 // ============================================================
 // PERSONNEL
@@ -91,7 +102,6 @@ $routes->get ('tools',                  'ToolsController::index');
 $routes->get ('tools/refresh',          'ToolsController::refreshData');
 $routes->get ('tools/power-tools',      'ToolsController::powerTools');
 $routes->get ('tools/consumable',       'ToolsController::consumable');
-$routes->get ('tools/sports-equipment', 'ToolsController::sportsEquipment');
 $routes->get ('tools/borrowing',        'ToolsController::borrowing');
 // "Tools Equipment" was merged into Power Tools — redirect any old
 // bookmarks/links instead of leaving them as a dead 404.
@@ -337,9 +347,9 @@ $routes->post('auth/login',   'AuthController::attemptLogin');
 $routes->get ('logout',       'AuthController::logout');
 $routes->get ('auth/logout',  'AuthController::logout');
 
-// Default redirect to dashboard
+// Landing page is the department portal hub; sign-in happens after a box is picked
 $routes->get('/', function() {
-    return redirect()->to(base_url('dashboard'));
+    return redirect()->to(base_url('portals'));
 });
 
 // ============================================================

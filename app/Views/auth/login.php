@@ -146,8 +146,33 @@
     cursor: pointer;
 }
 
+.auth-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.auth-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 18px;
+    border: 1px solid #800000;
+    border-radius: 8px;
+    background: #fff;
+    color: #800000;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.auth-back-btn:hover {
+    background: #fbeeee;
+}
+
 .auth-submit {
-    width: 100%;
+    flex: 1;
     padding: 14px;
     background: #800000;
     color: #fff;
@@ -176,6 +201,9 @@
     <div class="auth-badge"><img src="<?= base_url('images/' . rawurlencode('UBRA LOGO (cropped).png')) ?>" alt="UBRA logo"></div>
     <h1>UBRA</h1>
     <p class="auth-subtitle">Sign in to your account</p>
+    <?php if (!empty($selectedPortal)): ?>
+      <p class="auth-subtitle" style="font-weight:600;color:#800000;margin-top:8px;"><?= esc($selectedPortal) ?></p>
+    <?php endif; ?>
 </div>
 
 <?php if (session()->getFlashdata('error')): ?>
@@ -186,7 +214,7 @@
     <?= csrf_field() ?>
 
     <div class="auth-field">
-        <label for="employee_id">Employee ID</label>
+        <label for="employee_id">ID</label>
         <div class="auth-input-wrap">
             <i class="bi bi-person-vcard auth-input-icon"></i>
             <input type="text" id="employee_id" name="employee_id" required placeholder="e.g. 20230251" autocomplete="username">
@@ -212,7 +240,10 @@
         <label for="remember">Remember me</label>
     </div>
 
-    <button type="submit" class="auth-submit">Sign In</button>
+    <div class="auth-actions">
+        <a href="<?= base_url('portals') ?>" class="auth-back-btn"><i class="bi bi-arrow-left"></i> Back</a>
+        <button type="submit" class="auth-submit">Sign In</button>
+    </div>
 </form>
 
 <div class="auth-footer"><span style="font-family:'Times New Roman', Times, serif;">Foundation University</span> &middot; Operations Portal</div>

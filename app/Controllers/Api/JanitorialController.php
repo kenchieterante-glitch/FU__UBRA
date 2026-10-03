@@ -178,7 +178,7 @@ class JanitorialController extends BaseApiController
 
         $id = $this->inventoryModel->insert([
             'item_name'         => $name,
-            'category'          => $this->request->getPost('category') ?: 'Cleaning Agent',
+            'category'          => $this->request->getPost('category') ?: 'Cleaning Detergent',
             'unit'              => $this->request->getPost('unit') ?: 'Pieces',
             'current_stock'     => $this->request->getPost('current_stock') ?: 0,
             'reorder_threshold' => $this->request->getPost('reorder_threshold') ?: 5,

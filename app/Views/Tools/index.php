@@ -6,14 +6,15 @@
 $toolList = $tools ?? [];
 $personnelList = $personnel ?? [];
 $title = $title ?? 'Tools Equipment Management';
-$showCategoryTabs = in_array($title, ['Power Tools', 'Consumable', 'Sports Equipment'], true);
+$showCategoryTabs = in_array($title, ['Power Tools', 'Consumable'], true);
 $isConsumablePage = ($title === 'Consumable');
+helper('facilities');
 ?>
 
 <div class="page-header">
   <div>
-    <h1><?= esc($title) ?></h1>
-    <p class="page-subtitle"><?= $showCategoryTabs ? 'Tools and equipment in the ' . esc($title) . ' category.' : 'Manage all university operational assets, tools, equipment, and assigned resources.' ?></p>
+    <h1><?= esc(tool_cat_label($title)) ?></h1>
+    <p class="page-subtitle"><?= $showCategoryTabs ? 'Tools and equipment in the ' . esc(tool_cat_label($title)) . ' category.' : 'Manage all university operational assets, tools, equipment, and assigned resources.' ?></p>
   </div>
   <button class="btn-add" onclick="document.getElementById('addModal').style.display='flex'">+ Add New Tool</button>
 </div>
@@ -47,7 +48,7 @@ $isConsumablePage = ($title === 'Consumable');
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('consumable')" role="button" tabindex="0">
     <span class="stat-icon tone-blue"><i class="bi bi-box2"></i></span>
-    <h3>Consumable</h3>
+    <h3>Supplies &amp; Materials</h3>
     <div class="value" id="statConsumableTools"><?= esc((string) ((int) ($consumable_tools ?? 0))) ?></div>
   </div>
 </div>
@@ -73,7 +74,7 @@ $isConsumablePage = ($title === 'Consumable');
             <select id="toolsCategory" onchange="filterToolsTable()">
               <option value="">All Categories</option>
               <option value="Power Tools">Power Tools</option>
-              <option value="Consumable">Consumable</option>
+              <option value="Consumable">Supplies &amp; Materials</option>
               <option value="Sports Equipment">Sports Equipment</option>
               <option value="IT Equipment">IT Equipment</option>
               <option value="Media Studio">Media Studio</option>
@@ -171,40 +172,65 @@ $isConsumablePage = ($title === 'Consumable');
 <?php if (!empty($toolList)): ?>
   <?php foreach ($toolList as $t): ?>
     <div class="modal" id="editModal<?= $t['id'] ?>">
-      <div class="modal-box">
+      <div class="modal-box modal-box-wide">
         <h3>Edit Tool</h3>
         <form action="<?= base_url('tools/edit/'.$t['id']) ?>" method="post">
           <?= csrf_field() ?>
-          <label>Tool Name <span class="required-mark">*</span></label>
-          <input type="text" name="asset_name" value="<?= esc($t['asset_name']) ?>" required>
-          <label>Tool Code</label>
-          <input type="text" name="asset_code" value="<?= esc($t['asset_code']) ?>">
-          <label>Category</label>
-          <select name="category">
-            <option value="">— Select Category —</option>
-            <?php foreach (['Power Tools', 'Consumable', 'Sports Equipment', 'IT Equipment', 'Media Studio', 'Janitorial', 'Tools'] as $cat): ?>
-              <option value="<?= esc($cat) ?>" <?= $t['category'] === $cat ? 'selected' : '' ?>><?= esc($cat) ?></option>
-            <?php endforeach; ?>
-          </select>
-          <label>Location</label>
-          <input type="text" name="location" value="<?= esc($t['location']) ?>">
-          <label>Custodian</label>
-          <select name="custodian">
-            <option value="">— Unassigned —</option>
-            <?php foreach ($personnelList as $person): ?>
-              <option value="<?= esc($person['full_name']) ?>" <?= ($t['custodian'] ?? '') === $person['full_name'] ? 'selected' : '' ?>><?= esc($person['full_name']) ?></option>
-            <?php endforeach; ?>
-          </select>
-          <label>Condition</label>
-          <select name="condition_status">
-            <?php foreach (['Excellent', 'Good', 'Fair', 'Poor'] as $cond): ?>
-              <option value="<?= esc($cond) ?>" <?= $t['condition_status'] === $cond ? 'selected' : '' ?>><?= esc($cond) ?></option>
-            <?php endforeach; ?>
-          </select>
-          <?php if ($t['category'] === 'Consumable'): ?>
-            <label>Unit</label>
-            <input type="text" name="unit" list="toolUnitOptions" value="<?= esc($t['unit'] ?? 'pcs') ?>" placeholder="e.g. rolls, bottles, pcs">
-          <?php endif; ?>
+          <div class="form-grid2">
+            <div class="fg">
+              <label>Tool Name <span class="required-mark">*</span></label>
+              <input type="text" name="asset_name" value="<?= esc($t['asset_name']) ?>" required>
+            </div>
+            <div class="fg">
+              <label>Tool Code</label>
+              <input type="text" name="asset_code" value="<?= esc($t['asset_code']) ?>">
+            </div>
+            <div class="fg">
+              <label>Category</label>
+              <select name="category">
+                <option value="">— Select Category —</option>
+                <?php foreach (['Power Tools', 'Consumable', 'Sports Equipment', 'IT Equipment', 'Media Studio', 'Janitorial', 'Tools'] as $cat): ?>
+                  <option value="<?= esc($cat) ?>" <?= $t['category'] === $cat ? 'selected' : '' ?>><?= esc(tool_cat_label($cat)) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <?php if ($t['category'] === 'Consumable'): ?>
+              <div class="fg">
+                <label>Unit</label>
+                <input type="text" name="unit" list="toolUnitOptions" value="<?= esc($t['unit'] ?? 'pcs') ?>" placeholder="e.g. rolls, bottles, pcs">
+              </div>
+            <?php endif; ?>
+            <div class="fg">
+              <label>Location</label>
+              <select name="location">
+                <option value="">— Select a Building —</option>
+                <?php $curLoc = (string) ($t['location'] ?? ''); $bldList = \App\Models\FireExtinguisherModel::BUILDINGS; ?>
+                <?php if ($curLoc !== '' && !in_array($curLoc, $bldList, true)): ?>
+                  <option value="<?= esc($curLoc) ?>" selected><?= esc($curLoc) ?></option>
+                <?php endif; ?>
+                <?php foreach ($bldList as $bld): ?>
+                  <option value="<?= esc($bld) ?>" <?= $curLoc === $bld ? 'selected' : '' ?>><?= esc($bld) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Custodian</label>
+              <select name="custodian">
+                <option value="">— Unassigned —</option>
+                <?php foreach ($personnelList as $person): ?>
+                  <option value="<?= esc($person['full_name']) ?>" <?= ($t['custodian'] ?? '') === $person['full_name'] ? 'selected' : '' ?>><?= esc($person['full_name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Condition</label>
+              <select name="condition_status">
+                <?php foreach (['Excellent', 'Good', 'Fair', 'Poor'] as $cond): ?>
+                  <option value="<?= esc($cond) ?>" <?= $t['condition_status'] === $cond ? 'selected' : '' ?>><?= esc($cond) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+          </div>
           <div class="modal-actions">
             <button type="button" onclick="document.getElementById('editModal<?= $t['id'] ?>').style.display='none'">Cancel</button>
             <button type="submit" class="btn-maroon">Save Changes</button>
@@ -507,46 +533,65 @@ setInterval(refreshTools, 20000);
 
 <!-- ADD MODAL -->
 <div class="modal" id="addModal">
-  <div class="modal-box">
+  <div class="modal-box modal-box-wide">
     <h3>Add New Tool</h3>
     <form action="<?= base_url('tools/add') ?>" method="post">
       <?= csrf_field() ?>
       <p class="required-note">Fields marked <span class="required-mark">*</span> are required.</p>
-      <label>Tool Name <span class="required-mark">*</span></label>
-      <input type="text" name="asset_name" placeholder="e.g. Cordless drill" required>
-      <label>Tool Code</label>
-      <input type="text" name="asset_code" placeholder="e.g. TL-0042">
-      <label>Category</label>
-      <select name="category" onchange="document.getElementById('addUnitField').style.display = this.value === 'Consumable' ? 'block' : 'none'">
-        <option value="">— Select Category —</option>
-        <option value="Power Tools">Power Tools</option>
-        <option value="Consumable">Consumable</option>
-        <option value="Sports Equipment">Sports Equipment</option>
-        <option value="IT Equipment">IT Equipment</option>
-        <option value="Media Studio">Media Studio</option>
-        <option value="Janitorial">Janitorial</option>
-        <option value="Tools">Tools</option>
-      </select>
-      <div id="addUnitField" style="display:none">
-        <label>Unit</label>
-        <input type="text" name="unit" list="toolUnitOptions" placeholder="e.g. rolls, bottles, pcs">
+      <div class="form-grid2">
+        <div class="fg">
+          <label>Tool Name <span class="required-mark">*</span></label>
+          <input type="text" name="asset_name" placeholder="e.g. Cordless drill" required>
+        </div>
+        <div class="fg">
+          <label>Tool Code</label>
+          <input type="text" name="asset_code" placeholder="e.g. TL-0042">
+        </div>
+        <div class="fg">
+          <label>Category</label>
+          <select name="category" onchange="document.getElementById('addUnitField').style.display = this.value === 'Consumable' ? 'flex' : 'none'">
+            <option value="">— Select Category —</option>
+            <option value="Power Tools">Power Tools</option>
+            <option value="Consumable">Supplies &amp; Materials</option>
+            <option value="Sports Equipment">Sports Equipment</option>
+            <option value="IT Equipment">IT Equipment</option>
+            <option value="Media Studio">Media Studio</option>
+            <option value="Janitorial">Janitorial</option>
+            <option value="Tools">Tools</option>
+          </select>
+        </div>
+        <div class="fg" id="addUnitField" style="display:none">
+          <label>Unit</label>
+          <input type="text" name="unit" list="toolUnitOptions" placeholder="e.g. rolls, bottles, pcs">
+        </div>
+        <div class="fg">
+          <label>Location</label>
+          <select name="location">
+            <option value="">— Select a Building —</option>
+            <?php foreach (\App\Models\FireExtinguisherModel::BUILDINGS as $bld): ?>
+              <option value="<?= esc($bld) ?>"><?= esc($bld) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Custodian</label>
+          <select name="custodian">
+            <option value="">— Unassigned —</option>
+            <?php foreach ($personnelList as $person): ?>
+              <option value="<?= esc($person['full_name']) ?>"><?= esc($person['full_name']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Condition</label>
+          <select name="condition_status">
+            <option>Excellent</option>
+            <option>Good</option>
+            <option>Fair</option>
+            <option>Poor</option>
+          </select>
+        </div>
       </div>
-      <label>Location</label>
-      <input type="text" name="location" placeholder="e.g. Shelf B-3">
-      <label>Custodian</label>
-      <select name="custodian">
-        <option value="">— Unassigned —</option>
-        <?php foreach ($personnelList as $person): ?>
-          <option value="<?= esc($person['full_name']) ?>"><?= esc($person['full_name']) ?></option>
-        <?php endforeach; ?>
-      </select>
-      <label>Condition</label>
-      <select name="condition_status">
-        <option>Excellent</option>
-        <option>Good</option>
-        <option>Fair</option>
-        <option>Poor</option>
-      </select>
       <div class="modal-actions">
         <button type="button" onclick="document.getElementById('addModal').style.display='none'">Cancel</button>
         <button type="submit" class="btn-maroon">Save</button>

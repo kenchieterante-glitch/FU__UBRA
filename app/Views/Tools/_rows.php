@@ -10,7 +10,7 @@
     <tr>
       <td class="tool-name-cell"><?= esc($t['asset_name']) ?></td>
       <td><?= esc($t['asset_code']) ?></td>
-      <td><?= esc($t['category']) ?></td>
+      <td><?php helper('facilities'); ?><?= esc(tool_cat_label($t['category'])) ?></td>
       <td><?= esc($t['location']) ?></td>
       <td><?= esc($t['custodian_name'] ?? 'Unassigned') ?></td>
       <td><span class="status-badge status-<?= strtolower($t['condition_status']) ?>"><?= esc($t['condition_status']) ?></span></td>

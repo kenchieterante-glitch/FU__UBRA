@@ -291,7 +291,7 @@
    just with a bit more breathing room and the Save button sized to fit
    next to Cancel instead of the default full-width .btn-maroon. */
 #addModal .modal-box {
-    max-width: 400px;
+    max-width: 640px;
     padding: 26px;
 }
 
@@ -443,3 +443,34 @@
     }
 }
 
+
+/* Two-column ("crosswise") add/edit forms, same pattern used across the Facilities pages */
+.modal-box-wide {
+    width: 100%;
+    max-width: 640px;
+}
+
+.form-grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .85rem;
+}
+
+.form-grid2 .fg {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+
+.form-grid2 .fg label {
+    margin-top: 0;
+}
+
+.form-grid2 .fg-full {
+    grid-column: span 2;
+}
+
+@media (max-width: 720px) {
+    .modal-box-wide { max-width: 94vw; }
+    .form-grid2 { grid-template-columns: 1fr; }
+}

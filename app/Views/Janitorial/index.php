@@ -236,7 +236,7 @@
       <div class="form-grid2">
         <div class="fg"><label>Item Name</label><input type="text" id="invName" placeholder="e.g. Broom"></div>
         <div class="fg"><label>Category</label>
-          <select id="invCat"><option>Cleaning Agent</option><option>Tools</option><option>Disposable</option><option>Equipment</option></select>
+          <select id="invCat"><option>Cleaning Detergent</option><option>Tools</option><option>Disposable</option><option>Equipment</option></select>
         </div>
         <div class="fg"><label>Unit</label><input type="text" id="invUnit" placeholder="Liters / Pieces / Rolls"></div>
         <div class="fg"><label>Building <span style="font-weight:400;color:var(--muted)">(optional)</span></label>

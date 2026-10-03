@@ -360,3 +360,13 @@
     width: auto;
     margin-top: 0;
 }
+
+/* Two-column ("crosswise") add form */
+#addModal .modal-box-wide { width: 100%; max-width: 640px; }
+#addModal .form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+#addModal .form-grid2 .fg { display: flex; flex-direction: column; gap: .25rem; }
+#addModal .form-grid2 .fg label { margin-top: 0; }
+@media (max-width: 720px) {
+    #addModal .modal-box-wide { max-width: 94vw; }
+    #addModal .form-grid2 { grid-template-columns: 1fr; }
+}

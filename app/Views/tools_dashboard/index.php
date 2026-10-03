@@ -5,12 +5,10 @@
   $categoryRoutes = [
       'Power Tools'        => 'tools/power-tools',
       'Consumable'         => 'tools/consumable',
-      'Sports Equipment'   => 'tools/sports-equipment',
   ];
   $categoryIcons = [
       'Power Tools'        => 'bi-lightning-fill',
       'Consumable'         => 'bi-box-seam-fill',
-      'Sports Equipment'   => 'bi-trophy-fill',
   ];
 ?>
 
@@ -75,9 +73,9 @@
               $route = $categoryRoutes[$cat] ?? 'tools';
               $icon = $categoryIcons[$cat] ?? 'bi-tag-fill';
             ?>
-            <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="<?= esc($cat, 'attr') ?>" data-url="<?= base_url($route) ?>">
+            <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="<?= esc(tool_cat_label($cat), 'attr') ?>" data-url="<?= base_url($route) ?>">
                 <span class="stat-icon tone-neutral"><i class="bi <?= esc($icon, 'attr') ?>"></i></span>
-                <h3><?= esc($cat) ?></h3>
+                <?php helper('facilities'); ?><h3><?= esc(tool_cat_label($cat)) ?></h3>
                 <div class="value"><?= (int) $row['count'] ?></div>
             </div>
         <?php endforeach; ?>

@@ -374,7 +374,7 @@ class JanitorialController extends BaseController
 
         $this->inventoryModel->insert([
             'item_name'         => $name,
-            'category'          => $this->request->getPost('category') ?: 'Cleaning Agent',
+            'category'          => $this->request->getPost('category') ?: 'Cleaning Detergent',
             'unit'              => $this->request->getPost('unit') ?: 'Pieces',
             'building'          => $this->request->getPost('building') ?: null,
             'floor'             => $this->request->getPost('floor') ?: null,
