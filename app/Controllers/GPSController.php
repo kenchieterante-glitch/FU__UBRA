@@ -137,8 +137,35 @@ class GPSController extends BaseController
         // A plain "YYYY-MM-DD" from a <input type="date"> means the whole
         // day — start of day for "from", end of day for "to" — not the
         // literal midnight instant a bare date would otherwise compare as.
-        $from = $fromInput ? date('Y-m-d 00:00:00', strtotime($fromInput)) : date('Y-m-d H:i:s', strtotime('-24 hours'));
-        $to   = $toInput   ? date('Y-m-d 23:59:59', strtotime($toInput))   : date('Y-m-d H:i:s');
+        // A value with a time part ("YYYY-MM-DDTHH:MM" from a datetime-local
+        // input) is used as the exact instant instead.
+        $hasTime = fn($s) => (bool) preg_match('/\d{1,2}:\d{2}/', (string) $s);
+        $from = $fromInput
+            ? ($hasTime($fromInput) ? date('Y-m-d H:i:00', strtotime($fromInput)) : date('Y-m-d 00:00:00', strtotime($fromInput)))
+            : date('Y-m-d H:i:s', strtotime('-24 hours'));
+        $to = $toInput
+            ? ($hasTime($toInput) ? date('Y-m-d H:i:59', strtotime($toInput)) : date('Y-m-d 23:59:59', strtotime($toInput)))
+            : date('Y-m-d H:i:s');
+
+        // Prefer the tracker's full history from Traccar when the vehicle is
+        // linked to one; gps_logs only holds the latest fix per sync.
+        $traccarPoints = null;
+        if (!empty($vehicle['gps_device_id'])) {
+            $traccarPoints = (new \App\Libraries\TraccarClient())
+                ->routeHistory($vehicle['gps_device_id'], strtotime($from), strtotime($to));
+        }
+
+        if ($traccarPoints !== null) {
+            $points = array_map(fn($p) => $p + ['signal' => '—', 'status' => $p['speed'] . ' km/h'], $traccarPoints);
+            return $this->response->setJSON([
+                'vehicle_id' => (int) $id,
+                'plate_no'   => $vehicle['plate_no'] ?? '—',
+                'from'       => $from,
+                'to'         => $to,
+                'count'      => count($points),
+                'points'     => $points,
+            ]);
+        }
 
         $logs = $this->gpsModel->getHistoryInRange((int) $id, $from, $to);
 

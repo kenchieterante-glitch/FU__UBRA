@@ -344,7 +344,11 @@ function renderModalProfile(v) {
         : `<tr><td colspan="4">No GPS pings recorded yet.</td></tr>`;
 
     // Defaults the Route History date pickers to today.
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const pad2 = n => String(n).padStart(2, '0');
+    const nowD = new Date();
+    const dayStr = `${nowD.getFullYear()}-${pad2(nowD.getMonth() + 1)}-${pad2(nowD.getDate())}`;
+    const fromDefault = dayStr + 'T00:00';
+    const toDefault = `${dayStr}T${pad2(nowD.getHours())}:${pad2(nowD.getMinutes())}`;
 
     // Same wide-popup layout as the Vehicle Management / Personnel Management
     // detail popups: maroon header + × only, then labeled sections in a
@@ -363,6 +367,39 @@ function renderModalProfile(v) {
         </div>
     </div>
     <div class="modal-body">
+        <div class="detail-section">
+            <div class="detail-section-title">Route History</div>
+            <div class="route-history-controls">
+                <label>From <input type="datetime-local" id="routeFromDate" value="${fromDefault}" max="${toDefault}"></label>
+                <label>To <input type="datetime-local" id="routeToDate" value="${toDefault}" max="${toDefault}"></label>
+                <button type="button" class="btn-outline-sm" onclick="showVehicleRoute(${v.id})">
+                    <i class="bi bi-signpost-2"></i> Show Route
+                </button>
+                <button type="button" class="btn-outline-sm" id="gpsRouteClearBtn" onclick="clearVehicleRoute()" style="display:none;">
+                    <i class="bi bi-x-lg"></i> Clear
+                </button>
+            </div>
+            <div id="gpsRouteStatus" class="route-history-status"></div>
+
+            <!-- Shown once a route with 2+ points loads (see drawRouteOnMap).
+                 Moves a marker point-to-point along the recorded pings in
+                 order, so you can watch/scrub where the vehicle was at each
+                 exact timestamp instead of just seeing the finished path. -->
+            <div id="gpsPlaybackControls" class="route-playback-controls" style="display:none;">
+                <button type="button" class="icon-btn" id="gpsPlaybackToggleBtn" onclick="toggleRoutePlayback()" title="Play" aria-label="Play route playback">
+                    <i class="bi bi-play-fill"></i>
+                </button>
+                <input type="range" id="gpsPlaybackSlider" min="0" max="0" value="0" step="1" oninput="scrubRoutePlayback(this.value)">
+                <select id="gpsPlaybackSpeed" onchange="setRoutePlaybackSpeed(this.value)" title="Playback speed">
+                    <option value="1400">0.5×</option>
+                    <option value="700" selected>1×</option>
+                    <option value="350">2×</option>
+                    <option value="150">4×</option>
+                </select>
+            </div>
+            <div id="gpsPlaybackTimestamp" class="route-playback-timestamp"></div>
+        </div>
+
         <!-- Embedded live map — loads automatically with the vehicle's
              last known coordinates every time this modal opens, instead
              of requiring a click out to a separate Maps tab. Placed first
@@ -401,39 +438,6 @@ function renderModalProfile(v) {
                 <div class="detail-row"><span>Coordinates</span><strong id="gpsCoordinates">${v.latitude ? v.latitude + ', ' + v.longitude : 'N/A'}</strong></div>
                 <div class="detail-row"><span>Signal Strength</span><strong id="gpsSignalStrength">${esc(signalText)}</strong></div>
             </div>
-        </div>
-
-        <div class="detail-section">
-            <div class="detail-section-title">Route History</div>
-            <div class="route-history-controls">
-                <label>From <input type="date" id="routeFromDate" value="${todayStr}" max="${todayStr}"></label>
-                <label>To <input type="date" id="routeToDate" value="${todayStr}" max="${todayStr}"></label>
-                <button type="button" class="btn-outline-sm" onclick="showVehicleRoute(${v.id})">
-                    <i class="bi bi-signpost-2"></i> Show Route
-                </button>
-                <button type="button" class="btn-outline-sm" id="gpsRouteClearBtn" onclick="clearVehicleRoute()" style="display:none;">
-                    <i class="bi bi-x-lg"></i> Clear
-                </button>
-            </div>
-            <div id="gpsRouteStatus" class="route-history-status"></div>
-
-            <!-- Shown once a route with 2+ points loads (see drawRouteOnMap).
-                 Moves a marker point-to-point along the recorded pings in
-                 order, so you can watch/scrub where the vehicle was at each
-                 exact timestamp instead of just seeing the finished path. -->
-            <div id="gpsPlaybackControls" class="route-playback-controls" style="display:none;">
-                <button type="button" class="icon-btn" id="gpsPlaybackToggleBtn" onclick="toggleRoutePlayback()" title="Play" aria-label="Play route playback">
-                    <i class="bi bi-play-fill"></i>
-                </button>
-                <input type="range" id="gpsPlaybackSlider" min="0" max="0" value="0" step="1" oninput="scrubRoutePlayback(this.value)">
-                <select id="gpsPlaybackSpeed" onchange="setRoutePlaybackSpeed(this.value)" title="Playback speed">
-                    <option value="1400">0.5×</option>
-                    <option value="700" selected>1×</option>
-                    <option value="350">2×</option>
-                    <option value="150">4×</option>
-                </select>
-            </div>
-            <div id="gpsPlaybackTimestamp" class="route-playback-timestamp"></div>
         </div>
 
         <div class="detail-section">

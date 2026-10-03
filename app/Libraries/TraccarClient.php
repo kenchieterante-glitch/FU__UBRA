@@ -71,15 +71,43 @@ class TraccarClient
         return $result;
     }
 
+    /**
+     * Every position Traccar recorded for one tracker between two unix
+     * timestamps, oldest first. Traccar keeps the full history; the local
+     * gps_logs table only gets the latest fix each time a sync runs.
+     *
+     * @return array<int,array{lat:float,lng:float,loggedAt:string,speed:float}>|null null when Traccar is unreachable / the tracker is unknown
+     */
+    public function routeHistory(string $identifier, int $fromTs, int $toTs): ?array
+    {
+        if (!$this->isConfigured()) return null;
+
+        $devices = $this->get('/api/devices?uniqueId=' . rawurlencode($identifier));
+        if (!$devices || !isset($devices[0]['id'])) return null;
+
+        $rows = $this->get('/api/reports/route?deviceId=' . (int) $devices[0]['id']
+            . '&from=' . gmdate('Y-m-d\TH:i:s\Z', $fromTs)
+            . '&to=' . gmdate('Y-m-d\TH:i:s\Z', $toTs), 20);
+        if ($rows === null) return null;
+
+        return array_map(fn($p) => [
+            'lat'      => (float) $p['latitude'],
+            'lng'      => (float) $p['longitude'],
+            // Traccar is UTC; render in the app's timezone like TraccarSync does.
+            'loggedAt' => date('Y-m-d H:i:s', strtotime($p['fixTime'])),
+            'speed'    => round(((float) ($p['speed'] ?? 0)) * 1.852, 1),
+        ], $rows);
+    }
+
     /** GET a Traccar API path; decoded JSON on HTTP 200, otherwise null. */
-    private function get(string $path): ?array
+    private function get(string $path, int $timeout = self::TIMEOUT_SECONDS): ?array
     {
         $auth    = base64_encode(env('TRACCAR_USER') . ':' . env('TRACCAR_PASS'));
         $context = stream_context_create([
             'http' => [
                 'method'        => 'GET',
                 'header'        => "Authorization: Basic {$auth}\r\nAccept: application/json\r\n",
-                'timeout'       => self::TIMEOUT_SECONDS,
+                'timeout'       => $timeout,
                 'ignore_errors' => true,
             ],
         ]);
