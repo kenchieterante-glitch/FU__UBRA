@@ -86,9 +86,10 @@ class AuthController extends BaseController
         $this->setNoStoreHeaders();
 
         $portals = [
-            'facilities' => 'Facilities Administration & General Services',
+            'facilities' => 'Facilities Administration and General Services',
             'safety'     => 'Safety and Security Department',
             'asset'      => 'Asset Acquisition and Monitoring Department',
+            'iysp'       => 'Sports Equipment Monitoring',
         ];
         $portalKey = (string) $this->request->getGet('portal');
 

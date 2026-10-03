@@ -812,13 +812,7 @@ function fpConfirm(title, text, okLabel) {
     document.body.appendChild(ov);
   });
 }
-function fpToast(msg, bad) {
-  const t = document.createElement('div');
-  t.className = 'fp-toast' + (bad ? ' bad' : '');
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 2600);
-}
+function fpToast(msg, bad) { uiToast(msg, !!bad); }
 function fpRemove(id) {
   fpConfirm('Remove this marker?', 'It will be taken off the floor plan.', 'Remove').then(ok => {
     if (!ok) return;

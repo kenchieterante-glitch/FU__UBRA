@@ -89,20 +89,14 @@ $draft_count = $draft_count ?? 0;
                                 <label for="catFilter">Category</label>
                                 <select id="catFilter" onchange="filterTable()">
                                     <option value="">All Categories</option>
-                                    <option value="Vehicle Inspection">Vehicle Inspection</option>
-                                    <option value="Air-Con Cleaning">Air-Con Cleaning</option>
-                                    <option value="Janitorial Assignment">Janitorial Assignment</option>
-                                    <option value="Inventory Low Stock">Inventory Low Stock</option>
-                                    <option value="Tool Borrowed">Tool Borrowed</option>
-                                    <option value="Vehicle Expiry">Vehicle Expiry</option>
-                                    <option value="Fire Extinguisher Installed">Fire Extinguisher Installed</option>
-                                    <option value="Fire Extinguisher Expiring Soon">Fire Extinguisher Expiring Soon</option>
-                                    <option value="Aircon Unit Registered">Aircon Unit Registered</option>
-                                    <option value="Aircon Needs Cleaning">Aircon Needs Cleaning</option>
-                                    <option value="Cleaning Scheduled">Cleaning Scheduled</option>
-                                    <option value="Urgent Cleaning Scheduled">Urgent Cleaning Scheduled</option>
-                                    <option value="Trip Ticket Request">Trip Ticket Request</option>
-                                    <option value="Trip Ticket Assignment">Trip Ticket Assignment</option>
+                                    <?php
+                                    $catAllowed = \App\Models\NotificationModel::allowedModulesForRole((string) session()->get('role'));
+                                    foreach (['Vehicle Inspection', 'Vehicle Expiry', 'Trip Ticket Request', 'Trip Ticket Assignment', 'Travel Reminder', 'Vehicle Service Due', 'Motor Pool Work Order', 'Equipment Needs Repair', 'Air-Con Cleaning', 'Janitorial Assignment', 'Inventory Low Stock', 'Tool Borrowed', 'Fire Extinguisher Installed', 'Fire Extinguisher Expiring Soon', 'Aircon Unit Registered', 'Aircon Needs Cleaning', 'Cleaning Scheduled', 'Urgent Cleaning Scheduled'] as $catName):
+                                        $catModule = \App\Models\NotificationModel::CATEGORY_MODULE[$catName] ?? null;
+                                        if ($catAllowed !== null && $catModule !== null && !in_array($catModule, $catAllowed, true)) continue;
+                                    ?>
+                                    <option value="<?= esc($catName) ?>"><?= esc($catName) ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="filter-row">
@@ -164,6 +158,10 @@ $draft_count = $draft_count ?? 0;
                                     'Urgent Cleaning Scheduled'   => 'bi-exclamation-triangle-fill',
                                     'Trip Ticket Request'         => 'bi-ticket-perforated',
                                     'Trip Ticket Assignment'      => 'bi-truck',
+                                    'Motor Pool Work Order'       => 'bi-wrench-adjustable',
+                                    'Equipment Needs Repair'      => 'bi-gear-wide-connected',
+                                    'Vehicle Service Due'         => 'bi-calendar-check',
+                                    'Travel Reminder'             => 'bi-signpost-2',
                                     default                 => 'bi-bell-fill',
                                 };
                                 // Where clicking the row should take you — the module that actually
@@ -178,8 +176,22 @@ $draft_count = $draft_count ?? 0;
                                     'Fire Extinguisher Expiring Soon', 'Aircon Unit Registered',
                                     'Aircon Needs Cleaning', 'Maintenance Scheduled'            => 'safety',
                                     'Trip Ticket Request', 'Trip Ticket Assignment'             => 'travel',
+                                    'Motor Pool Work Order'                                    => 'assets-dept/work-orders',
+                                    'Equipment Needs Repair'                                   => 'assets-dept/vehicles',
+                                    'Vehicle Service Due'                                      => 'assets-dept/vehicles',
+                                    'Travel Reminder'                                          => 'travel',
                                     default                                                     => null,
                                 };
+                                // Department accounts open their own department's pages.
+                                $roleKey = strtolower((string) session()->get('role'));
+                                if ($roleKey === 'assets' && $catRoute) {
+                                    $catRoute = match($n['category'] ?? '') {
+                                        'Vehicle Inspection', 'Vehicle Expiry'  => 'assets-dept/vehicles',
+                                        'Trip Ticket Request', 'Trip Ticket Assignment', 'Travel Reminder' => 'assets-dept/trip-tickets',
+                                        default => $catRoute,
+                                    };
+                                }
+                                if ($roleKey === 'security' && $catRoute) $catRoute = 'security-dept/fire-safety';
                                 // Matches NotificationController::index()'s $today_count definition exactly.
                                 $isToday = substr($n['created_at'] ?? '', 0, 10) === date('Y-m-d');
                                 $isDraft = ($n['_kind'] ?? 'live') === 'draft';

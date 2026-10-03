@@ -285,7 +285,7 @@ CREATE TABLE `borrow_records` (
   PRIMARY KEY (`id`),
   KEY `tool_id` (`tool_id`),
   CONSTRAINT `borrow_records_ibfk_1` FOREIGN KEY (`tool_id`) REFERENCES `tools` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=94 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=98 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -373,7 +373,10 @@ INSERT INTO `borrow_records` VALUES
 (76,71,1.00,'Juan Santos','Facilities','2026-08-27','2026-09-14','Returned','2026-09-05 17:45:21',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:06:36'),
 (77,72,1.00,'Maria Domingo','Maintenance','2026-08-26','2026-09-15','Returned','2026-09-05 17:45:21',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:06:36'),
 (78,73,1.00,'Fernando Cruz','Maintenance','2026-08-25','2026-09-16','Returned','2026-09-05 17:45:21',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:06:36'),
-(93,2,1.00,'Rico Dela Cruz','Athletics','2026-09-06','2026-09-13','Borrowed','2026-09-06 01:30:35',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:30:35');
+(93,2,1.00,'Rico Dela Cruz','Athletics','2026-09-06','2026-09-13','Borrowed','2026-09-06 01:30:35',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:30:35'),
+(94,74,1.00,'Coach Reyes (sample)','Athletics','2026-10-02','2026-10-09','Borrowed','2026-10-04 02:27:14',0,NULL,'None',NULL,NULL,NULL,'2026-10-04 02:27:14'),
+(95,77,1.00,'Mina Santos (sample)','Athletics','2026-09-25','2026-10-01','Borrowed','2026-10-04 02:27:14',0,NULL,'None',NULL,NULL,NULL,'2026-10-04 02:27:14'),
+(96,82,1.00,'PE Instructor Cruz (sample)','Student Affairs','2026-10-03','2026-10-05','Borrowed','2026-10-04 02:27:14',0,NULL,'None',NULL,NULL,NULL,'2026-10-04 02:27:14');
 /*!40000 ALTER TABLE `borrow_records` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1432,6 +1435,47 @@ INSERT INTO `key_borrow_logs` VALUES
 UNLOCK TABLES;
 
 --
+-- Table structure for table `mechanical_equipment`
+--
+
+DROP TABLE IF EXISTS `mechanical_equipment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mechanical_equipment` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `code` varchar(50) NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `equipment_type` varchar(80) NOT NULL,
+  `location` varchar(150) DEFAULT NULL,
+  `status` enum('Operational','Needs Repair','Under Maintenance','Out of Service') NOT NULL DEFAULT 'Operational',
+  `last_service` date DEFAULT NULL,
+  `next_service` date DEFAULT NULL,
+  `remarks` text DEFAULT NULL,
+  `created_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mechanical_equipment`
+--
+
+LOCK TABLES `mechanical_equipment` WRITE;
+/*!40000 ALTER TABLE `mechanical_equipment` DISABLE KEYS */;
+INSERT INTO `mechanical_equipment` VALUES
+(1,'ME-GEN-01','Diesel Generator 50kVA','Generator','Power House','Operational','2026-08-25','2026-11-23','Sample data','2026-10-04 01:15:24'),
+(2,'ME-GEN-02','Standby Generator 20kVA','Generator','Administration Building','Needs Repair','2026-07-01','2026-09-29','Sample data - fails to start','2026-10-04 01:15:24'),
+(3,'ME-PMP-01','Main Water Pump','Water Pump','Pump House','Operational','2026-09-14','2026-12-13','Sample data','2026-10-04 01:15:24'),
+(4,'ME-PMP-02','Booster Pump','Water Pump','College of Law Building','Under Maintenance','2026-10-01','2026-10-16','Sample data','2026-10-04 01:15:24'),
+(5,'ME-CMP-01','Air Compressor','Compressor','Motor Pool Shop','Operational','2026-08-05','2026-10-09','Sample data','2026-10-04 01:15:24'),
+(6,'ME-MOW-01','Ride-on Lawn Mower','Grounds Equipment','Motor Pool Shop','Needs Repair','2026-06-06','2026-09-04','Sample data','2026-10-04 01:15:24'),
+(7,'ME-MOW-02','Brush Cutter','Grounds Equipment','Motor Pool Shop','Operational','2026-09-19','2026-12-18','Sample data','2026-10-04 01:15:24'),
+(8,'ME-WLD-01','Welding Machine','Workshop Equipment','Carpentry Shop','Out of Service','2026-03-18',NULL,'Sample data - beyond repair','2026-10-04 01:15:24');
+/*!40000 ALTER TABLE `mechanical_equipment` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `migrations`
 --
 
@@ -1486,6 +1530,93 @@ INSERT INTO `migrations` VALUES
 UNLOCK TABLES;
 
 --
+-- Table structure for table `motorpool_wo_history`
+--
+
+DROP TABLE IF EXISTS `motorpool_wo_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `motorpool_wo_history` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `work_order_id` int(11) NOT NULL,
+  `status` varchar(30) NOT NULL,
+  `changed_by` varchar(150) NOT NULL,
+  `changed_at` datetime NOT NULL,
+  `notes` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `work_order_id` (`work_order_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `motorpool_wo_history`
+--
+
+LOCK TABLES `motorpool_wo_history` WRITE;
+/*!40000 ALTER TABLE `motorpool_wo_history` DISABLE KEYS */;
+INSERT INTO `motorpool_wo_history` VALUES
+(1,1,'Pending','Sample Requester','2026-10-03 01:15:24','Work order created'),
+(2,2,'Pending','Sample Requester','2026-10-01 01:15:24','Work order created'),
+(3,3,'Pending','Sample Requester','2026-09-20 01:15:24','Work order created'),
+(4,4,'Pending','Sample Requester','2026-10-02 01:15:24','Work order created'),
+(5,5,'Pending','Sample Requester','2026-10-03 21:15:24','Work order created'),
+(6,6,'Pending','Sample Requester','2026-09-25 01:15:24','Work order created'),
+(7,7,'Pending','Sample Requester','2026-09-14 01:15:24','Work order created'),
+(8,2,'In Progress','Motor Pool Mechanic','2026-10-02 01:15:24','Work started'),
+(9,3,'In Progress','Motor Pool Mechanic','2026-09-24 01:15:24','Work started'),
+(10,4,'In Progress','Motor Pool Mechanic','2026-10-03 01:15:24','Work started'),
+(11,6,'In Progress','Motor Pool Mechanic','2026-09-28 01:15:24','Work started'),
+(15,3,'Completed','Motor Pool Mechanic','2026-09-24 01:15:24','Work finished'),
+(16,6,'Completed','Motor Pool Mechanic','2026-09-28 01:15:24','Work finished'),
+(18,7,'Cancelled','Motor Pool Head','2026-09-15 01:15:24','Request cancelled');
+/*!40000 ALTER TABLE `motorpool_wo_history` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `motorpool_work_orders`
+--
+
+DROP TABLE IF EXISTS `motorpool_work_orders`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `motorpool_work_orders` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `wo_number` varchar(30) NOT NULL,
+  `wo_type` enum('Vehicle Repair','Mechanical Equipment') NOT NULL,
+  `vehicle_id` int(11) DEFAULT NULL,
+  `equipment_id` int(11) DEFAULT NULL,
+  `issue` text NOT NULL,
+  `priority` enum('Routine','Urgent') NOT NULL DEFAULT 'Routine',
+  `status` enum('Pending','In Progress','Completed','Cancelled') NOT NULL DEFAULT 'Pending',
+  `requested_by` varchar(150) NOT NULL,
+  `assigned_to` varchar(150) DEFAULT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `wo_number` (`wo_number`),
+  KEY `wo_type` (`wo_type`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `motorpool_work_orders`
+--
+
+LOCK TABLES `motorpool_work_orders` WRITE;
+/*!40000 ALTER TABLE `motorpool_work_orders` DISABLE KEYS */;
+INSERT INTO `motorpool_work_orders` VALUES
+(1,'MP-001','Vehicle Repair',2,NULL,'Air conditioning not cooling','Routine','Pending','Sample Requester',NULL,'2026-10-03 01:15:24',NULL,NULL),
+(2,'MP-002','Vehicle Repair',3,NULL,'Brake noise when stopping','Urgent','In Progress','Sample Requester','Motor Pool Mechanic','2026-10-01 01:15:24','2026-10-02 01:15:24',NULL),
+(3,'MP-003','Vehicle Repair',5,NULL,'Replace worn front tires','Routine','Completed','Sample Requester','Motor Pool Mechanic','2026-09-20 01:15:24','2026-09-24 01:15:24','2026-09-24 01:15:24'),
+(4,'MP-004','Mechanical Equipment',NULL,2,'Generator fails to start','Urgent','In Progress','Sample Requester','Motor Pool Mechanic','2026-10-02 01:15:24','2026-10-03 01:15:24',NULL),
+(5,'MP-005','Mechanical Equipment',NULL,6,'Engine overheats after 10 minutes','Routine','Pending','Sample Requester',NULL,'2026-10-03 21:15:24',NULL,NULL),
+(6,'MP-006','Mechanical Equipment',NULL,4,'Replace pump seal','Routine','Completed','Sample Requester','Motor Pool Mechanic','2026-09-25 01:15:24','2026-09-28 01:15:24','2026-09-28 01:15:24'),
+(7,'MP-007','Vehicle Repair',5,NULL,'Request cancelled - vehicle sold','Routine','Cancelled','Sample Requester',NULL,'2026-09-14 01:15:24','2026-09-15 01:15:24',NULL);
+/*!40000 ALTER TABLE `motorpool_work_orders` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `notifications`
 --
 
@@ -1507,7 +1638,7 @@ CREATE TABLE `notifications` (
   KEY `idx_is_read` (`is_read`),
   KEY `idx_priority` (`priority`),
   KEY `idx_created` (`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=187 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=200 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1690,7 +1821,19 @@ INSERT INTO `notifications` VALUES
 (183,'Personnel Document Incomplete','John Doe has incomplete requirements (0/0 documents verified).','Head of Facilities','MODERATE','Pending','system',0,NULL,'2026-09-12 18:17:34'),
 (184,'Tool Borrowed','MacBook Pro 16 borrowed by Rico Dela Cruz (Athletics) — due back on Sep 13, 2026.','Tools & Equipment Office','MODERATE','Pending','system',1,'2026-09-19 17:51:26','2026-09-06 01:30:35'),
 (185,'Fire Extinguisher Expiring Soon','Fire extinguisher FE-7FC697 at College of Education Building is due for inspection/refill soon (next due 2026-10-10).','Safety Team','MODERATE','Pending','system',0,NULL,'2026-09-21 13:58:45'),
-(186,'Aircon Needs Cleaning','Aircon unit AC-EXE-G1 at Executive House needs cleaning.','Maintenance Team','MODERATE','Pending','system',0,NULL,'2026-10-03 23:02:28');
+(186,'Aircon Needs Cleaning','Aircon unit AC-EXE-G1 at Executive House needs cleaning.','Maintenance Team','MODERATE','Pending','system',0,NULL,'2026-10-03 23:02:28'),
+(187,'Motor Pool Work Order','MP-002 (Vehicle Repair) is urgent: brake noise when stopping - work in progress.','Motor Pool','CRITICAL','Pending','system',0,NULL,'2026-10-02 02:00:18'),
+(188,'Motor Pool Work Order','MP-004 (Mechanical Equipment) is urgent: Standby Generator 20kVA fails to start.','Motor Pool','CRITICAL','Pending','system',0,NULL,'2026-10-03 02:00:18'),
+(189,'Motor Pool Work Order','MP-001 (Vehicle Repair) is waiting to be started: air conditioning not cooling.','Motor Pool','MODERATE','Pending','system',0,NULL,'2026-10-03 06:00:18'),
+(190,'Motor Pool Work Order','MP-005 (Mechanical Equipment) is waiting to be started: Ride-on Lawn Mower overheats.','Motor Pool','MODERATE','Pending','system',0,NULL,'2026-10-03 22:00:18'),
+(191,'Equipment Needs Repair','ME-GEN-02 Standby Generator 20kVA is marked Needs Repair and its service is overdue.','Motor Pool','CRITICAL','Pending','system',0,NULL,'2026-10-01 02:00:18'),
+(192,'Equipment Needs Repair','ME-MOW-01 Ride-on Lawn Mower is marked Needs Repair and its service is overdue.','Motor Pool','MODERATE','Pending','system',0,NULL,'2026-10-01 02:00:18'),
+(193,'Vehicle Service Due','Yamaha (4567HUJI) service is overdue (brake inspection).','Motor Pool','MODERATE','Pending','system',0,NULL,'2026-10-03 21:00:18'),
+(194,'Vehicle Service Due','Mitsubishi (90HJI87) has a service coming up in the next 14 days.','Motor Pool','ROUTINE','Pending','system',0,NULL,'2026-10-03 20:00:18'),
+(195,'Sports Equipment Overdue','Badminton Racket Set (4pcs) was due back 3 days ago - borrowed by Mina Santos (Athletics).','Sports Equipment Office','CRITICAL','Pending','system',0,NULL,'2026-10-03 23:27:14'),
+(196,'Sports Equipment Borrowed','Gym Mats (Set of 5) borrowed by PE Instructor Cruz - due back tomorrow.','Sports Equipment Office','ROUTINE','Pending','system',0,NULL,'2026-10-03 02:27:14'),
+(197,'Sports Equipment Borrowed','Basketball (Molten GG7) borrowed by Coach Reyes - due back in 5 days.','Sports Equipment Office','ROUTINE','Pending','system',0,NULL,'2026-10-02 02:27:14'),
+(198,'Sports Equipment Needs Repair','Table Tennis Paddle Set is in Poor condition.','Sports Equipment Office','MODERATE','Pending','system',0,NULL,'2026-10-03 21:27:14');
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2137,7 +2280,7 @@ CREATE TABLE `return_records` (
   KEY `tool_id` (`tool_id`),
   CONSTRAINT `return_records_ibfk_1` FOREIGN KEY (`borrow_id`) REFERENCES `borrow_records` (`id`),
   CONSTRAINT `return_records_ibfk_2` FOREIGN KEY (`tool_id`) REFERENCES `tools` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2384,7 +2527,7 @@ CREATE TABLE `tools` (
   `last_activity_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `asset_code` (`asset_code`)
-) ENGINE=InnoDB AUTO_INCREMENT=84 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=86 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2459,16 +2602,16 @@ INSERT INTO `tools` VALUES
 (71,'Electrical Tape','AST-2346','Consumable','Cisco Lab','Pedro Penduko','Excellent','Available',NULL,NULL,'pcs',0,'2026-08-29 23:15:19',0,NULL,'2026-09-06 01:06:36'),
 (72,'CCTV ','AST-2344','Media Studio','Cisco Lab','Sonia G. Ramirez','Excellent','Available',NULL,NULL,'pcs',0,'2026-08-29 23:16:28',0,NULL,'2026-09-06 01:06:36'),
 (73,'Jack Hammer','200056','Power Tools','North Campus','Juan dela Beto','Excellent','Available',NULL,NULL,'pcs',0,'2026-08-29 23:46:24',0,NULL,'2026-09-06 01:06:36'),
-(74,'Basketball (Molten GG7)','AST-41001','Sports Equipment','Gymnasium Storage',NULL,'Excellent','Available',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-09-06 01:06:36'),
+(74,'Basketball (Molten GG7)','AST-41001','Sports Equipment','Gymnasium Storage',NULL,'Excellent','Borrowed',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-10-04 02:27:14'),
 (75,'Volleyball (Mikasa V300W)','AST-41002','Sports Equipment','Gymnasium Storage',NULL,'Excellent','Available',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-09-06 01:06:36'),
 (76,'Volleyball Net Set','AST-41003','Sports Equipment','Gymnasium Storage',NULL,'Good','Available',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-09-06 01:06:36'),
-(77,'Badminton Racket Set (4pcs)','AST-41004','Sports Equipment','PE Equipment Room',NULL,'Good','Available',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-09-06 01:06:36'),
+(77,'Badminton Racket Set (4pcs)','AST-41004','Sports Equipment','PE Equipment Room',NULL,'Good','Borrowed',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-10-04 02:27:14'),
 (78,'Badminton Net & Pole Set','AST-41005','Sports Equipment','PE Equipment Room',NULL,'Good','Available',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-09-06 01:06:36'),
-(79,'Table Tennis Paddle Set','AST-41006','Sports Equipment','PE Equipment Room',NULL,'Fair','Available',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-09-06 01:06:36'),
+(79,'Table Tennis Paddle Set','AST-41006','Sports Equipment','PE Equipment Room',NULL,'Poor','Available',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-10-04 02:27:14'),
 (80,'Soccer Ball (Size 5)','AST-41007','Sports Equipment','Gymnasium Storage',NULL,'Excellent','Available',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-09-06 01:06:36'),
 (81,'Tennis Racket','AST-41008','Sports Equipment','Sports Complex','','Good','Available',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-09-19 21:21:42'),
-(82,'Gym Mats (Set of 5)','AST-41009','Sports Equipment','Gymnasium Storage',NULL,'Good','Available',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-09-06 01:06:36'),
-(83,'Baseball Bat & Glove Set','AST-41010','Sports Equipment','Sports Complex',NULL,'Fair','Available',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-09-06 01:06:36');
+(82,'Gym Mats (Set of 5)','AST-41009','Sports Equipment','Gymnasium Storage',NULL,'Good','Borrowed',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-10-04 02:27:14'),
+(83,'Baseball Bat & Glove Set','AST-41010','Sports Equipment','Sports Complex',NULL,'Fair','Maintenance',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-10-04 02:27:14');
 /*!40000 ALTER TABLE `tools` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2545,7 +2688,7 @@ CREATE TABLE `travel_requests` (
   CONSTRAINT `fk_travel_driver` FOREIGN KEY (`assigned_driver_id`) REFERENCES `personnel` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_travel_requester` FOREIGN KEY (`requester_id`) REFERENCES `personnel` (`id`),
   CONSTRAINT `fk_travel_vehicle` FOREIGN KEY (`assigned_vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2564,9 +2707,15 @@ INSERT INTO `travel_requests` VALUES
 (7,'TR-20260410-0001',8,'Silliman University','Interagency site visit','2026-04-10','07:00:00','18:00:00',1,6,3,'Completed',NULL,NULL,NULL,1,'None',NULL,NULL,NULL,'2026-06-01 00:00:00','2026-07-28 16:42:00','2026-07-28 16:42:00','2026-07-28 16:42:00'),
 (8,'TR-20260320-0001',9,'Dumaguete Airport','Guest pickup','2026-03-20','06:00:00','09:00:00',2,19,2,'Rejected',NULL,NULL,NULL,1,'None',NULL,NULL,NULL,'2026-08-04 05:21:20','2026-07-28 16:42:00','2026-08-04 05:21:20','2026-07-28 16:42:00'),
 (13,'TR-20260804-0001',5,'Tanjay asaggra','Regional outreach visit','2026-08-05','07:00:00','18:00:00',5,51,2,'Approved','2026-08-04 09:34:59',NULL,NULL,1,'None',NULL,NULL,NULL,'2026-08-04 05:08:40','2026-08-04 01:23:05','2026-08-19 16:03:31','2026-08-04 01:34:59'),
-(16,'TR-20260804-0002',14,'Bais City','Site visit and coordination','2026-08-05','07:30:00','05:00:00',5,31,7,'Submitted',NULL,NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-08-04 05:21:04','2026-08-29 16:43:56','2026-08-04 05:21:04'),
+(16,'TR-20260804-0002',14,'Bais City','Site visit and coordination','2026-08-05','07:30:00','05:00:00',5,31,7,'Rejected',NULL,NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-08-04 05:21:04','2026-10-03 17:54:33','2026-10-03 17:54:33'),
 (17,'TR-20261001-0001',8,'Cebu City - DepEd Regional Office','Submit compliance documents','2026-10-01','09:00:00','17:00:00',6,6,6,'Approved',NULL,NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-09-30 18:27:29','2026-09-30 18:27:29','2026-09-30 18:27:29'),
-(18,'TR-20261001-0002',9,'Bacolod City - Supplier Pickup','Pick up construction supplies','2026-10-01','07:30:00','16:00:00',1,7,3,'In Transit','2026-10-01 07:35:00',NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-09-30 18:27:29','2026-09-30 18:27:29','2026-09-30 18:27:29');
+(18,'TR-20261001-0002',9,'Bacolod City - Supplier Pickup','Pick up construction supplies','2026-10-01','07:30:00','16:00:00',1,7,3,'In Transit','2026-10-01 07:35:00',NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-09-30 18:27:29','2026-09-30 18:27:29','2026-09-30 18:27:29'),
+(19,'TR-SAMPLE-0001',3,'Dumaguete City Hall','Deliver documents (sample)','2026-10-04','08:00:00','12:00:00',NULL,5,2,'Approved',NULL,NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-10-03 17:23:59','2026-10-03 17:23:59','2026-10-03 17:23:59'),
+(20,'TR-SAMPLE-0002',3,'Sibulan Campus','Inter-campus meeting (sample)','2026-10-05','09:00:00','15:00:00',NULL,7,6,'Approved',NULL,NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-10-03 17:23:59','2026-10-03 17:23:59','2026-10-03 17:23:59'),
+(21,'TR-SAMPLE-0003',3,'Bacong Town Plaza','Student activity transport (sample)','2026-10-07','07:30:00','17:00:00',NULL,14,5,'Approved',NULL,NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-10-03 17:23:59','2026-10-03 17:54:28','2026-10-03 17:54:28'),
+(22,'TR-SAMPLE-0004',3,'Valencia Supply Depot','Pick up supplies (sample)','2026-09-30','08:00:00','11:30:00',NULL,6,7,'Completed',NULL,NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-10-03 17:23:59','2026-10-03 17:23:59','2026-10-03 17:23:59'),
+(23,'TR-SAMPLE-0005',3,'Airport - Sibulan','Guest pick-up (sample)','2026-09-25','13:00:00','16:00:00',NULL,19,3,'Completed',NULL,NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-10-03 17:23:59','2026-10-03 17:23:59','2026-10-03 17:23:59'),
+(24,'TR-SAMPLE-0006',3,'Dauin Marine Park','Field trip (sample)','2026-10-02','06:30:00','18:00:00',NULL,5,2,'Reviewed',NULL,NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-10-03 17:23:59','2026-10-03 17:23:59','2026-10-03 17:23:59');
 /*!40000 ALTER TABLE `travel_requests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2586,7 +2735,7 @@ CREATE TABLE `trip_status_log` (
   `notes` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `travel_request_id` (`travel_request_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2605,7 +2754,9 @@ INSERT INTO `trip_status_log` VALUES
 (7,7,'Completed','Dr. Helen Peralta','2026-07-29 00:42:00','Existing record - history predates status tracking'),
 (8,8,'Rejected','sherina Banosong','2026-07-29 00:42:00','Existing record - history predates status tracking'),
 (9,13,'Approved','Pedro Penduko','2026-08-04 09:23:05','Existing record - history predates status tracking'),
-(10,16,'Submitted','Timothy Eraham','2026-08-04 13:21:04','Existing record - history predates status tracking');
+(10,16,'Submitted','Timothy Eraham','2026-08-04 13:21:04','Existing record - history predates status tracking'),
+(12,21,'Approved','Assets Test Account','2026-10-04 01:54:28','Approved by Asset Acquisition and Monitoring'),
+(13,16,'Rejected','Assets Test Account','2026-10-04 01:54:33','Rejected by Asset Acquisition and Monitoring');
 /*!40000 ALTER TABLE `trip_status_log` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2624,7 +2775,7 @@ CREATE TABLE `ubra_chat_logs` (
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `emp_id` (`emp_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=277 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=281 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2682,7 +2833,9 @@ INSERT INTO `users` VALUES
 (9,'Timothy Eraham','timothy.eraham@foundationu.com','security','10005','$2y$10$bAEiq/MrHZxqBLT3Y8j4nOCk3EQ0Fn3KuGGdmva5GEJSVGEveyuMG','Security','Safety & Security','1788029522_d47e818ca26ab4f0a98e.jpg','2026-08-21 20:32:29'),
 (10,'Maisie Therese Tigmo','janitorial@fu-ubra.local','janitorial','10010','$2y$10$PCVcLtcX319cDb4FqgyZOuHDcy3bPj/JpC21itpZSOdVRo3EBFyGK','Janitorial',NULL,'1789909237_3e7efa2c8eab9ec54d1f.jpg','2026-09-20 20:53:31'),
 (11,'Facilities Test Account','facilities.test@foundationu.local','facilities_test','10020','$2y$10$bWPZG.CKHw8AShc0uYV.fO9xC4MD.LI8m7FfK2We8neMgh7LY5/Hy','Facilities','Facilities',NULL,'2026-10-03 15:00:55'),
-(12,'Security Test Account','security.test@foundationu.local','security_test','10030','$2y$10$WdW62spkFCt0jlF5fOOaMOrOGqQ.65mq0epq6HWQSwf4k.7.W0Dy6','Security','Security',NULL,'2026-10-03 22:35:01');
+(12,'Security Test Account','security.test@foundationu.local','security_test','10030','$2y$10$WdW62spkFCt0jlF5fOOaMOrOGqQ.65mq0epq6HWQSwf4k.7.W0Dy6','Security','Security',NULL,'2026-10-03 22:35:01'),
+(13,'Assets Test Account','assets.test@foundationu.local','assets_test','10040','$2y$10$DyXP2dO2KIxG1LdNKW2wnuVASr.dpGKGC4vRVpKbEaIFbNEBJI4gC','Assets','Asset Acquisition and Monitoring',NULL,'2026-10-04 01:10:16'),
+(14,'Sports Test Account','sports.test@foundationu.local','sports_test','10050','$2y$10$fOiVapffyFPdx9kt.NWSguiDDRgndabBwLtWbobYd04Iru9TzIcsm','Sports','Sports Equipment Monitoring',NULL,'2026-10-04 02:27:14');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2746,6 +2899,54 @@ LOCK TABLES `vehicle_inspection_items` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `vehicle_maintenance`
+--
+
+DROP TABLE IF EXISTS `vehicle_maintenance`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vehicle_maintenance` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `vehicle_id` int(11) NOT NULL,
+  `service_type` varchar(120) NOT NULL,
+  `serviced_on` date NOT NULL,
+  `odometer_km` decimal(10,1) DEFAULT NULL,
+  `cost` decimal(10,2) DEFAULT NULL,
+  `performed_by` varchar(150) DEFAULT NULL,
+  `next_due` date DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `vehicle_id` (`vehicle_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `vehicle_maintenance`
+--
+
+LOCK TABLES `vehicle_maintenance` WRITE;
+/*!40000 ALTER TABLE `vehicle_maintenance` DISABLE KEYS */;
+INSERT INTO `vehicle_maintenance` VALUES
+(1,2,'Change Oil','2026-09-04',44000.0,2500.00,'Motor Pool Shop','2027-02-07','Sample data','2026-10-04 01:15:24'),
+(2,2,'Tire Rotation','2026-07-21',45500.0,800.00,'Motor Pool Shop','2027-02-07','Sample data','2026-10-04 01:15:24'),
+(3,2,'Brake Inspection','2026-06-06',42000.0,1800.00,'Casa Service Center','2026-11-27','Sample data','2026-10-04 01:15:24'),
+(4,3,'Change Oil','2026-09-04',45000.0,2500.00,'Motor Pool Shop','2026-12-02','Sample data','2026-10-04 01:15:24'),
+(5,3,'Tire Rotation','2026-07-21',46500.0,800.00,'Motor Pool Shop','2026-12-02','Sample data','2026-10-04 01:15:24'),
+(6,3,'Brake Inspection','2026-06-06',43000.0,1800.00,'Casa Service Center','2026-10-05','Sample data','2026-10-04 01:15:24'),
+(7,5,'Change Oil','2026-09-04',47000.0,2500.00,'Motor Pool Shop','2026-11-18','Sample data','2026-10-04 01:15:24'),
+(8,5,'Tire Rotation','2026-07-21',48500.0,800.00,'Motor Pool Shop','2026-11-18','Sample data','2026-10-04 01:15:24'),
+(9,5,'Brake Inspection','2026-06-06',45000.0,1800.00,'Casa Service Center','2026-09-19','Sample data','2026-10-04 01:15:24'),
+(10,6,'Change Oil','2026-09-04',48000.0,2500.00,'Motor Pool Shop','2027-01-10','Sample data','2026-10-04 01:15:24'),
+(11,6,'Tire Rotation','2026-07-21',49500.0,800.00,'Motor Pool Shop','2027-01-10','Sample data','2026-10-04 01:15:24'),
+(12,6,'Brake Inspection','2026-06-06',46000.0,1800.00,'Casa Service Center','2026-10-26','Sample data','2026-10-04 01:15:24'),
+(13,7,'Change Oil','2026-09-04',49000.0,2500.00,'Motor Pool Shop','2026-11-04','Sample data','2026-10-04 01:15:24'),
+(14,7,'Tire Rotation','2026-07-21',50500.0,800.00,'Motor Pool Shop','2026-11-04','Sample data','2026-10-04 01:15:24'),
+(15,7,'Brake Inspection','2026-06-06',47000.0,1800.00,'Casa Service Center','2026-12-02','Sample data','2026-10-04 01:15:24');
+/*!40000 ALTER TABLE `vehicle_maintenance` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `vehicles`
 --
 
@@ -2775,7 +2976,7 @@ CREATE TABLE `vehicles` (
   KEY `department_id` (`department_id`),
   CONSTRAINT `fk_vehicle_department` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_vehicle_driver` FOREIGN KEY (`driver_id`) REFERENCES `personnel` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2848,4 +3049,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-10-04  1:07:30
+-- Dump completed on 2026-10-04  2:40:29

@@ -16,12 +16,16 @@ class AuthFilter implements FilterInterface
     // existed — this map only ever narrows access, never widens it.
     private const ROLE_LANDING = [
         'security'   => 'security-dept',
+        'assets'     => 'assets-dept',
+        'sports'     => 'sports-dept',
         'tools'      => 'tools-dashboard',
         'facilities' => 'facilities',
     ];
 
     private const ROLE_ALLOWED_PREFIXES = [
         'security'   => ['security-dept', 'security-dashboard', 'safety', 'vehicles', 'gps', 'travel', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
+        'assets'     => ['assets-dept', 'vehicles', 'travel', 'gps', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
+        'sports'     => ['sports-dept', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings'],
         'tools'      => ['tools-dashboard', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile'],
         'facilities' => ['facilities', 'facilities-dashboard', 'personnel', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
     ];

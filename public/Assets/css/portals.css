@@ -361,3 +361,70 @@ body.portal-lobby .portal-covers strong {
     padding: 18px;
     border-top: 1px solid #ececf0;
 }
+
+/* Equal portal cards: titles reserve two lines, descriptions three, and the
+   "Covers" line + Sign in button always sit at the bottom of the card. */
+.portal-card h2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 58px;
+    line-height: 1.2;
+}
+.portal-desc {
+    min-height: 66px;
+}
+.portal-covers {
+    margin-top: auto;
+}
+
+/* Lobby background: the PTBK garden photo, sharp (no blur), with a soft dark
+   shadow rising from the bottom edge. */
+body.portal-lobby {
+    background: #1d2b1f url('../../images/PTBK.jpg') center center / cover no-repeat fixed;
+}
+body.portal-lobby::after {
+    content: '';
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 48vh;
+    background: linear-gradient(to top, rgba(0, 0, 0, .72) 0%, rgba(0, 0, 0, .38) 45%, rgba(0, 0, 0, 0) 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+body.portal-lobby .portal-lobby-top,
+body.portal-lobby .portal-hub,
+body.portal-lobby .portal-lobby-foot {
+    position: relative;
+    z-index: 1;
+}
+body.portal-lobby .portal-lobby-foot {
+    background: transparent;
+    border-top: 0;
+    color: rgba(255, 255, 255, .88);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .6);
+}
+body.portal-lobby .portal-card {
+    box-shadow: 0 18px 34px -8px rgba(0, 0, 0, .45), 0 6px 12px -6px rgba(0, 0, 0, .3);
+}
+
+/* Lobby header text: white on the maroon bar */
+.portal-lobby-brand,
+.portal-lobby-sub {
+    color: #ffffff;
+}
+
+/* Four department portals side by side */
+body.portal-lobby .portal-hub { max-width: 1280px; }
+body.portal-lobby .portal-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+body.portal-lobby .portal-card { padding-left: 18px; padding-right: 18px; }
+body.portal-lobby .portal-desc { min-height: 88px; }
+@media (max-width: 1100px) {
+    body.portal-lobby .portal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+    body.portal-lobby .portal-grid { grid-template-columns: 1fr; }
+    body.portal-lobby .portal-desc { min-height: 0; }
+}

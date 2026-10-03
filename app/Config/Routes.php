@@ -57,6 +57,23 @@ $routes->post('security-dept/markers/(:num)/status', 'SecurityDeptController::ma
 $routes->post('security-dept/markers/(:num)/delete', 'SecurityDeptController::deleteMarker/$1');
 $routes->post('security-dept/equipment', 'SecurityDeptController::storeEquipment');
 $routes->post('security-dept/inspections', 'SecurityDeptController::storeInspection');
+
+// Asset Acquisition and Monitoring Department
+$routes->get('assets-dept', 'AssetDeptController::overview');
+$routes->get('assets-dept/status', 'AssetDeptController::status');
+$routes->get('assets-dept/(:segment)', 'AssetDeptController::index/$1');
+$routes->post('assets-dept/vehicles', 'AssetDeptController::storeVehicle');
+$routes->post('assets-dept/maintenance', 'AssetDeptController::storeMaintenance');
+$routes->post('assets-dept/equipment', 'AssetDeptController::storeEquipment');
+$routes->post('assets-dept/work-orders', 'AssetDeptController::storeWorkOrder');
+$routes->post('assets-dept/work-orders/(:num)/status', 'AssetDeptController::updateWorkOrderStatus/$1');
+$routes->post('assets-dept/trip-tickets', 'AssetDeptController::storeTrip');
+
+// Sports Equipment Monitoring
+$routes->get('sports-dept', 'SportsDeptController::overview');
+$routes->get('sports-dept/status', 'SportsDeptController::status');
+$routes->get('sports-dept/(:segment)', 'SportsDeptController::index/$1');
+$routes->post('sports-dept/equipment', 'SportsDeptController::storeEquipment');
 $routes->get('facilities', 'FacilitiesController::overview');
 $routes->get('facilities/status', 'FacilitiesController::status');
 $routes->get('facilities/(:segment)', 'FacilitiesController::index/$1');

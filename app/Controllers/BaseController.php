@@ -98,6 +98,8 @@ abstract class BaseController extends Controller
     {
         return match (strtolower($this->userRole())) {
             'security'   => '/security-dept',
+            'assets'     => '/assets-dept',
+            'sports'     => '/sports-dept',
             'tools'      => '/tools-dashboard',
             'facilities' => '/facilities',
             'janitorial' => '/janitorial-dashboard',

@@ -45,11 +45,14 @@
         <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Inspection</span>
         <span class="legend-item"><span class="legend-dot" style="background:#7c3aed"></span> Maintenance</span>
         <span class="legend-item"><span class="legend-dot" style="background:#2563eb"></span> Compliance</span>
-        <?php if (empty($is_security)): ?>
+        <?php if (empty($hide_cleaning)): ?>
         <span class="legend-item"><span class="legend-dot" style="background:#16a34a"></span> Cleaning</span>
         <span class="legend-item"><span class="legend-dot" style="background:#dc2626"></span> Urgent Cleaning</span>
         <?php endif; ?>
         <span class="legend-item"><span class="legend-dot" style="background:#0891b2"></span> Travel</span>
+        <?php if (!empty($is_assets)): ?>
+        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Check Due</span>
+        <?php endif; ?>
         <?php if (!empty($show_safety)): ?>
         <span class="legend-item"><span class="legend-dot" style="background:#0d9488"></span> Installed</span>
         <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Check Due</span>
@@ -91,7 +94,7 @@
                     <div><div class="up-title">Van-03 Inspection</div><div class="up-sub">Scheduled</div></div>
                 </div>
                 <?php endif; ?>
-                <?php if (empty($is_security)): ?>
+                <?php if (empty($hide_cleaning)): ?>
                 <div class="upcoming-item">
                     <span class="up-dot" style="background:#f59e0b"></span>
                     <div><div class="up-title">AC Cleaning – Bldg A</div><div class="up-sub">Routine</div></div>
@@ -180,7 +183,7 @@
                 </div>
                 <div class="ubra-section-title">Today's Summary</div>
                 <ul class="ubra-list">
-                    <?php if (empty($is_security)): ?><li>Bldg A AC cleaning starts in <strong>2 days</strong>.</li><?php endif; ?>
+                    <?php if (empty($hide_cleaning)): ?><li>Bldg A AC cleaning starts in <strong>2 days</strong>.</li><?php endif; ?>
                     <li>1 maintenance schedule due <strong>next week</strong>.</li>
                 </ul>
                 <div class="ubra-section-title" style="margin-top:.9rem;">Suggested Actions</div>
@@ -190,7 +193,7 @@
                         <span class="ubra-btn-label">Notify Driver</span>
                         <span class="ubra-btn-arrow"><i class="bi bi-chevron-right"></i></span>
                     </button>
-                    <?php if (empty($is_security)): ?>
+                    <?php if (empty($hide_cleaning)): ?>
                     <button class="ubra-btn" onclick="openNotifyPicker('cleaning')">
                         <span class="ubra-btn-icon"><i class="bi bi-brush"></i></span>
                         <span class="ubra-btn-label">Notify Cleaning Personnel</span>
@@ -235,7 +238,7 @@
                         <option value="Inspection">Inspection</option>
                         <option value="Maintenance">Maintenance</option>
                         <option value="Compliance">Compliance</option>
-                        <?php if (empty($is_security)): ?>
+                        <?php if (empty($hide_cleaning)): ?>
                         <option value="Cleaning">Cleaning</option>
                         <option value="Urgent Cleaning">Urgent Cleaning</option>
                         <?php endif; ?>

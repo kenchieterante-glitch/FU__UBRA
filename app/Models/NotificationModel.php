@@ -21,17 +21,24 @@ class NotificationModel extends Model
         'Vehicle Expiry'                   => 'vehicles',
         'Trip Ticket Request'              => 'vehicles',
         'Trip Ticket Assignment'           => 'vehicles',
+        'Travel Reminder'                  => 'vehicles',
+        'Vehicle Service Due'              => 'motorpool',
+        'Motor Pool Work Order'            => 'motorpool',
+        'Equipment Needs Repair'           => 'motorpool',
+        'Sports Equipment Borrowed'        => 'sports',
+        'Sports Equipment Overdue'         => 'sports',
+        'Sports Equipment Needs Repair'    => 'sports',
         'Inventory Low Stock'              => 'tools',
         'Tool Borrowed'                    => 'tools',
         'Janitorial Assignment'            => 'janitorial',
         'Cleaning Scheduled'               => 'janitorial',
         'Urgent Cleaning Scheduled'        => 'janitorial',
         'Consumable Low Stock'             => 'janitorial',
-        'Air-Con Cleaning'                 => 'safety',
-        'Fire Extinguisher Installed'      => 'safety',
-        'Fire Extinguisher Expiring Soon'  => 'safety',
-        'Aircon Unit Registered'           => 'safety',
-        'Aircon Needs Cleaning'            => 'safety',
+        'Air-Con Cleaning'                 => 'aircon',
+        'Fire Extinguisher Installed'      => 'firesafety',
+        'Fire Extinguisher Expiring Soon'  => 'firesafety',
+        'Aircon Unit Registered'           => 'aircon',
+        'Aircon Needs Cleaning'            => 'aircon',
         'Maintenance Scheduled'            => 'safety',
         'Job Order Expiring Soon'          => 'personnel',
         'Job Order Expired'                => 'personnel',
@@ -46,8 +53,13 @@ class NotificationModel extends Model
     public static function allowedModulesForRole(string $role): ?array
     {
         return match (strtolower($role)) {
-            'facilities' => ['tools', 'personnel'],
-            'security'   => ['safety', 'vehicles'],
+            'facilities' => ['tools', 'personnel', 'aircon', 'safety'],
+            // Safety & Security: fire safety only (vehicles belong to Asset Acquisition now).
+            'security'   => ['firesafety'],
+            // Asset Acquisition and Monitoring: vehicles, trips and the motor pool.
+            'assets'     => ['vehicles', 'motorpool'],
+            // Sports Equipment Monitoring: only sports equipment notifications.
+            'sports'     => ['sports'],
             // Tools Head = the Tools & Equipment / "Maintenance" office —
             // only its own inventory/borrow notifications.
             'tools'      => ['tools'],

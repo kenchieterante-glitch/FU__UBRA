@@ -416,7 +416,7 @@ class SecurityDeptController extends BaseController
         return [
             'status' => [
                 ['key' => 'fs_total', 'label' => 'Total Equipment', 'value' => count($rows), 'icon' => 'bi-fire', 'tone' => 'maroon'],
-                ['key' => 'fs_attention', 'label' => 'Needs Attention', 'value' => count($attention), 'icon' => 'bi-exclamation-triangle-fill', 'tone' => 'red'],
+                ['key' => 'fs_attention', 'label' => 'Equipment Needing Attention', 'value' => count($attention), 'icon' => 'bi-exclamation-triangle-fill', 'tone' => 'red'],
                 ['key' => 'fs_due', 'label' => 'Check Due or Overdue', 'value' => count($due), 'icon' => 'bi-calendar-event', 'tone' => 'amber'],
             ],
             'stat_detail' => [
@@ -535,7 +535,7 @@ class SecurityDeptController extends BaseController
         return [
             'status' => [
                 ['key' => 'i_safe', 'label' => 'Safe', 'value' => count($by('Safe')), 'icon' => 'bi-shield-check', 'tone' => 'green'],
-                ['key' => 'i_attn', 'label' => 'Needs Attention', 'value' => count($by('Needs Attention')), 'icon' => 'bi-exclamation-circle-fill', 'tone' => 'amber'],
+                ['key' => 'i_attn', 'label' => 'Buildings Needing Attention', 'value' => count($by('Needs Attention')), 'icon' => 'bi-exclamation-circle-fill', 'tone' => 'amber'],
                 ['key' => 'i_unsafe', 'label' => 'Unsafe', 'value' => count($by('Unsafe')), 'icon' => 'bi-shield-exclamation', 'tone' => 'red'],
                 ['key' => 'i_none', 'label' => 'Not Inspected Yet', 'value' => count($notDone), 'icon' => 'bi-hourglass', 'tone' => 'gold'],
             ],

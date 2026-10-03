@@ -2919,3 +2919,22 @@ tr.row-blink td {
 .tt-v { font-size:14px; font-weight:600; color:#222; word-break:break-word; }
 @media (max-width:520px) { .tt-modal-grid { grid-template-columns:1fr; } }
 .fp-controls #fpPlaceBtn { margin-left:auto; }
+
+/* Borrowing & Return: condition picker + Return button, one tidy row */
+.sp-return { display:flex; align-items:center; justify-content:center; gap:8px; margin:0; }
+.sp-return-select {
+    height: 34px; min-width: 96px; padding: 0 30px 0 12px;
+    border: 1px solid #d0d0d0; border-radius: 8px; background-color: #fff;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%237b0f1a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat; background-position: right 11px center;
+    -webkit-appearance: none; appearance: none;
+    font-size: 13px; font-family: inherit; color: #222; cursor: pointer;
+}
+.sp-return-select:hover { border-color: #7b0f1a; }
+.sp-return-select:focus { outline: none; border-color: #7b0f1a; box-shadow: 0 0 0 3px rgba(123, 15, 26, .12); }
+.sp-return-btn {
+    height: 34px; padding: 0 16px; border: 0; border-radius: 8px; cursor: pointer;
+    background: #7b0f1a; color: #fff; font-size: 13px; font-weight: 600; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.sp-return-btn:hover { background: #5e0b14; }

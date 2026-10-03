@@ -17,24 +17,31 @@ class PortalController extends BaseController
     private const PORTALS = [
         'facilities' => [
             'box'         => '01',
-            'name'        => 'Facilities Administration & General Services',
-            'short'       => 'Facilities & General Services',
+            'name'        => 'Facilities Administration and General Services',
+            'short'       => 'Facilities Administration and General Services',
             'description' => 'Janitorial coverage, consumable supplies, and campus aircon condition.',
             'covers'      => 'Janitorial, Consumables, Aircon',
         ],
         'safety' => [
             'box'         => '02',
             'name'        => 'Safety and Security Department',
-            'short'       => 'Safety & Security',
+            'short'       => 'Safety and Security Department',
             'description' => 'Fire extinguisher coverage and inspections, key control, and trip gate activity.',
             'covers'      => 'Fire Safety, Keys, Trip Gate',
         ],
         'asset' => [
             'box'         => '03',
             'name'        => 'Asset Acquisition and Monitoring Department',
-            'short'       => 'Asset Acquisition & Monitoring',
+            'short'       => 'Asset Acquisition and Monitoring Department',
             'description' => 'Tools and equipment inventory, vehicle fleet status, and consumable stock levels.',
             'covers'      => 'Tools, Vehicles, Stock',
+        ],
+        'iysp' => [
+            'box'         => '04',
+            'name'        => 'Sports Equipment Monitoring',
+            'short'       => 'Sports Equipment Monitoring',
+            'description' => 'Sports equipment inventory, borrowing, and condition monitoring.',
+            'covers'      => 'Equipment, Borrowing, Condition',
         ],
     ];
 
@@ -103,6 +110,10 @@ class PortalController extends BaseController
             ];
         }
 
+        if ($key === 'iysp') {
+            return [];
+        }
+
         $tools = new ToolsModel();
         $vehicles = new VehicleModel();
         $consumables = new ConsumableInventoryModel();
@@ -128,6 +139,7 @@ class PortalController extends BaseController
                 ['label' => 'Guard Dashboard', 'url' => 'safety/guard-dashboard', 'icon' => 'bi-shield-check'],
                 ['label' => 'Trip Ticket', 'url' => 'travel', 'icon' => 'bi-ticket-perforated'],
             ],
+            'iysp' => [],
             default => [
                 ['label' => 'Tools Management', 'url' => 'tools', 'icon' => 'bi-boxes'],
                 ['label' => 'Vehicle Management', 'url' => 'vehicles', 'icon' => 'bi-truck'],

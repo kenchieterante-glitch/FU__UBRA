@@ -298,12 +298,13 @@ img {
   box-shadow: var(--shadow-lg);
   opacity: 0;
   transform: translateY(-8px);
-  transition: opacity .25s ease, transform .25s ease;
+  transition: opacity 1s ease, transform 1s ease; /* fades out over about a second */
 }
 
 .flash-toast.show {
   opacity: 1;
   transform: translateY(0);
+  transition: opacity .25s ease, transform .25s ease; /* quick fade in */
 }
 
 .flash-toast-success {
@@ -3004,9 +3005,12 @@ table.stg-table tbody td {
   text-align: left;
 }
 table.data-table tbody td.action-cell,
-table.gps-table tbody td .vehicle-cell,
 table.data-table tbody td .cell-user {
   justify-content: center;
+}
+/* GPS table: the vehicle (icon + name) sits at the left of its cell. */
+table.gps-table tbody td .vehicle-cell {
+  justify-content: flex-start;
 }
 
 /* Save/Cancel pairs in every modal: .btn-maroon defaults to a full-width

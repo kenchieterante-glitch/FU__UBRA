@@ -14,7 +14,7 @@ window.attachTableTools = function (panel) {
   const cell = (row, i) => (row.children[i] ? row.children[i].textContent.trim() : '');
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  const statusIdx = heads.findIndex(h => /status|progress|result|priority/i.test(h));
+  const statusIdx = heads.findIndex(h => /status|progress|result|priority|availability/i.test(h));
   const statusValues = statusIdx < 0 ? [] : Array.from(new Set(dataRows().map(r => cell(r, statusIdx)))).filter(Boolean).sort();
 
   const original = dataRows();
@@ -98,9 +98,9 @@ window.attachRowDetails = function (panel) {
     row.style.cursor = 'pointer';
     row.title = 'Click to view details';
     row.addEventListener('click', e => {
-      if (e.target.closest('a, button, input, select')) return;
+      if (e.target.closest('a, button, input, select, form')) return;
       const cells = Array.from(row.children);
-      const fields = cells.map((c, i) => ({ k: heads[i] || '', v: c.innerHTML.trim(), t: c.textContent.trim() })).filter(f => f.k);
+      const fields = cells.map((c, i) => ({ k: heads[i] || '', v: c.innerHTML.trim(), t: c.textContent.trim() })).filter(f => f.k && f.k !== 'Action');
       const ov = document.createElement('div');
       ov.className = 'tt-modal-overlay';
       ov.innerHTML = `<div class="tt-modal"><div class="tt-modal-head"><h3>${esc(fields[0] ? fields[0].t : 'Details')}</h3><button type="button" class="tt-modal-x" aria-label="Close">&times;</button></div>

@@ -4,6 +4,7 @@ if (!function_exists('fac_cell')) {
     // One table cell; known status words become colored badges, the rest stay plain text.
     function fac_cell($value): string
     {
+        if (is_array($value) && isset($value['raw'])) return '<td>' . $value['raw'] . '</td>';
         $text = (string) $value;
         $map = [
             'Pending'         => 'tt-badge zb-needs',
@@ -36,6 +37,28 @@ if (!function_exists('fac_cell')) {
             'Vehicle Out'     => 'tt-badge zb-needs',
             'Awaiting Dispatch' => 'tt-badge zb-needs',
             'Key out over 8 hours' => 'tt-badge zb-overdue badge-blink',
+            'Available'       => 'tt-badge zb-done',
+            'Excellent'       => 'tt-badge zb-done',
+            'Good'            => 'tt-badge zb-done',
+            'Fair'            => 'tt-badge zb-needs',
+            'Poor'            => 'tt-badge zb-overdue badge-blink',
+            'Borrowed'        => 'tt-badge zb-needs',
+            'Disposal'        => 'tt-badge zb-overdue',
+            'In Use'          => 'tt-badge zb-needs',
+            'Reserved'        => 'tt-badge zb-needs',
+            'Maintenance'     => 'tt-badge zb-needs',
+            'Inactive'        => 'tt-badge zb-overdue',
+            'Under Maintenance' => 'tt-badge zb-needs',
+            'Out of Service'  => 'tt-badge zb-overdue badge-blink',
+            'Service Overdue' => 'tt-badge zb-overdue badge-blink',
+            'Service Due Soon' => 'tt-badge zb-needs',
+            'Cancelled'       => 'tt-badge zb-overdue',
+            'Submitted'       => 'tt-badge zb-needs',
+            'Reviewed'        => 'tt-badge zb-needs',
+            'Approved'        => 'tt-badge zb-done',
+            'In Transit'      => 'tt-badge zb-needs',
+            'Rejected'        => 'tt-badge zb-overdue',
+            'Active'          => 'tt-badge zb-done',
             'Routine'         => 'status-badge status-available',
             'Urgent'          => 'status-badge status-pending',
         ];

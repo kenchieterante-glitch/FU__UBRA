@@ -3,6 +3,9 @@
 namespace App\Controllers;
 
 use App\Models\FireExtinguisherModel;
+use App\Models\MechanicalEquipmentModel;
+use App\Models\MotorpoolWorkOrderModel;
+use App\Models\VehicleMaintenanceModel;
 use App\Models\FloorPlanMarkerModel;
 use App\Models\SafetyEquipmentModel;
 use App\Models\VehicleModel;
@@ -37,6 +40,17 @@ class CalendarController extends BaseController
         return strtolower((string) $this->session->get('role')) === 'security';
     }
 
+    private function isAssets(): bool
+    {
+        return strtolower((string) $this->session->get('role')) === 'assets';
+    }
+
+    // Neither Safety & Security nor Asset Acquisition handles janitorial work.
+    private function hideCleaning(): bool
+    {
+        return $this->isSecurity() || $this->isAssets();
+    }
+
     private function showSafety(): bool
     {
         return in_array(strtolower((string) $this->session->get('role')), ['security', 'administrator'], true);
@@ -63,6 +77,8 @@ class CalendarController extends BaseController
             'flash_success'    => $this->session->getFlashdata('success'),
             'pending_renewals' => $this->pendingVehicleRenewals(),
             'is_security'      => $this->isSecurity(),
+            'hide_cleaning'    => $this->hideCleaning(),
+            'is_assets'        => $this->isAssets(),
             'show_safety'      => $this->showSafety(),
             'safety_renewals'  => $this->isSecurity() ? $this->safetyRenewals() : [],
             'safety_upcoming'  => $this->isSecurity() ? $this->safetyUpcoming() : [],
@@ -150,8 +166,8 @@ class CalendarController extends BaseController
             return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'Unauthorized']);
         }
 
-        if ($this->isSecurity()) {
-            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'Cleaning schedules are not part of Safety and Security.']);
+        if ($this->hideCleaning()) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'Cleaning schedules are not part of this department.']);
         }
 
         $data      = $this->request->getJSON(true) ?? [];
@@ -296,7 +312,7 @@ class CalendarController extends BaseController
 
     private function persistedEvents(): array
     {
-        $cleaning = $this->isSecurity() ? [] : array_map(fn($a) => $this->toEvent(
+        $cleaning = $this->hideCleaning() ? [] : array_map(fn($a) => $this->toEvent(
             $a['id'],
             $a['assigned_zone'],
             $a['date_assigned'],
@@ -304,7 +320,7 @@ class CalendarController extends BaseController
             $a['staff_name']
         ), (new JanitorialAssignmentModel())->findAll());
 
-        $maintenance = array_map(fn($w) => $this->toMaintenanceEvent(
+        $maintenance = $this->isAssets() ? [] : array_map(fn($w) => $this->toMaintenanceEvent(
             $w['id'],
             $w['issue'],
             $w['location'],
@@ -320,7 +336,7 @@ class CalendarController extends BaseController
         );
         $travel = array_map(fn($t) => $this->toTravelEvent($t), $trips);
 
-        return array_merge($cleaning, $maintenance, $travel, $this->showSafety() ? $this->safetyEvents() : []);
+        return array_merge($cleaning, $maintenance, $travel, $this->showSafety() ? $this->safetyEvents() : [], $this->isAssets() ? $this->assetEvents() : []);
     }
 
     // Safety & Security's own "renewals": fire safety items that have expired or expire within 30 days.
@@ -355,6 +371,46 @@ class CalendarController extends BaseController
         usort($out, fn($a, $b) => strcmp($a['start'], $b['start']));
 
         return array_slice($out, 0, 5);
+    }
+
+    // Asset Acquisition and Monitoring: open motor pool work orders and upcoming vehicle / equipment service dates.
+    private function assetEvents(): array
+    {
+        $events = [];
+        $push = function (string $kind, string $title, string $date, string $zone, string $purpose, ?string $status = null) use (&$events) {
+            if ($date === '') return;
+            $color = self::CATEGORY_COLORS[$kind];
+            $events[] = [
+                'id' => 'as-' . count($events), 'title' => $title, 'start' => $date,
+                'backgroundColor' => $color, 'borderColor' => $color,
+                'extendedProps' => ['type' => $kind, 'zone' => $zone, 'purpose' => $purpose, 'status' => $status],
+            ];
+        };
+
+        $vehicles = [];
+        foreach ((new VehicleModel())->findAll() as $v) $vehicles[$v['id']] = $v['vehicle_name'] . ' (' . $v['plate_no'] . ')';
+        $equipment = [];
+        foreach ((new MechanicalEquipmentModel())->findAll() as $e) $equipment[$e['id']] = $e['code'] . ' — ' . $e['name'];
+
+        foreach ((new MotorpoolWorkOrderModel())->whereIn('status', ['Pending', 'In Progress'])->findAll() as $w) {
+            $item = $w['wo_type'] === 'Vehicle Repair' ? ($vehicles[$w['vehicle_id']] ?? '—') : ($equipment[$w['equipment_id']] ?? '—');
+            $push('Maintenance', '🔧 ' . $w['wo_number'] . ' — ' . $item, substr($w['created_at'], 0, 10), $item, $w['issue'], $w['status']);
+        }
+
+        $latest = [];
+        foreach ((new VehicleMaintenanceModel())->orderBy('serviced_on', 'DESC')->findAll() as $m) {
+            $latest[$m['vehicle_id']][$m['service_type']] ??= $m['next_due'];
+        }
+        foreach ($latest as $vid => $types) {
+            foreach ($types as $service => $due) {
+                if ($due) $push('Check Due', '🚐 Check Due — ' . ($vehicles[$vid] ?? 'Vehicle'), $due, $vehicles[$vid] ?? 'Vehicle', $service);
+            }
+        }
+        foreach ((new MechanicalEquipmentModel())->findAll() as $e) {
+            if ($e['next_service']) $push('Check Due', '⚙️ Check Due — ' . $e['code'], $e['next_service'], $e['location'] ?: 'Motor Pool', $e['name'] . ' service');
+        }
+
+        return $events;
     }
 
     // Fire Safety dates: when each item was installed, when its next check is due, and when it expires.

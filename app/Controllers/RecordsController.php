@@ -52,9 +52,10 @@ class RecordsController extends BaseController
         // full cross-system audit trail every other role sees. Stats are
         // recomputed from the already-filtered list rather than the raw
         // borrow/report sources, since those aren't Janitorial-specific.
-        $scopedToJanitorial = strtolower((string) $this->session->get('role')) === 'janitorial';
-        if ($scopedToJanitorial) {
-            $activities = array_values(array_filter($activities, fn($a) => $a['module'] === 'Janitorial'));
+        $scopeModules = $this->scopeModules();
+        $scopedToJanitorial = $scopeModules === ['Janitorial'];
+        if ($scopeModules !== null) {
+            $activities = array_values(array_filter($activities, fn($a) => in_array($a['module'], $scopeModules, true)));
 
             $today = date('Y-m-d');
             $stats = [
@@ -91,9 +92,95 @@ class RecordsController extends BaseController
             'activities'          => $activities,
             'reportRecords'       => $reportRecords,
             'scopedToJanitorial'  => $scopedToJanitorial,
+            'scopeModules'        => $scopeModules,
             'flash_success'       => session()->getFlashdata('success'),
             'flash_error'         => session()->getFlashdata('error'),
         ]);
+    }
+
+    // Roles that only see their own department's records in the Information Hub (null = everything).
+    private function scopeModules(): ?array
+    {
+        return match (strtolower((string) $this->session->get('role'))) {
+            'janitorial' => ['Janitorial'],
+            'assets'     => ['Vehicle', 'Motor Pool'],
+            'sports'     => ['Sports'],
+            default      => null,
+        };
+    }
+
+    // Sports Equipment Monitoring: the sports equipment itself and every borrow / return of it.
+    private function sportsActivities(): array
+    {
+        $out = [];
+        $tools = [];
+        foreach ($this->toolsModel->where('category', 'Sports Equipment')->findAll() as $t) $tools[$t['id']] = $t;
+        foreach ($tools as $t) {
+            if (!empty($t['is_archived'])) continue;
+            $out[] = [
+                'type' => 'sports', 'id' => $t['id'], 'date' => $t['last_activity_at'] ?: ($t['created_at'] ?? null), 'module' => 'Sports', 'kind' => 'Record',
+                'record' => ($t['asset_code'] ? $t['asset_code'] . ' — ' : '') . $t['asset_name'], 'record_sub' => ($t['location'] ?: 'No location') . ' · ' . ($t['condition_status'] ?: '—'),
+                'action' => 'Equipment', 'performed_by' => $t['custodian'] ?: '—', 'status' => $t['availability'], 'is_archived' => false, 'disposal_status' => 'None',
+            ];
+        }
+        if ($tools) {
+            foreach ($this->borrowModel->whereIn('tool_id', array_keys($tools))->where('is_archived', 0)->orderBy('id', 'DESC')->findAll() as $b) {
+                $t = $tools[$b['tool_id']];
+                $out[] = [
+                    'type' => 'sportsborrow', 'id' => $b['id'], 'date' => $b['borrowed_date'], 'module' => 'Sports', 'kind' => 'Record',
+                    'record' => $t['asset_name'], 'record_sub' => 'Due back ' . ($b['expected_return'] ? date('M j, Y', strtotime($b['expected_return'])) : '—') . ($b['department'] ? ' · ' . $b['department'] : ''),
+                    'action' => 'Borrowing', 'performed_by' => $b['borrower'] ?: '—', 'status' => $b['status'], 'is_archived' => false, 'disposal_status' => 'None',
+                ];
+            }
+        }
+
+        return $out;
+    }
+
+    // Asset Acquisition and Monitoring records: trips, vehicle maintenance, motor pool work orders and equipment.
+    private function assetActivities(): array
+    {
+        $out = [];
+        $stamp = fn($d) => $d ?: null;
+
+        $vehicles = [];
+        foreach ($this->vehicleModel->findAll() as $v) $vehicles[$v['id']] = $v['vehicle_name'] . ' (' . $v['plate_no'] . ')';
+        $equipment = [];
+        foreach ((new \App\Models\MechanicalEquipmentModel())->findAll() as $e) $equipment[$e['id']] = $e['code'] . ' — ' . $e['name'];
+
+        foreach ((new \App\Models\MotorpoolWorkOrderModel())->orderBy('id', 'DESC')->findAll() as $w) {
+            $item = $w['wo_type'] === 'Vehicle Repair' ? ($vehicles[$w['vehicle_id']] ?? '—') : ($equipment[$w['equipment_id']] ?? '—');
+            $out[] = [
+                'type' => 'motorpool', 'id' => $w['id'], 'date' => $stamp($w['updated_at'] ?: $w['created_at']), 'module' => 'Motor Pool', 'kind' => 'Record',
+                'record' => $w['wo_number'] . ' — ' . $item, 'record_sub' => $w['wo_type'] . ': ' . $w['issue'], 'action' => 'Work Order',
+                'performed_by' => $w['requested_by'], 'status' => $w['status'], 'is_archived' => false, 'disposal_status' => 'None',
+            ];
+        }
+        foreach ((new \App\Models\MechanicalEquipmentModel())->findAll() as $e) {
+            $out[] = [
+                'type' => 'equipment', 'id' => $e['id'], 'date' => $stamp($e['created_at']), 'module' => 'Motor Pool', 'kind' => 'Record',
+                'record' => $e['code'] . ' — ' . $e['name'], 'record_sub' => $e['equipment_type'] . ($e['location'] ? ' · ' . $e['location'] : ''), 'action' => 'Equipment',
+                'performed_by' => '—', 'status' => $e['status'], 'is_archived' => false, 'disposal_status' => 'None',
+            ];
+        }
+        foreach ((new \App\Models\VehicleMaintenanceModel())->orderBy('serviced_on', 'DESC')->findAll() as $m) {
+            $out[] = [
+                'type' => 'maintenance', 'id' => $m['id'], 'date' => $stamp($m['serviced_on']), 'module' => 'Vehicle', 'kind' => 'Record',
+                'record' => $m['service_type'] . ' — ' . ($vehicles[$m['vehicle_id']] ?? 'Vehicle'),
+                'record_sub' => $m['odometer_km'] !== null ? number_format((float) $m['odometer_km']) . ' km' : 'Vehicle maintenance',
+                'action' => 'Maintenance', 'performed_by' => $m['performed_by'] ?: '—', 'status' => 'Completed', 'is_archived' => false, 'disposal_status' => 'None',
+            ];
+        }
+        foreach ((new \App\Models\TravelModel())->getAllWithDetails() as $t) {
+            $out[] = [
+                'type' => 'trip', 'id' => $t['id'], 'date' => $stamp($t['travel_date']), 'module' => 'Vehicle', 'kind' => 'Record',
+                'record' => $t['trip_id'] . ' — ' . $t['destination'],
+                'record_sub' => ($t['driver_name'] ?: 'No driver') . ' · ' . ($t['vehicle_name'] ?: 'No vehicle'),
+                'action' => 'Trip Ticket', 'performed_by' => $t['requester_name'] ?: '—', 'status' => $t['status'], 'is_archived' => false, 'disposal_status' => 'None',
+            ];
+        }
+
+        return $out;
     }
 
     // Builds the exact same unified activity rows the Information Hub table
@@ -270,6 +357,8 @@ class RecordsController extends BaseController
             ];
         }
 
+        $activities = array_merge($activities, $this->assetActivities(), $this->sportsActivities());
+
         usort($activities, function ($a, $b) {
             return (strtotime($b['date'] ?? '') ?: 0) <=> (strtotime($a['date'] ?? '') ?: 0);
         });
@@ -376,8 +465,8 @@ class RecordsController extends BaseController
         // Same Janitorial-only scoping as index() — a restricted role
         // shouldn't be able to export other modules' records just by
         // editing the query string.
-        if (strtolower((string) $this->session->get('role')) === 'janitorial') {
-            $activities = array_values(array_filter($activities, fn($a) => $a['module'] === 'Janitorial'));
+        if (($scopeModules = $this->scopeModules()) !== null) {
+            $activities = array_values(array_filter($activities, fn($a) => in_array($a['module'], $scopeModules, true)));
         }
 
         $filtered = array_values(array_filter($activities, function ($a) use ($slug, $module, $kind, $status, $date, $dateFrom, $dateTo, $search) {

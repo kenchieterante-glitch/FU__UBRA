@@ -5,6 +5,8 @@
 $stats = $stats ?? ['total_records' => 0, 'archived_records' => 0, 'reports_generated' => 0, 'today_activities' => 0];
 $activities = $activities ?? [];
 $scopedToJanitorial = $scopedToJanitorial ?? false;
+$scopeModules = $scopeModules ?? null;
+$modButtons = ['Tools' => ['tools', 'bi-wrench-adjustable'], 'Vehicle' => ['vehicle', 'bi-truck'], 'Motor Pool' => ['motor-pool', 'bi-gear-wide-connected'], 'Sports' => ['sports', 'bi-trophy-fill'], 'Safety' => ['safety', 'bi-shield-check'], 'Janitorial' => ['janitorial', 'bi-brush'], 'Personnel' => ['personnel', 'bi-people-fill']];
 $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
 ?>
 
@@ -14,7 +16,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
     <div class="page-header">
         <div>
             <h1>Information Hub</h1>
-            <p class="page-subtitle"><?= $scopedToJanitorial ? 'Janitorial records and activity only.' : 'View, manage and generate reports for all modules in one place.' ?></p>
+            <p class="page-subtitle"><?= $scopedToJanitorial ? 'Janitorial records and activity only.' : ($scopeModules ? implode(' and ', $scopeModules) . ' records and activity only.' : 'View, manage and generate reports for all modules in one place.') ?></p>
         </div>
     </div>
 
@@ -45,7 +47,14 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
     <!-- ── FILTER BAR ───────────────────────────────────────────── -->
     <div class="rec-filter-bar">
         <div class="rec-filter-fields">
-            <?php if (!$scopedToJanitorial): ?>
+            <?php if ($scopeModules && count($scopeModules) > 1): ?>
+            <div class="rec-icon-filter" id="moduleFilterGroup" data-target="module">
+                <button type="button" class="rec-icon-btn active" data-value="" title="All"><i class="bi bi-grid-fill"></i></button>
+                <?php foreach ($scopeModules as $m): [$mv, $mi] = $modButtons[$m]; ?>
+                <button type="button" class="rec-icon-btn" data-value="<?= esc($mv) ?>" title="<?= esc($m) ?>"><i class="bi <?= $mi ?>"></i></button>
+                <?php endforeach; ?>
+            </div>
+            <?php elseif (!$scopeModules): ?>
             <div class="rec-icon-filter" id="moduleFilterGroup" data-target="module">
                 <button type="button" class="rec-icon-btn active" data-value="" title="All Modules"><i class="bi bi-grid-fill"></i></button>
                 <button type="button" class="rec-icon-btn" data-value="tools" title="Tools"><i class="bi bi-wrench-adjustable"></i></button>
@@ -69,6 +78,11 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                 <option value="approved">Approved</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
+                <option value="in-progress">In Progress</option>
+                <option value="in-transit">In Transit</option>
+                <option value="submitted">Submitted</option>
+                <option value="operational">Operational</option>
+                <option value="needs-repair">Needs Repair</option>
                 <option value="generated">Generated</option>
                 <option value="archived">Archived</option>
                 <option value="disposed">Disposed</option>
@@ -126,6 +140,8 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                             $modIcon = match ($act['module']) {
                                 'Tools'      => 'bi-wrench-adjustable',
                                 'Vehicle'    => 'bi-truck',
+                                'Motor Pool' => 'bi-gear-wide-connected',
+                                'Sports'     => 'bi-trophy-fill',
                                 'Safety'     => 'bi-shield-check',
                                 'Janitorial' => 'bi-brush',
                                 'Personnel'  => 'bi-people-fill',
@@ -273,8 +289,9 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
             <div class="form-group">
                 <label>Which module do you want to export?</label>
                 <select id="exportModuleSelect">
-                    <?php if ($scopedToJanitorial): ?>
-                        <option value="janitorial">Janitorial</option>
+                    <?php if ($scopeModules): ?>
+                        <?php if (count($scopeModules) > 1): ?><option value="">All my modules</option><?php endif; ?>
+                        <?php foreach ($scopeModules as $m): ?><option value="<?= esc($modButtons[$m][0]) ?>"><?= esc($m) ?></option><?php endforeach; ?>
                     <?php else: ?>
                         <option value="">All Modules</option>
                         <option value="tools">Tools</option>

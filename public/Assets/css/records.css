@@ -683,3 +683,7 @@
 .btn-submit:hover {
     background: var(--maroon-dark);
 }
+
+.mod-motor-pool { background: #ffedd5; color: #9a3412; }
+
+.mod-sports { background: #e0f2fe; color: #075985; }
