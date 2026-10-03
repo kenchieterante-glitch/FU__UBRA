@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 <div class="page-header">
   <div>
-    <h1>Facilities Status</h1>
+    <h1><?= esc($page_title ?? 'Facilities Status') ?></h1>
     <p class="page-subtitle">Click a box to see the records behind it.</p>
   </div>
 </div>
@@ -83,4 +83,6 @@ function setupStatusCarousel() {
 }
 document.addEventListener('DOMContentLoaded', setupStatusCarousel);
 </script>
+<script src="<?= base_url('Assets/js/table-tools.js') ?>?v=<?= @filemtime(FCPATH . 'Assets/js/table-tools.js') ?>"></script>
+<script>document.querySelectorAll('.status-table').forEach(attachTableTools);</script>
 <?= $this->endSection() ?>

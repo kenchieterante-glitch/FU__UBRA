@@ -2862,3 +2862,60 @@ tr.row-blink td {
 :is(.stat-cards ~ .fac-pane, .stat-cards ~ .bld-page, .status-tables, #statInline) .sj-table tbody tr:hover {
     background: var(--bg-subtle);
 }
+
+.tt-toolbar {
+    margin-bottom: 12px;
+}
+
+/* Status-list toolbar: open the filter box beside the funnel, level with it, instead of below it */
+.tt-toolbar .filter-popup {
+    top: 0;
+    right: calc(100% + 8px);
+}
+
+/* Floor plans (Safety & Security) */
+.fp-controls, .fp-placebar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:12px 0; }
+.fp-controls select, .fp-placebar select, .fp-placebar input[type=text] {
+    height: 38px; padding: 0 12px; border: 1px solid #d0d0d0; border-radius: 8px;
+    background: #fff; font-size: 14px; color: #222; font-family: inherit;
+}
+.fp-controls select { min-width: 240px; }
+.fp-placebar input[type=text] { min-width: 190px; }
+.fp-controls .sub-tabs { margin: 0; padding: 0; border: 0; }
+.fp-btn {
+    height: 38px; padding: 0 16px; border: 0; border-radius: 8px; cursor: pointer;
+    background: #7b0f1a; color: #fff; font-size: 14px; font-weight: 600; font-family: inherit;
+}
+.fp-btn:hover { background: #5e0b14; }
+.fp-btn.secondary { background: #fff; color: #7b0f1a; border: 1px solid #7b0f1a; }
+.fp-hint { color: #777; font-size: 13px; }
+.fp-edit { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+.fp-field label { display:block; font-size:12px; color:#777; margin-bottom:4px; }
+.fp-field select { width:100%; height:38px; padding:0 12px; border:1px solid #d0d0d0; border-radius:8px; background:#fff; font-size:14px; font-family:inherit; }
+.fp-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+.fp-dialog-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:100000; }
+.fp-dialog { background:#fff; border-radius:14px; padding:26px 28px 22px; width:min(380px,90vw); text-align:center; box-shadow:0 12px 40px rgba(0,0,0,.3); }
+.fp-dialog-icon { width:52px; height:52px; margin:0 auto 12px; border-radius:50%; background:#fdeaea; color:#c62828; display:flex; align-items:center; justify-content:center; font-size:24px; }
+.fp-dialog h4 { margin:0 0 6px; font-size:18px; color:#222; }
+.fp-dialog p { margin:0 0 20px; color:#666; font-size:14px; }
+.fp-dialog-actions { display:flex; gap:10px; justify-content:center; }
+.fp-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#2e7d32; color:#fff; padding:10px 20px; border-radius:8px; font-size:14px; font-weight:600; z-index:100001; box-shadow:0 4px 14px rgba(0,0,0,.25); }
+.fp-toast.bad { background:#c62828; }
+.fp-tab-alert { color:#d32f2f; font-weight:700; margin-left:4px; }
+.sub-tab.active .fp-tab-alert { color:#fff; background:#d32f2f; border-radius:10px; padding:0 6px; }
+
+.fp-field input[type=date], .fp-placebar input[type=date] { height:38px; padding:0 10px; border:1px solid #d0d0d0; border-radius:8px; background:#fff; font-size:14px; font-family:inherit; width:100%; box-sizing:border-box; }
+.fp-placebar input[type=date] { width:auto; }
+.fp-mark-alert { position:absolute; top:-12px; right:-10px; font-size:15px; line-height:1; background:#fff; border-radius:50%; width:17px; height:17px; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,.4); }
+
+/* Record details popup for status tables */
+.tt-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:100000; padding:16px; }
+.tt-modal { background:#fff; border-radius:14px; width:min(560px,100%); max-height:85vh; overflow:auto; box-shadow:0 12px 40px rgba(0,0,0,.3); }
+.tt-modal-head { display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-bottom:1px solid #eee; }
+.tt-modal-head h3 { margin:0; font-size:17px; color:#7b0f1a; }
+.tt-modal-x { border:0; background:none; font-size:26px; line-height:1; color:#888; cursor:pointer; }
+.tt-modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px 22px; padding:20px 22px 24px; }
+.tt-k { font-size:12px; color:#777; margin-bottom:3px; }
+.tt-v { font-size:14px; font-weight:600; color:#222; word-break:break-word; }
+@media (max-width:520px) { .tt-modal-grid { grid-template-columns:1fr; } }
+.fp-controls #fpPlaceBtn { margin-left:auto; }

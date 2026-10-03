@@ -1060,3 +1060,6 @@
 .cal-toast.toast-error {
     background: var(--danger);
 }
+.edp-installed { background: #ccfbf1; color: #0f766e; }
+.edp-checkdue  { background: #fef3c7; color: #92400e; }
+.edp-expires   { background: #ffe4e6; color: #9f1239; }

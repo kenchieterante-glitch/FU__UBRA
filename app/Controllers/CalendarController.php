@@ -2,6 +2,9 @@
 
 namespace App\Controllers;
 
+use App\Models\FireExtinguisherModel;
+use App\Models\FloorPlanMarkerModel;
+use App\Models\SafetyEquipmentModel;
 use App\Models\VehicleModel;
 use App\Models\UserModel;
 use App\Models\JanitorialAssignmentModel;
@@ -23,7 +26,21 @@ class CalendarController extends BaseController
         'Cleaning'        => '#16a34a',
         'Urgent Cleaning' => '#dc2626',
         'Travel'          => '#0891b2',
+        'Installed'       => '#0d9488',
+        'Check Due'       => '#f59e0b',
+        'Expires'         => '#be123c',
     ];
+
+    // Safety & Security does not handle janitorial work, so cleaning stays off its calendar.
+    private function isSecurity(): bool
+    {
+        return strtolower((string) $this->session->get('role')) === 'security';
+    }
+
+    private function showSafety(): bool
+    {
+        return in_array(strtolower((string) $this->session->get('role')), ['security', 'administrator'], true);
+    }
 
     // The only Janitorial-linked account today — cleaning schedules created
     // from the Calendar are assigned to, and notify, this account.
@@ -45,6 +62,10 @@ class CalendarController extends BaseController
             'events_json'      => $this->jsonForScript($this->persistedEvents()),
             'flash_success'    => $this->session->getFlashdata('success'),
             'pending_renewals' => $this->pendingVehicleRenewals(),
+            'is_security'      => $this->isSecurity(),
+            'show_safety'      => $this->showSafety(),
+            'safety_renewals'  => $this->isSecurity() ? $this->safetyRenewals() : [],
+            'safety_upcoming'  => $this->isSecurity() ? $this->safetyUpcoming() : [],
             // Real people, with contact numbers when on file — power the
             // "Notify Driver" / "Notify Cleaning Personnel" suggested-action
             // pickers so they actually target someone instead of a hardcoded
@@ -127,6 +148,10 @@ class CalendarController extends BaseController
     {
         if (!$this->session->get('isLoggedIn')) {
             return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        if ($this->isSecurity()) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'Cleaning schedules are not part of Safety and Security.']);
         }
 
         $data      = $this->request->getJSON(true) ?? [];
@@ -271,7 +296,7 @@ class CalendarController extends BaseController
 
     private function persistedEvents(): array
     {
-        $cleaning = array_map(fn($a) => $this->toEvent(
+        $cleaning = $this->isSecurity() ? [] : array_map(fn($a) => $this->toEvent(
             $a['id'],
             $a['assigned_zone'],
             $a['date_assigned'],
@@ -295,7 +320,81 @@ class CalendarController extends BaseController
         );
         $travel = array_map(fn($t) => $this->toTravelEvent($t), $trips);
 
-        return array_merge($cleaning, $maintenance, $travel);
+        return array_merge($cleaning, $maintenance, $travel, $this->showSafety() ? $this->safetyEvents() : []);
+    }
+
+    // Safety & Security's own "renewals": fire safety items that have expired or expire within 30 days.
+    private function safetyRenewals(): array
+    {
+        $limit = date('Y-m-d', strtotime('+30 days'));
+        $out = [];
+        foreach ((new FireExtinguisherModel())->where('expires_on <=', $limit)->findAll() as $e) {
+            $out[] = ['title' => 'Fire Extinguisher ' . $e['unit_id'], 'place' => $e['location'] . ' — ' . $e['floor'], 'date' => $e['expires_on']];
+        }
+        foreach ((new SafetyEquipmentModel())->where('expires_on <=', $limit)->findAll() as $e) {
+            $out[] = ['title' => $e['equipment_type'] . ' ' . $e['code'], 'place' => $e['building'] . ($e['floor'] ? ' — ' . $e['floor'] : ''), 'date' => $e['expires_on']];
+        }
+        usort($out, fn($a, $b) => strcmp($a['date'], $b['date']));
+        $today = date('Y-m-d');
+        foreach ($out as &$o) {
+            $o['expired'] = $o['date'] < $today;
+            $o['label'] = ($o['expired'] ? 'Expired ' : 'Expires ') . date('M j, Y', strtotime($o['date']));
+        }
+
+        return array_slice($out, 0, 8);
+    }
+
+    // Next few fire safety checks that are coming up.
+    private function safetyUpcoming(): array
+    {
+        $today = date('Y-m-d');
+        $out = [];
+        foreach ($this->safetyEvents() as $e) {
+            if ($e['start'] >= $today && $e['extendedProps']['type'] !== 'Installed') $out[] = $e;
+        }
+        usort($out, fn($a, $b) => strcmp($a['start'], $b['start']));
+
+        return array_slice($out, 0, 5);
+    }
+
+    // Fire Safety dates: when each item was installed, when its next check is due, and when it expires.
+    private function safetyEvents(): array
+    {
+        $events = [];
+        $add = function (string $kind, string $icon, string $date, string $code, string $equipment, string $building, ?string $floor) use (&$events) {
+            if ($date === '') return;
+            $color = self::CATEGORY_COLORS[$kind];
+            $events[] = [
+                'id'              => 'fs-' . count($events),
+                'title'           => "{$icon} {$kind} — {$code}",
+                'start'           => $date,
+                'backgroundColor' => $color,
+                'borderColor'     => $color,
+                'extendedProps'   => [
+                    'type'    => $kind,
+                    'zone'    => $building . ($floor ? " — {$floor}" : ''),
+                    'purpose' => "{$equipment} {$code}",
+                ],
+            ];
+        };
+
+        foreach ((new FireExtinguisherModel())->findAll() as $e) {
+            $add('Installed', '🧯', (string) $e['installed_on'], $e['unit_id'], 'Fire Extinguisher', $e['location'], $e['floor']);
+            $add('Check Due', '🧯', (string) $e['next_due'], $e['unit_id'], 'Fire Extinguisher', $e['location'], $e['floor']);
+            $add('Expires', '🧯', (string) $e['expires_on'], $e['unit_id'], 'Fire Extinguisher', $e['location'], $e['floor']);
+        }
+        foreach ((new SafetyEquipmentModel())->findAll() as $e) {
+            $icon = $e['equipment_type'] === 'Smoke Detector' ? '💨' : ($e['equipment_type'] === 'Fire Alarm' ? '🚨' : '🚪');
+            $add('Installed', $icon, (string) $e['installed_on'], $e['code'], $e['equipment_type'], $e['building'], $e['floor']);
+            $add('Check Due', $icon, (string) $e['next_check'], $e['code'], $e['equipment_type'], $e['building'], $e['floor']);
+            $add('Expires', $icon, (string) $e['expires_on'], $e['code'], $e['equipment_type'], $e['building'], $e['floor']);
+        }
+        foreach ((new FloorPlanMarkerModel())->findAll() as $m) {
+            if (!in_array($m['equipment_type'], ['Fire Extinguisher', 'Smoke Detector'], true)) continue;
+            $add('Expires', $m['equipment_type'] === 'Smoke Detector' ? '💨' : '🧯', (string) $m['expires_on'], $m['label'] ?: 'Plan marker #' . $m['id'], $m['equipment_type'], 'Floor plan', null);
+        }
+
+        return $events;
     }
 
     private function toTravelEvent(array $trip): array

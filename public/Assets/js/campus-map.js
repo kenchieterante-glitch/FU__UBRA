@@ -33,6 +33,7 @@ const MAP_BUILDINGS = [
 
 // opts: { imageUrl, statusByName, alertFloorsByName }
 //   statusByName      – building name -> 'Passed' | 'Needs Attention' (monthly check)
+//   hideFloorText – true to leave the floor names off the alert icons (hover title still lists them)
 //   alertFloorsByName – building name -> [floor, ...] that have an upcoming or overdue aircon alert (blinks)
 window.renderMapImage = function (svgId, opts) {
   const svg = document.getElementById(svgId);
@@ -156,7 +157,7 @@ window.renderMapImage = function (svgId, opts) {
         Object.entries({ x: cx, y: by + 17, 'text-anchor': 'middle', 'font-size': 36, 'font-weight': 800, fill: yellow ? '#1a1a1a' : '#ffffff' }).forEach(([k, v]) => bang.setAttribute(k, v));
         bang.textContent = '!';
         ag.appendChild(bang);
-        if (al.floors.length) {
+        if (al.floors.length && !opts.hideFloorText) {
           make('text', {
             x: bx, y: by + 86 + i * 28, 'text-anchor': 'middle', 'font-size': 24, 'font-weight': 700,
             fill: yellow ? '#a87800' : '#d10000', stroke: '#ffffff', 'stroke-width': 6, 'paint-order': 'stroke',

@@ -97,7 +97,7 @@ abstract class BaseController extends Controller
     protected function roleLandingUrl(): string
     {
         return match (strtolower($this->userRole())) {
-            'security'   => '/security-dashboard',
+            'security'   => '/security-dept',
             'tools'      => '/tools-dashboard',
             'facilities' => '/facilities',
             'janitorial' => '/janitorial-dashboard',

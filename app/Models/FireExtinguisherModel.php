@@ -9,7 +9,7 @@ class FireExtinguisherModel extends Model
     protected $useTimestamps = false;
     protected $allowedFields = [
         'unit_id', 'type', 'location', 'floor', 'department_id', 'weight_kg', 'last_inspection', 'next_due',
-        'status', 'year_acquired', 'inspector', 'assigned_guard', 'notes',
+        'status', 'year_acquired', 'installed_on', 'expires_on', 'inspector', 'assigned_guard', 'notes',
     ];
 
     public function getBuildingCounts(): array

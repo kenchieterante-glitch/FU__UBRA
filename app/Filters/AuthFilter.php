@@ -15,13 +15,13 @@ class AuthFilter implements FilterInterface
     // and any legacy role) is unrestricted, same as before these roles
     // existed — this map only ever narrows access, never widens it.
     private const ROLE_LANDING = [
-        'security'   => 'security-dashboard',
+        'security'   => 'security-dept',
         'tools'      => 'tools-dashboard',
         'facilities' => 'facilities',
     ];
 
     private const ROLE_ALLOWED_PREFIXES = [
-        'security'   => ['security-dashboard', 'safety', 'vehicles', 'gps', 'travel', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
+        'security'   => ['security-dept', 'security-dashboard', 'safety', 'vehicles', 'gps', 'travel', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
         'tools'      => ['tools-dashboard', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile'],
         'facilities' => ['facilities', 'facilities-dashboard', 'personnel', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
     ];

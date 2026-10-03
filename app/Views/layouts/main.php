@@ -27,6 +27,9 @@
       if ($seg === 'vehicles') {
           return $uri === 'vehicles' ? 'active' : '';
       }
+      if ($seg === 'security-dept') {
+          return $uri === 'security-dept' ? 'active' : '';
+      }
       if ($seg === 'facilities') {
           return $uri === 'facilities' ? 'active' : '';
       }
@@ -133,13 +136,29 @@
       $isFacilitiesSupervisor = $userRole === 'facilities';
       $isJanitorialSupervisor = $userRole === 'janitorial';
       $isFullAccess          = !$isSecurityHead && !$isToolsHead && !$isFacilitiesSupervisor && !$isJanitorialSupervisor;
-      $dashboardUrl          = $isSecurityHead ? 'security-dashboard'
+      $dashboardUrl          = $isSecurityHead ? 'security-dept'
         : ($isToolsHead ? 'tools-dashboard'
         : ($isFacilitiesSupervisor ? 'facilities'
         : ($isJanitorialSupervisor ? 'janitorial-dashboard' : 'dashboard')));
     ?>
     <nav class="sidebar-nav">
       <a href="<?= base_url($dashboardUrl) ?>" class="<?= navActive($dashboardUrl) ?>" data-tooltip="Dashboard"><i class="bi bi-grid-1x2"></i> <span class="nav-label">Dashboard</span></a>
+
+      <?php if ($isSecurityHead): ?>
+      <?php $isSecDeptSection = strpos($currentUri, 'security-dept/') === 0 && $currentUri !== 'security-dept/status'; ?>
+      <div class="nav-parent-group <?= $isSecDeptSection ? 'open' : '' ?>">
+        <a href="<?= base_url('security-dept/status') ?>" class="nav-parent-link <?= $isSecDeptSection ? 'open' : '' ?>" data-secdept-toggle data-tooltip="Safety & Security">
+          <i class="bi bi-shield-fill-check"></i>
+          <span class="nav-label">Safety &amp; Security</span>
+          <i class="bi bi-chevron-down nav-parent-caret"></i>
+        </a>
+        <div class="nav-submenu" id="secdept-submenu">
+          <a href="<?= base_url('security-dept/fire-safety') ?>" class="<?= navActive('security-dept/fire-safety') ?>"><i class="bi bi-fire"></i> <span class="nav-label">Fire Safety</span></a>
+          <a href="<?= base_url('security-dept/guard') ?>" class="<?= navActive('security-dept/guard') ?>"><i class="bi bi-shield-check"></i> <span class="nav-label">Guard Monitoring</span></a>
+          <a href="<?= base_url('security-dept/inspection') ?>" class="<?= navActive('security-dept/inspection') ?>"><i class="bi bi-clipboard2-check"></i> <span class="nav-label">Safety Inspection</span></a>
+        </div>
+      </div>
+      <?php endif; ?>
 
       <?php if ($isFacilitiesSupervisor): ?>
       <?php $isFacilitiesSection = strpos($currentUri, 'facilities/') === 0; ?>
@@ -175,23 +194,6 @@
         </div>
       </div>
       <?php endif; ?>
-
-      <?php if ($isFullAccess || $isSecurityHead): ?>
-      <?php $isVehicleSection = $currentUri === 'vehicles' || $currentUri === 'gps' || $currentUri === 'travel'; ?>
-      <div class="nav-parent-group <?= $isVehicleSection ? 'open' : '' ?>">
-        <a href="<?= base_url('vehicles') ?>" class="nav-parent-link <?= $isVehicleSection ? 'active open' : '' ?>" data-vehicle-toggle data-tooltip="Vehicle Management">
-          <i class="bi bi-truck"></i>
-          <span class="nav-label">Vehicle Management</span>
-          <i class="bi bi-chevron-down nav-parent-caret"></i>
-        </a>
-        <div class="nav-submenu" id="vehicle-submenu">
-          <a href="<?= base_url('vehicles') ?>" class="<?= navActive('vehicles') ?>"><i class="bi bi-truck"></i> <span class="nav-label">Vehicle Management</span></a>
-          <a href="<?= base_url('gps') ?>" class="<?= navActive('gps') ?>"><i class="bi bi-geo-alt-fill"></i> <span class="nav-label">GPS Tracker</span></a>
-          <a href="<?= base_url('travel') ?>" class="<?= navActive('travel') ?>"><i class="bi bi-ticket-perforated"></i> <span class="nav-label">Trip Ticket</span></a>
-        </div>
-      </div>
-      <?php endif; ?>
-
       <?php if ($isFullAccess || $isToolsHead || $isFacilitiesSupervisor): ?>
       <?php $isToolsSection = $currentUri === 'tools' || strpos($currentUri, 'tools/') === 0; ?>
       <div class="nav-parent-group <?= $isToolsSection ? 'open' : '' ?>">
@@ -209,7 +211,7 @@
       </div>
       <?php endif; ?>
 
-      <?php if ($isFullAccess || $isSecurityHead): ?>
+      <?php if ($isFullAccess): ?>
       <a href="<?= base_url('safety') ?>" class="<?= navActive('safety') ?>" data-tooltip="Maintenance"><i class="bi bi-wrench-adjustable"></i> <span class="nav-label">Maintenance</span></a>
       <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>" data-tooltip="Guard"><i class="bi bi-shield-check"></i> <span class="nav-label">Guard</span></a>
       <?php endif; ?>
@@ -826,31 +828,13 @@ if (personnelLink && personnelGroup) {
   });
 }
 
-const vehicleLink = document.querySelector('[data-vehicle-toggle]');
-const vehicleGroup = vehicleLink?.closest('.nav-parent-group');
-if (vehicleLink && vehicleGroup) {
-  vehicleLink.addEventListener('click', (event) => {
-    const currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
-    const isVehicleRoute = currentPath === 'vehicles' || currentPath === 'gps' || currentPath === 'travel';
-    const clickedCaret = event.target.closest('.nav-parent-caret');
-
-    if (clickedCaret || isVehicleRoute) {
-      event.preventDefault();
-      vehicleGroup.classList.toggle('open');
-      vehicleLink.classList.toggle('open');
-    }
-  });
-}
-
 const toolsLink = document.querySelector('[data-tools-toggle]');
 const toolsGroup = toolsLink?.closest('.nav-parent-group');
 if (toolsLink && toolsGroup) {
   toolsLink.addEventListener('click', (event) => {
-    const currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
-    const isToolsRoute = currentPath === 'tools' || currentPath.startsWith('tools/');
     const clickedCaret = event.target.closest('.nav-parent-caret');
 
-    if (clickedCaret || isToolsRoute) {
+    if (clickedCaret) {
       event.preventDefault();
       toolsGroup.classList.toggle('open');
       toolsLink.classList.toggle('open');
@@ -868,6 +852,18 @@ if (facilitiesLink && facilitiesGroup) {
       event.preventDefault();
       facilitiesGroup.classList.toggle('open');
       facilitiesLink.classList.toggle('open');
+    }
+  });
+}
+
+const secDeptLink = document.querySelector('[data-secdept-toggle]');
+const secDeptGroup = secDeptLink?.closest('.nav-parent-group');
+if (secDeptLink && secDeptGroup) {
+  secDeptLink.addEventListener('click', (event) => {
+    if (event.target.closest('.nav-parent-caret')) {
+      event.preventDefault();
+      secDeptGroup.classList.toggle('open');
+      secDeptLink.classList.toggle('open');
     }
   });
 }

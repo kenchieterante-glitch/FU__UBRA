@@ -1307,4 +1307,6 @@ function switchWoTab(key) {
 })();
 
 </script>
+<script src="<?= base_url('Assets/js/table-tools.js') ?>?v=<?= @filemtime(FCPATH . 'Assets/js/table-tools.js') ?>"></script>
+<script>const _si = document.getElementById('statInline'); if (_si) attachTableTools(_si);</script>
 <?= $this->endSection() ?>

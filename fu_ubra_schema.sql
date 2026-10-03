@@ -32,7 +32,7 @@ CREATE TABLE `activity_logs` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`department_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -57,7 +57,9 @@ INSERT INTO `activity_logs` VALUES
 (15,2,'Janitorial','Kenchie Terante: Added inventory item Tissue Paper','2026-09-21 14:31:36'),
 (16,2,'Settings','Kenchie Terante: Updated AI configuration','2026-09-30 21:58:05'),
 (17,2,'Settings','Kenchie Terante: Updated AI configuration','2026-09-30 22:21:49'),
-(18,2,'Safety','Kenchie Terante: Set installer for aircon unit #9 to Fernando Reyes','2026-10-01 02:23:18');
+(18,2,'Safety','Kenchie Terante: Set installer for aircon unit #9 to Fernando Reyes','2026-10-01 02:23:18'),
+(19,12,'Safety','Security Test Account: Key \"ZZ Key\" scanned out to ZZ Tester','2026-10-03 22:36:30'),
+(20,12,'Safety','Security Test Account: Key \"ZZ Key\" returned by ZZ Tester','2026-10-03 22:36:31');
 /*!40000 ALTER TABLE `activity_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -729,6 +731,8 @@ CREATE TABLE `fire_extinguishers` (
   `next_due` date DEFAULT NULL,
   `status` enum('New','Refillable','Defective','Missing') NOT NULL DEFAULT 'New',
   `year_acquired` year(4) DEFAULT NULL,
+  `installed_on` date DEFAULT NULL,
+  `expires_on` date DEFAULT NULL,
   `inspector` varchar(100) DEFAULT NULL,
   `assigned_guard` varchar(100) DEFAULT NULL,
   `notes` text DEFAULT NULL,
@@ -741,7 +745,7 @@ CREATE TABLE `fire_extinguishers` (
   KEY `idx_next_due` (`next_due`),
   KEY `fire_extinguishers_department_id_foreign` (`department_id`),
   CONSTRAINT `fire_extinguishers_department_id_foreign` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=78 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -751,56 +755,221 @@ CREATE TABLE `fire_extinguishers` (
 LOCK TABLES `fire_extinguishers` WRITE;
 /*!40000 ALTER TABLE `fire_extinguishers` DISABLE KEYS */;
 INSERT INTO `fire_extinguishers` VALUES
-(28,'FE-7FC697','CO2','College of Education Building','Ground Floor',NULL,10.0,'2026-08-03','2026-10-10','New',2026,'Apolinario Mabini','Fernando Navarro',NULL,'2026-08-02 23:05:23','2026-09-19 22:45:05'),
-(29,'FE-A3A248','CO2','College of Art & Sciences Building','Ground Floor',NULL,20.0,'2026-07-15','2027-01-01','New',2026,'Armand Perez','Josefa Garcia',NULL,'2026-08-02 23:12:49','2026-09-19 22:45:05'),
-(30,'FE-6E7EF8','Dry Chemical','Executive House','Ground Floor',NULL,2.0,'2026-08-31','2027-08-04','New',2026,'Cardo Garcia','Fernando Cruz',NULL,'2026-08-02 23:24:17','2026-09-19 22:45:05'),
-(31,'FE-14C453','CO2','Animation Lab / ROTC Office','Ground Floor',NULL,3.0,'2026-11-30','2027-08-04','New',2026,'Diego Fernandez','Cardo Navarro',NULL,'2026-08-02 23:26:39','2026-09-19 22:45:05'),
-(32,'FE-C5AED1','CO2','College of Business Economics and Accountancy','Ground Floor',NULL,5.0,'2026-10-12','2027-08-04','New',2026,'Fernando Reyes','Andres Garcia',NULL,'2026-08-02 23:28:26','2026-09-19 22:45:05'),
-(33,'FE-E368E2','CO2','College of Law Building','Ground Floor',NULL,3.0,'2026-09-25','2027-08-06','New',2026,'Jose Protacio Rizal Mercado y Realonzo Realonda','Diego Manalo',NULL,'2026-08-02 23:49:02','2026-09-19 22:45:05'),
-(34,'FE-B76F14','CO2','College of Education Building','2nd Floor',NULL,10.0,'2026-06-13','2027-06-13','New',2026,'Josefa Mendoza','Remedios Mendoza',NULL,'2026-08-04 00:19:26','2026-09-19 22:45:05'),
-(35,'FE-EEB8BB','Dry Chemical','College of Education Building','3rd Floor',NULL,5.0,'2026-04-05','2027-04-05','New',2026,'Juan dela Cruz','Isabel Castillo',NULL,'2026-08-04 00:19:26','2026-09-19 22:45:05'),
-(36,'FE-7E1DDD','CO2','College of Business Economics and Accountancy','2nd Floor',NULL,10.0,'2026-07-05','2027-07-05','Refillable',2026,'Maisie Therese Tigmo','Col. Arthur Miller',NULL,'2026-08-04 00:19:26','2026-09-05 18:01:26'),
-(37,'FE-A9AE7D','Foam','College of Art & Sciences Building','2nd Floor',NULL,6.0,'2026-01-30','2027-01-30','New',2026,'Remedios Mendoza','Fernando Navarro',NULL,'2026-08-04 00:19:26','2026-09-19 22:45:05'),
-(38,'FE-B8C6CB','CO2','College of Art & Sciences Building','3rd Floor',NULL,10.0,'2026-05-13','2027-05-13','New',2026,'Teresa Domingo','Josefa Garcia',NULL,'2026-08-04 00:19:27','2026-09-19 22:45:05'),
-(39,'FE-84A046','Dry Chemical','University Cafeteria, Bookstore, Sewing','Ground Floor',NULL,5.0,'2026-02-12','2027-02-12','New',2026,'Apolinario Mabini','Fernando Cruz',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(40,'FE-74B590','CO2','University Library','Ground Floor',NULL,10.0,'2026-02-23','2027-02-23','New',2025,'Armand Perez','Cardo Navarro',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(41,'FE-B2D5A3','CO2','University Library','2nd Floor',NULL,6.0,'2026-03-10','2027-03-10','Refillable',2023,'Cardo Garcia','Andres Garcia',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(42,'FE-C0E3F2','Wet Chemical','Guest House','Ground Floor',NULL,3.0,'2026-02-14','2027-02-14','New',2026,'Diego Fernandez','Diego Manalo',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(43,'FE-1D9DB5','Wet Chemical','HRM Kitchen','Ground Floor',NULL,6.0,'2026-02-21','2027-02-21','New',2025,'Fernando Reyes','Remedios Mendoza',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(44,'FE-9F925F','CO2','LG Sinco Computer Center Building','Ground Floor',NULL,10.0,'2026-01-29','2027-01-29','New',2026,'Jose Protacio Rizal Mercado y Realonzo Realonda','Isabel Castillo',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(45,'FE-6D0A41','CO2','LG Sinco Computer Center Building','2nd Floor',NULL,10.0,'2026-03-12','2027-03-12','New',2026,'Josefa Mendoza','Col. Arthur Miller',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(46,'FE-EAD4E5','Dry Chemical','Sofia Soller Sinco Hall','Ground Floor',NULL,6.0,'2026-06-17','2027-06-17','New',2024,'Juan dela Cruz','Fernando Navarro',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(47,'FE-79594D','Dry Chemical','Art & Science Laboratories / Audio Visual Rooms','Ground Floor',NULL,5.0,'2026-02-27','2027-02-27','Defective',2021,'Maisie Therese Tigmo','Josefa Garcia',NULL,'2026-08-04 03:43:30','2026-09-05 18:01:26'),
-(48,'FE-85BE4D','CO2','College of Nursing','Ground Floor',NULL,10.0,'2026-02-26','2027-02-26','New',2026,'Remedios Mendoza','Fernando Cruz',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(49,'FE-B4766A','Foam','College of Nursing','2nd Floor',NULL,6.0,'2026-03-02','2027-03-02','New',2025,'Teresa Domingo','Cardo Navarro',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(50,'FE-BE8D98','CO2','Administration Building','Ground Floor',NULL,10.0,'2026-07-09','2027-07-09','New',2026,'Apolinario Mabini','Andres Garcia',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(51,'FE-4FBD01','Dry Chemical','Administration Building','2nd Floor',NULL,5.0,'2026-06-24','2027-06-24','Refillable',2022,'Armand Perez','Diego Manalo',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(52,'FE-0C362A','Dry Chemical','Registrar\'s Office','Ground Floor',NULL,3.0,'2025-12-13','2026-12-13','New',2025,'Cardo Garcia','Remedios Mendoza',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(53,'FE-2F7B1B','CO2','Old College of Industrial Engineering and Technology','Ground Floor',NULL,10.0,'2026-04-14','2026-07-21','Missing',2020,'Diego Fernandez','Isabel Castillo',NULL,'2026-08-04 03:43:30','2026-09-19 22:45:05'),
-(54,'FE-B1541D','CO2','Parade Ground','Ground Floor',NULL,6.0,'2025-08-15','2026-08-15','New',2025,'Fernando Reyes','Col. Arthur Miller',NULL,'2026-08-04 04:47:13','2026-09-19 22:45:05'),
-(55,'FE-FC7DFC','Dry Chemical','Guest House','Ground Floor',NULL,5.0,'2025-08-08','2026-08-08','New',2024,'Jose Protacio Rizal Mercado y Realonzo Realonda','Fernando Navarro',NULL,'2026-08-04 04:47:13','2026-09-19 22:45:05'),
-(56,'FE-E0C2BE','CO2','Executive House','Ground Floor',NULL,10.0,'2025-09-17','2026-09-17','Refillable',2023,'Josefa Mendoza','Josefa Garcia',NULL,'2026-08-04 04:47:13','2026-09-19 22:45:05'),
-(57,'FE-D6F5E7','CO2','College of Agriculture and SIE','Ground Floor',NULL,10.0,'2026-07-24','2027-07-24','New',2026,'Juan dela Cruz','Fernando Cruz',NULL,'2026-08-04 05:09:24','2026-09-19 22:45:05'),
-(58,'FE-DF7293','Dry Chemical','College of Agriculture and SIE','2nd Floor',NULL,5.0,'2026-01-18','2027-01-18','New',2025,'Maisie Therese Tigmo','Cardo Navarro',NULL,'2026-08-04 05:09:24','2026-09-19 22:45:05'),
-(59,'FE-05FF77','CO2','College of Agriculture and SIE','3rd Floor',NULL,10.0,'2025-12-19','2026-12-19','Refillable',2022,'Remedios Mendoza','Andres Garcia',NULL,'2026-08-04 05:09:24','2026-09-19 22:45:05'),
-(60,'FE-33C25D','Dry Chemical','Museo de Vicente','Ground Floor',NULL,3.0,'2026-03-12','2027-03-12','New',2025,'Teresa Domingo','Diego Manalo',NULL,'2026-08-04 05:09:24','2026-09-19 22:45:05'),
-(61,'FE-01F04A','Wet Chemical','Bunk House','Ground Floor',NULL,3.0,'2026-05-04','2027-05-04','New',2026,'Apolinario Mabini','Remedios Mendoza',NULL,'2026-08-04 05:09:24','2026-09-19 22:45:05'),
-(62,'FE-072B05','CO2','Electric Pump House','Ground Floor',NULL,6.0,'2026-07-10','2027-07-10','New',2024,'Armand Perez','Isabel Castillo',NULL,'2026-08-04 05:09:24','2026-09-19 22:45:05'),
-(63,'FE-82161C','Dry Chemical','Business and Finance Office','Ground Floor',NULL,5.0,'2026-02-25','2027-02-25','New',2026,'Cardo Garcia','Col. Arthur Miller',NULL,'2026-08-04 05:09:24','2026-09-19 22:45:05'),
-(65,'FE-LIB-014','Dry Chemical','University Library','Ground Floor',NULL,10.0,'2026-09-05','2027-09-05','New',2026,'Diego Fernandez',NULL,NULL,'2026-09-05 19:22:18','2026-09-19 22:46:38'),
-(66,'FE-ADM-021','CO2','Administration building','Ground Floor',NULL,5.0,'2026-09-04','2027-09-04','New',2026,'Fernando Reyes',NULL,NULL,'2026-09-05 19:22:19','2026-09-19 22:45:05'),
-(67,'FE-B10AF1','CO2','College of Art & Sciences Building','4th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'Josefa Mendoza',NULL,NULL,'2026-09-19 22:45:28',NULL),
-(68,'FE-C22BE2','Dry Chemical','College of Business Economics and Accountancy','3rd Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'Juan dela Cruz',NULL,NULL,'2026-09-19 22:45:28',NULL),
-(69,'FE-D33CF3','Dry Chemical','College of Business Economics and Accountancy','4th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'Maisie Therese Tigmo',NULL,NULL,'2026-09-19 22:45:28',NULL),
-(70,'FE-E44D04','CO2','College of Education Building','4th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'Remedios Mendoza',NULL,NULL,'2026-09-19 22:45:28',NULL),
-(71,'FE-F55E15','CO2','College of Law Building','1st Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'Teresa Domingo',NULL,NULL,'2026-09-19 22:45:28',NULL),
-(72,'FE-A66F26','CO2','College of Nursing','3rd Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'Apolinario Mabini',NULL,NULL,'2026-09-19 22:45:28',NULL),
-(73,'FE-B77037','CO2','College of Nursing','4th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'Armand Perez',NULL,NULL,'2026-09-19 22:45:28',NULL),
-(74,'FE-C88148','CO2','College of Nursing','5th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'Cardo Garcia',NULL,NULL,'2026-09-19 22:45:28',NULL),
-(75,'FE-D99259','CO2','College of Nursing','6th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'Diego Fernandez',NULL,NULL,'2026-09-19 22:45:28',NULL),
-(76,'FE-EA0A6A','CO2','College of Nursing','7th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'Fernando Reyes',NULL,NULL,'2026-09-19 22:45:28',NULL),
-(77,'FE-FB1B7B','Wet Chemical','University Library','3rd Floor',NULL,6.0,'2026-08-15','2027-08-15','New',2026,'Jose Protacio Rizal Mercado y Realonzo Realonda',NULL,NULL,'2026-09-19 22:45:28',NULL);
+(28,'FE-7FC697','CO2','College of Education Building','Ground Floor',NULL,10.0,'2026-08-03','2026-10-10','New',2026,'2026-08-02','2027-04-18','Apolinario Mabini','Fernando Navarro',NULL,'2026-08-02 23:05:23','2026-10-04 00:59:50'),
+(29,'FE-A3A248','CO2','College of Art & Sciences Building','Ground Floor',NULL,20.0,'2026-07-15','2027-01-01','New',2026,'2026-08-02','2027-05-25','Armand Perez','Josefa Garcia',NULL,'2026-08-02 23:12:49','2026-10-04 00:59:50'),
+(30,'FE-6E7EF8','Dry Chemical','Executive House','Ground Floor',NULL,2.0,'2026-08-31','2027-08-04','New',2026,'2026-08-02','2027-07-01','Cardo Garcia','Fernando Cruz',NULL,'2026-08-02 23:24:17','2026-10-04 00:59:50'),
+(31,'FE-14C453','CO2','Animation Lab / ROTC Office','Ground Floor',NULL,3.0,'2026-11-30','2027-08-04','New',2026,'2026-08-02','2027-08-07','Diego Fernandez','Cardo Navarro',NULL,'2026-08-02 23:26:39','2026-10-04 00:59:50'),
+(32,'FE-C5AED1','CO2','College of Business Economics and Accountancy','Ground Floor',NULL,5.0,'2026-10-12','2027-08-04','New',2026,'2026-08-02','2027-09-13','Fernando Reyes','Andres Garcia',NULL,'2026-08-02 23:28:26','2026-10-04 00:59:50'),
+(33,'FE-E368E2','CO2','College of Law Building','Ground Floor',NULL,3.0,'2026-09-25','2027-08-06','New',2026,'2026-08-02','2026-09-15','Jose Protacio Rizal Mercado y Realonzo Realonda','Diego Manalo',NULL,'2026-08-02 23:49:02','2026-10-04 00:59:50'),
+(34,'FE-B76F14','CO2','College of Education Building','2nd Floor',NULL,10.0,'2026-06-13','2027-06-13','New',2026,'2026-08-04','2026-10-22','Josefa Mendoza','Remedios Mendoza',NULL,'2026-08-04 00:19:26','2026-10-04 00:59:50'),
+(35,'FE-EEB8BB','Dry Chemical','College of Education Building','3rd Floor',NULL,5.0,'2026-04-05','2027-04-05','New',2026,'2026-08-04','2026-11-28','Juan dela Cruz','Isabel Castillo',NULL,'2026-08-04 00:19:26','2026-10-04 00:59:50'),
+(36,'FE-7E1DDD','CO2','College of Business Economics and Accountancy','2nd Floor',NULL,10.0,'2026-07-05','2027-07-05','Refillable',2026,'2026-08-04','2027-01-04','Maisie Therese Tigmo','Col. Arthur Miller',NULL,'2026-08-04 00:19:26','2026-10-04 00:59:50'),
+(37,'FE-A9AE7D','Foam','College of Art & Sciences Building','2nd Floor',NULL,6.0,'2026-01-30','2027-01-30','New',2026,'2026-08-04','2027-02-10','Remedios Mendoza','Fernando Navarro',NULL,'2026-08-04 00:19:26','2026-10-04 00:59:50'),
+(38,'FE-B8C6CB','CO2','College of Art & Sciences Building','3rd Floor',NULL,10.0,'2026-05-13','2027-05-13','New',2026,'2026-08-04','2027-03-19','Teresa Domingo','Josefa Garcia',NULL,'2026-08-04 00:19:27','2026-10-04 00:59:50'),
+(39,'FE-84A046','Dry Chemical','University Cafeteria, Bookstore, Sewing','Ground Floor',NULL,5.0,'2026-02-12','2027-02-12','New',2026,'2026-08-04','2027-04-25','Apolinario Mabini','Fernando Cruz',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(40,'FE-74B590','CO2','University Library','Ground Floor',NULL,10.0,'2026-02-23','2027-02-23','New',2025,'2026-08-04','2027-06-01','Armand Perez','Cardo Navarro',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(41,'FE-B2D5A3','CO2','University Library','2nd Floor',NULL,6.0,'2026-03-10','2027-03-10','Refillable',2023,'2026-08-04','2027-07-08','Cardo Garcia','Andres Garcia',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(42,'FE-C0E3F2','Wet Chemical','Guest House','Ground Floor',NULL,3.0,'2026-02-14','2027-02-14','New',2026,'2026-08-04','2027-08-14','Diego Fernandez','Diego Manalo',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(43,'FE-1D9DB5','Wet Chemical','HRM Kitchen','Ground Floor',NULL,6.0,'2026-02-21','2027-02-21','New',2025,'2026-08-04','2027-09-20','Fernando Reyes','Remedios Mendoza',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(44,'FE-9F925F','CO2','LG Sinco Computer Center Building','Ground Floor',NULL,10.0,'2026-01-29','2027-01-29','New',2026,'2026-08-04','2026-09-22','Jose Protacio Rizal Mercado y Realonzo Realonda','Isabel Castillo',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(45,'FE-6D0A41','CO2','LG Sinco Computer Center Building','2nd Floor',NULL,10.0,'2026-03-12','2027-03-12','New',2026,'2026-08-04','2026-10-29','Josefa Mendoza','Col. Arthur Miller',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(46,'FE-EAD4E5','Dry Chemical','Sofia Soller Sinco Hall','Ground Floor',NULL,6.0,'2026-06-17','2027-06-17','New',2024,'2026-08-04','2026-12-05','Juan dela Cruz','Fernando Navarro',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(47,'FE-79594D','Dry Chemical','Art & Science Laboratories / Audio Visual Rooms','Ground Floor',NULL,5.0,'2026-02-27','2027-02-27','Defective',2021,'2026-08-04','2027-01-11','Maisie Therese Tigmo','Josefa Garcia',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(48,'FE-85BE4D','CO2','College of Nursing','Ground Floor',NULL,10.0,'2026-02-26','2027-02-26','New',2026,'2026-08-04','2027-02-17','Remedios Mendoza','Fernando Cruz',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(49,'FE-B4766A','Foam','College of Nursing','2nd Floor',NULL,6.0,'2026-03-02','2027-03-02','New',2025,'2026-08-04','2027-03-26','Teresa Domingo','Cardo Navarro',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(50,'FE-BE8D98','CO2','Administration Building','Ground Floor',NULL,10.0,'2026-07-09','2027-07-09','New',2026,'2026-08-04','2027-05-02','Apolinario Mabini','Andres Garcia',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(51,'FE-4FBD01','Dry Chemical','Administration Building','2nd Floor',NULL,5.0,'2026-06-24','2027-06-24','Refillable',2022,'2026-08-04','2027-06-08','Armand Perez','Diego Manalo',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(52,'FE-0C362A','Dry Chemical','Registrar\'s Office','Ground Floor',NULL,3.0,'2025-12-13','2026-12-13','New',2025,'2026-08-04','2027-07-15','Cardo Garcia','Remedios Mendoza',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(53,'FE-2F7B1B','CO2','Old College of Industrial Engineering and Technology','Ground Floor',NULL,10.0,'2026-04-14','2026-07-21','Missing',2020,'2026-08-04','2027-08-21','Diego Fernandez','Isabel Castillo',NULL,'2026-08-04 03:43:30','2026-10-04 00:59:50'),
+(54,'FE-B1541D','CO2','Parade Ground','Ground Floor',NULL,6.0,'2025-08-15','2026-08-15','New',2025,'2026-08-04','2027-09-27','Fernando Reyes','Col. Arthur Miller',NULL,'2026-08-04 04:47:13','2026-10-04 00:59:50'),
+(55,'FE-FC7DFC','Dry Chemical','Guest House','Ground Floor',NULL,5.0,'2025-08-08','2026-08-08','New',2024,'2026-08-04','2026-09-29','Jose Protacio Rizal Mercado y Realonzo Realonda','Fernando Navarro',NULL,'2026-08-04 04:47:13','2026-10-04 00:59:50'),
+(56,'FE-E0C2BE','CO2','Executive House','Ground Floor',NULL,10.0,'2025-09-17','2026-09-17','Refillable',2023,'2026-08-04','2026-11-05','Josefa Mendoza','Josefa Garcia',NULL,'2026-08-04 04:47:13','2026-10-04 00:59:50'),
+(57,'FE-D6F5E7','CO2','College of Agriculture and SIE','Ground Floor',NULL,10.0,'2026-07-24','2027-07-24','New',2026,'2026-08-04','2026-12-12','Juan dela Cruz','Fernando Cruz',NULL,'2026-08-04 05:09:24','2026-10-04 00:59:50'),
+(58,'FE-DF7293','Dry Chemical','College of Agriculture and SIE','2nd Floor',NULL,5.0,'2026-01-18','2027-01-18','New',2025,'2026-08-04','2027-01-18','Maisie Therese Tigmo','Cardo Navarro',NULL,'2026-08-04 05:09:24','2026-10-04 00:59:50'),
+(59,'FE-05FF77','CO2','College of Agriculture and SIE','3rd Floor',NULL,10.0,'2025-12-19','2026-12-19','Refillable',2022,'2026-08-04','2027-02-24','Remedios Mendoza','Andres Garcia',NULL,'2026-08-04 05:09:24','2026-10-04 00:59:50'),
+(60,'FE-33C25D','Dry Chemical','Museo de Vicente','Ground Floor',NULL,3.0,'2026-03-12','2027-03-12','New',2025,'2026-08-04','2027-04-02','Teresa Domingo','Diego Manalo',NULL,'2026-08-04 05:09:24','2026-10-04 00:59:50'),
+(61,'FE-01F04A','Wet Chemical','Bunk House','Ground Floor',NULL,3.0,'2026-05-04','2027-05-04','New',2026,'2026-08-04','2027-05-09','Apolinario Mabini','Remedios Mendoza',NULL,'2026-08-04 05:09:24','2026-10-04 00:59:50'),
+(62,'FE-072B05','CO2','Electric Pump House','Ground Floor',NULL,6.0,'2026-07-10','2027-07-10','New',2024,'2026-08-04','2027-06-15','Armand Perez','Isabel Castillo',NULL,'2026-08-04 05:09:24','2026-10-04 00:59:50'),
+(63,'FE-82161C','Dry Chemical','Business and Finance Office','Ground Floor',NULL,5.0,'2026-02-25','2027-02-25','New',2026,'2026-08-04','2027-07-22','Cardo Garcia','Col. Arthur Miller',NULL,'2026-08-04 05:09:24','2026-10-04 00:59:50'),
+(65,'FE-LIB-014','Dry Chemical','University Library','Ground Floor',NULL,10.0,'2026-09-05','2027-09-05','New',2026,'2026-09-05','2026-08-30','Diego Fernandez',NULL,NULL,'2026-09-05 19:22:18','2026-10-04 00:59:50'),
+(66,'FE-ADM-021','CO2','Administration building','Ground Floor',NULL,5.0,'2026-09-04','2027-09-04','New',2026,'2026-09-05','2026-10-06','Fernando Reyes',NULL,NULL,'2026-09-05 19:22:19','2026-10-04 00:59:50'),
+(67,'FE-B10AF1','CO2','College of Art & Sciences Building','4th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2026-11-12','Josefa Mendoza',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50'),
+(68,'FE-C22BE2','Dry Chemical','College of Business Economics and Accountancy','3rd Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2026-12-19','Juan dela Cruz',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50'),
+(69,'FE-D33CF3','Dry Chemical','College of Business Economics and Accountancy','4th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2027-01-25','Maisie Therese Tigmo',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50'),
+(70,'FE-E44D04','CO2','College of Education Building','4th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2027-03-03','Remedios Mendoza',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50'),
+(71,'FE-F55E15','CO2','College of Law Building','1st Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2027-04-09','Teresa Domingo',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50'),
+(72,'FE-A66F26','CO2','College of Nursing','3rd Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2027-05-16','Apolinario Mabini',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50'),
+(73,'FE-B77037','CO2','College of Nursing','4th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2027-06-22','Armand Perez',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50'),
+(74,'FE-C88148','CO2','College of Nursing','5th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2027-07-29','Cardo Garcia',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50'),
+(75,'FE-D99259','CO2','College of Nursing','6th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2027-09-04','Diego Fernandez',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50'),
+(76,'FE-EA0A6A','CO2','College of Nursing','7th Floor',NULL,10.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2026-09-06','Fernando Reyes',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50'),
+(77,'FE-FB1B7B','Wet Chemical','University Library','3rd Floor',NULL,6.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2026-10-13','Jose Protacio Rizal Mercado y Realonzo Realonda',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50');
 /*!40000 ALTER TABLE `fire_extinguishers` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `floor_plan_markers`
+--
+
+DROP TABLE IF EXISTS `floor_plan_markers`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `floor_plan_markers` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `plan_file` varchar(200) NOT NULL,
+  `equipment_type` enum('Fire Extinguisher','Fire Alarm','Smoke Detector','Emergency Exit Sign') NOT NULL,
+  `label` varchar(100) DEFAULT NULL,
+  `x_pct` decimal(6,3) NOT NULL,
+  `y_pct` decimal(6,3) NOT NULL,
+  `status` enum('Working','Needs Repair','Missing') NOT NULL DEFAULT 'Working',
+  `expires_on` date DEFAULT NULL,
+  `created_by` varchar(150) DEFAULT NULL,
+  `created_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `plan_file` (`plan_file`)
+) ENGINE=InnoDB AUTO_INCREMENT=146 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `floor_plan_markers`
+--
+
+LOCK TABLES `floor_plan_markers` WRITE;
+/*!40000 ALTER TABLE `floor_plan_markers` DISABLE KEYS */;
+INSERT INTO `floor_plan_markers` VALUES
+(14,'ADMINandARTS_Groundﬂoorplan.png','Fire Extinguisher','TEST FE-1',81.000,49.120,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(15,'ADMINandARTS_Groundﬂoorplan.png','Fire Extinguisher','TEST FE-2',68.660,49.000,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(16,'ADMINandARTS_Groundﬂoorplan.png','Fire Extinguisher','TEST FE-3',31.620,55.940,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(17,'ADMINandARTS_Groundﬂoorplan.png','Fire Extinguisher','TEST FE-4',75.670,56.330,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(18,'ADMINandARTS_Groundﬂoorplan.png','Smoke Detector','TEST SD-1',78.380,32.080,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(19,'ADMINandARTS_Groundﬂoorplan.png','Smoke Detector','TEST SD-2',73.190,32.770,'Working','2027-05-10','Test Data','2026-10-04 00:41:44'),
+(20,'ADMINandARTS_Groundﬂoorplan.png','Smoke Detector','TEST SD-3',48.820,33.090,'Missing',NULL,'Test Data','2026-10-04 00:41:44'),
+(21,'ADMINandARTS_Groundﬂoorplan.png','Smoke Detector','TEST SD-4',90.230,34.740,'Working','2027-04-04','Test Data','2026-10-04 00:41:44'),
+(22,'ADMINandARTS_SecondFloorPlan.png','Fire Extinguisher','TEST FE-1',65.590,31.620,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(23,'ADMINandARTS_SecondFloorPlan.png','Fire Extinguisher','TEST FE-2',70.230,31.560,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(24,'ADMINandARTS_SecondFloorPlan.png','Fire Extinguisher','TEST FE-3',9.930,32.590,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(25,'ADMINandARTS_SecondFloorPlan.png','Fire Extinguisher','TEST FE-4',35.540,32.600,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(26,'ADMINandARTS_SecondFloorPlan.png','Smoke Detector','TEST SD-1',61.330,33.120,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(27,'ADMINandARTS_SecondFloorPlan.png','Smoke Detector','TEST SD-2',77.810,34.280,'Working','2027-05-10','Test Data','2026-10-04 00:41:44'),
+(28,'ADMINandARTS_SecondFloorPlan.png','Smoke Detector','TEST SD-3',9.890,39.800,'Missing',NULL,'Test Data','2026-10-04 00:41:44'),
+(29,'ADMINandARTS_SecondFloorPlan.png','Smoke Detector','TEST SD-4',18.260,39.800,'Working','2027-04-04','Test Data','2026-10-04 00:41:44'),
+(30,'Agriculture Building_GroundFloorPlan.png','Fire Extinguisher','TEST FE-1',84.310,37.760,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(31,'Agriculture Building_GroundFloorPlan.png','Fire Extinguisher','TEST FE-2',31.630,79.050,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(32,'Agriculture Building_SecondFloorPlan.png','Fire Extinguisher','TEST FE-1',87.440,71.430,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(33,'Agriculture Building_SecondFloorPlan.png','Fire Extinguisher','TEST FE-2',23.910,79.350,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(34,'Agriculture Building_ThirdFloorPlan.png','Fire Extinguisher','TEST FE-1',5.980,77.500,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(35,'Arts and Sciences _FourthFloorPlan.png','Fire Extinguisher','TEST FE-1',63.230,63.160,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(36,'Arts and Sciences_GroundFloorPlan.png','Fire Extinguisher','TEST FE-1',16.970,35.610,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(37,'Arts and Sciences_GroundFloorPlan.png','Fire Extinguisher','TEST FE-2',18.990,36.510,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(38,'Arts and Sciences_GroundFloorPlan.png','Fire Extinguisher','TEST FE-3',71.860,40.600,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(39,'Arts and Sciences_GroundFloorPlan.png','Fire Extinguisher','TEST FE-4',66.040,53.900,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(40,'Arts and Sciences_GroundFloorPlan.png','Smoke Detector','TEST SD-1',74.310,28.450,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(41,'Arts and Sciences_GroundFloorPlan.png','Smoke Detector','TEST SD-2',9.640,28.600,'Working','2027-05-10','Test Data','2026-10-04 00:41:44'),
+(42,'Arts and Sciences_GroundFloorPlan.png','Smoke Detector','TEST SD-3',12.470,40.020,'Missing',NULL,'Test Data','2026-10-04 00:41:44'),
+(43,'Arts and Sciences_GroundFloorPlan.png','Smoke Detector','TEST SD-4',72.690,46.340,'Working','2027-04-04','Test Data','2026-10-04 00:41:44'),
+(44,'Arts and Sciences_SecondFloorPlan.png','Fire Extinguisher','TEST FE-1',17.190,35.630,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(45,'Arts and Sciences_SecondFloorPlan.png','Fire Extinguisher','TEST FE-2',66.900,48.820,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(46,'Arts and Sciences_SecondFloorPlan.png','Fire Extinguisher','TEST FE-3',19.840,64.700,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(47,'Arts and Sciences_SecondFloorPlan.png','Fire Extinguisher','TEST FE-4',70.790,67.010,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(48,'Arts and Sciences_SecondFloorPlan.png','Smoke Detector','TEST SD-1',10.230,23.070,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(49,'Arts and Sciences_SecondFloorPlan.png','Smoke Detector','TEST SD-2',75.010,32.310,'Working','2027-05-10','Test Data','2026-10-04 00:41:44'),
+(50,'Arts and Sciences_SecondFloorPlan.png','Smoke Detector','TEST SD-3',10.230,41.440,'Missing',NULL,'Test Data','2026-10-04 00:41:44'),
+(51,'Arts and Sciences_SecondFloorPlan.png','Smoke Detector','TEST SD-4',53.340,58.370,'Working','2027-04-04','Test Data','2026-10-04 00:41:44'),
+(52,'Arts and Sciences_ThirdFloorPlan.png','Fire Extinguisher','TEST FE-1',17.320,35.930,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(53,'Arts and Sciences_ThirdFloorPlan.png','Fire Extinguisher','TEST FE-2',68.140,40.180,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(54,'Arts and Sciences_ThirdFloorPlan.png','Fire Extinguisher','TEST FE-3',58.260,73.410,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(55,'Arts and Sciences_ThirdFloorPlan.png','Fire Extinguisher','TEST FE-4',15.930,88.410,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(56,'Arts and Sciences_ThirdFloorPlan.png','Smoke Detector','TEST SD-1',76.360,24.280,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(57,'Arts and Sciences_ThirdFloorPlan.png','Smoke Detector','TEST SD-2',10.100,39.450,'Working','2027-05-10','Test Data','2026-10-04 00:41:44'),
+(58,'Arts and Sciences_ThirdFloorPlan.png','Smoke Detector','TEST SD-3',76.840,46.180,'Missing',NULL,'Test Data','2026-10-04 00:41:44'),
+(59,'Arts and Sciences_ThirdFloorPlan.png','Smoke Detector','TEST SD-4',10.100,58.680,'Working','2027-04-04','Test Data','2026-10-04 00:41:44'),
+(60,'Business and Administration_FourthFloorPlan.png','Fire Extinguisher','TEST FE-1',26.440,82.510,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(61,'Business and Administration_FourthFloorPlan.png','Fire Extinguisher','TEST FE-2',73.900,82.490,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(62,'Business and Administration_FourthFloorPlan.png','Smoke Detector','TEST SD-1',35.410,50.020,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(63,'Business and Administration_FourthFloorPlan.png','Smoke Detector','TEST SD-2',64.430,50.020,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(64,'Business and Administration_FourthFloorPlan.png','Smoke Detector','TEST SD-3',14.330,57.780,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(65,'Business and Administration_FourthFloorPlan.png','Smoke Detector','TEST SD-4',85.980,57.770,'Working','2027-05-10','Test Data','2026-10-04 00:41:44'),
+(66,'Business and Administration_GroundFloorPlan.png','Fire Extinguisher','TEST FE-1',54.070,76.100,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(67,'Business and Administration_GroundFloorPlan.png','Smoke Detector','TEST SD-1',91.920,34.860,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(68,'Business and Administration_GroundFloorPlan.png','Smoke Detector','TEST SD-2',24.960,44.670,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(69,'Business and Administration_GroundFloorPlan.png','Smoke Detector','TEST SD-3',44.080,44.660,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(70,'Business and Administration_GroundFloorPlan.png','Smoke Detector','TEST SD-4',74.380,50.070,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(71,'Business and Administration_SecondFloorPlan.png','Fire Extinguisher','TEST FE-1',54.740,71.290,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(72,'Business and Administration_SecondFloorPlan.png','Smoke Detector','TEST SD-1',36.940,44.960,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(73,'Business and Administration_SecondFloorPlan.png','Smoke Detector','TEST SD-2',87.750,44.960,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(74,'Business and Administration_SecondFloorPlan.png','Smoke Detector','TEST SD-3',70.000,44.980,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(75,'Business and Administration_ThirdFloorPlan.png','Fire Extinguisher','TEST FE-1',53.520,77.470,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(76,'Business and Administration_ThirdFloorPlan.png','Smoke Detector','TEST SD-1',26.110,48.090,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(77,'Business and Administration_ThirdFloorPlan.png','Smoke Detector','TEST SD-2',44.370,48.090,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(78,'Business and Administration_ThirdFloorPlan.png','Smoke Detector','TEST SD-3',69.240,48.090,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(79,'Business and Administration_ThirdFloorPlan.png','Smoke Detector','TEST SD-4',87.490,48.090,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(80,'EDUC_FourthFloorPlan.png','Fire Extinguisher','TEST FE-1',45.900,38.620,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(81,'EDUC_FourthFloorPlan.png','Smoke Detector','TEST SD-1',19.470,60.630,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(82,'EDUC_FourthFloorPlan.png','Smoke Detector','TEST SD-2',83.310,61.270,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(83,'EDUC_FourthFloorPlan.png','Smoke Detector','TEST SD-3',44.290,64.560,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(84,'EDUC_FourthFloorPlan.png','Smoke Detector','TEST SD-4',64.790,64.560,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(85,'EDUC_GroundFloorPlan.png','Fire Extinguisher','TEST FE-1',4.260,37.410,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(86,'EDUC_GroundFloorPlan.png','Fire Extinguisher','TEST FE-2',67.700,41.950,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(87,'EDUC_GroundFloorPlan.png','Fire Extinguisher','TEST FE-3',27.300,55.270,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(88,'EDUC_GroundFloorPlan.png','Smoke Detector','TEST SD-1',13.740,32.680,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(89,'EDUC_GroundFloorPlan.png','Smoke Detector','TEST SD-2',38.270,59.090,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(90,'EDUC_GroundFloorPlan.png','Smoke Detector','TEST SD-3',82.140,60.010,'Working','2027-05-10','Test Data','2026-10-04 00:41:44'),
+(91,'EDUC_SecondFloorPlan.png','Fire Extinguisher','TEST FE-1',21.370,45.810,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(92,'EDUC_SecondFloorPlan.png','Fire Extinguisher','TEST FE-2',48.460,62.770,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(93,'EDUC_SecondFloorPlan.png','Smoke Detector','TEST SD-1',17.640,67.610,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(94,'EDUC_SecondFloorPlan.png','Smoke Detector','TEST SD-2',34.860,67.610,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(95,'EDUC_SecondFloorPlan.png','Smoke Detector','TEST SD-3',64.970,67.620,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(96,'EDUC_SecondFloorPlan.png','Smoke Detector','TEST SD-4',82.250,67.620,'Working','2027-05-10','Test Data','2026-10-04 00:41:44'),
+(97,'EDUC_ThirdFloorPlan.png','Fire Extinguisher','TEST FE-1',48.240,60.320,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(98,'EDUC_ThirdFloorPlan.png','Smoke Detector','TEST SD-1',14.090,65.340,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(99,'EDUC_ThirdFloorPlan.png','Smoke Detector','TEST SD-2',32.850,65.340,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(100,'EDUC_ThirdFloorPlan.png','Smoke Detector','TEST SD-3',67.020,65.340,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(101,'EDUC_ThirdFloorPlan.png','Smoke Detector','TEST SD-4',86.470,65.340,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(102,'IT Building_GroundFloorPlan.png','Fire Extinguisher','TEST FE-1',42.890,44.040,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(103,'IT Building_GroundFloorPlan.png','Fire Extinguisher','TEST FE-2',42.700,54.510,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(104,'IT Building_SecondFloorPlan.png','Fire Extinguisher','TEST FE-1',39.250,26.140,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(105,'IT Building_SecondFloorPlan.png','Fire Extinguisher','TEST FE-2',32.910,64.380,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(106,'IT Building_SecondFloorPlan.png','Fire Extinguisher','TEST FE-3',32.040,68.550,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(107,'IT Building_SecondFloorPlan.png','Smoke Detector','TEST SD-1',48.340,26.380,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(108,'IT Building_SecondFloorPlan.png','Smoke Detector','TEST SD-2',39.750,35.720,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(109,'IT Building_SecondFloorPlan.png','Smoke Detector','TEST SD-3',56.110,42.730,'Working','2027-05-10','Test Data','2026-10-04 00:41:44'),
+(110,'IT Building_SecondFloorPlan.png','Smoke Detector','TEST SD-4',31.020,44.840,'Missing',NULL,'Test Data','2026-10-04 00:41:44'),
+(111,'IT Building_ThirdFloorPlan.png','Fire Extinguisher','TEST FE-1',21.890,34.580,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(112,'IT Building_ThirdFloorPlan.png','Fire Extinguisher','TEST FE-2',84.060,46.020,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(113,'IT Building_ThirdFloorPlan.png','Smoke Detector','TEST SD-1',33.320,40.080,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(114,'IT Building_ThirdFloorPlan.png','Smoke Detector','TEST SD-2',78.870,41.870,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(115,'IT Building_ThirdFloorPlan.png','Smoke Detector','TEST SD-3',40.950,41.740,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(116,'IT Building_ThirdFloorPlan.png','Smoke Detector','TEST SD-4',85.280,42.880,'Working','2027-05-10','Test Data','2026-10-04 00:41:44'),
+(117,'Kennel Caf_GroundFloorPlan.png','Fire Extinguisher','TEST FE-1',68.740,40.790,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(118,'Kennel Caf_GroundFloorPlan.png','Fire Extinguisher','TEST FE-2',13.310,52.650,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(119,'Kennel Caf_SecondFloorPlan.png','Fire Extinguisher','TEST FE-1',33.720,25.530,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(120,'Kennel Caf_SecondFloorPlan.png','Fire Extinguisher','TEST FE-2',55.540,78.330,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(121,'Law Building_GroundFloorPlan.png','Fire Extinguisher','TEST FE-1',33.120,54.700,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(122,'Law Building_GroundFloorPlan.png','Fire Extinguisher','TEST FE-2',32.590,66.370,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(123,'Law Building_GroundFloorPlan.png','Smoke Detector','TEST SD-1',50.860,77.060,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(124,'Law Building_SecondFloorPlan.png','Fire Extinguisher','TEST FE-1',29.050,48.050,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(125,'Main Building_GroundFloorPlan.png','Fire Extinguisher','TEST FE-1',74.600,51.700,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(126,'Main Building_GroundFloorPlan.png','Fire Extinguisher','TEST FE-2',11.200,70.700,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(127,'Main Building_GroundFloorPlan.png','Smoke Detector','TEST SD-1',50.000,50.000,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(128,'Main Building_SecondFloorPlan.png','Fire Extinguisher','TEST FE-1',60.400,49.500,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(129,'Main Building_SecondFloorPlan.png','Fire Extinguisher','TEST FE-2',32.800,64.600,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(130,'Main Building_SecondFloorPlan.png','Fire Extinguisher','TEST FE-3',8.200,70.000,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(131,'Main Building_SecondFloorPlan.png','Fire Extinguisher','TEST FE-4',34.400,78.000,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(132,'Main Building_SecondFloorPlan.png','Smoke Detector','TEST SD-1',45.000,40.000,'Working','2026-10-24','Test Data','2026-10-04 00:41:44'),
+(133,'Main Library_Ground FloorPlan.png','Fire Extinguisher','TEST FE-1',54.190,31.120,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(134,'Main Library_Ground FloorPlan.png','Fire Extinguisher','TEST FE-2',77.580,37.420,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(135,'Main Library_Ground FloorPlan.png','Fire Extinguisher','TEST FE-3',32.390,89.430,'Working','2027-06-01','Test Data','2026-10-04 00:41:44'),
+(136,'Main Library_Ground FloorPlan.png','Fire Extinguisher','TEST FE-4',18.120,90.200,'Needs Repair','2027-03-01','Test Data','2026-10-04 00:41:44'),
+(137,'Main Library_SecondFloorPlan.png','Fire Extinguisher','TEST FE-1',61.910,90.560,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(138,'Main Library_ThirdFloorPlan.png','Fire Extinguisher','TEST FE-1',62.420,90.440,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(139,'Museum.png','Fire Extinguisher','TEST FE-1',32.870,37.830,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(140,'Museum.png','Fire Extinguisher','TEST FE-2',32.180,81.250,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(141,'SSS_GroundFloorPlan.png','Fire Extinguisher','TEST FE-1',87.000,21.580,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(142,'SSS_GroundFloorPlan.png','Fire Extinguisher','TEST FE-2',26.270,65.670,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(143,'SSS_SecondFloorPlan.png','Fire Extinguisher','TEST FE-1',47.850,30.720,'Working','2026-08-15','Test Data','2026-10-04 00:41:44'),
+(144,'SSS_SecondFloorPlan.png','Fire Extinguisher','TEST FE-2',47.570,83.880,'Working','2026-10-16','Test Data','2026-10-04 00:41:44'),
+(145,'Agriculture Building_ThirdFloorPlan.png','Fire Extinguisher',NULL,16.664,58.133,'Working',NULL,'Security Test Account','2026-10-04 00:47:48');
+/*!40000 ALTER TABLE `floor_plan_markers` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1242,7 +1411,7 @@ CREATE TABLE `key_borrow_logs` (
   KEY `key_borrow_logs_key_id_foreign` (`key_id`),
   CONSTRAINT `fk_keylog_trip` FOREIGN KEY (`trip_ticket_id`) REFERENCES `travel_requests` (`id`) ON DELETE SET NULL,
   CONSTRAINT `key_borrow_logs_key_id_foreign` FOREIGN KEY (`key_id`) REFERENCES `facility_keys` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1338,7 +1507,7 @@ CREATE TABLE `notifications` (
   KEY `idx_is_read` (`is_read`),
   KEY `idx_priority` (`priority`),
   KEY `idx_created` (`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=186 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=187 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1520,7 +1689,8 @@ INSERT INTO `notifications` VALUES
 (182,'Personnel Document Incomplete','Bayani Cruz has incomplete requirements (0/0 documents verified).','Head of Facilities','MODERATE','Pending','system',0,NULL,'2026-09-12 18:17:34'),
 (183,'Personnel Document Incomplete','John Doe has incomplete requirements (0/0 documents verified).','Head of Facilities','MODERATE','Pending','system',0,NULL,'2026-09-12 18:17:34'),
 (184,'Tool Borrowed','MacBook Pro 16 borrowed by Rico Dela Cruz (Athletics) — due back on Sep 13, 2026.','Tools & Equipment Office','MODERATE','Pending','system',1,'2026-09-19 17:51:26','2026-09-06 01:30:35'),
-(185,'Fire Extinguisher Expiring Soon','Fire extinguisher FE-7FC697 at College of Education Building is due for inspection/refill soon (next due 2026-10-10).','Safety Team','MODERATE','Pending','system',0,NULL,'2026-09-21 13:58:45');
+(185,'Fire Extinguisher Expiring Soon','Fire extinguisher FE-7FC697 at College of Education Building is due for inspection/refill soon (next due 2026-10-10).','Safety Team','MODERATE','Pending','system',0,NULL,'2026-09-21 13:58:45'),
+(186,'Aircon Needs Cleaning','Aircon unit AC-EXE-G1 at Executive House needs cleaning.','Maintenance Team','MODERATE','Pending','system',0,NULL,'2026-10-03 23:02:28');
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1984,6 +2154,94 @@ INSERT INTO `return_records` VALUES
 UNLOCK TABLES;
 
 --
+-- Table structure for table `safety_equipment`
+--
+
+DROP TABLE IF EXISTS `safety_equipment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `safety_equipment` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `equipment_type` enum('Fire Alarm','Smoke Detector','Emergency Exit Sign') NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `building` varchar(150) NOT NULL,
+  `floor` varchar(50) DEFAULT NULL,
+  `location_note` varchar(150) DEFAULT NULL,
+  `status` enum('Working','Needs Repair','Missing') NOT NULL DEFAULT 'Working',
+  `last_checked` date DEFAULT NULL,
+  `next_check` date DEFAULT NULL,
+  `installed_on` date DEFAULT NULL,
+  `expires_on` date DEFAULT NULL,
+  `remarks` text DEFAULT NULL,
+  `created_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `building` (`building`),
+  KEY `equipment_type` (`equipment_type`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `safety_equipment`
+--
+
+LOCK TABLES `safety_equipment` WRITE;
+/*!40000 ALTER TABLE `safety_equipment` DISABLE KEYS */;
+INSERT INTO `safety_equipment` VALUES
+(1,'Fire Alarm','FA-ADM-01','Administration Building','Ground Floor','Main lobby','Working','2026-09-03','2026-12-02','2026-10-03',NULL,NULL,'2026-10-03 22:30:52'),
+(2,'Fire Alarm','FA-LIB-01','University Library','2nd Floor','Reading room','Needs Repair','2026-07-15','2026-09-28','2026-10-03',NULL,'Siren is very weak','2026-10-03 22:30:52'),
+(3,'Fire Alarm','FA-NUR-01','College of Nursing','Ground Floor','Hallway','Working','2026-09-13','2026-12-12','2026-10-03',NULL,NULL,'2026-10-03 22:30:52'),
+(4,'Smoke Detector','SD-ADM-01','Administration Building','2nd Floor','Records room','Working','2026-09-08','2026-10-08','2026-10-03','2027-04-14',NULL,'2026-10-03 22:30:52'),
+(5,'Smoke Detector','SD-LAW-01','College of Law Building','Ground Floor','Faculty office','Missing','2026-07-05','2026-09-23','2026-10-03','2027-06-06','Detector removed, not replaced','2026-10-03 22:30:52'),
+(6,'Smoke Detector','SD-EDU-01','College of Education Building','3rd Floor','Computer room','Working','2026-08-24','2026-11-22','2026-10-03','2026-10-02',NULL,'2026-10-03 22:30:52'),
+(7,'Smoke Detector','SD-CAF-01','University Cafeteria, Bookstore, Sewing','Ground Floor','Kitchen','Needs Repair','2026-08-04','2026-10-06','2026-10-03','2026-11-24','Sensitive, false alarms','2026-10-03 22:30:52'),
+(8,'Emergency Exit Sign','ES-ADM-01','Administration Building','Ground Floor','Front exit','Working','2026-09-18','2027-01-01','2026-10-03',NULL,NULL,'2026-10-03 22:30:52'),
+(9,'Emergency Exit Sign','ES-LIB-01','University Library','Ground Floor','Back stairs','Needs Repair','2026-07-25','2026-10-01','2026-10-03',NULL,'Light is out','2026-10-03 22:30:52'),
+(10,'Emergency Exit Sign','ES-NUR-01','College of Nursing','2nd Floor','East stairs','Working','2026-09-23','2026-12-22','2026-10-03',NULL,NULL,'2026-10-03 22:30:52'),
+(11,'Emergency Exit Sign','FE-ADM-01','Administration Building','Ground Floor','Rear door','Working','2026-09-11','2026-12-07','2026-10-03',NULL,NULL,'2026-10-03 22:30:52'),
+(12,'Emergency Exit Sign','FE-LAW-01','College of Law Building','2nd Floor','Side stairwell','Working','2026-08-29','2026-10-07','2026-10-03',NULL,NULL,'2026-10-03 22:30:52'),
+(13,'Emergency Exit Sign','FE-LIB-01','University Library','Ground Floor','Back door','Needs Repair','2026-07-20','2026-09-25','2026-10-03',NULL,'Door sticks, hard to open','2026-10-03 22:30:52'),
+(14,'Emergency Exit Sign','FE-EDU-01','College of Education Building','Ground Floor','North corridor','Working','2026-09-05','2026-12-04','2026-10-03',NULL,NULL,'2026-10-03 22:30:52');
+/*!40000 ALTER TABLE `safety_equipment` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `safety_inspections`
+--
+
+DROP TABLE IF EXISTS `safety_inspections`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `safety_inspections` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `building` varchar(150) NOT NULL,
+  `inspection_month` char(7) NOT NULL,
+  `safety_status` enum('Safe','Needs Attention','Unsafe') NOT NULL,
+  `remarks` text DEFAULT NULL,
+  `inspected_by` varchar(150) NOT NULL,
+  `inspected_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `building` (`building`,`inspection_month`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `safety_inspections`
+--
+
+LOCK TABLES `safety_inspections` WRITE;
+/*!40000 ALTER TABLE `safety_inspections` DISABLE KEYS */;
+INSERT INTO `safety_inspections` VALUES
+(1,'Administration Building','2026-10','Safe',NULL,'Timothy Eraham','2026-10-03 22:30:52'),
+(2,'University Library','2026-10','Needs Attention','Fire alarm siren weak, exit sign light out','Timothy Eraham','2026-10-03 22:30:52'),
+(3,'College of Law Building','2026-10','Unsafe','Smoke detector missing in faculty office','Timothy Eraham','2026-10-03 22:30:52'),
+(4,'College of Nursing','2026-10','Safe',NULL,'Timothy Eraham','2026-10-03 22:30:52'),
+(5,'Administration Building','2026-09','Safe','All good last month','Timothy Eraham','2026-09-03 22:30:52'),
+(6,'University Library','2026-09','Safe',NULL,'Timothy Eraham','2026-09-03 22:30:52'),
+(7,'College of Law Building','2026-09','Needs Attention','Exit sign dim','Timothy Eraham','2026-09-03 22:30:52');
+/*!40000 ALTER TABLE `safety_inspections` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `safety_reports`
 --
 
@@ -2423,7 +2681,8 @@ INSERT INTO `users` VALUES
 (5,'Sherina Banosong','sherina.banosong@foundationu.com','facilities','20230407','$2y$10$X7B8Zl3W/OOxATcABKwwqeFOvn77LV15ujUCcwd7QmMk6vfqNJcm6','Facilities',NULL,'1788029598_fca15c5bcb9244960756.jpg','2026-08-29 16:33:30'),
 (9,'Timothy Eraham','timothy.eraham@foundationu.com','security','10005','$2y$10$bAEiq/MrHZxqBLT3Y8j4nOCk3EQ0Fn3KuGGdmva5GEJSVGEveyuMG','Security','Safety & Security','1788029522_d47e818ca26ab4f0a98e.jpg','2026-08-21 20:32:29'),
 (10,'Maisie Therese Tigmo','janitorial@fu-ubra.local','janitorial','10010','$2y$10$PCVcLtcX319cDb4FqgyZOuHDcy3bPj/JpC21itpZSOdVRo3EBFyGK','Janitorial',NULL,'1789909237_3e7efa2c8eab9ec54d1f.jpg','2026-09-20 20:53:31'),
-(11,'Facilities Test Account','facilities.test@foundationu.local','facilities_test','10020','$2y$10$bWPZG.CKHw8AShc0uYV.fO9xC4MD.LI8m7FfK2We8neMgh7LY5/Hy','Facilities','Facilities',NULL,'2026-10-03 15:00:55');
+(11,'Facilities Test Account','facilities.test@foundationu.local','facilities_test','10020','$2y$10$bWPZG.CKHw8AShc0uYV.fO9xC4MD.LI8m7FfK2We8neMgh7LY5/Hy','Facilities','Facilities',NULL,'2026-10-03 15:00:55'),
+(12,'Security Test Account','security.test@foundationu.local','security_test','10030','$2y$10$WdW62spkFCt0jlF5fOOaMOrOGqQ.65mq0epq6HWQSwf4k.7.W0Dy6','Security','Security',NULL,'2026-10-03 22:35:01');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2589,4 +2848,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-10-03 22:19:20
+-- Dump completed on 2026-10-04  1:07:30

@@ -45,9 +45,16 @@
         <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Inspection</span>
         <span class="legend-item"><span class="legend-dot" style="background:#7c3aed"></span> Maintenance</span>
         <span class="legend-item"><span class="legend-dot" style="background:#2563eb"></span> Compliance</span>
+        <?php if (empty($is_security)): ?>
         <span class="legend-item"><span class="legend-dot" style="background:#16a34a"></span> Cleaning</span>
         <span class="legend-item"><span class="legend-dot" style="background:#dc2626"></span> Urgent Cleaning</span>
+        <?php endif; ?>
         <span class="legend-item"><span class="legend-dot" style="background:#0891b2"></span> Travel</span>
+        <?php if (!empty($show_safety)): ?>
+        <span class="legend-item"><span class="legend-dot" style="background:#0d9488"></span> Installed</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Check Due</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#be123c"></span> Expires</span>
+        <?php endif; ?>
     </div>
 
     <!-- ── MAIN LAYOUT ───────────────────────────────────────────── -->
@@ -69,14 +76,27 @@
             <div class="sidebar-card">
                 <div class="sc-title">Upcoming Events</div>
                 <!-- Static maintenance placeholders (wired to maintenance module in a later step) -->
+                <?php if (!empty($is_security)): ?>
+                    <?php if (empty($safety_upcoming)): ?>
+                        <div class="empty-day"><i class="bi bi-calendar-check"></i> Nothing coming up.</div>
+                    <?php else: foreach ($safety_upcoming as $u): ?>
+                        <div class="upcoming-item">
+                            <span class="up-dot" style="background:<?= esc($u['backgroundColor']) ?>"></span>
+                            <div><div class="up-title"><?= esc($u['title']) ?></div><div class="up-sub"><?= esc(date('M j, Y', strtotime($u['start']))) ?> · <?= esc($u['extendedProps']['zone']) ?></div></div>
+                        </div>
+                    <?php endforeach; endif; ?>
+                <?php else: ?>
                 <div class="upcoming-item">
                     <span class="up-dot" style="background:#7c3aed"></span>
                     <div><div class="up-title">Van-03 Inspection</div><div class="up-sub">Scheduled</div></div>
                 </div>
+                <?php endif; ?>
+                <?php if (empty($is_security)): ?>
                 <div class="upcoming-item">
                     <span class="up-dot" style="background:#f59e0b"></span>
                     <div><div class="up-title">AC Cleaning – Bldg A</div><div class="up-sub">Routine</div></div>
                 </div>
+                <?php endif; ?>
             </div>
 
             <!-- Pending Renewals — real vehicles whose inspection is expired
@@ -84,7 +104,19 @@
                  since that decision belongs in Vehicle Management, not here. -->
             <div class="sidebar-card">
                 <div class="sc-title">Pending Renewals</div>
-                <?php if (empty($pending_renewals)): ?>
+                <?php if (!empty($is_security)): ?>
+                    <?php if (empty($safety_renewals)): ?>
+                        <div class="empty-day"><i class="bi bi-check-circle"></i> No fire safety renewals pending.</div>
+                    <?php else: foreach ($safety_renewals as $r): ?>
+                        <div class="pending-item">
+                            <div>
+                                <div class="pi-title"><?= esc($r['title']) ?></div>
+                                <div class="pi-sub"><?= esc($r['place']) ?> · <?= esc($r['label']) ?></div>
+                            </div>
+                            <a href="<?= base_url('security-dept/fire-safety') ?>" class="pi-action" title="Review in Fire Safety">Review →</a>
+                        </div>
+                    <?php endforeach; endif; ?>
+                <?php elseif (empty($pending_renewals)): ?>
                     <div class="empty-day"><i class="bi bi-check-circle"></i> No vehicle renewals pending.</div>
                 <?php else: ?>
                     <?php foreach ($pending_renewals as $v): ?>
@@ -148,7 +180,7 @@
                 </div>
                 <div class="ubra-section-title">Today's Summary</div>
                 <ul class="ubra-list">
-                    <li>Bldg A AC cleaning starts in <strong>2 days</strong>.</li>
+                    <?php if (empty($is_security)): ?><li>Bldg A AC cleaning starts in <strong>2 days</strong>.</li><?php endif; ?>
                     <li>1 maintenance schedule due <strong>next week</strong>.</li>
                 </ul>
                 <div class="ubra-section-title" style="margin-top:.9rem;">Suggested Actions</div>
@@ -158,11 +190,13 @@
                         <span class="ubra-btn-label">Notify Driver</span>
                         <span class="ubra-btn-arrow"><i class="bi bi-chevron-right"></i></span>
                     </button>
+                    <?php if (empty($is_security)): ?>
                     <button class="ubra-btn" onclick="openNotifyPicker('cleaning')">
                         <span class="ubra-btn-icon"><i class="bi bi-brush"></i></span>
                         <span class="ubra-btn-label">Notify Cleaning Personnel</span>
                         <span class="ubra-btn-arrow"><i class="bi bi-chevron-right"></i></span>
                     </button>
+                    <?php endif; ?>
                     <button class="ubra-btn primary" onclick="generateSummary()">
                         <span class="ubra-btn-icon"><i class="bi bi-file-earmark-text"></i></span>
                         <span class="ubra-btn-label">Generate Weekly Summary</span>
@@ -201,8 +235,10 @@
                         <option value="Inspection">Inspection</option>
                         <option value="Maintenance">Maintenance</option>
                         <option value="Compliance">Compliance</option>
+                        <?php if (empty($is_security)): ?>
                         <option value="Cleaning">Cleaning</option>
                         <option value="Urgent Cleaning">Urgent Cleaning</option>
+                        <?php endif; ?>
                     </select>
                 </div>
             </div>
@@ -361,6 +397,9 @@ const typeColors = {
     Cleaning:        '#16a34a',
     'Urgent Cleaning': '#dc2626',
     Travel:          '#0891b2',
+    Installed:       '#0d9488',
+    'Check Due':     '#f59e0b',
+    Expires:         '#be123c',
 };
 
 // ── FullCalendar init ──────────────────────────────────────────
