@@ -354,7 +354,7 @@
             <label for="supStatusFilter">Stock</label>
             <select id="supStatusFilter" onchange="applySupplyFilters()">
               <option value="">All</option>
-              <option value="OK">OK</option>
+              <option value="Good">Good</option>
               <option value="Out of Stock">Out of Stock</option>
             </select>
           </div>
@@ -378,12 +378,13 @@
     <div class="gc-title"><i class="bi bi-map"></i> Cleaning Map</div>
 <?php $zoomId = 'cleanMapSVG'; ?>
     <div class="map-zoom-row">
-      <select class="fac-select" onchange="zoomMapTo('<?= $zoomId ?>', this.value)" aria-label="Zoom to a building">
+      <select class="fac-select" onchange="facBuildingPicked(this.value, '<?= $zoomId ?>', 'cleanFloorFilter', 'clean')" aria-label="Zoom to a building">
         <option value="">— Select a Building —</option>
         <?php foreach ($buildings as $zb): ?>
           <option value="<?= esc($zb) ?>"><?= esc($zb) ?></option>
         <?php endforeach; ?>
       </select>
+      <select class="fac-select" id="cleanFloorFilter" onchange="facFloorPicked('clean')" aria-label="Floor"><option value="">All floors</option></select>
     </div>
     <div class="fac-map-wrap">
       <svg id="cleanMapSVG" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg>
@@ -482,7 +483,8 @@
       <div class="guard-card" style="padding:18px;margin-bottom:16px;">
         <div class="gc-title"><i class="bi bi-box-seam"></i> <?= esc($category) ?></div>
         <div class="table-wrap">
-          <table class="sj-table">
+          <table class="sj-table sup-table">
+            <colgroup><col style="width:30%"><col style="width:34%"><col style="width:18%"><col style="width:18%"></colgroup>
             <thead><tr><th>Item</th><th>Location</th><th>Stock</th><th>Status</th></tr></thead>
             <tbody>
               <?php foreach ($items as $it): ?>
@@ -491,8 +493,8 @@
                   <td><?= esc($it['building'] ?? '—') ?><?= !empty($it['floor']) ? ', ' . esc($it['floor']) : '' ?><?= !empty($it['place']) ? '<br><small class="text-muted">' . esc($it['place']) . '</small>' : '' ?></td>
                   <td><?= esc((string) $it['stock']) ?> <?= esc($it['unit']) ?></td>
                   <td>
-                    <?php if ($it['status'] === 'OK'): ?>
-                      <span class="inv-badge inv-ok">OK</span>
+                    <?php if ($it['status'] === 'Good'): ?>
+                      <span class="inv-badge inv-ok">Good</span>
                     <?php else: ?>
                       <span class="inv-badge inv-out">Out of Stock</span>
                     <?php endif; ?>
@@ -554,13 +556,15 @@
     <div class="gc-title"><i class="bi bi-map"></i> Building Map — <?= esc($inspection_month) ?></div>
 <?php $zoomId = 'facMapSVG'; ?>
     <div class="map-zoom-row">
-      <select class="fac-select" onchange="zoomMapTo('<?= $zoomId ?>', this.value)" aria-label="Zoom to a building">
+      <select class="fac-select" onchange="facBuildingPicked(this.value, '<?= $zoomId ?>', 'bldFloorFilter', 'bld')" aria-label="Zoom to a building">
         <option value="">— Select a Building —</option>
         <?php foreach ($buildings as $zb): ?>
           <option value="<?= esc($zb) ?>"><?= esc($zb) ?></option>
         <?php endforeach; ?>
       </select>
+      <select class="fac-select" id="bldFloorFilter" onchange="facFloorPicked('bld')" aria-label="Floor"><option value="">All floors</option></select>
     </div>
+    <div id="bldFloorInfo" class="text-muted" style="display:none;margin:4px 0 12px;"></div>
     <div class="fac-map-wrap">
       <svg id="facMapSVG" viewBox="0 0 950 900" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg>
     </div>
@@ -576,11 +580,12 @@
 
     <div class="table-wrap">
       <table class="sj-table">
-        <thead><tr><th>Building</th><th>Result (<?= esc($inspection_month) ?>)</th><th>Inspected By</th><th>Date</th><th>Notes</th></tr></thead>
+        <thead><tr><th>Building</th><th>Floor</th><th>Result (<?= esc($inspection_month) ?>)</th><th>Inspected By</th><th>Date</th><th>Notes</th></tr></thead>
         <tbody id="bldBody">
           <?php foreach ($inspections as $idx => $i): ?>
-            <tr class="bld-row" data-idx="<?= (int) $idx ?>" data-name="<?= esc($i['building']) ?>" data-result="<?= esc($i['result'] ?? 'Not checked') ?>" data-last="<?= esc($i['inspected_at'] ?? '') ?>" style="cursor:pointer;" onclick="showBuildingCheckDetail(this.dataset.name)">
+            <tr class="bld-row" data-idx="<?= (int) $idx ?>" data-name="<?= esc($i['building']) ?>" data-floor="<?= esc($i['floor'] ?? '') ?>" data-result="<?= esc($i['result'] ?? 'Not checked') ?>" data-last="<?= esc($i['inspected_at'] ?? '') ?>" style="cursor:pointer;" onclick="showBuildingCheckDetail(this.dataset.name)">
               <td><strong><?= esc($i['building']) ?></strong></td>
+              <td><?= esc($i['floor'] ?? '—') ?></td>
               <td>
                 <?php if ($i['result'] === null): ?>
                   <span class="tt-badge zb-needs badge-blink">Not Inspected</span>
@@ -611,12 +616,16 @@
       <div class="form-grid2">
         <div class="fg">
           <label>Building <span class="required-mark">*</span></label>
-          <select name="building" id="bldSelect" required>
+          <select name="building" id="bldSelect" required onchange="facFillFloors(this.value, 'bldFloorSelect', 'Whole building')">
             <option value="">— Select a Building —</option>
             <?php foreach ($buildings as $b): ?>
               <option value="<?= esc($b) ?>"><?= esc($b) ?></option>
             <?php endforeach; ?>
           </select>
+        </div>
+        <div class="fg">
+          <label>Floor</label>
+          <select name="floor" id="bldFloorSelect"><option value="">Whole building</option></select>
         </div>
         <div class="fg">
           <label>Result <span class="required-mark">*</span></label>
@@ -731,7 +740,7 @@
         </div>
         <div class="fg">
           <label>Building</label>
-          <select name="building">
+          <select name="building" onchange="facFillFloors(this.value, 'supFloorSelect', 'Unspecified')">
             <option value="">— Unspecified —</option>
             <?php foreach ($buildings as $b): ?>
               <option value="<?= esc($b) ?>"><?= esc($b) ?></option>
@@ -740,7 +749,7 @@
         </div>
         <div class="fg">
           <label>Floor</label>
-          <input type="text" name="floor" placeholder="e.g. 2nd Floor">
+          <select name="floor" id="supFloorSelect"><option value="">Unspecified</option></select>
         </div>
         <div class="fg">
           <label>Specific Place</label>
@@ -881,13 +890,59 @@ function closeBldDetail() {
   document.getElementById('bldDetailModal').style.display = 'none';
 }
 
+// ---- floors per building, taken from the floor plan files (names only — no plans are shown here)
+const facFloors = <?= $floors_json ?>;
+const facPick = { bld: { b: '', f: '' }, clean: { b: '', f: '' } };
+document.addEventListener('DOMContentLoaded', () => {
+  facFillFloors('', 'bldFloorFilter', 'All floors');
+  facFillFloors('', 'cleanFloorFilter', 'All floors');
+});
+const facAllFloors = ['Ground Floor', '2nd Floor', '3rd Floor', '4th Floor'];
+const facFloorChecks = <?= $floor_checks_json ?>;
+function facFillFloors(building, selectId, firstLabel) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const floors = building ? (facFloors[building] || []) : facAllFloors;
+  sel.innerHTML = '<option value="">' + esc(firstLabel) + '</option>' + floors.map(f => '<option>' + esc(f) + '</option>').join('');
+}
+function facBuildingPicked(building, svgId, floorId, key) {
+  zoomMapTo(svgId, building);
+  facFillFloors(building, floorId, 'All floors');
+  facPick[key] = { b: building, f: '' };
+  key === 'bld' ? applyBuildingFilters() : filterCleaning();
+}
+function facFloorPicked(key) {
+  facPick[key].f = document.getElementById(key === 'bld' ? 'bldFloorFilter' : 'cleanFloorFilter').value;
+  key === 'bld' ? applyBuildingFilters() : filterCleaning();
+}
+
+// Building Check: say how the chosen floor was checked this month (the table itself stays one row per building).
+function facShowFloorInfo() {
+  const box = document.getElementById('bldFloorInfo');
+  const { b, f } = facPick.bld;
+  if (!f) { box.style.display = 'none'; return; }
+  const fmt = c => '<strong>' + esc(c.result || '—') + '</strong> — checked by ' + esc(c.by || '—') + ' on ' + esc((c.at || '').slice(0, 10)) + (c.notes ? ' · ' + esc(c.notes) : '');
+  let html;
+  if (b) {
+    const c = (facFloorChecks[b] || {})[f];
+    html = esc(b) + ' — ' + esc(f) + ': ' + (c ? fmt(c) : 'not checked this month yet.');
+  } else {
+    const list = Object.keys(facFloorChecks).filter(x => facFloorChecks[x][f]).map(x => '<div>' + esc(x) + ': ' + fmt(facFloorChecks[x][f]) + '</div>');
+    html = '<div>' + esc(f) + ' — checked this month:</div>' + (list.join('') || '<div>No building has been checked on this floor yet.</div>');
+  }
+  box.innerHTML = html;
+  box.style.display = '';
+}
+
 function applyBuildingFilters() {
+  facShowFloorInfo();
   const q = document.getElementById('bldSearch').value.trim().toLowerCase();
   const result = document.getElementById('bldResultFilter').value;
   document.querySelectorAll('#bldBody .bld-row').forEach(r => {
     const okResult = !result || r.dataset.result === result;
     const okSearch = !q || r.textContent.toLowerCase().includes(q);
-    r.style.display = okResult && okSearch ? '' : 'none';
+    const okBuilding = !facPick.bld.b || r.dataset.name === facPick.bld.b;
+    r.style.display = okResult && okSearch && okBuilding ? '' : 'none';
   });
 }
 
@@ -907,6 +962,7 @@ function openInspectionModal(name) {
   const s = document.getElementById('bldSelect');
   if (!s) return;
   s.value = name || '';
+  facFillFloors(s.value, 'bldFloorSelect', 'Whole building');
   document.getElementById('inspectionModal').style.display = 'flex';
 }
 
@@ -1192,7 +1248,21 @@ function filterCleaning() {
     const inZoneTable = row.closest('#jan-daily, #jan-monitor');
     const matchesSearch = !q || text.includes(q);
     const matchesStatus = !status || !inZoneTable || text.includes(status.toLowerCase());
-    row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+    const matchesPlace = !inZoneTable || ((!facPick.clean.b || row.cells[0].textContent.trim() === facPick.clean.b) && (!facPick.clean.f || row.cells[1].textContent.trim() === facPick.clean.f));
+    row.style.display = matchesSearch && matchesStatus && matchesPlace ? '' : 'none';
+  });
+  // Say so when a building / floor has no cleaning assignments, instead of leaving an empty table.
+  document.querySelectorAll('#jan-daily tbody, #jan-monitor tbody').forEach(tb => {
+    const rows = [...tb.querySelectorAll('tr:not(.fac-nomatch)')].filter(r => !r.querySelector('.empty-row'));
+    let msg = tb.querySelector('.fac-nomatch');
+    const none = rows.length && rows.every(r => r.style.display === 'none');
+    if (none && !msg) {
+      msg = document.createElement('tr');
+      msg.className = 'fac-nomatch';
+      msg.innerHTML = '<td colspan="8" class="empty-row">Nothing matches — no cleaning assignments for that building / floor.</td>';
+      tb.appendChild(msg);
+    }
+    if (msg) msg.style.display = none ? '' : 'none';
   });
 }
 

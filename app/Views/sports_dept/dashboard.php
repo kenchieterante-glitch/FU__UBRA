@@ -1,6 +1,12 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('content') ?>
+<?php
+// Values the controller passes in — given safe defaults here so the page (and the editor) always know them.
+$stats = $stats ?? [];
+$details = $details ?? [];
+$sections = $sections ?? [];
+?>
 <div class="page-header">
   <div>
     <h1>Sports Equipment Monitoring</h1>

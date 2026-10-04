@@ -8,12 +8,38 @@
   </div>
 </div>
 
+<?php
+helper('facilities');
+$stats = $stats ?? [];
+$details = $details ?? [];
+$sections = $sections ?? [];
+?>
 <div class="stat-cards">
   <?php foreach ($stats as $s): ?>
-    <div class="stat-card">
+    <button type="button" class="stat-card status-pick" data-key="<?= esc($s['key']) ?>" onclick="pickDash('<?= esc($s['key'], 'js') ?>')">
       <span class="stat-icon tone-<?= esc($s['tone']) ?>"><i class="bi <?= esc($s['icon']) ?>"></i></span>
       <h3><?= esc($s['label']) ?></h3>
       <div class="value"><?= esc((string) $s['value']) ?></div>
+    </button>
+  <?php endforeach; ?>
+</div>
+
+<div class="status-tables" style="margin-top:16px;">
+  <?php foreach ($stats as $c): $d = $details[$c['key']] ?? ['title' => $c['label'], 'columns' => [], 'rows' => []]; ?>
+    <div class="status-table guard-card" id="st-<?= esc($c['key']) ?>" style="display:none;">
+      <div class="gc-title"><i class="bi <?= esc($c['icon']) ?>"></i> <?= esc($d['title']) ?></div>
+      <div class="table-wrap">
+        <table class="sj-table">
+          <thead><tr><?php foreach ($d['columns'] as $col): ?><th><?= esc($col) ?></th><?php endforeach; ?></tr></thead>
+          <tbody>
+            <?php if (empty($d['rows'])): ?>
+              <tr><td colspan="<?= max(1, count($d['columns'])) ?>" class="empty-row">Nothing here right now.</td></tr>
+            <?php else: foreach ($d['rows'] as $row): ?>
+              <tr><?php foreach ($row as $cell): ?><?= fac_cell($cell) ?><?php endforeach; ?></tr>
+            <?php endforeach; endif; ?>
+          </tbody>
+        </table>
+      </div>
     </div>
   <?php endforeach; ?>
 </div>
@@ -30,4 +56,15 @@
     </a>
   <?php endforeach; ?>
 </div>
+<script>
+function pickDash(key) {
+  const panel = document.getElementById('st-' + key);
+  const wasOpen = panel.style.display !== 'none';
+  document.querySelectorAll('.status-table').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.status-pick').forEach(b => b.classList.toggle('active', !wasOpen && b.dataset.key === key));
+  if (!wasOpen) panel.style.display = '';
+}
+</script>
+<script src="<?= base_url('Assets/js/table-tools.js') ?>?v=<?= @filemtime(FCPATH . 'Assets/js/table-tools.js') ?>"></script>
+<script>document.querySelectorAll('.status-table').forEach(attachTableTools);</script>
 <?= $this->endSection() ?>

@@ -101,12 +101,61 @@ class RecordsController extends BaseController
     // Roles that only see their own department's records in the Information Hub (null = everything).
     private function scopeModules(): ?array
     {
-        return match (strtolower((string) $this->session->get('role'))) {
-            'janitorial' => ['Janitorial'],
-            'assets'     => ['Vehicle', 'Motor Pool'],
-            'sports'     => ['Sports'],
-            default      => null,
-        };
+        return \App\Libraries\DepartmentScope::modulesForRole((string) $this->session->get('role'));
+    }
+
+    private function rec(string $type, $id, $date, string $module, string $record, string $sub, string $action, string $by, string $status): array
+    {
+        return [
+            'type' => $type, 'id' => $id, 'date' => $date ?: null, 'module' => $module, 'kind' => 'Record', 'record' => $record, 'record_sub' => $sub,
+            'action' => $action, 'performed_by' => $by ?: '—', 'status' => $status, 'is_archived' => false, 'disposal_status' => 'None',
+        ];
+    }
+
+    // Safety and Security: fire safety equipment, building safety inspections, and key borrowing.
+    private function securityActivities(): array
+    {
+        $out = [];
+        $today = date('Y-m-d');
+        foreach ((new \App\Models\FireExtinguisherModel())->findAll() as $e) {
+            $state = $e['status'] === 'New' ? ((!empty($e['expires_on']) && $e['expires_on'] < $today) ? 'Expired' : ((!empty($e['next_due']) && $e['next_due'] < $today) ? 'Overdue' : 'Good')) : $e['status'];
+            $out[] = $this->rec('fire', $e['id'], $e['updated_at'] ?: $e['created_at'], 'Security', 'Fire Extinguisher ' . $e['unit_id'], $e['location'] . ' — ' . $e['floor'], 'Fire Safety', $e['inspector'] ?? '', $state);
+        }
+        foreach ((new \App\Models\SafetyEquipmentModel())->findAll() as $e) {
+            $out[] = $this->rec('safetyeq', $e['id'], $e['created_at'], 'Security', $e['equipment_type'] . ' ' . $e['code'], $e['building'] . ($e['floor'] ? ' — ' . $e['floor'] : ''), 'Fire Safety', '', $e['status'] === 'Working' ? 'Good' : $e['status']);
+        }
+        foreach ((new \App\Models\SafetyInspectionModel())->orderBy('inspected_at', 'DESC')->findAll() as $i) {
+            $out[] = $this->rec('inspection', $i['id'], $i['inspected_at'], 'Security', 'Safety inspection — ' . $i['building'], $i['remarks'] ?: $i['inspection_month'], 'Inspection', $i['inspected_by'] ?? '', $i['safety_status']);
+        }
+        foreach ((new \App\Models\KeyBorrowLogModel())->orderBy('id', 'DESC')->findAll() as $l) {
+            $out[] = $this->rec('keylog', $l['id'], $l['scan_in'] ?: $l['created_at'], 'Security', $l['log_number'] . ' — ' . $l['key_item'], 'Date borrowed ' . ($l['scan_in'] ? date('M j, Y', strtotime($l['scan_in'])) : '—'), 'Guard Monitoring', $l['full_name'], $l['status'] === 'Active' ? 'Borrowed' : 'Returned');
+        }
+
+        return $out;
+    }
+
+    // Facilities Administration and General Services: repair requests, aircon units, building checks, cleaning, supplies.
+    private function facilitiesActivities(): array
+    {
+        $out = [];
+        foreach ((new \App\Models\WorkOrderModel())->orderBy('id', 'DESC')->findAll() as $w) {
+            $out[] = $this->rec('facwo', $w['id'], $w['updated_at'] ?: $w['created_at'], 'Facilities', $w['title'], $w['building'] . ($w['floor'] ? ' — ' . $w['floor'] : ''), 'Repair Request', $w['requested_by'], $w['status']);
+        }
+        foreach ((new \App\Models\AirconUnitModel())->findAll() as $a) {
+            $out[] = $this->rec('aircon', $a['id'], $a['updated_at'] ?: $a['created_at'], 'Facilities', $a['unit_name'], $a['location'] . ' — ' . $a['floor'], 'Aircon', $a['assigned_tech'] ?? '', $a['condition_status']);
+        }
+        foreach ((new \App\Models\JanitorialInspectionModel())->orderBy('inspected_at', 'DESC')->findAll() as $i) {
+            $out[] = $this->rec('buildingcheck', $i['id'], $i['inspected_at'], 'Facilities', 'Building check — ' . $i['building'], $i['notes'] ?: $i['inspection_month'], 'Building Check', $i['inspected_by'] ?? '', $i['result']);
+        }
+        foreach ((new \App\Models\JanitorialAssignmentModel())->orderBy('id', 'DESC')->findAll() as $j) {
+            $out[] = $this->rec('cleaning', $j['id'], $j['date_assigned'], 'Facilities', 'Cleaning — ' . $j['assigned_zone'], ($j['priority'] ?? 'Routine') . ' · ' . ($j['floor'] ?: 'All floors'), 'Janitorial', $j['staff_name'], $j['status']);
+        }
+        foreach ((new \App\Models\ConsumableInventoryModel())->findAll() as $c) {
+            $state = (float) $c['current_stock'] <= 0 ? 'Out of Stock' : ((float) $c['current_stock'] <= (float) $c['reorder_threshold'] ? 'Low Stock' : 'In Stock');
+            $out[] = $this->rec('supply', $c['id'], $c['last_refill'] ?: $c['created_at'], 'Facilities', $c['item_name'], ($c['building'] ?: $c['department'] ?: 'Supplies') . ' · ' . (float) $c['current_stock'] . ' ' . $c['unit'], 'Supplies', '', $state);
+        }
+
+        return $out;
     }
 
     // Sports Equipment Monitoring: the sports equipment itself and every borrow / return of it.
@@ -357,7 +406,7 @@ class RecordsController extends BaseController
             ];
         }
 
-        $activities = array_merge($activities, $this->assetActivities(), $this->sportsActivities());
+        $activities = array_merge($activities, $this->assetActivities(), $this->sportsActivities(), $this->securityActivities(), $this->facilitiesActivities());
 
         usort($activities, function ($a, $b) {
             return (strtotime($b['date'] ?? '') ?: 0) <=> (strtotime($a['date'] ?? '') ?: 0);

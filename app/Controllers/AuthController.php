@@ -10,6 +10,26 @@ class AuthController extends BaseController
 {
     protected $userModel;
 
+    // Which account roles may sign in through each department portal. Administrators may use any portal.
+    private const PORTAL_ROLES = [
+        'facilities' => ['facilities', 'janitorial'],
+        'safety'     => ['security'],
+        'asset'      => ['assets', 'tools'],
+        'iysp'       => ['sports'],
+    ];
+
+    private const PORTAL_NAMES = [
+        'facilities' => 'Facilities Administration and General Services',
+        'safety'     => 'Safety and Security Department',
+        'asset'      => 'Asset Acquisition and Monitoring Department',
+        'iysp'       => 'Sports Equipment Monitoring',
+    ];
+
+    private function loginUrl(string $portal): string
+    {
+        return isset(self::PORTAL_NAMES[$portal]) ? base_url('login?portal=' . $portal) : base_url('login');
+    }
+
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
@@ -24,17 +44,18 @@ class AuthController extends BaseController
             return redirect()->to($this->roleLandingUrl());
         }
 
+        $portal = (string) $this->request->getPost('portal');
         $employeeId = trim((string) ($this->request->getPost('employee_id') ?? $this->request->getPost('emp_id') ?? $this->request->getPost('username') ?? ''));
         $password = $this->request->getPost('password') ?? '';
 
         if ($employeeId === '' || $password === '') {
-            return redirect()->back()->with('error', 'Employee ID and password are required.');
+            return redirect()->to($this->loginUrl($portal))->with('error', 'Employee ID and password are required.');
         }
 
         $user = $this->userModel->getByEmployeeId($employeeId);
 
         if (!$user) {
-            return redirect()->back()->with('error', 'Invalid employee ID or password.');
+            return redirect()->to($this->loginUrl($portal))->with('error', 'Invalid employee ID or password.');
         }
 
         $storedHash = $user['password_hash'] ?? null;
@@ -53,6 +74,12 @@ class AuthController extends BaseController
             $userId = $user['id'] ?? $user['user_id'] ?? $user['userid'] ?? $user['department_id'] ?? null;
             $fullName = $user['full_name'] ?? $user['name'] ?? $user['emp_id'] ?? 'System Admin';
             $role = $user['role'] ?? 'Operations';
+
+            // Signing in through a department portal only works for that department's own accounts.
+            if (isset(self::PORTAL_ROLES[$portal]) && strtolower($role) !== 'administrator' && !in_array(strtolower($role), self::PORTAL_ROLES[$portal], true)) {
+                return redirect()->to($this->loginUrl($portal))->with('error', 'This account does not belong to the ' . self::PORTAL_NAMES[$portal] . ' portal. Please sign in through your own department portal.');
+            }
+
             $departmentId = $user['department_id'] ?? null;
 
             $session = service('session');
@@ -72,7 +99,7 @@ class AuthController extends BaseController
             return redirect()->to($this->roleLandingUrl());
         }
 
-        return redirect()->back()->with('error', 'Invalid employee ID or password.');
+        return redirect()->to($this->loginUrl($portal))->with('error', 'Invalid employee ID or password.');
     }
 
     public function login()
@@ -94,7 +121,8 @@ class AuthController extends BaseController
         $portalKey = (string) $this->request->getGet('portal');
 
         return view('auth/login', [
-            'selectedPortal' => $portals[$portalKey] ?? null,
+            'selectedPortal'    => $portals[$portalKey] ?? null,
+            'selectedPortalKey' => isset($portals[$portalKey]) ? $portalKey : '',
         ]);
     }
 

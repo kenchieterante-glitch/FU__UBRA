@@ -42,7 +42,7 @@
       <input type="text" name="full_name" id="borrowFullName" required>
       <label>Department</label>
       <input type="text" name="department" id="borrowDept">
-      <label>Key / Item <span style="color:var(--maroon)">*</span></label>
+      <label>Key Item <span style="color:var(--maroon)">*</span></label>
       <input type="text" name="key_item" placeholder="e.g. Room 204 Master Key" required>
       <p id="borrowLookupMsg" style="font-size:12px;margin-top:8px;color:var(--maroon-dark, #5a0909);"></p>
       <div class="modal-actions">

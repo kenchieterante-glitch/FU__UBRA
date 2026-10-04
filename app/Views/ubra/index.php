@@ -25,6 +25,11 @@
 
       <!-- Left rail: icon-only quick actions -->
       <div class="ubra-rail">
+        <?php if (!empty($quick_actions)): foreach ($quick_actions as [$qIcon, $qTitle, $qPrompt]): ?>
+        <button type="button" class="ubra-rail-btn" title="<?= esc($qTitle) ?>" aria-label="<?= esc($qTitle) ?>" onclick="quickPrompt(<?= esc(json_encode($qPrompt), 'attr') ?>)">
+          <i class="bi <?= esc($qIcon) ?>"></i>
+        </button>
+        <?php endforeach; else: ?>
         <button type="button" class="ubra-rail-btn" title="Fleet health check" aria-label="Fleet health check" onclick="quickPrompt('Give me a fleet health check — vehicle status, GPS status, and anything needing attention.')">
           <i class="bi bi-truck"></i>
         </button>
@@ -37,12 +42,13 @@
         <button type="button" class="ubra-rail-btn" title="Weekly report" aria-label="Weekly report" onclick="quickPrompt('Generate a brief weekly operations report.')">
           <i class="bi bi-file-earmark-text"></i>
         </button>
+        <?php endif; ?>
       </div>
 
       <!-- Conversation thread -->
       <div class="ubra-convo">
         <div class="ubra-messages" id="chatMessages">
-          <div class="ubra-greeting">Good <?= date('H') < 12 ? 'morning' : (date('H') < 17 ? 'afternoon' : 'evening') ?>, Operations Office.</div>
+          <div class="ubra-greeting">Good <?= date('H') < 12 ? 'morning' : (date('H') < 17 ? 'afternoon' : 'evening') ?>, <?= esc($greet_name ?? 'there') ?>.</div>
         </div>
       </div>
     </div>

@@ -2938,3 +2938,7 @@ tr.row-blink td {
     display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
 }
 .sp-return-btn:hover { background: #5e0b14; }
+
+/* Supplies: every category table uses the same fixed columns so Item / Location / Stock / Status line up from one table to the next */
+table.sup-table { table-layout: fixed; width: 100%; }
+table.sup-table td, table.sup-table th { overflow-wrap: anywhere; }

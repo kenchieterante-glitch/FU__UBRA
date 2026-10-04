@@ -3025,3 +3025,35 @@ table.gps-table tbody td .vehicle-cell {
 .modal-actions {
   align-items: center;
 }
+
+/* X button in the corner of map / floor plan panels */
+.panel-close-x {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 5;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d9d9de;
+  border-radius: 50%;
+  background: #fff;
+  color: #7b0f1a;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .12);
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.panel-close-x:hover {
+  background: #7b0f1a;
+  color: #fff;
+  border-color: #7b0f1a;
+}
+
+/* The record table opened by a status box doesn't repeat the box's name as a heading */
+.status-table > .gc-title,
+#statInline > .gc-title {
+  display: none;
+}

@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Models\VehicleModel;
 use App\Models\PersonnelModel;
 use App\Models\ToolsModel;
+use App\Libraries\DepartmentScope;
+use App\Libraries\UbraScope;
 use App\Models\UbraChatLogModel;
 
 class UbraController extends BaseController
@@ -33,6 +35,8 @@ class UbraController extends BaseController
         $data = [
             'title'        => 'Mr. UBRA Assistant',
             'flash_success' => $this->session->getFlashdata('success'),
+            'quick_actions' => UbraScope::quickActions((string) $this->session->get('role')),
+            'greet_name'   => (string) ($this->session->get('full_name') ?? 'there'),
         ];
 
         return view('ubra/index', $data);
@@ -49,6 +53,19 @@ class UbraController extends BaseController
 
         if (empty(trim($userMessage ?? ''))) {
             return $this->response->setJSON(['error' => 'Message is required.']);
+        }
+
+        // Department accounts only get answers about their own department. A question that is clearly about another
+        // department is turned down here, before any data is read or any AI call is made.
+        $role = (string) $this->session->get('role');
+        $refusal = UbraScope::refusalFor($role, (string) $userMessage);
+        if ($refusal !== null) {
+            $empId = $this->currentEmpId();
+            if ($empId !== '') {
+                $this->chatLogModel->logTurn($empId, 'user', $userMessage);
+                $this->chatLogModel->logTurn($empId, 'assistant', $refusal);
+            }
+            return $this->response->setJSON(['reply' => $refusal, 'role' => 'assistant']);
         }
 
         // A plain text-in/text-out AI API call has no way to actually produce
@@ -329,6 +346,9 @@ class UbraController extends BaseController
         ];
 
         $message = $prompts[$action] ?? 'Give me an operations overview.';
+        if (UbraScope::departmentFor((string) $this->session->get('role')) !== null) {
+            $message = 'Give me a concise overview of my department right now, based on the snapshot you have.';
+        }
         $_POST['message'] = $message;
         $_POST['history'] = '[]';
 
@@ -374,6 +394,10 @@ class UbraController extends BaseController
             'safety'     => ['safety', 'maintenance', 'fire extinguisher', 'aircon', 'work order'],
             'janitorial' => ['janitorial', 'janitor', 'cleaning'],
             'personnel'  => ['personnel', 'staff', 'employee', 'job order'],
+            'motor-pool' => ['motor pool', 'mechanical equipment', 'generator'],
+            'sports'     => ['sports', 'basketball', 'volleyball', 'racket'],
+            'security'   => ['fire safety', 'smoke detector', 'guard', 'key log', 'keys'],
+            'facilities' => ['repair request', 'building check', 'supplies'],
         ];
         $module = '';
         foreach ($moduleMap as $slug => $keywords) {
@@ -431,6 +455,16 @@ class UbraController extends BaseController
     // no AI round-trip needed, and no more "I can't attach files" apology.
     private function replyWithReport(array $req, string $userMessage)
     {
+        // An account can only export its own department's records.
+        $allowed = DepartmentScope::modulesForRole((string) $this->session->get('role'));
+        if ($allowed !== null && $req['module'] !== '') {
+            $allowedSlugs = array_map(fn($m) => DepartmentScope::SLUGS[$m], $allowed);
+            if (!in_array($req['module'], $allowedSlugs, true)) {
+                $msg = "That report is outside your account's access. I can only prepare reports for your own department (" . implode(' and ', $allowed) . ').';
+                return $this->response->setJSON(['reply' => $msg, 'role' => 'assistant']);
+            }
+        }
+
         $url = base_url('records/export/' . $req['format']) . '?' . http_build_query([
             'module'    => $req['module'],
             'date_from' => $req['date_from'],
@@ -459,7 +493,8 @@ class UbraController extends BaseController
         ]);
     }
 
-    private function buildContext(): array
+    // System-wide numbers — only for the unrestricted (administrator) assistant.
+    private function buildFullContext(): array
     {
         $ctx = [];
         try {
@@ -488,7 +523,82 @@ class UbraController extends BaseController
         return $ctx;
     }
 
+    // The numbers a department account's assistant may see: its own department only.
+    private function buildContext(): array
+    {
+        $dept = UbraScope::departmentFor((string) $this->session->get('role'));
+        if ($dept === null) return $this->buildFullContext();
+
+        $ctx = ['dept' => $dept, 'lines' => []];
+        $today = date('Y-m-d');
+        $month = date('Y-m');
+        try {
+            if ($dept === 'facilities') {
+                $wo = new \App\Models\WorkOrderModel();
+                $ctx['lines'][] = 'Repair requests: ' . (new \App\Models\WorkOrderModel())->where('status !=', 'Completed')->countAllResults() . ' open | ' . $wo->where('status !=', 'Completed')->where('priority', 'Urgent')->countAllResults() . ' urgent';
+                $ctx['lines'][] = 'Aircon units due or overdue (next 7 days): ' . (new \App\Models\AirconUnitModel())->where('next_schedule <=', date('Y-m-d', strtotime('+7 days')))->countAllResults();
+                $tasks = new \App\Models\JanitorialTaskModel();
+                $ctx['lines'][] = 'Cleaning tasks done: ' . (new \App\Models\JanitorialTaskModel())->where('is_done', 1)->countAllResults() . ' / ' . $tasks->countAllResults();
+                $ctx['lines'][] = 'Facilities supplies out of stock: ' . (new \App\Models\ConsumableInventoryModel())->where('department', 'Facilities')->where('current_stock <= 0', null, false)->countAllResults();
+                $ctx['lines'][] = 'Buildings checked this month: ' . (int) \Config\Database::connect()->table('janitorial_inspections')->select('COUNT(DISTINCT building) AS n')->where('inspection_month', $month)->get()->getRow()->n;
+            } elseif ($dept === 'security') {
+                $fe = new \App\Models\FireExtinguisherModel();
+                $ctx['lines'][] = 'Fire extinguishers: ' . $fe->countAllResults() . ' total | ' . (new \App\Models\FireExtinguisherModel())->where('next_due <', $today)->countAllResults() . ' overdue for check | ' . (new \App\Models\FireExtinguisherModel())->where('expires_on <', $today)->countAllResults() . ' expired';
+                $ctx['lines'][] = 'Other safety equipment (alarms, smoke detectors, exit signs): ' . (new \App\Models\SafetyEquipmentModel())->countAllResults() . ' total';
+                $ctx['lines'][] = 'Keys currently borrowed: ' . (new \App\Models\KeyBorrowLogModel())->where('status', 'Active')->countAllResults();
+                $ctx['lines'][] = 'Safety inspections this month: ' . (new \App\Models\SafetyInspectionModel())->where('inspection_month', $month)->countAllResults() . ' recorded | ' . (new \App\Models\SafetyInspectionModel())->where('inspection_month', $month)->where('safety_status', 'Unsafe')->countAllResults() . ' marked unsafe';
+            } elseif ($dept === 'assets') {
+                $v = new VehicleModel();
+                $ctx['lines'][] = 'Vehicles: ' . $v->where('is_archived', 0)->countAllResults() . ' total | ' . (new VehicleModel())->where('is_archived', 0)->where('availability', 'Available')->countAllResults() . ' available | ' . (new VehicleModel())->where('is_archived', 0)->whereIn('inspection_status', ['Due Soon', 'Expired'])->countAllResults() . ' with inspection due or expired';
+                $mp = new \App\Models\MotorpoolWorkOrderModel();
+                $ctx['lines'][] = 'Motor pool work orders: ' . $mp->whereIn('status', ['Pending', 'In Progress'])->countAllResults() . ' open | ' . (new \App\Models\MotorpoolWorkOrderModel())->whereIn('status', ['Pending', 'In Progress'])->where('priority', 'Urgent')->countAllResults() . ' urgent';
+                $ctx['lines'][] = 'Mechanical equipment needing repair: ' . (new \App\Models\MechanicalEquipmentModel())->whereIn('status', ['Needs Repair', 'Out of Service'])->countAllResults();
+                $t = new \App\Models\TravelModel();
+                $ctx['lines'][] = 'Trips today: ' . $t->where('travel_date', $today)->where('is_archived', 0)->countAllResults() . ' | in transit: ' . (new \App\Models\TravelModel())->where('status', 'In Transit')->where('is_archived', 0)->countAllResults();
+            } elseif ($dept === 'sports') {
+                $tm = new ToolsModel();
+                $ctx['lines'][] = 'Sports equipment: ' . $tm->where('category', 'Sports Equipment')->where('is_archived', 0)->countAllResults() . ' total | ' . (new ToolsModel())->where('category', 'Sports Equipment')->where('is_archived', 0)->where('availability', 'Available')->countAllResults() . ' available | ' . (new ToolsModel())->where('category', 'Sports Equipment')->where('is_archived', 0)->where('availability', 'Borrowed')->countAllResults() . ' borrowed';
+                $ids = array_column((new ToolsModel())->where('category', 'Sports Equipment')->findAll(), 'id');
+                $overdue = $ids ? (new \App\Models\BorrowModel())->whereIn('tool_id', $ids)->where('status', 'Borrowed')->where('expected_return <', $today)->countAllResults() : 0;
+                $ctx['lines'][] = 'Overdue returns: ' . $overdue;
+                $ctx['lines'][] = 'Sports equipment in poor condition: ' . (new ToolsModel())->where('category', 'Sports Equipment')->where('condition_status', 'Poor')->countAllResults();
+            } elseif ($dept === 'janitorial') {
+                $zc = (new \App\Models\JanitorialAssignmentModel())->getZoneCleanCounts();
+                $ctx['lines'][] = 'Cleaning zones cleaned today: ' . $zc['cleaned'] . '/' . $zc['total'];
+                $ctx['lines'][] = 'Cleaning tasks done: ' . (new \App\Models\JanitorialTaskModel())->where('is_done', 1)->countAllResults() . ' / ' . (new \App\Models\JanitorialTaskModel())->countAllResults();
+            } elseif ($dept === 'tools') {
+                $ctx['lines'][] = 'Tools and equipment: ' . (new ToolsModel())->where('is_archived', 0)->countAllResults() . ' total | ' . (new ToolsModel())->where('is_archived', 0)->where('availability', 'Borrowed')->countAllResults() . ' borrowed';
+            }
+        } catch (\Throwable $e) {
+            $ctx['lines'][] = '(some numbers are unavailable right now)';
+        }
+        $ctx['current_date'] = date('l, F j, Y');
+        $ctx['current_time'] = date('h:i A');
+        $ctx['role']         = (string) ($this->session->get('role') ?? '');
+
+        return $ctx;
+    }
+
     private function buildSystemPrompt(array $ctx): string
+    {
+        $profile = UbraScope::profile($ctx['dept'] ?? null);
+        if ($profile === null) return $this->buildFullSystemPrompt($ctx);
+
+        return "You are Mr. UBRA, the assistant for UBRA — Foundation University's Buildings and Grounds management system. You are speaking with a {$ctx['role']} account of **{$profile['name']}**.\n\n"
+            . "CURRENT SNAPSHOT FOR THIS DEPARTMENT ({$ctx['current_date']} {$ctx['current_time']}):\n- " . implode("\n- ", $ctx['lines']) . "\n\n"
+            . "WHAT YOU CAN HELP WITH: {$profile['scope']}. Point people to the right page of their own portal when it helps.\n\n"
+            . "STRICT SCOPE — read carefully:\n"
+            . "- You only answer about {$profile['name']}. If the user asks about any other department, other staff accounts, other departments' records or numbers, system settings, API keys, passwords or user accounts, politely decline in one or two sentences and offer to help with their own department instead. Never guess, hint at, or reveal anything from outside this department.\n"
+            . "- The snapshot above is the only data you have. Do not claim to know campus-wide figures.\n\n"
+            . "HOW TO FOLLOW INSTRUCTIONS:\n"
+            . "- Read the user's message literally and do exactly what it asks; don't substitute a similar request or add unrequested extras.\n"
+            . "- If a request is genuinely ambiguous, ask one short clarifying question instead of guessing.\n\n"
+            . "DON'T GUESS AT DATA: Only state a specific number, name, ID, or date if it is in the snapshot above or in the conversation itself. If you don't have a detail, say to check the relevant page of their portal instead of inventing one.\n\n"
+            . "FILE REPORTS: You cannot attach files yourself. A real downloadable link is produced automatically when the user names a format (pdf/excel/csv) together with 'report' or 'summary' (e.g. 'generate a pdf report this month'). If asked for a file, tell them to phrase it that way.\n\n"
+            . "Be concise, professional, and action-oriented. Use bullet points and bold for key figures.";
+    }
+
+    private function buildFullSystemPrompt(array $ctx): string
     {
         return "You are Mr. UBRA, the Intelligent Operations Assistant for UBRA — Foundation University's Buildings and Grounds Integrated Management System.\n\n"
             . "CURRENT SYSTEM SNAPSHOT ({$ctx['current_date']} {$ctx['current_time']}, viewer role: " . ($ctx['role'] ?: 'unknown') . "):\n"

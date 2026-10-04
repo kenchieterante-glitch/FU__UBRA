@@ -155,7 +155,7 @@
       <a href="<?= base_url($dashboardUrl) ?>" class="<?= navActive($dashboardUrl) ?>" data-tooltip="Dashboard"><i class="bi bi-grid-1x2"></i> <span class="nav-label">Dashboard</span></a>
 
       <?php if ($isSecurityHead): ?>
-      <?php $isSecDeptSection = strpos($currentUri, 'security-dept/') === 0 && $currentUri !== 'security-dept/status'; ?>
+      <?php $isSecDeptSection = strpos($currentUri, 'security-dept/') === 0 && !in_array($currentUri, ['security-dept/status', 'security-dept/guard', 'security-dept/keys'], true); ?>
       <div class="nav-parent-group <?= $isSecDeptSection ? 'open' : '' ?>">
         <a href="<?= base_url('security-dept/status') ?>" class="nav-parent-link <?= $isSecDeptSection ? 'open' : '' ?>" data-secdept-toggle data-tooltip="Safety & Security">
           <i class="bi bi-shield-fill-check"></i>
@@ -164,8 +164,18 @@
         </a>
         <div class="nav-submenu" id="secdept-submenu">
           <a href="<?= base_url('security-dept/fire-safety') ?>" class="<?= navActive('security-dept/fire-safety') ?>"><i class="bi bi-fire"></i> <span class="nav-label">Fire Safety</span></a>
-          <a href="<?= base_url('security-dept/guard') ?>" class="<?= navActive('security-dept/guard') ?>"><i class="bi bi-shield-check"></i> <span class="nav-label">Guard Monitoring</span></a>
           <a href="<?= base_url('security-dept/inspection') ?>" class="<?= navActive('security-dept/inspection') ?>"><i class="bi bi-clipboard2-check"></i> <span class="nav-label">Safety Inspection</span></a>
+        </div>
+      </div>
+      <?php $isGuardSection = $currentUri === 'security-dept/keys'; /* the Guard Monitoring label page itself keeps the dropdown closed */ ?>
+      <div class="nav-parent-group <?= $isGuardSection ? 'open' : '' ?>">
+        <a href="<?= base_url('security-dept/guard') ?>" class="nav-parent-link <?= $isGuardSection ? 'open' : '' ?> <?= $currentUri === 'security-dept/guard' ? 'active' : '' ?>" data-guard-toggle data-tooltip="Guard Monitoring">
+          <i class="bi bi-shield-check"></i>
+          <span class="nav-label">Guard Monitoring</span>
+          <i class="bi bi-chevron-down nav-parent-caret"></i>
+        </a>
+        <div class="nav-submenu" id="guard-submenu">
+          <a href="<?= base_url('security-dept/keys') ?>" class="<?= navActive('security-dept/keys') ?>"><i class="bi bi-list-ul"></i> <span class="nav-label">List of Keys</span></a>
         </div>
       </div>
       <?php endif; ?>
@@ -262,7 +272,7 @@
       <a href="<?= base_url('janitorial') ?>" class="<?= navActive('janitorial') ?>" data-tooltip="Janitorial Monitoring"><i class="bi bi-brush"></i> <span class="nav-label">Cleaning Checks</span></a>
       <?php endif; ?>
 
-      <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor || $isJanitorialSupervisor || $isAssetsHead): ?>
+      <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor || $isJanitorialSupervisor || $isAssetsHead || $isSportsHead): ?>
       <a href="<?= base_url('calendar') ?>" class="<?= navActive('calendar') ?>" data-tooltip="Calendar"><i class="bi bi-calendar3"></i> <span class="nav-label">Calendar</span></a>
       <?php endif; ?>
 
@@ -276,13 +286,19 @@
         </a>
         <div class="nav-submenu" id="infohub-submenu">
           <a href="<?= base_url('reports') ?>" class="<?= navActive('reports') ?>"><i class="bi bi-list-task"></i> <span class="nav-label">All Records</span></a>
-          <?php if (!$isJanitorialSupervisor && !$isAssetsHead && !$isSportsHead): ?>
+          <?php if ($isFullAccess || $isFacilitiesSupervisor): ?>
           <a href="<?= base_url('maintenance-forms/facility') ?>" class="<?= navActive('maintenance-forms/facility') ?>"><i class="bi bi-clipboard2-check"></i> <span class="nav-label">Facility Checklist</span></a>
+          <?php endif; ?>
+          <?php if ($isFullAccess || $isFacilitiesSupervisor || $isAssetsHead): ?>
           <a href="<?= base_url('maintenance-forms/equipment-log') ?>" class="<?= navActive('maintenance-forms/equipment-log') ?>"><i class="bi bi-wrench-adjustable"></i> <span class="nav-label">Equipment Log</span></a>
+          <?php endif; ?>
+          <?php if ($isFullAccess || $isFacilitiesSupervisor): ?>
           <a href="<?= base_url('maintenance-forms/aircon-log') ?>" class="<?= navActive('maintenance-forms/aircon-log') ?>"><i class="bi bi-snow2"></i> <span class="nav-label">Aircon Inspection Log</span></a>
+          <?php endif; ?>
+          <?php if ($isFullAccess || $isAssetsHead): ?>
           <a href="<?= base_url('maintenance-forms/vehicle-checklist') ?>" class="<?= navActive('maintenance-forms/vehicle-checklist') ?>"><i class="bi bi-truck"></i> <span class="nav-label">Vehicle Checklist</span></a>
           <?php endif; ?>
-          <?php if (!$isAssetsHead && !$isSportsHead): ?>
+          <?php if ($isFullAccess || $isFacilitiesSupervisor || $isJanitorialSupervisor): ?>
           <a href="<?= base_url('maintenance-forms/restroom') ?>" class="<?= navActive('maintenance-forms/restroom') ?>"><i class="bi bi-brush"></i> <span class="nav-label">Restroom Checklist</span></a>
           <?php endif; ?>
         </div>
@@ -606,6 +622,34 @@ document.querySelectorAll('[onsubmit*="confirm("], [onclick*="confirm("]').forEa
   }
 });
 
+// Every map / floor plan panel gets an X in its top-right corner that closes it
+// (it presses the panel's own Map / Floor Plans button, so the button's state stays right).
+(function () {
+  const panels = [
+    ['acMapPanel', () => document.getElementById('acMapBtn')?.click()],
+    ['cleanMapPanel', () => document.getElementById('janMapBtn')?.click()],
+    ['janMapPanel', () => document.getElementById('bldMapBtn')?.click()],
+    ['fsMapPanel', () => document.getElementById('fsMapBtn')?.click()],
+    ['inMapPanel', () => document.getElementById('inMapBtn')?.click()],
+    ['fpPanel', () => document.getElementById('fpBtn')?.click()],
+    ['mapPanel', () => (typeof toggleMapView === 'function' ? toggleMapView() : null)],
+  ];
+  const add = () => panels.forEach(([id, close]) => {
+    const panel = document.getElementById(id);
+    if (!panel || panel.querySelector(':scope > .panel-close-x')) return;
+    if (getComputedStyle(panel).position === 'static') panel.style.position = 'relative';
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'panel-close-x';
+    x.title = 'Close';
+    x.setAttribute('aria-label', 'Close');
+    x.innerHTML = '<i class="bi bi-x-lg"></i>';
+    x.addEventListener('click', close);
+    panel.appendChild(x);
+  });
+  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', add) : add();
+})();
+
 // Flash message toasts (redirect-based "Personnel updated successfully"
 // style messages) fade in, then auto-dismiss on their own after a few
 // seconds instead of sitting on screen until the page is reloaded again.
@@ -908,6 +952,18 @@ if (secDeptLink && secDeptGroup) {
       event.preventDefault();
       secDeptGroup.classList.toggle('open');
       secDeptLink.classList.toggle('open');
+    }
+  });
+}
+
+const guardLink = document.querySelector('[data-guard-toggle]');
+const guardGroup = guardLink?.closest('.nav-parent-group');
+if (guardLink && guardGroup) {
+  guardLink.addEventListener('click', (event) => {
+    if (event.target.closest('.nav-parent-caret')) {
+      event.preventDefault();
+      guardGroup.classList.toggle('open');
+      guardLink.classList.toggle('open');
     }
   });
 }

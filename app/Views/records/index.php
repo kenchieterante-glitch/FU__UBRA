@@ -6,7 +6,7 @@ $stats = $stats ?? ['total_records' => 0, 'archived_records' => 0, 'reports_gene
 $activities = $activities ?? [];
 $scopedToJanitorial = $scopedToJanitorial ?? false;
 $scopeModules = $scopeModules ?? null;
-$modButtons = ['Tools' => ['tools', 'bi-wrench-adjustable'], 'Vehicle' => ['vehicle', 'bi-truck'], 'Motor Pool' => ['motor-pool', 'bi-gear-wide-connected'], 'Sports' => ['sports', 'bi-trophy-fill'], 'Safety' => ['safety', 'bi-shield-check'], 'Janitorial' => ['janitorial', 'bi-brush'], 'Personnel' => ['personnel', 'bi-people-fill']];
+$modButtons = ['Tools' => ['tools', 'bi-wrench-adjustable'], 'Vehicle' => ['vehicle', 'bi-truck'], 'Motor Pool' => ['motor-pool', 'bi-gear-wide-connected'], 'Sports' => ['sports', 'bi-trophy-fill'], 'Security' => ['security', 'bi-shield-fill-check'], 'Facilities' => ['facilities', 'bi-building-gear'], 'Safety' => ['safety', 'bi-shield-check'], 'Janitorial' => ['janitorial', 'bi-brush'], 'Personnel' => ['personnel', 'bi-people-fill']];
 $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
 ?>
 
@@ -79,6 +79,11 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
                 <option value="in-progress">In Progress</option>
+                <option value="good">Good</option>
+                <option value="safe">Safe</option>
+                <option value="unsafe">Unsafe</option>
+                <option value="needs-attention">Needs Attention</option>
+                <option value="low-stock">Low Stock</option>
                 <option value="in-transit">In Transit</option>
                 <option value="submitted">Submitted</option>
                 <option value="operational">Operational</option>
@@ -142,6 +147,8 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                                 'Vehicle'    => 'bi-truck',
                                 'Motor Pool' => 'bi-gear-wide-connected',
                                 'Sports'     => 'bi-trophy-fill',
+                                'Security'   => 'bi-shield-fill-check',
+                                'Facilities' => 'bi-building-gear',
                                 'Safety'     => 'bi-shield-check',
                                 'Janitorial' => 'bi-brush',
                                 'Personnel'  => 'bi-people-fill',
@@ -299,6 +306,10 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                         <option value="safety">Safety</option>
                         <option value="janitorial">Janitorial</option>
                         <option value="personnel">Personnel</option>
+                        <option value="motor-pool">Motor Pool</option>
+                        <option value="sports">Sports</option>
+                        <option value="security">Security</option>
+                        <option value="facilities">Facilities</option>
                     <?php endif; ?>
                 </select>
             </div>

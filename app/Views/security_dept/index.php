@@ -84,7 +84,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
             <label for="fsStatusFilter">Status</label>
             <select id="fsStatusFilter" onchange="applyFsFilters()">
               <option value="">All statuses</option>
-              <option>Working</option><option>Needs Repair</option><option>Needs Refill</option>
+              <option>Good</option><option>Needs Repair</option><option>Needs Refill</option>
               <option>Defective</option><option>Missing</option>
               <option value="Overdue">Check Overdue</option><option value="Due in 7 Days">Check Due in 7 Days</option>
             </select>
@@ -108,7 +108,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
     <div class="gc-title"><i class="bi bi-map"></i> Fire Safety Map</div>
     <?= $zoomSelect('fsMapSVG') ?>
     <div class="fac-map-legend">
-      <span><i class="map-pass"></i> All equipment OK</span>
+      <span><i class="map-pass"></i> All equipment Good</span>
       <span><i style="background:#ffc400"></i> Yellow alert = check due soon</span>
       <span><i class="map-alert"></i> Red warning = needs repair or missing</span>
     </div>
@@ -157,7 +157,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
           <tbody class="fs-body">
             <?php $list = $equipment_by_type[$t] ?? []; if (empty($list)): ?>
               <tr><td colspan="6" class="empty-row">No <?= esc(strtolower($t)) ?> recorded yet.</td></tr>
-            <?php else: foreach ($list as $r): $shown = $r['status'] === 'Working' ? $r['due'] : $r['status']; ?>
+            <?php else: foreach ($list as $r): $shown = $r['status'] !== 'Working' ? $r['status'] : ($r['due'] === 'OK' ? 'Good' : $r['due']); ?>
               <tr class="fs-row" style="cursor:pointer" onclick="showFsDetail(this)"
                   data-type="<?= esc($r['type']) ?>" data-code="<?= esc($r['code']) ?>" data-building="<?= esc($r['building']) ?>" data-floor="<?= esc($r['floor'] ?? '') ?>"
                   data-status="<?= esc($r['status']) ?>" data-due="<?= esc($r['due']) ?>" data-shown="<?= esc($shown) ?>" data-next="<?= esc((string) $r['next']) ?>"
@@ -277,7 +277,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
           <div class="filter-row">
             <label for="gStatusFilter">Key status</label>
             <select id="gStatusFilter" onchange="applyGFilters()">
-              <option value="">All</option><option value="Key Out">Key Out</option><option value="Returned">Returned</option>
+              <option value="">All</option><option value="Borrowed">Borrowed</option><option value="Returned">Returned</option>
             </select>
           </div>
           <div class="filter-row">
@@ -305,18 +305,18 @@ $zoomSelect = function (string $svgId) use ($buildings) {
     <div class="gc-title" style="margin:6px 0 10px;"><i class="bi bi-key-fill"></i> Keys Currently Out</div>
     <div class="table-wrap">
       <table class="sj-table">
-        <thead><tr><th>Log #</th><th>Borrower</th><th>Department</th><th>Key / Item</th><th>Borrowed</th><th>Status</th></tr></thead>
+        <thead><tr><th>Log #</th><th>Borrower</th><th>Department</th><th>Key Item</th><th>Date Borrowed</th><th>Status</th></tr></thead>
         <tbody class="g-body">
           <?php if (empty($active_keys)): ?>
             <tr><td colspan="6" class="empty-row">No keys are out right now.</td></tr>
           <?php else: foreach ($active_keys as $l): ?>
-            <tr class="g-row" style="cursor:pointer" onclick="showKeyDetail(<?= (int) $l['id'] ?>)" data-id="<?= (int) $l['id'] ?>" data-status="Key Out" data-time="<?= esc($l['scan_in']) ?>">
+            <tr class="g-row" style="cursor:pointer" onclick="showKeyDetail(<?= (int) $l['id'] ?>)" data-id="<?= (int) $l['id'] ?>" data-status="Borrowed" data-time="<?= esc($l['scan_in']) ?>">
               <td><strong><?= esc($l['log_number']) ?></strong></td>
               <td><?= esc($l['full_name']) ?></td>
               <td><?= esc($l['department']) ?></td>
               <td><?= esc($l['key_item']) ?></td>
               <td><?= date('M d, Y g:i A', strtotime($l['scan_in'])) ?></td>
-              <?= fac_cell('Key Out') ?>
+              <?= fac_cell('Borrowed') ?>
             </tr>
           <?php endforeach; endif; ?>
         </tbody>
@@ -327,11 +327,11 @@ $zoomSelect = function (string $svgId) use ($buildings) {
   <div class="g-pane" id="g-history" style="display:none">
     <div class="table-wrap">
       <table class="sj-table">
-        <thead><tr><th>Log #</th><th>Borrower</th><th>Key / Item</th><th>Borrowed</th><th>Returned</th><th>Status</th></tr></thead>
+        <thead><tr><th>Log #</th><th>Borrower</th><th>Key Item</th><th>Date Borrowed</th><th>Returned</th><th>Status</th></tr></thead>
         <tbody class="g-body">
           <?php if (empty($key_logs)): ?>
             <tr><td colspan="6" class="empty-row">No borrowing history yet.</td></tr>
-          <?php else: foreach ($key_logs as $l): $st = $l['status'] === 'Active' ? 'Key Out' : 'Returned'; ?>
+          <?php else: foreach ($key_logs as $l): $st = $l['status'] === 'Active' ? 'Borrowed' : 'Returned'; ?>
             <tr class="g-row" style="cursor:pointer" onclick="showKeyDetail(<?= (int) $l['id'] ?>)" data-id="<?= (int) $l['id'] ?>" data-status="<?= $st ?>" data-time="<?= esc($l['scan_in']) ?>">
               <td><strong><?= esc($l['log_number']) ?></strong></td>
               <td><?= esc($l['full_name']) ?></td>
@@ -349,13 +349,14 @@ $zoomSelect = function (string $svgId) use ($buildings) {
   <div class="g-pane" id="g-records" style="display:none">
     <div class="table-wrap">
       <table class="sj-table">
-        <thead><tr><th>Time</th><th>Guard</th><th>Activity</th></tr></thead>
+        <thead><tr><th>Date</th><th>Time</th><th>Guard</th><th>Activity</th></tr></thead>
         <tbody class="g-body">
           <?php if (empty($events)): ?>
-            <tr><td colspan="3" class="empty-row">No guard records yet.</td></tr>
+            <tr><td colspan="4" class="empty-row">No guard records yet.</td></tr>
           <?php else: foreach ($events as $e): ?>
             <tr class="g-row" data-status="" data-time="<?= esc($e['time']) ?>">
-              <td><?= date('M d, Y g:i A', strtotime($e['time'])) ?></td>
+              <td><?= date('M d, Y', strtotime($e['time'])) ?></td>
+              <td><?= date('g:i A', strtotime($e['time'])) ?></td>
               <td><?= esc($e['guard']) ?></td>
               <td><?= esc($e['action']) ?></td>
             </tr>
@@ -368,7 +369,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
   <div class="g-pane" id="g-vehicles" style="display:none">
     <div class="table-wrap">
       <table class="sj-table">
-        <thead><tr><th>Trip ID</th><th>Requester</th><th>Destination</th><th>Driver / Vehicle</th><th>Departure</th><th>Gate Status</th><th>Action</th></tr></thead>
+        <thead><tr><th>Trip ID</th><th>Requester</th><th>Destination</th><th>Assigned Driver</th><th>Departure</th><th>Gate Status</th><th>Action</th></tr></thead>
         <tbody class="g-body">
           <?php if (empty($gate_trips)): ?>
             <tr><td colspan="7" class="empty-row">No approved trips waiting at the gate.</td></tr>
@@ -398,7 +399,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
       <div class="gc-title"><i class="bi bi-eye"></i> Security Monitoring — what needs the guard's attention</div>
       <div class="table-wrap">
         <table class="sj-table">
-          <thead><tr><th>Who / What</th><th>Details</th><th>Reference</th><th>Alert</th></tr></thead>
+          <thead><tr><th>Name</th><th>Details</th><th>Reference</th><th>Alert</th></tr></thead>
           <tbody id="monitorBody"></tbody>
         </table>
       </div>
@@ -868,7 +869,7 @@ function fsAddToggle() {
 <?php endif; ?>
 
 <?php if ($section === 'guard'): ?>
-const alertData = { g: { items: <?= $alerts_json ?>, titles: { red: 'Keys out over 8 hours', yellow: 'Trips awaiting dispatch' }, cols: ['Who', 'Details', 'Reference', 'Alert'] } };
+const alertData = { g: { items: <?= $alerts_json ?>, titles: { red: 'Keys out over 8 hours', yellow: 'Trips awaiting dispatch' }, cols: ['Name', 'Details', 'Reference', 'Alert'] } };
 initAlertIcons();
 const keyLogsData = <?= $key_logs_json ?>;
 
@@ -909,7 +910,7 @@ function showKeyDetail(id) {
   document.getElementById('keyDetailTitle').textContent = `${l.log} — ${l.key}`;
   document.getElementById('keyDetailBody').innerHTML = detailGrid([
     ['Borrower', l.borrower], ['Borrower ID', l.borrower_id || '—'], ['Department', l.dept || '—'],
-    ['Borrowed', l.borrowed], ['Returned', l.returned], ['Status', l.status], ['Guard on duty', l.guard],
+    ['Date Borrowed', l.borrowed], ['Returned', l.returned], ['Status', l.status], ['Guard on duty', l.guard],
   ]);
   document.getElementById('keyDetailModal').style.display = 'flex';
 }

@@ -373,7 +373,7 @@ INSERT INTO `borrow_records` VALUES
 (76,71,1.00,'Juan Santos','Facilities','2026-08-27','2026-09-14','Returned','2026-09-05 17:45:21',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:06:36'),
 (77,72,1.00,'Maria Domingo','Maintenance','2026-08-26','2026-09-15','Returned','2026-09-05 17:45:21',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:06:36'),
 (78,73,1.00,'Fernando Cruz','Maintenance','2026-08-25','2026-09-16','Returned','2026-09-05 17:45:21',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:06:36'),
-(93,2,1.00,'Rico Dela Cruz','Athletics','2026-09-06','2026-09-13','Borrowed','2026-09-06 01:30:35',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:30:35'),
+(93,2,1.00,'Rico Dela Cruz','Athletics','2026-09-06','2026-09-13','Returned','2026-09-06 01:30:35',0,NULL,'None',NULL,NULL,NULL,'2026-10-04 02:47:47'),
 (94,74,1.00,'Coach Reyes (sample)','Athletics','2026-10-02','2026-10-09','Borrowed','2026-10-04 02:27:14',0,NULL,'None',NULL,NULL,NULL,'2026-10-04 02:27:14'),
 (95,77,1.00,'Mina Santos (sample)','Athletics','2026-09-25','2026-10-01','Borrowed','2026-10-04 02:27:14',0,NULL,'None',NULL,NULL,NULL,'2026-10-04 02:27:14'),
 (96,82,1.00,'PE Instructor Cruz (sample)','Student Affairs','2026-10-03','2026-10-05','Borrowed','2026-10-04 02:27:14',0,NULL,'None',NULL,NULL,NULL,'2026-10-04 02:27:14');
@@ -697,13 +697,14 @@ CREATE TABLE `facility_keys` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `key_name` varchar(150) NOT NULL,
   `location` varchar(150) DEFAULT NULL,
+  `floor` varchar(50) DEFAULT NULL,
   `nfc_uid` varchar(100) NOT NULL,
   `status` enum('Available','Borrowed') NOT NULL DEFAULT 'Available',
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nfc_uid` (`nfc_uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -712,6 +713,13 @@ CREATE TABLE `facility_keys` (
 
 LOCK TABLES `facility_keys` WRITE;
 /*!40000 ALTER TABLE `facility_keys` DISABLE KEYS */;
+INSERT INTO `facility_keys` VALUES
+(4,'Admin Filing Room Key',NULL,NULL,'KEY-8E4BF210','Available','2026-10-04 10:48:12','2026-10-04 10:48:12'),
+(5,'Conference Room Key',NULL,NULL,'KEY-908094ED','Available','2026-10-04 10:48:14','2026-10-04 10:48:14'),
+(6,'Gymnasium Storage Key',NULL,NULL,'KEY-5F7E4FDF','Available','2026-10-04 10:48:19','2026-10-04 10:48:19'),
+(7,'Lab Cabinet Keys',NULL,NULL,'KEY-7A14AC3B','Available','2026-10-04 10:48:21','2026-10-04 10:48:21'),
+(8,'Library Storeroom Key',NULL,NULL,'KEY-D6BC7BA5','Available','2026-10-04 10:48:22','2026-10-04 10:48:22'),
+(9,'Server Room Key',NULL,NULL,'KEY-9C5458C1','Available','2026-10-04 10:48:24','2026-10-04 10:48:24');
 /*!40000 ALTER TABLE `facility_keys` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1141,6 +1149,7 @@ DROP TABLE IF EXISTS `janitorial_inspections`;
 CREATE TABLE `janitorial_inspections` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `building` varchar(150) NOT NULL,
+  `floor` varchar(50) DEFAULT NULL,
   `inspection_month` char(7) NOT NULL,
   `result` enum('Passed','Needs Attention') NOT NULL,
   `inspected_by` varchar(150) NOT NULL,
@@ -1148,7 +1157,7 @@ CREATE TABLE `janitorial_inspections` (
   `inspected_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `building` (`building`,`inspection_month`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1158,15 +1167,15 @@ CREATE TABLE `janitorial_inspections` (
 LOCK TABLES `janitorial_inspections` WRITE;
 /*!40000 ALTER TABLE `janitorial_inspections` DISABLE KEYS */;
 INSERT INTO `janitorial_inspections` VALUES
-(2,'University Library','2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:50:50'),
-(3,'College of Nursing','2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:50:50'),
-(4,'Administration Building','2026-10','Needs Attention','Facilities Test Account',NULL,'2026-10-03 17:50:50'),
-(5,'College of Law Building','2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:51:50'),
-(6,'Executive House','2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:51:50'),
-(7,'Guest House','2026-10','Needs Attention','Facilities Test Account','Lights in hallway need replacing','2026-10-03 17:51:50'),
-(8,'HRM Kitchen','2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:51:50'),
-(11,'University Cafeteria, Bookstore, Sewing','2026-10','Passed','Facilities Test Account','okay natu','2026-10-03 20:53:05'),
-(13,'Guest House','2026-10','Passed','Facilities Test Account','Goods Nani','2026-10-03 20:57:34');
+(2,'University Library',NULL,'2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:50:50'),
+(3,'College of Nursing',NULL,'2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:50:50'),
+(4,'Administration Building',NULL,'2026-10','Needs Attention','Facilities Test Account',NULL,'2026-10-03 17:50:50'),
+(5,'College of Law Building',NULL,'2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:51:50'),
+(6,'Executive House',NULL,'2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:51:50'),
+(7,'Guest House',NULL,'2026-10','Needs Attention','Facilities Test Account','Lights in hallway need replacing','2026-10-03 17:51:50'),
+(8,'HRM Kitchen',NULL,'2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:51:50'),
+(11,'University Cafeteria, Bookstore, Sewing',NULL,'2026-10','Passed','Facilities Test Account','okay natu','2026-10-03 20:53:05'),
+(13,'Guest House',NULL,'2026-10','Passed','Facilities Test Account','Goods Nani','2026-10-03 20:57:34');
 /*!40000 ALTER TABLE `janitorial_inspections` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1545,7 +1554,7 @@ CREATE TABLE `motorpool_wo_history` (
   `notes` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `work_order_id` (`work_order_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1568,7 +1577,10 @@ INSERT INTO `motorpool_wo_history` VALUES
 (11,6,'In Progress','Motor Pool Mechanic','2026-09-28 01:15:24','Work started'),
 (15,3,'Completed','Motor Pool Mechanic','2026-09-24 01:15:24','Work finished'),
 (16,6,'Completed','Motor Pool Mechanic','2026-09-28 01:15:24','Work finished'),
-(18,7,'Cancelled','Motor Pool Head','2026-09-15 01:15:24','Request cancelled');
+(18,7,'Cancelled','Motor Pool Head','2026-09-15 01:15:24','Request cancelled'),
+(22,2,'Completed','Assets Test Account','2026-10-04 04:32:13','Work finished'),
+(23,1,'In Progress','Assets Test Account','2026-10-04 13:19:14','Work started'),
+(24,1,'Completed','Assets Test Account','2026-10-04 13:19:19','Work finished');
 /*!40000 ALTER TABLE `motorpool_wo_history` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1606,8 +1618,8 @@ CREATE TABLE `motorpool_work_orders` (
 LOCK TABLES `motorpool_work_orders` WRITE;
 /*!40000 ALTER TABLE `motorpool_work_orders` DISABLE KEYS */;
 INSERT INTO `motorpool_work_orders` VALUES
-(1,'MP-001','Vehicle Repair',2,NULL,'Air conditioning not cooling','Routine','Pending','Sample Requester',NULL,'2026-10-03 01:15:24',NULL,NULL),
-(2,'MP-002','Vehicle Repair',3,NULL,'Brake noise when stopping','Urgent','In Progress','Sample Requester','Motor Pool Mechanic','2026-10-01 01:15:24','2026-10-02 01:15:24',NULL),
+(1,'MP-001','Vehicle Repair',2,NULL,'Air conditioning not cooling','Routine','Completed','Sample Requester','Assets Test Account','2026-10-03 01:15:24','2026-10-04 13:19:19','2026-10-04 13:19:19'),
+(2,'MP-002','Vehicle Repair',3,NULL,'Brake noise when stopping','Urgent','Completed','Sample Requester','Motor Pool Mechanic','2026-10-01 01:15:24','2026-10-04 04:32:13','2026-10-04 04:32:13'),
 (3,'MP-003','Vehicle Repair',5,NULL,'Replace worn front tires','Routine','Completed','Sample Requester','Motor Pool Mechanic','2026-09-20 01:15:24','2026-09-24 01:15:24','2026-09-24 01:15:24'),
 (4,'MP-004','Mechanical Equipment',NULL,2,'Generator fails to start','Urgent','In Progress','Sample Requester','Motor Pool Mechanic','2026-10-02 01:15:24','2026-10-03 01:15:24',NULL),
 (5,'MP-005','Mechanical Equipment',NULL,6,'Engine overheats after 10 minutes','Routine','Pending','Sample Requester',NULL,'2026-10-03 21:15:24',NULL,NULL),
@@ -1638,7 +1650,7 @@ CREATE TABLE `notifications` (
   KEY `idx_is_read` (`is_read`),
   KEY `idx_priority` (`priority`),
   KEY `idx_created` (`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=200 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=203 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1833,7 +1845,10 @@ INSERT INTO `notifications` VALUES
 (195,'Sports Equipment Overdue','Badminton Racket Set (4pcs) was due back 3 days ago - borrowed by Mina Santos (Athletics).','Sports Equipment Office','CRITICAL','Pending','system',0,NULL,'2026-10-03 23:27:14'),
 (196,'Sports Equipment Borrowed','Gym Mats (Set of 5) borrowed by PE Instructor Cruz - due back tomorrow.','Sports Equipment Office','ROUTINE','Pending','system',0,NULL,'2026-10-03 02:27:14'),
 (197,'Sports Equipment Borrowed','Basketball (Molten GG7) borrowed by Coach Reyes - due back in 5 days.','Sports Equipment Office','ROUTINE','Pending','system',0,NULL,'2026-10-02 02:27:14'),
-(198,'Sports Equipment Needs Repair','Table Tennis Paddle Set is in Poor condition.','Sports Equipment Office','MODERATE','Pending','system',0,NULL,'2026-10-03 21:27:14');
+(198,'Sports Equipment Needs Repair','Table Tennis Paddle Set is in Poor condition.','Sports Equipment Office','MODERATE','Pending','system',0,NULL,'2026-10-03 21:27:14'),
+(200,'Motor Pool Work Order','MP-002 is now Completed.','Motor Pool','ROUTINE','Pending','system',0,NULL,'2026-10-04 04:32:13'),
+(201,'Motor Pool Work Order','MP-001 is now In Progress.','Motor Pool','ROUTINE','Pending','system',0,NULL,'2026-10-04 13:19:14'),
+(202,'Motor Pool Work Order','MP-001 is now Completed.','Motor Pool','ROUTINE','Pending','system',1,'2026-10-04 13:20:21','2026-10-04 13:19:20');
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2280,7 +2295,7 @@ CREATE TABLE `return_records` (
   KEY `tool_id` (`tool_id`),
   CONSTRAINT `return_records_ibfk_1` FOREIGN KEY (`borrow_id`) REFERENCES `borrow_records` (`id`),
   CONSTRAINT `return_records_ibfk_2` FOREIGN KEY (`tool_id`) REFERENCES `tools` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2292,7 +2307,8 @@ LOCK TABLES `return_records` WRITE;
 INSERT INTO `return_records` VALUES
 (1,10,55,1.00,'John Doe','2026-08-01','Good',NULL,'2026-08-02 03:34:15'),
 (2,11,55,1.00,'John Doe','2026-08-01','Good',NULL,'2026-08-02 04:10:55'),
-(3,12,55,1.00,'Sherina Banosong','2026-08-02','Good',NULL,'2026-08-02 17:42:30');
+(3,12,55,1.00,'Sherina Banosong','2026-08-02','Good',NULL,'2026-08-02 17:42:30'),
+(5,93,2,1.00,'Rico Dela Cruz','2026-10-04','Excellent',NULL,'2026-10-04 02:47:47');
 /*!40000 ALTER TABLE `return_records` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2364,7 +2380,7 @@ CREATE TABLE `safety_inspections` (
   `inspected_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `building` (`building`,`inspection_month`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2380,7 +2396,9 @@ INSERT INTO `safety_inspections` VALUES
 (4,'College of Nursing','2026-10','Safe',NULL,'Timothy Eraham','2026-10-03 22:30:52'),
 (5,'Administration Building','2026-09','Safe','All good last month','Timothy Eraham','2026-09-03 22:30:52'),
 (6,'University Library','2026-09','Safe',NULL,'Timothy Eraham','2026-09-03 22:30:52'),
-(7,'College of Law Building','2026-09','Needs Attention','Exit sign dim','Timothy Eraham','2026-09-03 22:30:52');
+(7,'College of Law Building','2026-09','Needs Attention','Exit sign dim','Timothy Eraham','2026-09-03 22:30:52'),
+(9,'College of Law Building','2026-10','Safe','Good','Security Test Account','2026-10-04 03:44:32'),
+(10,'College of Education Building','2026-10','Needs Attention',NULL,'Security Test Account','2026-10-04 03:46:39');
 /*!40000 ALTER TABLE `safety_inspections` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2537,7 +2555,7 @@ CREATE TABLE `tools` (
 LOCK TABLES `tools` WRITE;
 /*!40000 ALTER TABLE `tools` DISABLE KEYS */;
 INSERT INTO `tools` VALUES
-(2,'MacBook Pro 16','AST-92041','IT Equipment','Deans Office, CCS','Maria Clara Santos','Excellent','Borrowed',NULL,NULL,'pcs',0,'2026-07-18 20:20:56',0,NULL,'2026-09-06 01:30:35'),
+(2,'MacBook Pro 16','AST-92041','IT Equipment','Deans Office, CCS','Maria Clara Santos','Excellent','Available',NULL,NULL,'pcs',0,'2026-07-18 20:20:56',0,NULL,'2026-10-04 02:47:47'),
 (3,'Floors Buffer Matt','AST-03481','Janitorial','Janitor Depot B','Sonia G. Ramirez','Excellent','Available',NULL,NULL,'pcs',0,'2026-07-18 20:20:56',0,NULL,'2026-09-06 01:06:36'),
 (4,'Sony Alpha A7 III','AST-00612','Media Studio','Media Center','Col. Arthur Miller','Poor','Available',NULL,NULL,'pcs',0,'2026-07-18 20:20:56',0,NULL,'2026-09-06 01:06:36'),
 (5,'Epson Projector X50','AST-77120','IT Equipment','AVR Room 2','Pedro Penduko','Excellent','Available',NULL,NULL,'pcs',0,'2026-07-18 20:20:56',0,NULL,'2026-09-06 01:06:36'),
@@ -2775,7 +2793,7 @@ CREATE TABLE `ubra_chat_logs` (
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `emp_id` (`emp_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=281 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=297 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2792,7 +2810,23 @@ INSERT INTO `ubra_chat_logs` VALUES
 (271,'10005','user','Give me a fleet health check — vehicle status, GPS status, and anything needing attention.','2026-10-02 14:07:25'),
 (272,'10005','assistant','**Fleet Health Check – Summary (as of 02 Oct 2026, 14:07)**  \n\n- **Total fleet:** **5** vehicles  \n- **Available now:** **3** vehicles  \n- **In use / assigned:** **2** vehicles (the ones currently not listed as available)  \n\n**GPS Tracking**  \n- No GPS‑offline alerts are shown in the system snapshot.  \n- If any vehicle’s live tracker shows “no signal” or “inactive,” please verify in the **Vehicle Management → GPS Tracker** page.\n\n**Items Needing Attention**  \n- **Open maintenance work orders:** **4** (may involve vehicles or other assets). Review the **Maintenance (Safety) → Work Orders** list to see if any are tied to fleet equipment.  \n- **Fuel‑need predictions:** Not displayed in the snapshot; check the **Vehicle Management → Fuel Logs** module for any vehicles flagged for low fuel or upcoming refuel.  \n- **Trip tickets awaiting dispatch/approval:** **3** pending. Ensure drivers have approved tickets before dispatch to avoid scheduling conflicts.\n\n**Recommended Actions**  \n1. Open **Vehicle Management** and confirm the status (available, in‑service, under maintenance) of the two vehicles currently not listed as available.  \n2. Run the **GPS Tracker** live view to spot any devices showing “offline” or “error.”  \n3. Cross‑reference the **4 open maintenance work orders** with the fleet list; close or reassign any that pertain to vehicles.  \n4. Approve or reject the **3 pending trip tickets** to keep travel operations on schedule.  \n\nFor detailed per‑vehicle information (e.g., mileage, service due dates, GPS health), navigate to **Vehicle Management → Fleet Overview**. Let me know if you’d like a specific report (e.g., “generate a pdf report for fleet status this week”) and I’ll trigger the downloadable file.','2026-10-02 14:07:25'),
 (275,'20230251','user','Give me a fleet health check — vehicle status, GPS status, and anything needing attention.','2026-10-02 15:26:53'),
-(276,'20230251','assistant','**UBRA Fleet Health Check (as of Oct 2 2026 15:26)**  \n\n| Item | Current Status | Action Needed |\n|------|----------------|----------------|\n| **Total Vehicles** | **5** | – |\n| **Available** | **3** (idle) | No immediate action |\n| **In Use** | **2** (assigned to trips) | Verify driver logs & fuel levels |\n| **GPS Trackers** | Live status view available in **Vehicle Management → GPS Tracker** | • Confirm that both active units show a green “online” signal. <br>• Flag any unit showing “offline” or “signal lost” for replacement/repair. |\n| **Trip Tickets** | **3** tickets awaiting dispatch/approval | • Review and approve or reject the pending tickets to free vehicle capacity. |\n| **Maintenance Alerts** | No vehicle‑specific work orders listed in the snapshot, but **4 open maintenance work orders** exist system‑wide (may include vehicles). | • Open **Maintenance → Work Orders** and filter by “Vehicle” to address any pending repairs. |\n| **Safety Inspections** | Not listed for vehicles (fire‑extinguisher inspections are overdue). | • Ensure any required vehicle safety checks (e.g., brake, tire, oil) are up‑to‑date; schedule if missing. |\n\n### Recommended Immediate Steps\n1. **Check GPS health** – go to *Vehicle Management → GPS Tracker* and verify that the two vehicles currently in use report live locations.  \n2. **Process pending trip tickets** – approve/dispatch the three awaiting tickets to avoid idle time.  \n3. **Cross‑check work orders** – filter open work orders for vehicle‑related items and schedule repairs.  \n4. **Confirm routine vehicle inspections** – run a quick check in the Vehicle Management module to ensure all required preventative maintenance (oil change, tire rotation, safety inspection) is logged and up‑to‑date.\n\nIf you need a detailed PDF/Excel **fleet health report** (including GPS signal logs, mileage, fuel consumption, and upcoming maintenance), just let me know and I’ll generate the downloadable file for you.','2026-10-02 15:26:53');
+(276,'20230251','assistant','**UBRA Fleet Health Check (as of Oct 2 2026 15:26)**  \n\n| Item | Current Status | Action Needed |\n|------|----------------|----------------|\n| **Total Vehicles** | **5** | – |\n| **Available** | **3** (idle) | No immediate action |\n| **In Use** | **2** (assigned to trips) | Verify driver logs & fuel levels |\n| **GPS Trackers** | Live status view available in **Vehicle Management → GPS Tracker** | • Confirm that both active units show a green “online” signal. <br>• Flag any unit showing “offline” or “signal lost” for replacement/repair. |\n| **Trip Tickets** | **3** tickets awaiting dispatch/approval | • Review and approve or reject the pending tickets to free vehicle capacity. |\n| **Maintenance Alerts** | No vehicle‑specific work orders listed in the snapshot, but **4 open maintenance work orders** exist system‑wide (may include vehicles). | • Open **Maintenance → Work Orders** and filter by “Vehicle” to address any pending repairs. |\n| **Safety Inspections** | Not listed for vehicles (fire‑extinguisher inspections are overdue). | • Ensure any required vehicle safety checks (e.g., brake, tire, oil) are up‑to‑date; schedule if missing. |\n\n### Recommended Immediate Steps\n1. **Check GPS health** – go to *Vehicle Management → GPS Tracker* and verify that the two vehicles currently in use report live locations.  \n2. **Process pending trip tickets** – approve/dispatch the three awaiting tickets to avoid idle time.  \n3. **Cross‑check work orders** – filter open work orders for vehicle‑related items and schedule repairs.  \n4. **Confirm routine vehicle inspections** – run a quick check in the Vehicle Management module to ensure all required preventative maintenance (oil change, tire rotation, safety inspection) is logged and up‑to‑date.\n\nIf you need a detailed PDF/Excel **fleet health report** (including GPS signal logs, mileage, fuel consumption, and upcoming maintenance), just let me know and I’ll generate the downloadable file for you.','2026-10-02 15:26:53'),
+(281,'10030','user','unsay update sa Safety & Security?','2026-10-04 03:59:42'),
+(282,'10030','assistant','**Update sa Safety & Security (Alas 03:59 AM, Oct 4 2026)**  \n\n**Safety**  \n- **4** overdue fire‑extinguisher inspections – kinahanglan i‑schedule dayon aron malikayan penalties.  \n- **4** bukas nga maintenance work orders – tan‑awa ang *Maintenance* module para sa detalye sa mga pending tasks ug assign technicians.  \n\n**Security**  \n- **Vehicles:** 5 total; **3** available for patrol/response.  \n- **Personnel on duty:** **56** of 78 staff – may **22** off‑duty; siguroha nga coverage sa critical entry points.  \n- **Tools & Equipment borrowed:** **3** items currently out – verify return status sa *Tools Management* kung gigamit sa security ops.  \n\n**Suggested next steps**  \n1. Prioritize scheduling of the 4 overdue extinguisher inspections (Safety).  \n2. Review and close the 4 open work orders (Maintenance).  \n3. Verify vehicle availability for any upcoming security patrols or incident response.  \n4. Cross‑check borrowed tools to confirm they are returned before shift change.  \n\nKung gusto nimo ang detalyadong lista sa mga work order o inspeksyon, adto sa **Maintenance (Safety)** module. Kung kinahanglan nimo ang vehicle‑tracker o trip‑ticket status, adto sa **Vehicle Management**.','2026-10-04 03:59:42'),
+(283,'10030','user','unsay update sa janitorial?','2026-10-04 04:00:33'),
+(284,'10030','assistant','**Janitorial Update (Alas 04:00 AM, Oct 4 2026)**  \n\n- **Cleaning coverage:** **3** of **8** zones have been cleaned today ≈ 38 % completion.  \n- **Remaining zones:** 5 zones still pending cleaning for the current shift.  \n- **Staff on duty:** 56 security personnel are on shift; janitorial staff assignments are managed in the **Janitorial Monitoring** module (you can view exact crew allocations there).  \n\n**Recommended actions**  \n1. **Check the Janitorial Monitoring page** to see which crew members are assigned to the 5 pending zones and verify their shift status.  \n2. If additional support is needed, consider reallocating available security staff for spot‑cleaning of high‑traffic areas until janitorial crews arrive.  \n3. Monitor the **Cleaning Completion KPI** on the Dashboard to ensure the daily target (all 8 zones) is met before the end of the shift.  \n\nLet me know if you need a detailed zone‑by‑zone status or want to generate a cleaning‑report (e.g., “generate a pdf report for janitorial today”).','2026-10-04 04:00:33'),
+(285,'10040','user','unsay update sa janitorial','2026-10-04 04:40:22'),
+(286,'10040','assistant','**Janitorial Update (as of 04:40 AM, Oct 4, 2026)**  \n\n- **Zones cleaned today:** **3 / 8**  \n- **Remaining zones to clean:** 5 (scheduled for later today)  \n\nThe Janitorial Monitoring module shows the current progress for today’s cleaning schedule. Let me know if you need the detailed zone list, staff assignments, or a cleaning‑completion report.','2026-10-04 04:40:22'),
+(287,'10030','user','How many vehicles are available today?','2026-10-04 12:50:23'),
+(288,'10030','assistant','That\'s outside your account\'s access. This assistant only answers about **Safety and Security Department** — fire safety equipment (extinguishers, smoke detectors, alarms, exit signs), floor plans, guard monitoring and keys, and safety inspections. Please ask the account that handles that area, or ask me something about your own department.','2026-10-04 12:50:23'),
+(289,'10050','user','Which fire extinguishers are expired?','2026-10-04 12:50:31'),
+(290,'10050','assistant','I’m sorry, but I can only provide information about Sports equipment. If you need help with the sports equipment records, condition, location, or borrowing/returns, just let me know!','2026-10-04 12:50:31'),
+(291,'10050','user','generate a pdf report for vehicle this month','2026-10-04 12:50:35'),
+(292,'10050','assistant','That\'s outside your account\'s access. This assistant only answers about **Sports Equipment Monitoring** — sports equipment records, equipment condition and location, and borrowing and returns. Please ask the account that handles that area, or ask me something about your own department.','2026-10-04 12:50:35'),
+(293,'10040','user','How many motor pool work orders are open and how many are urgent? Answer in one line.','2026-10-04 12:50:44'),
+(294,'10040','assistant','Open work orders: **3**; Urgent: **1**.','2026-10-04 12:50:44'),
+(295,'10040','user','Any aircon units overdue for cleaning?','2026-10-04 12:50:49'),
+(296,'10040','assistant','That\'s outside your account\'s access. This assistant only answers about **Asset Acquisition and Monitoring Department** — vehicles and drivers, vehicle maintenance, mechanical equipment, motor pool work orders, trip tickets, and the GPS tracker. Please ask the account that handles that area, or ask me something about your own department.','2026-10-04 12:50:49');
 /*!40000 ALTER TABLE `ubra_chat_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -3049,4 +3083,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-10-04  2:40:29
+-- Dump completed on 2026-10-04 13:31:19

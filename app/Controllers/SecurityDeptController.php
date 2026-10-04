@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\FacilityKeyModel;
 use App\Models\FireExtinguisherModel;
 use App\Models\FloorPlanMarkerModel;
 use App\Models\KeyBorrowLogModel;
@@ -26,6 +27,14 @@ class SecurityDeptController extends BaseController
     private function fmtDateTime($d): string
     {
         return !empty($d) ? date('M d, Y g:i A', strtotime($d)) : '—';
+    }
+
+    // What the tables show for an item: its problem if it has one, otherwise its check state ('OK' reads as 'Good').
+    private function shownState(array $r): string
+    {
+        if ($r['status'] !== 'Working') return $r['status'];
+
+        return $r['due'] === 'OK' ? 'Good' : $r['due'];
     }
 
     // 'OK' | 'Due in 7 Days' | 'Overdue' for a next-check date.
@@ -140,7 +149,7 @@ class SecurityDeptController extends BaseController
         $gd = $this->guardData();
         $in = $this->inspectionData();
         $overdue = array_values(array_filter($equipment, fn($r) => $r['due'] === 'Overdue'));
-        $overdueRows = array_map(fn($r) => [$r['type'], $r['code'], $r['building'], $r['floor'] ?? '—', $r['status'] === 'Working' ? $r['due'] : $r['status'], $this->fmtDate($r['next'])], $overdue);
+        $overdueRows = array_map(fn($r) => [$r['type'], $r['code'], $r['building'], $r['floor'] ?? '—', $this->shownState($r), $this->fmtDate($r['next'])], $overdue);
         $details = [
             'sd_total'  => ['title' => 'All Safety Equipment'] + $fs['stat_detail']['fs_total'],
             'sd_attn'   => $fs['stat_detail']['fs_attention'],
@@ -231,6 +240,192 @@ class SecurityDeptController extends BaseController
             'active_stat' => $stat ?: null,
             'stat_rows'   => ($data['stat_detail'][$stat] ?? null),
         ], $data));
+    }
+
+    // List of Keys: every key on record (registered keys + any key that has ever been borrowed), and where it is now.
+    public function keyList()
+    {
+        if (!session()->get('isLoggedIn')) return redirect()->to('/login');
+
+        $keys = [];
+        foreach ((new FacilityKeyModel())->orderBy('key_name', 'ASC')->findAll() as $k) {
+            $keys[mb_strtolower($k['key_name'])] = ['id' => (int) $k['id'], 'name' => $k['key_name'], 'location' => $k['location'], 'floor' => $k['floor'] ?? null, 'registered' => true, 'uid' => $k['nfc_uid'], 'times' => 0, 'out' => false, 'last_by' => null, 'last_at' => null, 'borrower' => null];
+        }
+        foreach ((new KeyBorrowLogModel())->orderBy('scan_in', 'ASC')->findAll() as $l) {
+            $name = trim((string) $l['key_item']);
+            if ($name === '') continue;
+            $id = mb_strtolower($name);
+            $keys[$id] ??= ['id' => null, 'name' => $name, 'location' => null, 'floor' => null, 'registered' => false, 'uid' => null, 'times' => 0, 'out' => false, 'last_by' => null, 'last_at' => null, 'borrower' => null];
+            $keys[$id]['times']++;
+            $keys[$id]['last_by'] = $l['full_name'];
+            $keys[$id]['last_at'] = $l['scan_in'];
+            $keys[$id]['out'] = $l['status'] === 'Active';
+            $keys[$id]['borrower'] = $l['status'] === 'Active' ? $l['full_name'] : null;
+        }
+        uasort($keys, fn($a, $b) => strcasecmp($a['name'], $b['name']));
+
+        $cols = ['Key', 'Location', 'Floor', 'Tag ID', 'Status', 'With', 'Times Borrowed', 'Last Borrowed', 'Action'];
+        // QR button for keys that have a Tag ID; keys that were only ever borrowed (never listed) get an "Add to list" button.
+        $action = function ($k) {
+            if ($k['registered']) {
+                return ['raw' => '<div style="display:flex;gap:6px;justify-content:center;align-items:center;"><button type="button" class="fp-btn" style="height:30px;padding:0 12px;font-size:12px;" data-name="' . esc($k['name']) . '" data-uid="' . esc($k['uid']) . '" data-place="' . esc(trim(($k['location'] ?: '') . ($k['floor'] ? ', ' . $k['floor'] : ''), ', ')) . '" onclick="showKeyQr(this)"><i class="bi bi-qr-code"></i> QR Code</button>'
+                    . '<button type="button" class="fp-btn secondary" style="height:30px;width:34px;padding:0;font-size:13px;" title="Delete this key" aria-label="Delete this key" data-id="' . (int) $k['id'] . '" data-name="' . esc($k['name']) . '" onclick="askDeleteKey(this)"><i class="bi bi-trash3"></i></button></div>'];
+            }
+            return ['raw' => '<form method="post" action="' . base_url('security-dept/keys') . '" style="display:inline">' . csrf_field() . '<input type="hidden" name="key_name" value="' . esc($k['name']) . '"><button type="submit" class="fp-btn secondary" style="height:30px;padding:0 12px;font-size:12px;">Add to list</button></form>'];
+        };
+        $row = fn($k) => [$k['name'], $k['location'] ?: '—', $k['floor'] ?: '—', $k['uid'] ?: '—', $k['out'] ? 'Borrowed' : 'Available', $k['borrower'] ?: '—', (string) $k['times'], $k['last_at'] ? $this->fmtDate($k['last_at']) : '—', $action($k)];
+        $qrKeys = array_values(array_map(fn($k) => ['name' => $k['name'], 'uid' => $k['uid'], 'place' => trim(($k['location'] ?: '') . ($k['floor'] ? ', ' . $k['floor'] : ''), ', ')], array_filter($keys, fn($k) => $k['registered'])));
+        $all = array_values($keys);
+        $out = array_values(array_filter($all, fn($k) => $k['out']));
+        $in = array_values(array_filter($all, fn($k) => !$k['out']));
+
+        return view('security_dept/keys', [
+            'title'       => 'List of Keys',
+            'pageCss'     => 'safety.css',
+            'columns'     => $cols,
+            'rows'        => array_map($row, $all),
+            'status'      => [
+                ['key' => 'k_total', 'label' => 'Total Keys', 'value' => count($all), 'icon' => 'bi-key-fill', 'tone' => 'maroon'],
+                ['key' => 'k_avail', 'label' => 'Available', 'value' => count($in), 'icon' => 'bi-check-circle-fill', 'tone' => 'green'],
+                ['key' => 'k_out', 'label' => 'Borrowed', 'value' => count($out), 'icon' => 'bi-box-arrow-up-right', 'tone' => 'gold'],
+            ],
+            'details'     => [
+                'k_total' => ['title' => 'All Keys', 'rows' => array_map($row, $all)],
+                'k_avail' => ['title' => 'Available Keys', 'rows' => array_map($row, $in)],
+                'k_out'   => ['title' => 'Borrowed Keys', 'rows' => array_map($row, $out)],
+            ],
+            'buildings'   => FireExtinguisherModel::BUILDINGS,
+            'floors_json' => $this->jsonForScript(\App\Libraries\FloorPlanCatalog::floorsByBuilding()),
+            'qr_keys_json' => $this->jsonForScript($qrKeys),
+        ]);
+    }
+
+    // PDF of key QR codes on bond paper (same header look as the Information Hub PDF). The browser draws the QR
+    // pictures; this adds the university header and lays them out N to a sheet.
+    public function keysPdf()
+    {
+        if (!session()->get('isLoggedIn')) return redirect()->to('/login');
+
+        $paperKey = (string) $this->request->getPost('paper');
+        $papers = [
+            'letter' => ['size' => 'letter', 'w' => 215.9, 'h' => 279.4],
+            'a4'     => ['size' => 'a4', 'w' => 210.0, 'h' => 297.0],
+            'long'   => ['size' => [0, 0, 612, 936], 'w' => 215.9, 'h' => 330.2], // 8.5 x 13 in
+        ];
+        $grids = [6 => [2, 3], 8 => [2, 4], 12 => [3, 4], 15 => [3, 5], 20 => [4, 5], 24 => [4, 6], 30 => [5, 6], 35 => [5, 7], 48 => [6, 8]];
+        $per = (int) $this->request->getPost('per');
+        if (!isset($papers[$paperKey]) || !isset($grids[$per])) return redirect()->to('/security-dept/keys')->with('error', 'Choose the bond paper and how many QR codes per sheet.');
+        $paper = $papers[$paperKey];
+        [$cols, $rows] = $grids[$per];
+
+        $images = json_decode((string) $this->request->getPost('images'), true) ?: [];
+        $only = trim((string) $this->request->getPost('only'));
+        $keys = [];
+        foreach ((new FacilityKeyModel())->orderBy('key_name', 'ASC')->findAll() as $k) {
+            $img = $images[$k['nfc_uid']] ?? '';
+            if (!is_string($img) || !preg_match('#^data:image/png;base64,[A-Za-z0-9+/=]+$#', $img)) continue;
+            if ($only !== '' && $k['nfc_uid'] !== $only) continue;
+            $keys[] = ['name' => $k['key_name'], 'place' => trim(($k['location'] ?: '') . ($k['floor'] ? ', ' . $k['floor'] : ''), ', '), 'img' => $img];
+        }
+        if (!$keys) return redirect()->to('/security-dept/keys')->with('error', 'No keys with a QR code to print.');
+
+        $margin = 10; // mm
+        $headerH = 30; // mm reserved for the header on every sheet
+        $cw = ($paper['w'] - $margin * 2) / $cols;
+        $ch = ($paper['h'] - $margin * 2 - $headerH - 12) / $rows; // 12 mm safety so a sheet never spills onto a second page
+        $qr = min($cw * 0.72, $ch * 0.58);
+        $nameFont = max(7, min(11, $qr / 2.6));
+
+        $logoPath = FCPATH . 'images/UBRA LOGO (no background).png';
+        $logo = is_file($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : '';
+        $count = count($keys);
+        $header = '<div class="doc-header">' . ($logo ? '<img src="' . $logo . '" class="doc-logo">' : '')
+            . '<div class="doc-system-name">FOUNDATION UNIVERSITY — UBRA</div>'
+            . '<div class="doc-module-name">Key QR Codes</div>'
+            . '<div class="meta">Generated: ' . esc(date('M j, Y g:i A')) . ' &middot; ' . $count . ' key(s)</div></div>';
+
+        $pages = '';
+        $chunks = array_chunk($keys, $per);
+        foreach ($chunks as $pi => $chunk) {
+            $table = '<table class="grid">';
+            for ($r = 0; $r < $rows; $r++) {
+                $table .= '<tr>';
+                for ($c = 0; $c < $cols; $c++) {
+                    $k = $chunk[$r * $cols + $c] ?? null;
+                    $table .= '<td class="cell">' . ($k
+                        ? '<img src="' . $k['img'] . '" class="qr"><div class="n">' . esc($k['name']) . '</div>' . ($k['place'] !== '' ? '<div class="p">' . esc($k['place']) . '</div>' : '')
+                        : '') . '</td>';
+                }
+                $table .= '</tr>';
+            }
+            $pages .= '<div class="sheet"' . ($pi < count($chunks) - 1 ? ' style="page-break-after:always"' : '') . '>' . $header . $table . '</div>';
+        }
+
+        $html = '<html><head><style>
+            @page { margin: ' . $margin . 'mm; }
+            body { font-family: Helvetica, Arial, sans-serif; color: #222; margin: 0; }
+            .doc-header { text-align: center; height: ' . $headerH . 'mm; }
+            .doc-logo { display: block; margin: 0 auto 4px; height: 38px; }
+            .doc-system-name { font-size: 15px; font-weight: bold; letter-spacing: .04em; color: #800000; }
+            .doc-module-name { font-size: 13px; font-weight: bold; margin-top: 2px; }
+            .meta { color: #666; font-size: 11px; margin-top: 4px; }
+            table.grid { border-collapse: collapse; width: 100%; table-layout: fixed; }
+            td.cell { width: ' . $cw . 'mm; height: ' . ($ch - 2) . 'mm; border: 0.2mm dashed #999; text-align: center; vertical-align: middle; padding: 1mm; overflow: hidden; }
+            img.qr { width: ' . $qr . 'mm; height: ' . $qr . 'mm; }
+            .n { font-weight: bold; font-size: ' . $nameFont . 'px; margin-top: 1mm; }
+            .p { font-size: ' . max(5, $nameFont * 0.75) . 'px; color: #555; margin-top: 0.5mm; }
+        </style></head><body>' . $pages . '</body></html>';
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper($paper['size'], 'portrait');
+        $dompdf->render();
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="fu-ubra-key-qr-codes-' . date('Y-m-d') . '.pdf"')
+            ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->setBody($dompdf->output());
+    }
+
+    // Remove a key from the list (typo fix). A key that is out on loan can't be removed.
+    public function deleteKey(int $id)
+    {
+        if (!session()->get('isLoggedIn')) return redirect()->to('/login');
+
+        $model = new FacilityKeyModel();
+        $key = $model->find($id);
+        if (!$key) return redirect()->to('/security-dept/keys')->with('error', 'That key is no longer on the list.');
+
+        $out = (new KeyBorrowLogModel())->where('status', 'Active')->groupStart()->where('key_id', $id)->orWhere('key_item', $key['key_name'])->groupEnd()->countAllResults();
+        if ($key['status'] === 'Borrowed' || $out > 0) {
+            return redirect()->to('/security-dept/keys')->with('error', "\"{$key['key_name']}\" is out on loan right now, so it can't be deleted. Delete it after it is returned.");
+        }
+
+        $model->delete($id);
+
+        return redirect()->to('/security-dept/keys')->with('success', "Key \"{$key['key_name']}\" deleted.");
+    }
+
+    public function storeKey()
+    {
+        if (!session()->get('isLoggedIn')) return redirect()->to('/login');
+
+        $name = trim((string) $this->request->getPost('key_name'));
+        $location = trim((string) $this->request->getPost('location'));
+        $uid = trim((string) $this->request->getPost('nfc_uid'));
+        $floor = trim((string) $this->request->getPost('floor'));
+        if ($floor !== '' && !in_array($floor, \App\Libraries\FloorPlanCatalog::floorsByBuilding()[$location] ?? [], true)) $floor = '';
+        if ($name === '') return redirect()->to('/security-dept/keys')->with('error', 'Key name is required.');
+
+        $model = new FacilityKeyModel();
+        if ($model->where('key_name', $name)->countAllResults() > 0) return redirect()->to('/security-dept/keys')->with('error', "A key named \"{$name}\" is already listed.");
+        if ($uid === '') $uid = 'KEY-' . strtoupper(bin2hex(random_bytes(4)));
+        if ($model->where('nfc_uid', $uid)->countAllResults() > 0) return redirect()->to('/security-dept/keys')->with('error', "Tag ID {$uid} is already used by another key.");
+
+        $model->insert(['key_name' => $name, 'location' => $location ?: null, 'floor' => $floor !== '' ? $floor : null, 'nfc_uid' => $uid, 'status' => 'Available']);
+
+        return redirect()->to('/security-dept/keys')->with('success', "Key \"{$name}\" added to the list.");
     }
 
     // File-name label -> campus building it belongs to (used to open plans from the campus map).
@@ -376,7 +571,7 @@ class SecurityDeptController extends BaseController
     {
         $rows = $this->equipmentRows();
         $cols = ['Type', 'Code', 'Building', 'Floor', 'Status', 'Next Check'];
-        $row = fn($r) => [$r['type'], $r['code'], $r['building'], $r['floor'] ?? '—', $r['status'] === 'Working' ? $r['due'] : $r['status'], $this->fmtDate($r['next'])];
+        $row = fn($r) => [$r['type'], $r['code'], $r['building'], $r['floor'] ?? '—', $this->shownState($r), $this->fmtDate($r['next'])];
 
         $attention = array_values(array_filter($rows, fn($r) => $this->needsAttention($r)));
         $due = array_values(array_filter($rows, fn($r) => in_array($r['due'], ['Overdue', 'Due in 7 Days', 'Due Soon'], true)));
@@ -448,9 +643,9 @@ class SecurityDeptController extends BaseController
         $out = array_values(array_filter($gateTrips, fn($t) => $t['status'] === 'In Transit'));
         $awaiting = array_values(array_filter($gateTrips, fn($t) => $t['status'] === 'Approved'));
 
-        $keyCols = ['Log #', 'Borrower', 'Department', 'Key / Item', 'Borrowed', 'Returned', 'Status'];
-        $keyRow = fn($l) => [$l['log_number'], $l['full_name'], $l['department'], $l['key_item'], $this->fmtDateTime($l['scan_in']), $this->fmtDateTime($l['scan_out']), $l['status'] === 'Active' ? 'Key Out' : 'Returned'];
-        $tripCols = ['Trip ID', 'Requester', 'Destination', 'Driver / Vehicle', 'Gate Status'];
+        $keyCols = ['Log #', 'Borrower', 'Department', 'Key Item', 'Date Borrowed', 'Returned', 'Status'];
+        $keyRow = fn($l) => [$l['log_number'], $l['full_name'], $l['department'], $l['key_item'], $this->fmtDateTime($l['scan_in']), $this->fmtDateTime($l['scan_out']), $l['status'] === 'Active' ? 'Borrowed' : 'Returned'];
+        $tripCols = ['Trip ID', 'Requester', 'Destination', 'Assigned Driver', 'Gate Status'];
         $tripRow = fn($t) => [$t['trip_id'], $t['requester_name'] ?? 'Unknown', $t['destination'], ($t['driver_name'] ?? 'Unassigned') . ' / ' . ($t['plate_no'] ?? 'No vehicle'), $t['status'] === 'In Transit' ? 'Vehicle Out' : 'Awaiting Dispatch'];
 
         $events = [];
@@ -500,7 +695,7 @@ class SecurityDeptController extends BaseController
             'key_logs_json' => $this->jsonForScript(array_map(fn($l) => [
                 'id' => (int) $l['id'], 'log' => $l['log_number'], 'borrower' => $l['full_name'], 'borrower_id' => $l['borrower_id'],
                 'dept' => $l['department'], 'key' => $l['key_item'], 'borrowed' => $this->fmtDateTime($l['scan_in']),
-                'returned' => $this->fmtDateTime($l['scan_out']), 'status' => $l['status'] === 'Active' ? 'Key Out' : 'Returned',
+                'returned' => $this->fmtDateTime($l['scan_out']), 'status' => $l['status'] === 'Active' ? 'Borrowed' : 'Returned',
                 'guard' => $l['guard_on_duty'] ?: '—',
             ], $logs)),
         ];

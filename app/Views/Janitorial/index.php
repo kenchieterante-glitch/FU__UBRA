@@ -975,7 +975,7 @@ function renderInventory() {
     const col = status === 'out' ? 'text-danger' : status === 'low' ? 'text-warn' : '';
     const st  = status === 'out' ? '<span class="inv-badge inv-out">Out of Stock</span>'
               : status === 'low' ? '<span class="inv-badge inv-low">Low Stock ⚠</span>'
-              : '<span class="inv-badge inv-ok">OK</span>';
+              : '<span class="inv-badge inv-ok">Good</span>';
     const loc = item.building
       ? `${esc(item.building)}${item.floor ? ', ' + esc(item.floor) : ''}${item.place ? `<br><span class="text-muted" style="font-size:.75rem">${esc(item.place)}</span>` : ''}`
       : '<span class="text-muted">—</span>';

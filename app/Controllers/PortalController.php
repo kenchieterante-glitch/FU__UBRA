@@ -17,6 +17,7 @@ class PortalController extends BaseController
     private const PORTALS = [
         'facilities' => [
             'box'         => '01',
+            'icon'        => 'bi-building-gear',
             'name'        => 'Facilities Administration and General Services',
             'short'       => 'Facilities Administration and General Services',
             'description' => 'Janitorial coverage, consumable supplies, and campus aircon condition.',
@@ -24,6 +25,7 @@ class PortalController extends BaseController
         ],
         'safety' => [
             'box'         => '02',
+            'icon'        => 'bi-shield-fill-check',
             'name'        => 'Safety and Security Department',
             'short'       => 'Safety and Security Department',
             'description' => 'Fire extinguisher coverage and inspections, key control, and trip gate activity.',
@@ -31,6 +33,7 @@ class PortalController extends BaseController
         ],
         'asset' => [
             'box'         => '03',
+            'icon'        => 'bi-tools',
             'name'        => 'Asset Acquisition and Monitoring Department',
             'short'       => 'Asset Acquisition and Monitoring Department',
             'description' => 'Tools and equipment inventory, vehicle fleet status, and consumable stock levels.',
@@ -38,6 +41,7 @@ class PortalController extends BaseController
         ],
         'iysp' => [
             'box'         => '04',
+            'icon'        => 'bi-dribbble',
             'name'        => 'Sports Equipment Monitoring',
             'short'       => 'Sports Equipment Monitoring',
             'description' => 'Sports equipment inventory, borrowing, and condition monitoring.',

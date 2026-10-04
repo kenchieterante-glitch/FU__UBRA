@@ -428,3 +428,163 @@ body.portal-lobby .portal-desc { min-height: 88px; }
     body.portal-lobby .portal-grid { grid-template-columns: 1fr; }
     body.portal-lobby .portal-desc { min-height: 0; }
 }
+
+/* ============ Portal lobby — glass look: photo, dark tint, icon badges, white text ============ */
+body.portal-lobby {
+    background: #14181a url('../../images/PTBK.jpg') center center / cover no-repeat fixed;
+}
+body.portal-lobby::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(18, 22, 26, .52);
+    pointer-events: none;
+    z-index: 0;
+}
+body.portal-lobby .portal-lobby-top {
+    background: #6b0000;
+    border-bottom: 1px solid rgba(255, 255, 255, .18);
+}
+body.portal-lobby .portal-card {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    color: #fff;
+    padding: 18px 16px 16px;
+    font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+}
+body.portal-lobby .portal-card:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, .06);
+    border-color: transparent;
+    box-shadow: none;
+}
+body.portal-lobby .portal-icon {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: #7a0000;
+    border: 3px solid rgba(255, 255, 255, .92);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .5);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 40px;
+    margin-bottom: 18px;
+}
+body.portal-lobby .portal-card h2 {
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, .6);
+}
+body.portal-lobby .portal-desc {
+    color: rgba(255, 255, 255, .92);
+    font-size: 15px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, .65);
+}
+body.portal-lobby .portal-covers {
+    color: rgba(255, 255, 255, .92);
+    border-top: 1px solid rgba(255, 255, 255, .75);
+    font-size: 14px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, .65);
+}
+body.portal-lobby .portal-covers strong {
+    color: #fff;
+    font-weight: 400;
+}
+body.portal-lobby .portal-btn {
+    background: #7a0000;
+    border-radius: 4px;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .35);
+}
+body.portal-lobby .portal-card:hover .portal-btn {
+    background: #920000;
+}
+body.portal-lobby .portal-lobby-foot {
+    color: #fff;
+}
+/* Same height for every "Covers" line so the divider and button line up across the four cards */
+body.portal-lobby .portal-covers {
+    min-height: 3.4em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-sizing: border-box;
+}
+body.portal-lobby .portal-covers strong { margin-left: .35em; }
+
+/* Only the Sign in button is interactive: no card hover box, no pointer on the text */
+body.portal-lobby .portal-card,
+body.portal-lobby .portal-card:hover {
+    cursor: default;
+    transform: none;
+    background: transparent;
+    box-shadow: none;
+    border: 0;
+}
+body.portal-lobby .portal-btn {
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    box-sizing: border-box;
+    transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+body.portal-lobby .portal-card:hover .portal-btn { background: #7a0000; }
+body.portal-lobby .portal-btn:hover {
+    background: #9a0000;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .45);
+}
+body.portal-lobby .portal-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* Even rows across the four cards */
+body.portal-lobby .portal-desc { min-height: 80px; }
+body.portal-lobby .portal-covers {
+    display: block;
+    height: 3.6em;
+    min-height: 0;
+    padding-top: .7em;
+    text-align: center;
+    box-sizing: border-box;
+}
+body.portal-lobby .portal-covers strong { margin-left: 0; }
+
+/* Whole card reacts on hover (lift + soft glass), but only the Sign in button is a link */
+body.portal-lobby .portal-card {
+    border-radius: 14px;
+    transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+}
+body.portal-lobby .portal-card:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, .08);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .35);
+    cursor: default;
+}
+body.portal-lobby .portal-card:hover .portal-icon {
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .6);
+    transform: scale(1.04);
+}
+body.portal-lobby .portal-icon { transition: transform .18s ease, box-shadow .18s ease; }
+body.portal-lobby .portal-card:hover .portal-btn { background: #9a0000; }
+
+/* Gentle floating: the four cards drift up and down at slightly different times.
+   Uses the separate `translate` property so the hover lift (transform) still works on top. */
+@keyframes portalFloat {
+    0%, 100% { translate: 0 0; }
+    50%      { translate: 0 -10px; }
+}
+@keyframes portalIconFloat {
+    0%, 100% { translate: 0 0; }
+    50%      { translate: 0 -5px; }
+}
+body.portal-lobby .portal-card {
+    animation: portalFloat 5s ease-in-out infinite;
+}
+body.portal-lobby .portal-card:nth-child(2) { animation-delay: -1.2s; animation-duration: 5.6s; }
+body.portal-lobby .portal-card:nth-child(3) { animation-delay: -2.4s; animation-duration: 5.2s; }
+body.portal-lobby .portal-card:nth-child(4) { animation-delay: -3.6s; animation-duration: 5.8s; }
+body.portal-lobby .portal-icon {
+    animation: portalIconFloat 3.4s ease-in-out infinite;
+}

@@ -9,7 +9,7 @@ class FacilityKeyModel extends Model
     protected $table         = 'facility_keys';
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
-    protected $allowedFields = ['key_name', 'location', 'nfc_uid', 'status'];
+    protected $allowedFields = ['key_name', 'location', 'floor', 'nfc_uid', 'status'];
 
     public function findByNfcUid(string $uid): ?array
     {

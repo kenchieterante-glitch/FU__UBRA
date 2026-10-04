@@ -212,6 +212,7 @@
 
 <form action="<?= base_url('login') ?>" method="post">
     <?= csrf_field() ?>
+    <input type="hidden" name="portal" value="<?= esc($selectedPortalKey ?? '') ?>">
 
     <div class="auth-field">
         <label for="employee_id">ID</label>

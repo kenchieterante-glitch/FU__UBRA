@@ -33,19 +33,26 @@ class FacilitiesController extends BaseController
         $tasks = new JanitorialTaskModel();
 
         $stats = [
-            ['label' => 'Open Repair Requests', 'value' => $workOrders->where('status !=', 'Completed')->countAllResults(), 'icon' => 'bi-hourglass-split', 'tone' => 'gold'],
-            ['label' => 'Urgent Requests', 'value' => $workOrders->where('status !=', 'Completed')->where('priority', 'Urgent')->countAllResults(), 'icon' => 'bi-exclamation-triangle-fill', 'tone' => 'red'],
-            ['label' => 'Aircon Due or Overdue', 'value' => $airconAlerts, 'icon' => 'bi-snow2', 'tone' => 'amber'],
-            ['label' => 'Cleaning Tasks Done', 'value' => $tasks->where('is_done', 1)->countAllResults() . ' / ' . $tasks->countAllResults(), 'icon' => 'bi-brush', 'tone' => 'green'],
-            ['label' => 'Supplies Out of Stock', 'value' => (new ConsumableInventoryModel())->where('department', 'Facilities')->where('current_stock <= 0', null, false)->countAllResults(), 'icon' => 'bi-box-seam-fill', 'tone' => 'red'],
-            ['label' => 'Buildings Checked This Month', 'value' => (int) $db->table('janitorial_inspections')->select('COUNT(DISTINCT building) AS n')->where('inspection_month', $month)->get()->getRow()->n . ' / ' . count(FireExtinguisherModel::BUILDINGS), 'icon' => 'bi-calendar-check', 'tone' => 'maroon'],
-            ['label' => 'Checks Needing Attention', 'value' => (new JanitorialInspectionModel())->where('inspection_month', $month)->where('result', 'Needs Attention')->countAllResults(), 'icon' => 'bi-clipboard2-x', 'tone' => 'red'],
+            ['key' => 'open', 'label' => 'Open Repair Requests', 'value' => $workOrders->where('status !=', 'Completed')->countAllResults(), 'icon' => 'bi-hourglass-split', 'tone' => 'gold'],
+            ['key' => 'urgent', 'label' => 'Urgent Requests', 'value' => $workOrders->where('status !=', 'Completed')->where('priority', 'Urgent')->countAllResults(), 'icon' => 'bi-exclamation-triangle-fill', 'tone' => 'red'],
+            ['key' => 'overdue', 'label' => 'Aircon Due or Overdue', 'value' => $airconAlerts, 'icon' => 'bi-snow2', 'tone' => 'amber'],
+            ['key' => 'tasks', 'label' => 'Cleaning Tasks Done', 'value' => $tasks->where('is_done', 1)->countAllResults() . ' / ' . $tasks->countAllResults(), 'icon' => 'bi-brush', 'tone' => 'green'],
+            ['key' => 'supplies', 'label' => 'Supplies Out of Stock', 'value' => (new ConsumableInventoryModel())->where('department', 'Facilities')->where('current_stock <= 0', null, false)->countAllResults(), 'icon' => 'bi-box-seam-fill', 'tone' => 'red'],
+            ['key' => 'checked', 'label' => 'Buildings Checked This Month', 'value' => (int) $db->table('janitorial_inspections')->select('COUNT(DISTINCT building) AS n')->where('inspection_month', $month)->get()->getRow()->n . ' / ' . count(FireExtinguisherModel::BUILDINGS), 'icon' => 'bi-calendar-check', 'tone' => 'maroon'],
+            ['key' => 'attention', 'label' => 'Checks Needing Attention', 'value' => (new JanitorialInspectionModel())->where('inspection_month', $month)->where('result', 'Needs Attention')->countAllResults(), 'icon' => 'bi-clipboard2-x', 'tone' => 'red'],
         ];
+
+        $details = [];
+        foreach ($this->statusCards() as $card) $details[$card['key']] = ['title' => $card['title'], 'columns' => $card['columns'], 'rows' => $card['rows']];
+        // "Checks Needing Attention" counts buildings (their latest check), so it matches the records shown under it.
+        foreach ($stats as &$st) { if ($st['key'] === 'attention') $st['value'] = count($details['attention']['rows']); }
+        unset($st);
 
         return view('facilities/dashboard', [
             'title'   => 'Facilities Administration and General Services',
             'pageCss' => 'safety.css',
             'stats'   => $stats,
+            'details' => $details,
             'sections' => [
                 ['label' => 'Repair Requests', 'url' => 'facilities/work-orders', 'icon' => 'bi-clipboard2-check', 'desc' => 'Ask for repairs and see what is waiting or finished.'],
                 ['label' => 'Aircon Care', 'url' => 'facilities/aircon', 'icon' => 'bi-snow2', 'desc' => 'Check each aircon unit and when it needs care.'],
@@ -59,6 +66,18 @@ class FacilitiesController extends BaseController
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
+        $cards = $this->statusCards();
+
+        return view('facilities/status', [
+            'title'   => 'Facilities Status',
+            'pageCss' => 'safety.css',
+            'cards'   => $cards,
+        ]);
+    }
+
+    // Every status box with the records behind it — used by the status page and by the dashboard boxes.
+    private function statusCards(): array
+    {
         $today = date('Y-m-d');
         $soon = date('Y-m-d', strtotime('+7 days'));
         $month = date('Y-m');
@@ -136,11 +155,7 @@ class FacilitiesController extends BaseController
             ['key' => 'notchecked', 'label' => 'Not Checked Yet', 'value' => $buildingTotal - count($checked), 'icon' => 'bi-hourglass', 'tone' => 'gold', 'title' => 'Buildings Not Checked This Month', 'columns' => ['Building'], 'rows' => $notChecked],
         ];
 
-        return view('facilities/status', [
-            'title'   => 'Facilities Status',
-            'pageCss' => 'safety.css',
-            'cards'   => $cards,
-        ]);
+        return $cards;
     }
 
     public function index(string $section = 'work-orders')
@@ -246,12 +261,19 @@ class FacilitiesController extends BaseController
         foreach ($inspectionRows as $r) {
             $latestInspection[$r['building']] ??= $r;
         }
+        // Latest check this month for each building + floor (only checks where a floor was recorded).
+        $floorChecks = [];
+        foreach ($inspectionRows as $r) {
+            if (!empty($r['floor'])) $floorChecks[$r['building']][$r['floor']] ??= ['result' => $r['result'], 'by' => $r['inspected_by'], 'at' => $r['inspected_at'], 'notes' => $r['notes']];
+        }
+
         $inspections = array_map(fn($b) => [
             'building'    => $b,
             'result'      => $latestInspection[$b]['result'] ?? null,
             'inspected_by'=> $latestInspection[$b]['inspected_by'] ?? null,
             'inspected_at'=> $latestInspection[$b]['inspected_at'] ?? null,
             'notes'       => $latestInspection[$b]['notes'] ?? null,
+            'floor'       => $latestInspection[$b]['floor'] ?? null,
         ], FireExtinguisherModel::BUILDINGS);
 
         $consumables = (new ConsumableInventoryModel())->where('department', 'Facilities')->orderBy('category', 'ASC')->orderBy('item_name', 'ASC')->findAll();
@@ -265,7 +287,7 @@ class FacilitiesController extends BaseController
                 'building' => $c['building'],
                 'floor'    => $c['floor'],
                 'place'    => $c['location_note'],
-                'status'   => $stock <= 0 ? 'Out of Stock' : 'OK',
+                'status'   => $stock <= 0 ? 'Out of Stock' : 'Good',
             ];
         }
 
@@ -386,6 +408,8 @@ class FacilitiesController extends BaseController
             'section'    => $section,
             'pageCss'    => 'safety.css',
             'buildings'  => FireExtinguisherModel::BUILDINGS,
+            'floors_json' => $this->jsonForScript(\App\Libraries\FloorPlanCatalog::floorsByBuilding()),
+            'floor_checks_json' => $this->jsonForScript($floorChecks),
             'pending'    => $pending,
             'history'    => $history,
             'building_rows' => $buildings,
@@ -511,8 +535,12 @@ class FacilitiesController extends BaseController
             return redirect()->to('/facilities/buildings')->with('error', 'Choose a building and a result.');
         }
 
+        $floor = trim((string) $this->request->getPost('floor'));
+        if ($floor !== '' && !in_array($floor, \App\Libraries\FloorPlanCatalog::floorsByBuilding()[$building] ?? [], true)) $floor = '';
+
         (new JanitorialInspectionModel())->insert([
             'building'         => $building,
+            'floor'            => $floor !== '' ? $floor : null,
             'inspection_month' => date('Y-m'),
             'result'           => $result,
             'inspected_by'     => (string) (session()->get('full_name') ?? 'Unknown'),

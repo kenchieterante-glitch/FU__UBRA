@@ -42,22 +42,9 @@
 
     <!-- ── LEGEND ────────────────────────────────────────────────── -->
     <div class="cal-legend">
-        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Inspection</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#7c3aed"></span> Maintenance</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#2563eb"></span> Compliance</span>
-        <?php if (empty($hide_cleaning)): ?>
-        <span class="legend-item"><span class="legend-dot" style="background:#16a34a"></span> Cleaning</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#dc2626"></span> Urgent Cleaning</span>
-        <?php endif; ?>
-        <span class="legend-item"><span class="legend-dot" style="background:#0891b2"></span> Travel</span>
-        <?php if (!empty($is_assets)): ?>
-        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Check Due</span>
-        <?php endif; ?>
-        <?php if (!empty($show_safety)): ?>
-        <span class="legend-item"><span class="legend-dot" style="background:#0d9488"></span> Installed</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Check Due</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#be123c"></span> Expires</span>
-        <?php endif; ?>
+        <?php foreach ($legend as $l): ?>
+        <span class="legend-item"><span class="legend-dot" style="background:<?= esc($l['color']) ?>"></span> <?= esc($l['label']) ?></span>
+        <?php endforeach; ?>
     </div>
 
     <!-- ── MAIN LAYOUT ───────────────────────────────────────────── -->
@@ -75,48 +62,34 @@
                 <div class="empty-day"><i class="bi bi-calendar-check"></i> Nothing scheduled today.</div>
             </div>
 
-            <!-- Upcoming Events -->
+            <!-- Upcoming Events (this department's own schedule) -->
             <div class="sidebar-card">
                 <div class="sc-title">Upcoming Events</div>
-                <!-- Static maintenance placeholders (wired to maintenance module in a later step) -->
-                <?php if (!empty($is_security)): ?>
-                    <?php if (empty($safety_upcoming)): ?>
-                        <div class="empty-day"><i class="bi bi-calendar-check"></i> Nothing coming up.</div>
-                    <?php else: foreach ($safety_upcoming as $u): ?>
-                        <div class="upcoming-item">
-                            <span class="up-dot" style="background:<?= esc($u['backgroundColor']) ?>"></span>
-                            <div><div class="up-title"><?= esc($u['title']) ?></div><div class="up-sub"><?= esc(date('M j, Y', strtotime($u['start']))) ?> · <?= esc($u['extendedProps']['zone']) ?></div></div>
-                        </div>
-                    <?php endforeach; endif; ?>
-                <?php else: ?>
-                <div class="upcoming-item">
-                    <span class="up-dot" style="background:#7c3aed"></span>
-                    <div><div class="up-title">Van-03 Inspection</div><div class="up-sub">Scheduled</div></div>
-                </div>
-                <?php endif; ?>
-                <?php if (empty($hide_cleaning)): ?>
-                <div class="upcoming-item">
-                    <span class="up-dot" style="background:#f59e0b"></span>
-                    <div><div class="up-title">AC Cleaning – Bldg A</div><div class="up-sub">Routine</div></div>
-                </div>
-                <?php endif; ?>
+                <?php if (empty($upcoming_events)): ?>
+                    <div class="empty-day"><i class="bi bi-calendar-check"></i> Nothing coming up.</div>
+                <?php else: foreach ($upcoming_events as $u): ?>
+                    <div class="upcoming-item">
+                        <span class="up-dot" style="background:<?= esc($u['backgroundColor']) ?>"></span>
+                        <div><div class="up-title"><?= esc($u['title']) ?></div><div class="up-sub"><?= esc(date('M j, Y', strtotime($u['start']))) ?><?= !empty($u['extendedProps']['zone']) ? ' · ' . esc($u['extendedProps']['zone']) : '' ?></div></div>
+                    </div>
+                <?php endforeach; endif; ?>
             </div>
 
             <!-- Pending Renewals — real vehicles whose inspection is expired
                  or due soon (inspection_status), not a one-click "authorize"
                  since that decision belongs in Vehicle Management, not here. -->
             <div class="sidebar-card">
-                <div class="sc-title">Pending Renewals</div>
-                <?php if (!empty($is_security)): ?>
-                    <?php if (empty($safety_renewals)): ?>
-                        <div class="empty-day"><i class="bi bi-check-circle"></i> No fire safety renewals pending.</div>
-                    <?php else: foreach ($safety_renewals as $r): ?>
+                <div class="sc-title"><?= esc($renewals['title'] ?? 'Pending Renewals') ?></div>
+                <?php if ($renewals !== null): ?>
+                    <?php if (empty($renewals['items'])): ?>
+                        <div class="empty-day"><i class="bi bi-check-circle"></i> <?= esc($renewals['empty']) ?></div>
+                    <?php else: foreach ($renewals['items'] as $r): ?>
                         <div class="pending-item">
                             <div>
                                 <div class="pi-title"><?= esc($r['title']) ?></div>
-                                <div class="pi-sub"><?= esc($r['place']) ?> · <?= esc($r['label']) ?></div>
+                                <div class="pi-sub"><?= esc($r['sub']) ?></div>
                             </div>
-                            <a href="<?= base_url('security-dept/fire-safety') ?>" class="pi-action" title="Review in Fire Safety">Review →</a>
+                            <?php if (!empty($renewals['url'])): ?><a href="<?= base_url($renewals['url']) ?>" class="pi-action">Review →</a><?php endif; ?>
                         </div>
                     <?php endforeach; endif; ?>
                 <?php elseif (empty($pending_renewals)): ?>
@@ -155,22 +128,6 @@
 
             <!-- Right sidebar -->
             <div class="cal-sidebar-right">
-            <!-- Event detail panel (shown when event clicked) -->
-            <div id="eventDetailPanel" class="event-detail-panel" style="display:none;">
-                <div class="edp-header">
-                    <div class="edp-badge" id="edpBadge">Event</div>
-                    <span class="edp-status" id="edpStatus">Active</span>
-                </div>
-                <div class="edp-title" id="edpTitle">—</div>
-                <div class="edp-meta-grid" id="edpMeta"></div>
-                <div class="edp-actions">
-                    <button class="btn-outline-sm" id="edpNotifyBtn" onclick="notifyAssigned()"><i class="bi bi-bell-fill"></i> <span id="edpNotifyLabel">Notify</span></button>
-                    <button class="btn-outline-sm" onclick="document.getElementById('eventDetailPanel').style.display='none'">
-                        <i class="bi bi-x-lg"></i> Close
-                    </button>
-                </div>
-            </div>
-
             <!-- UBRA summary -->
             <div class="ubra-card">
                 <div class="ubra-header">
@@ -181,19 +138,23 @@
                     </div>
                     <span class="ubra-live-badge">Live</span>
                 </div>
+                <?php if (!empty($can_cleaning) || !empty($can_maintenance)): ?>
                 <div class="ubra-section-title">Today's Summary</div>
                 <ul class="ubra-list">
-                    <?php if (empty($hide_cleaning)): ?><li>Bldg A AC cleaning starts in <strong>2 days</strong>.</li><?php endif; ?>
-                    <li>1 maintenance schedule due <strong>next week</strong>.</li>
+                    <?php if (!empty($can_cleaning)): ?><li>Bldg A AC cleaning starts in <strong>2 days</strong>.</li><?php endif; ?>
+                    <?php if (!empty($can_maintenance)): ?><li>1 maintenance schedule due <strong>next week</strong>.</li><?php endif; ?>
                 </ul>
+                <?php endif; ?>
                 <div class="ubra-section-title" style="margin-top:.9rem;">Suggested Actions</div>
                 <div class="ubra-btns">
+                    <?php if (!empty($can_driver)): ?>
                     <button class="ubra-btn" onclick="openNotifyPicker('driver')">
                         <span class="ubra-btn-icon"><i class="bi bi-person-fill"></i></span>
                         <span class="ubra-btn-label">Notify Driver</span>
                         <span class="ubra-btn-arrow"><i class="bi bi-chevron-right"></i></span>
                     </button>
-                    <?php if (empty($hide_cleaning)): ?>
+                    <?php endif; ?>
+                    <?php if (!empty($can_cleaning)): ?>
                     <button class="ubra-btn" onclick="openNotifyPicker('cleaning')">
                         <span class="ubra-btn-icon"><i class="bi bi-brush"></i></span>
                         <span class="ubra-btn-label">Notify Cleaning Personnel</span>
@@ -235,13 +196,7 @@
                 <div class="form-group">
                     <label>Type</label>
                     <select id="evtType" onchange="toggleCleaningZone()">
-                        <option value="Inspection">Inspection</option>
-                        <option value="Maintenance">Maintenance</option>
-                        <option value="Compliance">Compliance</option>
-                        <?php if (empty($hide_cleaning)): ?>
-                        <option value="Cleaning">Cleaning</option>
-                        <option value="Urgent Cleaning">Urgent Cleaning</option>
-                        <?php endif; ?>
+                        <?php foreach ($event_types as $et): ?><option value="<?= esc($et) ?>"><?= esc($et) ?></option><?php endforeach; ?>
                     </select>
                 </div>
             </div>
@@ -365,19 +320,30 @@
             <div class="form-group">
                 <label>Module</label>
                 <select id="sumModule">
-                    <option value="">All Modules</option>
-                    <option value="tools">Tools</option>
-                    <option value="vehicle">Vehicle</option>
-                    <option value="safety">Safety</option>
-                    <option value="janitorial">Janitorial</option>
-                    <option value="personnel">Personnel</option>
+                    <?php foreach ($summary_modules as $m): ?><option value="<?= esc($m['value']) ?>"><?= esc($m['label']) ?></option><?php endforeach; ?>
                 </select>
-                <p class="field-hint">Defaults to the last 7 days, all modules — adjust either before generating. Pulls from the same activity log as Records, Archiving &amp; Reports.</p>
+                <p class="field-hint">Defaults to the last 7 days — adjust the dates or module before generating. Pulls from the same activity log as Records, Archiving &amp; Reports.</p>
             </div>
         </div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="closeSummaryModal()">Cancel</button>
             <button class="btn-submit" onclick="confirmGenerateSummary()"><i class="bi bi-download"></i> Generate</button>
+        </div>
+    </div>
+</div>
+
+<!-- Event details popup (opens when an event is clicked) -->
+<div id="eventDetailOverlay" class="edp-overlay" style="display:none" onclick="if (event.target === this) closeEventDetail()">
+    <div id="eventDetailPanel" class="event-detail-panel" role="dialog" aria-modal="true">
+        <button type="button" class="edp-close-x" onclick="closeEventDetail()" title="Close" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        <div class="edp-header">
+            <div class="edp-badge" id="edpBadge">Event</div>
+            <span class="edp-status" id="edpStatus">Active</span>
+        </div>
+        <div class="edp-title" id="edpTitle">—</div>
+        <div class="edp-meta-grid" id="edpMeta"></div>
+        <div class="edp-actions">
+            <button class="btn-outline-sm" id="edpNotifyBtn" onclick="notifyAssigned()"><i class="bi bi-bell-fill"></i> <span id="edpNotifyLabel">Notify</span></button>
         </div>
     </div>
 </div>
@@ -403,6 +369,8 @@ const typeColors = {
     Installed:       '#0d9488',
     'Check Due':     '#f59e0b',
     Expires:         '#be123c',
+    Borrowed:        '#0ea5e9',
+    'Due Back':      '#e11d48',
 };
 
 // ── FullCalendar init ──────────────────────────────────────────
@@ -500,8 +468,13 @@ function openEventDetail(event) {
         notifyBtn.style.display = 'none';
     }
 
-    document.getElementById('eventDetailPanel').style.display = 'block';
+    document.getElementById('eventDetailOverlay').style.display = 'flex';
 }
+
+function closeEventDetail() {
+    document.getElementById('eventDetailOverlay').style.display = 'none';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEventDetail(); });
 
 async function notifyAssigned() {
     const btn = document.getElementById('edpNotifyBtn');
