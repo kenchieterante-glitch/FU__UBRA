@@ -22,7 +22,7 @@ CREATE TABLE `activity_logs` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`department_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=76 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `activity_logs` WRITE;
@@ -45,7 +45,62 @@ INSERT INTO `activity_logs` VALUES
 (17,2,'Settings','Kenchie Terante: Updated AI configuration','2026-09-30 22:21:49'),
 (18,2,'Safety','Kenchie Terante: Set installer for aircon unit #9 to Fernando Reyes','2026-10-01 02:23:18'),
 (19,12,'Safety','Security Test Account: Key \"ZZ Key\" scanned out to ZZ Tester','2026-10-03 22:36:30'),
-(20,12,'Safety','Security Test Account: Key \"ZZ Key\" returned by ZZ Tester','2026-10-03 22:36:31');
+(20,12,'Safety','Security Test Account: Key \"ZZ Key\" returned by ZZ Tester','2026-10-03 22:36:31'),
+(21,15,'Safety','Admin Test Account: Created facility maintenance checklist for Administration Building','2026-10-07 03:03:29'),
+(22,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Law Building','2026-10-07 03:03:30'),
+(23,15,'Safety','Admin Test Account: Created facility maintenance checklist for University Library','2026-10-07 03:03:31'),
+(24,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Education Building','2026-10-07 03:03:32'),
+(25,15,'Safety','Admin Test Account: Created facility maintenance checklist for LG Sinco Computer Center Building','2026-10-07 03:03:33'),
+(26,15,'Safety','Admin Test Account: Created facility maintenance checklist for Administration Building','2026-10-07 03:04:28'),
+(27,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Law Building','2026-10-07 03:04:29'),
+(28,15,'Safety','Admin Test Account: Created facility maintenance checklist for University Library','2026-10-07 03:04:30'),
+(29,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Education Building','2026-10-07 03:04:32'),
+(30,15,'Safety','Admin Test Account: Created facility maintenance checklist for LG Sinco Computer Center Building','2026-10-07 03:04:33'),
+(31,15,'Safety','Admin Test Account: Created facility maintenance checklist for Administration Building','2026-10-07 03:05:18'),
+(32,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Law Building','2026-10-07 03:05:19'),
+(33,15,'Safety','Admin Test Account: Created facility maintenance checklist for University Library','2026-10-07 03:05:20'),
+(34,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Education Building','2026-10-07 03:05:21'),
+(35,15,'Safety','Admin Test Account: Created facility maintenance checklist for LG Sinco Computer Center Building','2026-10-07 03:05:21'),
+(36,15,'Safety','Admin Test Account: Created facility maintenance checklist for Administration Building','2026-10-07 03:05:59'),
+(37,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Law Building','2026-10-07 03:06:00'),
+(38,15,'Safety','Admin Test Account: Created facility maintenance checklist for University Library','2026-10-07 03:06:01'),
+(39,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Education Building','2026-10-07 03:06:02'),
+(40,15,'Safety','Admin Test Account: Created facility maintenance checklist for LG Sinco Computer Center Building','2026-10-07 03:06:03'),
+(41,15,'Safety','Admin Test Account: Created equipment maintenance log for Facilities','2026-10-07 03:06:37'),
+(42,15,'Safety','Admin Test Account: Created equipment maintenance log for Logistics','2026-10-07 03:06:43'),
+(43,15,'Safety','Admin Test Account: Created equipment maintenance log for College of IT','2026-10-07 03:06:50'),
+(44,15,'Safety','Admin Test Account: Created aircon inspection log by Fernando Reyes','2026-10-07 03:06:54'),
+(45,15,'Safety','Admin Test Account: Created aircon inspection log by Cardo Garcia','2026-10-07 03:06:59'),
+(46,15,'Safety','Admin Test Account: Created aircon inspection log by Remedios Mendoza','2026-10-07 03:07:03'),
+(47,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 466','2026-10-07 03:07:09'),
+(48,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 90HJI87','2026-10-07 03:07:10'),
+(49,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 4567HUJI','2026-10-07 03:07:11'),
+(50,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 5678','2026-10-07 03:07:12'),
+(51,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 230345','2026-10-07 03:07:13'),
+(52,15,'Janitorial','Admin Test Account: Created restroom checklist for Administration Building — Ground Floor','2026-10-07 03:07:40'),
+(53,15,'Janitorial','Admin Test Account: Created restroom checklist for College of Law Building — 2nd Floor','2026-10-07 03:07:47'),
+(54,15,'Janitorial','Admin Test Account: Created restroom checklist for University Library — Ground Floor','2026-10-07 03:07:57'),
+(55,15,'Janitorial','Admin Test Account: Created restroom checklist for LG Sinco Computer Center — 2nd Floor','2026-10-07 03:08:09'),
+(56,15,'Safety','Admin Test Account: Created facility maintenance checklist for Administration Building','2026-10-07 03:08:59'),
+(57,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Law Building','2026-10-07 03:08:59'),
+(58,15,'Safety','Admin Test Account: Created facility maintenance checklist for University Library','2026-10-07 03:09:00'),
+(59,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Education Building','2026-10-07 03:09:01'),
+(60,15,'Safety','Admin Test Account: Created facility maintenance checklist for LG Sinco Computer Center Building','2026-10-07 03:09:02'),
+(61,15,'Safety','Admin Test Account: Created equipment maintenance log for Facilities','2026-10-07 03:09:36'),
+(62,15,'Safety','Admin Test Account: Created equipment maintenance log for Logistics','2026-10-07 03:09:43'),
+(63,15,'Safety','Admin Test Account: Created equipment maintenance log for College of IT','2026-10-07 03:09:50'),
+(64,15,'Safety','Admin Test Account: Created aircon inspection log by Fernando Reyes','2026-10-07 03:09:53'),
+(65,15,'Safety','Admin Test Account: Created aircon inspection log by Cardo Garcia','2026-10-07 03:09:58'),
+(66,15,'Safety','Admin Test Account: Created aircon inspection log by Remedios Mendoza','2026-10-07 03:10:03'),
+(67,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 466','2026-10-07 03:10:10'),
+(68,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 90HJI87','2026-10-07 03:10:11'),
+(69,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 4567HUJI','2026-10-07 03:10:14'),
+(70,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 5678','2026-10-07 03:10:17'),
+(71,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 230345','2026-10-07 03:10:18'),
+(72,15,'Janitorial','Admin Test Account: Created restroom checklist for Administration Building — Ground Floor','2026-10-07 03:10:46'),
+(73,15,'Janitorial','Admin Test Account: Created restroom checklist for College of Law Building — 2nd Floor','2026-10-07 03:10:52'),
+(74,15,'Janitorial','Admin Test Account: Created restroom checklist for University Library — Ground Floor','2026-10-07 03:10:56'),
+(75,15,'Janitorial','Admin Test Account: Created restroom checklist for LG Sinco Computer Center — 2nd Floor','2026-10-07 03:11:02');
 /*!40000 ALTER TABLE `activity_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `aircon_checklist_items`;
@@ -138,11 +193,19 @@ CREATE TABLE `aircon_inspection_entries` (
   `remarks` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `log_id` (`log_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `aircon_inspection_entries` WRITE;
 /*!40000 ALTER TABLE `aircon_inspection_entries` DISABLE KEYS */;
+INSERT INTO `aircon_inspection_entries` VALUES
+(7,6,'2026-09-16','College of Law',1,'LAW-105','Window type','Coil cleaning and drain flush.','Working'),
+(8,6,'2026-09-23','Library',3,'LIB-GF','Split type','Filters cleaned, one unit recharged with refrigerant.','Monitor cooling'),
+(9,7,'2026-09-27','College of IT',2,'CCS-LAB1','Cassette type','Replaced capacitor on one unit.','Working'),
+(10,8,'2026-10-04','Art and Sciences',2,'ART-2F','Split type','Routine cleaning.','Working'),
+(11,6,'2026-09-09','Administration',2,'ADM-201','Split type','General cleaning, filter wash, gas pressure check.','Working'),
+(12,7,'2026-09-20','College of Education',2,'EDU-3F','Split type','Cleaned indoor and outdoor units.','Working'),
+(13,8,'2026-10-01','Business and Finance Office',1,'BFO-201','Split type','Not cooling — compressor checked, needs replacement.','For repair');
 /*!40000 ALTER TABLE `aircon_inspection_entries` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `aircon_inspection_logs`;
@@ -159,11 +222,15 @@ CREATE TABLE `aircon_inspection_logs` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `aircon_inspection_logs` WRITE;
 /*!40000 ALTER TABLE `aircon_inspection_logs` DISABLE KEYS */;
+INSERT INTO `aircon_inspection_logs` VALUES
+(6,'Fernando Reyes','2026-09-09',NULL,NULL,NULL,0,'2026-10-07 03:09:53','2026-10-07 03:09:53'),
+(7,'Cardo Garcia','2026-09-20',NULL,NULL,NULL,0,'2026-10-07 03:09:58','2026-10-07 03:09:58'),
+(8,'Remedios Mendoza','2026-10-01',NULL,NULL,NULL,0,'2026-10-07 03:10:03','2026-10-07 03:10:03');
 /*!40000 ALTER TABLE `aircon_inspection_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `aircon_units`;
@@ -471,11 +538,18 @@ CREATE TABLE `equipment_maintenance_entries` (
   `signature` varchar(150) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `log_id` (`log_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `equipment_maintenance_entries` WRITE;
 /*!40000 ALTER TABLE `equipment_maintenance_entries` DISABLE KEYS */;
+INSERT INTO `equipment_maintenance_entries` VALUES
+(6,6,'2026-09-24','Water Pump 5HP','WP-1120','Quarterly','Bearings greased, pressure checked.','Completed','2026-12-24','Cardo Garcia','Cardo Garcia'),
+(7,7,'2026-09-29','Pallet Jack PJ-04','PJ-0412','Monthly','Wheels replaced, lubricated.','Pending','2026-10-29','Remedios Mendoza','Remedios Mendoza'),
+(8,8,'2026-10-02','Network Switch 48-port','SW-4802','Quarterly','Cleaned dust filters, ports tested.','Completed','2027-01-02','Pedro Penduko','Pedro Penduko'),
+(9,6,'2026-09-10','Generator Set 20kVA','GS-2041','Monthly','Oil and filter change, load test passed.','Completed','2026-10-10','Fernando Reyes','Fernando Reyes'),
+(10,7,'2026-09-15','Forklift FL-02','FL-0233','Monthly','Hydraulic hose replaced.','Completed','2026-10-15','Remedios Mendoza','Remedios Mendoza'),
+(11,8,'2026-09-18','Server Rack UPS 3kVA','UPS-3310','Quarterly','Battery test, firmware updated.','Completed','2026-12-18','Pedro Penduko','Pedro Penduko');
 /*!40000 ALTER TABLE `equipment_maintenance_entries` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `equipment_maintenance_logs`;
@@ -492,11 +566,15 @@ CREATE TABLE `equipment_maintenance_logs` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `equipment_maintenance_logs` WRITE;
 /*!40000 ALTER TABLE `equipment_maintenance_logs` DISABLE KEYS */;
+INSERT INTO `equipment_maintenance_logs` VALUES
+(6,'Facilities','2026-09-10',NULL,NULL,NULL,0,'2026-10-07 03:09:36','2026-10-07 03:09:36'),
+(7,'Logistics','2026-09-15',NULL,NULL,NULL,0,'2026-10-07 03:09:43','2026-10-07 03:09:43'),
+(8,'College of IT','2026-09-18',NULL,NULL,NULL,0,'2026-10-07 03:09:50','2026-10-07 03:09:50');
 /*!40000 ALTER TABLE `equipment_maintenance_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `facility_checklist_items`;
@@ -512,11 +590,117 @@ CREATE TABLE `facility_checklist_items` (
   `corrective_action` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `checklist_id` (`checklist_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=568 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `facility_checklist_items` WRITE;
 /*!40000 ALTER TABLE `facility_checklist_items` DISABLE KEYS */;
+INSERT INTO `facility_checklist_items` VALUES
+(463,23,'General & Building Integrity','1.1','Exterior/Grounds: Are sidewalks, ramps, and stairs in good condition, free of cracks and trip hazards? Is lighting adequate?','C',NULL),
+(464,23,'General & Building Integrity','1.2','Interior Floors: Are floors, carpets, and stair tread free from damage and tripping hazards?','C',NULL),
+(465,23,'General & Building Integrity','1.3','Walls & Ceilings: Are walls and ceilings free of water damage, cracks, or missing tiles?','C',NULL),
+(466,23,'General & Building Integrity','1.4','Lighting: Is all lighting operational and providing sufficient illumination?','C',NULL),
+(467,23,'General & Building Integrity','1.5','Exits & Egress: Are all exit signs illuminated and exit pathways clear of obstructions? Do doors open and close properly?','C',NULL),
+(468,23,'General & Building Integrity','1.6','ADA Accessibility: Are ramps, door hardware, and restrooms compliant with accessibility standards?','N/A',NULL),
+(469,23,'General & Building Integrity','1.7','Housekeeping: Is the overall area clean, organized, and free of clutter?','C',NULL),
+(470,23,'Fire & Emergency Safety','2.1','Fire Extinguishers: Are fire extinguishers in their designated spots, easily accessible, and within their inspection dates?','C',NULL),
+(471,23,'Fire & Emergency Safety','2.2','Emergency Plans: Are emergency evacuation plans and contact numbers posted and visible?','C',NULL),
+(472,23,'Fire & Emergency Safety','2.3','First Aid Kits: Is a fully stocked and accessible first aid kit available in the area?','C',NULL),
+(473,23,'Fire & Emergency Safety','2.4','Fire Doors: Are fire doors kept closed and not propped open?','MI','Schedule minor repair within 2 weeks.'),
+(474,23,'Academic & Laboratory Specifics','3.1','Chemical Storage: Are chemicals properly labeled and stored in designated cabinets, segregated by hazard class?','C',NULL),
+(475,23,'Academic & Laboratory Specifics','3.2','Lab Safety: Are emergency eyewash stations and safety showers present and checked weekly?','C',NULL),
+(476,23,'Academic & Laboratory Specifics','3.3','Hazard Communication: Are Safety Data Sheets (SDS) for all chemicals readily accessible?','C',NULL),
+(477,23,'Academic & Laboratory Specifics','3.4','Equipment Safety: Are machine guards in place on all equipment, and is damaged equipment tagged \"Out of Service\"?','C',NULL),
+(478,23,'Academic & Laboratory Specifics','3.5','Personal Protective Equipment (PPE): Is required PPE available and in good condition for all personnel?','C',NULL),
+(479,23,'Academic & Laboratory Specifics','3.6','Wastes: Are hazardous wastes properly labeled and stored for disposal?','C',NULL),
+(480,23,'Electrical & Technology Safety','4.1','Electrical Cords: Are extension cords used only for temporary purposes and not as permanent wiring?','C',NULL),
+(481,23,'Electrical & Technology Safety','4.2','Power Strips: Are power strips UL listed and not \"daisy-chained\" together?','N/A',NULL),
+(482,23,'Electrical & Technology Safety','4.3','Electrical Panels: Is there a clear 3-foot clearance in front of all electrical panels?','C',NULL),
+(483,23,'Electrical & Technology Safety','4.4','Outlets & Switches: Are all electrical outlets and switches in good condition with no exposed wiring?','C',NULL),
+(484,24,'General & Building Integrity','1.1','Exterior/Grounds: Are sidewalks, ramps, and stairs in good condition, free of cracks and trip hazards? Is lighting adequate?','C',NULL),
+(485,24,'General & Building Integrity','1.2','Interior Floors: Are floors, carpets, and stair tread free from damage and tripping hazards?','C',NULL),
+(486,24,'General & Building Integrity','1.3','Walls & Ceilings: Are walls and ceilings free of water damage, cracks, or missing tiles?','C',NULL),
+(487,24,'General & Building Integrity','1.4','Lighting: Is all lighting operational and providing sufficient illumination?','C',NULL),
+(488,24,'General & Building Integrity','1.5','Exits & Egress: Are all exit signs illuminated and exit pathways clear of obstructions? Do doors open and close properly?','C',NULL),
+(489,24,'General & Building Integrity','1.6','ADA Accessibility: Are ramps, door hardware, and restrooms compliant with accessibility standards?','C',NULL),
+(490,24,'General & Building Integrity','1.7','Housekeeping: Is the overall area clean, organized, and free of clutter?','C',NULL),
+(491,24,'Fire & Emergency Safety','2.1','Fire Extinguishers: Are fire extinguishers in their designated spots, easily accessible, and within their inspection dates?','C',NULL),
+(492,24,'Fire & Emergency Safety','2.2','Emergency Plans: Are emergency evacuation plans and contact numbers posted and visible?','C',NULL),
+(493,24,'Fire & Emergency Safety','2.3','First Aid Kits: Is a fully stocked and accessible first aid kit available in the area?','C',NULL),
+(494,24,'Fire & Emergency Safety','2.4','Fire Doors: Are fire doors kept closed and not propped open?','MI','Schedule minor repair within 2 weeks.'),
+(495,24,'Academic & Laboratory Specifics','3.1','Chemical Storage: Are chemicals properly labeled and stored in designated cabinets, segregated by hazard class?','C',NULL),
+(496,24,'Academic & Laboratory Specifics','3.2','Lab Safety: Are emergency eyewash stations and safety showers present and checked weekly?','C',NULL),
+(497,24,'Academic & Laboratory Specifics','3.3','Hazard Communication: Are Safety Data Sheets (SDS) for all chemicals readily accessible?','C',NULL),
+(498,24,'Academic & Laboratory Specifics','3.4','Equipment Safety: Are machine guards in place on all equipment, and is damaged equipment tagged \"Out of Service\"?','C',NULL),
+(499,24,'Academic & Laboratory Specifics','3.5','Personal Protective Equipment (PPE): Is required PPE available and in good condition for all personnel?','C',NULL),
+(500,24,'Academic & Laboratory Specifics','3.6','Wastes: Are hazardous wastes properly labeled and stored for disposal?','C',NULL),
+(501,24,'Electrical & Technology Safety','4.1','Electrical Cords: Are extension cords used only for temporary purposes and not as permanent wiring?','C',NULL),
+(502,24,'Electrical & Technology Safety','4.2','Power Strips: Are power strips UL listed and not \"daisy-chained\" together?','C',NULL),
+(503,24,'Electrical & Technology Safety','4.3','Electrical Panels: Is there a clear 3-foot clearance in front of all electrical panels?','C',NULL),
+(504,24,'Electrical & Technology Safety','4.4','Outlets & Switches: Are all electrical outlets and switches in good condition with no exposed wiring?','C',NULL),
+(505,25,'General & Building Integrity','1.1','Exterior/Grounds: Are sidewalks, ramps, and stairs in good condition, free of cracks and trip hazards? Is lighting adequate?','C',NULL),
+(506,25,'General & Building Integrity','1.2','Interior Floors: Are floors, carpets, and stair tread free from damage and tripping hazards?','C',NULL),
+(507,25,'General & Building Integrity','1.3','Walls & Ceilings: Are walls and ceilings free of water damage, cracks, or missing tiles?','N/A',NULL),
+(508,25,'General & Building Integrity','1.4','Lighting: Is all lighting operational and providing sufficient illumination?','C',NULL),
+(509,25,'General & Building Integrity','1.5','Exits & Egress: Are all exit signs illuminated and exit pathways clear of obstructions? Do doors open and close properly?','C',NULL),
+(510,25,'General & Building Integrity','1.6','ADA Accessibility: Are ramps, door hardware, and restrooms compliant with accessibility standards?','C',NULL),
+(511,25,'General & Building Integrity','1.7','Housekeeping: Is the overall area clean, organized, and free of clutter?','C',NULL),
+(512,25,'Fire & Emergency Safety','2.1','Fire Extinguishers: Are fire extinguishers in their designated spots, easily accessible, and within their inspection dates?','C',NULL),
+(513,25,'Fire & Emergency Safety','2.2','Emergency Plans: Are emergency evacuation plans and contact numbers posted and visible?','C',NULL),
+(514,25,'Fire & Emergency Safety','2.3','First Aid Kits: Is a fully stocked and accessible first aid kit available in the area?','C',NULL),
+(515,25,'Fire & Emergency Safety','2.4','Fire Doors: Are fire doors kept closed and not propped open?','MI','Schedule minor repair within 2 weeks.'),
+(516,25,'Academic & Laboratory Specifics','3.1','Chemical Storage: Are chemicals properly labeled and stored in designated cabinets, segregated by hazard class?','C',NULL),
+(517,25,'Academic & Laboratory Specifics','3.2','Lab Safety: Are emergency eyewash stations and safety showers present and checked weekly?','C',NULL),
+(518,25,'Academic & Laboratory Specifics','3.3','Hazard Communication: Are Safety Data Sheets (SDS) for all chemicals readily accessible?','C',NULL),
+(519,25,'Academic & Laboratory Specifics','3.4','Equipment Safety: Are machine guards in place on all equipment, and is damaged equipment tagged \"Out of Service\"?','C',NULL),
+(520,25,'Academic & Laboratory Specifics','3.5','Personal Protective Equipment (PPE): Is required PPE available and in good condition for all personnel?','N/A',NULL),
+(521,25,'Academic & Laboratory Specifics','3.6','Wastes: Are hazardous wastes properly labeled and stored for disposal?','C',NULL),
+(522,25,'Electrical & Technology Safety','4.1','Electrical Cords: Are extension cords used only for temporary purposes and not as permanent wiring?','C',NULL),
+(523,25,'Electrical & Technology Safety','4.2','Power Strips: Are power strips UL listed and not \"daisy-chained\" together?','C',NULL),
+(524,25,'Electrical & Technology Safety','4.3','Electrical Panels: Is there a clear 3-foot clearance in front of all electrical panels?','C',NULL),
+(525,25,'Electrical & Technology Safety','4.4','Outlets & Switches: Are all electrical outlets and switches in good condition with no exposed wiring?','C',NULL),
+(526,26,'General & Building Integrity','1.1','Exterior/Grounds: Are sidewalks, ramps, and stairs in good condition, free of cracks and trip hazards? Is lighting adequate?','C',NULL),
+(527,26,'General & Building Integrity','1.2','Interior Floors: Are floors, carpets, and stair tread free from damage and tripping hazards?','C',NULL),
+(528,26,'General & Building Integrity','1.3','Walls & Ceilings: Are walls and ceilings free of water damage, cracks, or missing tiles?','C',NULL),
+(529,26,'General & Building Integrity','1.4','Lighting: Is all lighting operational and providing sufficient illumination?','C',NULL),
+(530,26,'General & Building Integrity','1.5','Exits & Egress: Are all exit signs illuminated and exit pathways clear of obstructions? Do doors open and close properly?','C',NULL),
+(531,26,'General & Building Integrity','1.6','ADA Accessibility: Are ramps, door hardware, and restrooms compliant with accessibility standards?','C',NULL),
+(532,26,'General & Building Integrity','1.7','Housekeeping: Is the overall area clean, organized, and free of clutter?','C',NULL),
+(533,26,'Fire & Emergency Safety','2.1','Fire Extinguishers: Are fire extinguishers in their designated spots, easily accessible, and within their inspection dates?','N/A',NULL),
+(534,26,'Fire & Emergency Safety','2.2','Emergency Plans: Are emergency evacuation plans and contact numbers posted and visible?','C',NULL),
+(535,26,'Fire & Emergency Safety','2.3','First Aid Kits: Is a fully stocked and accessible first aid kit available in the area?','C',NULL),
+(536,26,'Fire & Emergency Safety','2.4','Fire Doors: Are fire doors kept closed and not propped open?','MI','Schedule minor repair within 2 weeks.'),
+(537,26,'Academic & Laboratory Specifics','3.1','Chemical Storage: Are chemicals properly labeled and stored in designated cabinets, segregated by hazard class?','C',NULL),
+(538,26,'Academic & Laboratory Specifics','3.2','Lab Safety: Are emergency eyewash stations and safety showers present and checked weekly?','C',NULL),
+(539,26,'Academic & Laboratory Specifics','3.3','Hazard Communication: Are Safety Data Sheets (SDS) for all chemicals readily accessible?','C',NULL),
+(540,26,'Academic & Laboratory Specifics','3.4','Equipment Safety: Are machine guards in place on all equipment, and is damaged equipment tagged \"Out of Service\"?','C',NULL),
+(541,26,'Academic & Laboratory Specifics','3.5','Personal Protective Equipment (PPE): Is required PPE available and in good condition for all personnel?','MJ','Escalate to Facilities for immediate repair.'),
+(542,26,'Academic & Laboratory Specifics','3.6','Wastes: Are hazardous wastes properly labeled and stored for disposal?','C',NULL),
+(543,26,'Electrical & Technology Safety','4.1','Electrical Cords: Are extension cords used only for temporary purposes and not as permanent wiring?','C',NULL),
+(544,26,'Electrical & Technology Safety','4.2','Power Strips: Are power strips UL listed and not \"daisy-chained\" together?','C',NULL),
+(545,26,'Electrical & Technology Safety','4.3','Electrical Panels: Is there a clear 3-foot clearance in front of all electrical panels?','C',NULL),
+(546,26,'Electrical & Technology Safety','4.4','Outlets & Switches: Are all electrical outlets and switches in good condition with no exposed wiring?','N/A',NULL),
+(547,27,'General & Building Integrity','1.1','Exterior/Grounds: Are sidewalks, ramps, and stairs in good condition, free of cracks and trip hazards? Is lighting adequate?','C',NULL),
+(548,27,'General & Building Integrity','1.2','Interior Floors: Are floors, carpets, and stair tread free from damage and tripping hazards?','C',NULL),
+(549,27,'General & Building Integrity','1.3','Walls & Ceilings: Are walls and ceilings free of water damage, cracks, or missing tiles?','C',NULL),
+(550,27,'General & Building Integrity','1.4','Lighting: Is all lighting operational and providing sufficient illumination?','C',NULL),
+(551,27,'General & Building Integrity','1.5','Exits & Egress: Are all exit signs illuminated and exit pathways clear of obstructions? Do doors open and close properly?','C',NULL),
+(552,27,'General & Building Integrity','1.6','ADA Accessibility: Are ramps, door hardware, and restrooms compliant with accessibility standards?','C',NULL),
+(553,27,'General & Building Integrity','1.7','Housekeeping: Is the overall area clean, organized, and free of clutter?','C',NULL),
+(554,27,'Fire & Emergency Safety','2.1','Fire Extinguishers: Are fire extinguishers in their designated spots, easily accessible, and within their inspection dates?','C',NULL),
+(555,27,'Fire & Emergency Safety','2.2','Emergency Plans: Are emergency evacuation plans and contact numbers posted and visible?','C',NULL),
+(556,27,'Fire & Emergency Safety','2.3','First Aid Kits: Is a fully stocked and accessible first aid kit available in the area?','C',NULL),
+(557,27,'Fire & Emergency Safety','2.4','Fire Doors: Are fire doors kept closed and not propped open?','MI','Schedule minor repair within 2 weeks.'),
+(558,27,'Academic & Laboratory Specifics','3.1','Chemical Storage: Are chemicals properly labeled and stored in designated cabinets, segregated by hazard class?','C',NULL),
+(559,27,'Academic & Laboratory Specifics','3.2','Lab Safety: Are emergency eyewash stations and safety showers present and checked weekly?','N/A',NULL),
+(560,27,'Academic & Laboratory Specifics','3.3','Hazard Communication: Are Safety Data Sheets (SDS) for all chemicals readily accessible?','C',NULL),
+(561,27,'Academic & Laboratory Specifics','3.4','Equipment Safety: Are machine guards in place on all equipment, and is damaged equipment tagged \"Out of Service\"?','C',NULL),
+(562,27,'Academic & Laboratory Specifics','3.5','Personal Protective Equipment (PPE): Is required PPE available and in good condition for all personnel?','C',NULL),
+(563,27,'Academic & Laboratory Specifics','3.6','Wastes: Are hazardous wastes properly labeled and stored for disposal?','C',NULL),
+(564,27,'Electrical & Technology Safety','4.1','Electrical Cords: Are extension cords used only for temporary purposes and not as permanent wiring?','C',NULL),
+(565,27,'Electrical & Technology Safety','4.2','Power Strips: Are power strips UL listed and not \"daisy-chained\" together?','C',NULL),
+(566,27,'Electrical & Technology Safety','4.3','Electrical Panels: Is there a clear 3-foot clearance in front of all electrical panels?','C',NULL),
+(567,27,'Electrical & Technology Safety','4.4','Outlets & Switches: Are all electrical outlets and switches in good condition with no exposed wiring?','C',NULL);
 /*!40000 ALTER TABLE `facility_checklist_items` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `facility_checklists`;
@@ -538,11 +722,17 @@ CREATE TABLE `facility_checklists` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `facility_checklists` WRITE;
 /*!40000 ALTER TABLE `facility_checklists` DISABLE KEYS */;
+INSERT INTO `facility_checklists` VALUES
+(23,'Col. Arthur Miller','Administration Building','2026-09-08','Monthly','Satisfactory','Building is in good order with a few minor items to follow up.','Repair flagged items and re-inspect within 14 days.','Sonia G. Ramirez','2026-09-08','Dr. Helen Peralta',0,'2026-10-07 03:08:58','2026-10-07 03:09:29'),
+(24,'Isabel Castillo','College of Law Building','2026-09-12','Monthly','Excellent','Building is clean, safe and fully functional. No issues found.','Continue regular monthly checks.','Sonia G. Ramirez','2026-09-12','Dr. Helen Peralta',0,'2026-10-07 03:08:59','2026-10-07 03:09:30'),
+(25,'Fernando Navarro','University Library','2026-09-19','Quarterly','Satisfactory','Building is in good order with a few minor items to follow up.','Repair flagged items and re-inspect within 14 days.','Sonia G. Ramirez','2026-09-19','Dr. Helen Peralta',0,'2026-10-07 03:09:00','2026-10-07 03:09:31'),
+(26,'Josefa Garcia','College of Education Building','2026-09-26','Monthly','Unsatisfactory','Several items need repair; follow-up inspection required.','Repair flagged items and re-inspect within 14 days.','Sonia G. Ramirez','2026-09-26','Dr. Helen Peralta',0,'2026-10-07 03:09:01','2026-10-07 03:09:32'),
+(27,'Col. Arthur Miller','LG Sinco Computer Center Building','2026-10-03','Annual','Satisfactory','Building is in good order with a few minor items to follow up.','Repair flagged items and re-inspect within 14 days.','Sonia G. Ramirez','2026-10-03','Dr. Helen Peralta',0,'2026-10-07 03:09:02','2026-10-07 03:09:33');
 /*!40000 ALTER TABLE `facility_checklists` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `facility_keys`;
@@ -1886,13 +2076,27 @@ CREATE TABLE `restroom_checklist_entries` (
   `signature` varchar(150) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `checklist_id` (`checklist_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `restroom_checklist_entries` WRITE;
 /*!40000 ALTER TABLE `restroom_checklist_entries` DISABLE KEYS */;
 INSERT INTO `restroom_checklist_entries` VALUES
-(3,3,'2026-09-20','21:32:00',0,0,0,0,0,0,'',NULL);
+(3,3,'2026-09-20','21:32:00',0,0,0,0,0,0,'',NULL),
+(14,9,'2026-10-02','07:30:00',1,1,1,1,1,1,'Mina Santos','Mina Santos'),
+(15,9,'2026-10-03','14:00:00',1,1,0,1,1,1,'Mina Santos','Mina Santos'),
+(16,9,'2026-10-04','07:30:00',1,1,1,1,1,1,'Mina Santos','Mina Santos'),
+(17,10,'2026-10-02','07:30:00',1,1,1,1,1,1,'Lapu-lapu','Lapu-lapu'),
+(18,10,'2026-10-03','14:00:00',1,1,0,1,1,1,'Lapu-lapu','Lapu-lapu'),
+(19,11,'2026-10-02','07:30:00',1,1,1,1,1,1,'Juan dela Beto','Juan dela Beto'),
+(20,11,'2026-10-03','14:00:00',1,1,0,1,1,1,'Juan dela Beto','Juan dela Beto'),
+(21,11,'2026-10-04','07:30:00',1,1,1,1,1,1,'Juan dela Beto','Juan dela Beto'),
+(22,12,'2026-10-02','07:30:00',1,1,1,1,1,1,'Juan Cruz','Juan Cruz'),
+(23,12,'2026-10-03','14:00:00',1,1,0,1,1,1,'Juan Cruz','Juan Cruz'),
+(24,9,'2026-10-01','07:30:00',1,1,1,1,1,1,'Mina Santos','Mina Santos'),
+(25,10,'2026-10-01','07:30:00',1,1,1,1,1,1,'Lapu-lapu','Lapu-lapu'),
+(26,11,'2026-10-01','07:30:00',1,1,1,1,1,1,'Juan dela Beto','Juan dela Beto'),
+(27,12,'2026-10-01','07:30:00',1,1,1,1,1,1,'Juan Cruz','Juan Cruz');
 /*!40000 ALTER TABLE `restroom_checklist_entries` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `restroom_checklists`;
@@ -1907,14 +2111,18 @@ CREATE TABLE `restroom_checklists` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `restroom_checklists` WRITE;
 /*!40000 ALTER TABLE `restroom_checklists` DISABLE KEYS */;
 INSERT INTO `restroom_checklists` VALUES
 (2,'Cisco Lab',NULL,NULL,0,'2026-09-05 20:09:20','2026-09-05 20:09:20'),
-(3,'Test Restroom API',NULL,NULL,0,'2026-09-05 22:15:00','2026-09-05 22:15:00');
+(3,'Test Restroom API',NULL,NULL,0,'2026-09-05 22:15:00','2026-09-05 22:15:00'),
+(9,'Administration Building — Ground Floor',NULL,NULL,0,'2026-10-07 03:10:46','2026-10-07 03:10:46'),
+(10,'College of Law Building — 2nd Floor',NULL,NULL,0,'2026-10-07 03:10:52','2026-10-07 03:10:52'),
+(11,'University Library — Ground Floor',NULL,NULL,0,'2026-10-07 03:10:56','2026-10-07 03:10:56'),
+(12,'LG Sinco Computer Center — 2nd Floor',NULL,NULL,0,'2026-10-07 03:11:02','2026-10-07 03:11:02');
 /*!40000 ALTER TABLE `restroom_checklists` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `return_records`;
@@ -2343,7 +2551,7 @@ CREATE TABLE `ubra_chat_logs` (
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `emp_id` (`emp_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=297 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=309 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `ubra_chat_logs` WRITE;
@@ -2372,7 +2580,19 @@ INSERT INTO `ubra_chat_logs` VALUES
 (293,'10040','user','How many motor pool work orders are open and how many are urgent? Answer in one line.','2026-10-04 12:50:44'),
 (294,'10040','assistant','Open work orders: **3**; Urgent: **1**.','2026-10-04 12:50:44'),
 (295,'10040','user','Any aircon units overdue for cleaning?','2026-10-04 12:50:49'),
-(296,'10040','assistant','That\'s outside your account\'s access. This assistant only answers about **Asset Acquisition and Monitoring Department** — vehicles and drivers, vehicle maintenance, mechanical equipment, motor pool work orders, trip tickets, and the GPS tracker. Please ask the account that handles that area, or ask me something about your own department.','2026-10-04 12:50:49');
+(296,'10040','assistant','That\'s outside your account\'s access. This assistant only answers about **Asset Acquisition and Monitoring Department** — vehicles and drivers, vehicle maintenance, mechanical equipment, motor pool work orders, trip tickets, and the GPS tracker. Please ask the account that handles that area, or ask me something about your own department.','2026-10-04 12:50:49'),
+(297,'20230251','user','hello mr.ubra','2026-10-07 02:47:23'),
+(298,'20230251','assistant','Hello! How can I assist you with UBRA facilities today?','2026-10-07 02:47:23'),
+(299,'20230251','user','help me to identify how many fire extinguisher has overdue','2026-10-07 02:47:53'),
+(300,'20230251','assistant','- **Overdue fire‑extinguisher inspections:** **4** units  \n\nYou can view the details and schedule the required inspections in **Maintenance (Safety) → Fire Extinguisher**. Let me know if you’d like a PDF/Excel summary of the overdue items.','2026-10-07 02:47:53'),
+(301,'20230251','user','generate me today\'s summary report safety and seurity','2026-10-07 02:48:40'),
+(302,'20230251','assistant','Sure! I can generate a **today’s Safety & Security summary report** for you.  \n\nWhich file format would you like the report in?\n\n- PDF  \n- Excel (XLSX)  \n- CSV  \n\nJust let me know your preference, and the downloadable link will be prepared.','2026-10-07 02:48:40'),
+(303,'20230251','user','pdf','2026-10-07 02:48:47'),
+(304,'20230251','assistant','Here\'s your PDF report:\n\n**Covers:** All modules\n**Date range:** Oct 1, 2026 to Oct 7, 2026\n\nTip: say something like \"generate an excel report for tools this month\" to change the format, module, or date range.','2026-10-07 02:48:47'),
+(305,'20230251','user','what can you say to this system?','2026-10-07 02:50:36'),
+(306,'20230251','assistant','You can interact with UBRA’s integrated management system in many ways. Here are the primary actions I can help you perform:\n\n- **Dashboard & KPI snapshots** – Get real‑time overviews of vehicles, personnel, tools, safety alerts, janitorial zones, and travel tickets.  \n- **Personnel Management** – Look up staff records, filter by role (Drivers, Janitors, Maintenance, etc.), view shift assignments, and manage contracts.  \n- **Vehicle Management** – Check fleet availability, view live GPS status, approve or reject trip tickets, see fuel logs, and predict refueling needs.  \n- **Tools & Equipment** – See inventory counts, current borrowings, and generate borrowing ledgers or tool‑maintenance reports.  \n- **Safety & Maintenance** – List overdue fire‑extinguisher inspections, open work orders, schedule preventative maintenance, and view building‑map status.  \n- **Janitorial Monitoring** – Track zone‑by‑zone cleaning completion, assign staff, and monitor consumable inventory.  \n- **Travel (Trip Tickets)** – Review pending travel requests, approve/distribute tickets, and see vehicle assignment.  \n- **Calendar & Scheduling** – View or modify cleaning and maintenance calendars.  \n- **Notifications** – Get role‑specific alerts (e.g., overdue inspections, vehicle issues).  \n- **Information Hub** – Export logs and reports in PDF, Excel, or CSV formats.  \n- **Settings & User Management** – (Administrator only) Add or modify user accounts, adjust notification preferences, and configure system parameters.\n\nJust tell me the module, date range, and output format you need, and I’ll pull the data or generate the appropriate report for you.','2026-10-07 02:50:36'),
+(307,'20230251','user','in your own opinion for what this system for?','2026-10-07 02:51:36'),
+(308,'20230251','assistant','The UBRA system is a **single‑pane‑of‑glass platform for managing everything that keeps the university’s physical campus running smoothly**. It brings together:\n\n- **Asset oversight** (vehicles, tools, equipment) so the university knows what’s available, where it is, and when it needs service or refueling.  \n- **People coordination** (drivers, janitors, maintenance crews, contractors) to schedule shifts, assign tasks, and track who’s on‑duty.  \n- **Safety & compliance** (fire‑extinguisher inspections, work orders, guard gate logs) to ensure regulatory requirements are met and risks are mitigated.  \n- **Operational logistics** (trip tickets, fuel predictions, cleaning zones) that streamline daily workflows and reduce manual paperwork.  \n- **Real‑time monitoring & reporting** via dashboards, alerts, and exportable reports, giving leadership instant visibility into key performance indicators.\n\nIn short, it’s a **comprehensive facilities‑management solution** that centralizes data, automates routine processes, and supports proactive decision‑making for the university’s buildings, grounds, and support services.','2026-10-07 02:51:36');
 /*!40000 ALTER TABLE `ubra_chat_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `users`;
@@ -2425,11 +2645,17 @@ CREATE TABLE `vehicle_inspection_checklists` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `vehicle_inspection_checklists` WRITE;
 /*!40000 ALTER TABLE `vehicle_inspection_checklists` DISABLE KEYS */;
+INSERT INTO `vehicle_inspection_checklists` VALUES
+(8,'Motorcycle','466','12,480 km','Fernando Reyes','2026-10-05','2026-09-11',0,'2026-10-07 03:10:10','2026-10-07 03:10:10'),
+(9,'4 wheels','90HJI87','48,210 km','Cardo Garcia','2026-10-20','2026-09-14',0,'2026-10-07 03:10:11','2026-10-07 03:10:11'),
+(10,'Automatic Car','4567HUJI','33,905 km','Fernando Reyes','2026-11-02','2026-09-22',0,'2026-10-07 03:10:14','2026-10-07 03:10:14'),
+(11,'Van','5678','71,330 km','Remedios Mendoza','2026-10-30','2026-09-28',0,'2026-10-07 03:10:17','2026-10-07 03:10:17'),
+(12,'V2-4Wheels','230345','25,760 km','Cardo Garcia','2026-11-15','2026-10-04',0,'2026-10-07 03:10:18','2026-10-07 03:10:18');
 /*!40000 ALTER TABLE `vehicle_inspection_checklists` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `vehicle_inspection_items`;
@@ -2444,11 +2670,177 @@ CREATE TABLE `vehicle_inspection_items` (
   `remarks` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `checklist_id` (`checklist_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=67 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=397 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `vehicle_inspection_items` WRITE;
 /*!40000 ALTER TABLE `vehicle_inspection_items` DISABLE KEYS */;
+INSERT INTO `vehicle_inspection_items` VALUES
+(232,8,'Interior Inspection','All seats- belts-condition, secure mounting, operation.','Yes',NULL),
+(233,8,'Interior Inspection','Doors condition, hinges, latches, operation of doors windows.','Yes',NULL),
+(234,8,'Interior Inspection','Flooring, headliner, side panels, vent louvers, operation and condition.','No','Needs attention — schedule with the motor pool.'),
+(235,8,'Interior Inspection','Mirror-inside, right & left side mirror, condition and operation.','Yes',NULL),
+(236,8,'Interior Inspection','Lights- interior, hi-lo beam, turn signals, hazard flasher, parking','Yes',NULL),
+(237,8,'Interior Inspection','Lights- clearance, backup, brakes, license, instrument panel.','Yes',NULL),
+(238,8,'Interior Inspection','Warning system, switches gauges, trouble lights, condition & operation','Yes',NULL),
+(239,8,'Interior Inspection','Starter system- key operation','Yes',NULL),
+(240,8,'Interior Inspection','Windshield wipers, w/s washer, w/s wiper speed-condition & operation.','Yes',NULL),
+(241,8,'Interior Inspection','Comfort room- heater, defroster, air conditioning, blower speed.','Yes',NULL),
+(242,8,'Interior Inspection','Fire extinguisher- charged, first aid kit- complete.','Yes',NULL),
+(243,8,'Exterior Inspection','Paint, dents, rust decals, bumpers-brackets, condition','No','Needs attention — schedule with the motor pool.'),
+(244,8,'Exterior Inspection','Tire - tread wear, wheel lugs, hubcaps, valves cores, condition.','Yes',NULL),
+(245,8,'Exterior Inspection','Access doors, fuelport & cap, engine covers & latch operation.','Yes',NULL),
+(246,8,'Exterior Inspection','Engine oil & filter- change and replace','Yes',NULL),
+(247,8,'Exterior Inspection','Inspect & lubricate- ball joints, steering & driveline, etc.','Yes',NULL),
+(248,8,'Service and Operation Inspection','Battery- terminals, water level, battery box & hold down condition','Yes',NULL),
+(249,8,'Service and Operation Inspection','Cooling system, hoses, fan shroud, belts, overflow tank, radiator.','Yes',NULL),
+(250,8,'Service and Operation Inspection','Air cleaner, crankcase, air filter, PVC filter.','Yes',NULL),
+(251,8,'Service and Operation Inspection','Belts, hoses, wiring condition.','Yes',NULL),
+(252,8,'Service and Operation Inspection','Brake operation check, brakes, pedal, parking brake.','No','Needs attention — schedule with the motor pool.'),
+(253,8,'Service and Operation Inspection','Brakes-rotor, pads, caliper, lining, drums.','Yes',NULL),
+(254,8,'Service and Operation Inspection','Hood, transmission fluid level, filter & liner, cooler','Yes',NULL),
+(255,8,'Service and Operation Inspection','Transmission shifts through all ranges, backup lights.','Yes',NULL),
+(256,8,'Service and Operation Inspection','Front wheel bearings, drive shaft, U joints','Yes',NULL),
+(257,8,'Service and Operation Inspection','Shocks, spring, lubricants linkages.','Yes',NULL),
+(258,8,'Service and Operation Inspection','Acceleration, steering, tracking, wheel balance.','Yes',NULL),
+(259,8,'Service and Operation Inspection','Chassis- check for leaks, condition of bushing, rear axle, differential fluid level.','Yes',NULL),
+(260,8,'Service and Operation Inspection','Engine tune-up- plugs, wires, carburetion.','Yes',NULL),
+(261,8,'Accessories','Two way radio-operational check.','No','Needs attention — schedule with the motor pool.'),
+(262,8,'Accessories','Spare tire, jack, tire tools.','Yes',NULL),
+(263,8,'Accessories','License plate, vehicle registration, operator manual.','Yes',NULL),
+(264,8,'Accessories','Air conditioning, system check, freon level, drier.','Yes',NULL),
+(265,9,'Interior Inspection','All seats- belts-condition, secure mounting, operation.','Yes',NULL),
+(266,9,'Interior Inspection','Doors condition, hinges, latches, operation of doors windows.','Yes',NULL),
+(267,9,'Interior Inspection','Flooring, headliner, side panels, vent louvers, operation and condition.','Yes',NULL),
+(268,9,'Interior Inspection','Mirror-inside, right & left side mirror, condition and operation.','Yes',NULL),
+(269,9,'Interior Inspection','Lights- interior, hi-lo beam, turn signals, hazard flasher, parking','No','Needs attention — schedule with the motor pool.'),
+(270,9,'Interior Inspection','Lights- clearance, backup, brakes, license, instrument panel.','Yes',NULL),
+(271,9,'Interior Inspection','Warning system, switches gauges, trouble lights, condition & operation','Yes',NULL),
+(272,9,'Interior Inspection','Starter system- key operation','Yes',NULL),
+(273,9,'Interior Inspection','Windshield wipers, w/s washer, w/s wiper speed-condition & operation.','Yes',NULL),
+(274,9,'Interior Inspection','Comfort room- heater, defroster, air conditioning, blower speed.','Yes',NULL),
+(275,9,'Interior Inspection','Fire extinguisher- charged, first aid kit- complete.','Yes',NULL),
+(276,9,'Exterior Inspection','Paint, dents, rust decals, bumpers-brackets, condition','Yes',NULL),
+(277,9,'Exterior Inspection','Tire - tread wear, wheel lugs, hubcaps, valves cores, condition.','Yes',NULL),
+(278,9,'Exterior Inspection','Access doors, fuelport & cap, engine covers & latch operation.','No','Needs attention — schedule with the motor pool.'),
+(279,9,'Exterior Inspection','Engine oil & filter- change and replace','Yes',NULL),
+(280,9,'Exterior Inspection','Inspect & lubricate- ball joints, steering & driveline, etc.','Yes',NULL),
+(281,9,'Service and Operation Inspection','Battery- terminals, water level, battery box & hold down condition','Yes',NULL),
+(282,9,'Service and Operation Inspection','Cooling system, hoses, fan shroud, belts, overflow tank, radiator.','Yes',NULL),
+(283,9,'Service and Operation Inspection','Air cleaner, crankcase, air filter, PVC filter.','Yes',NULL),
+(284,9,'Service and Operation Inspection','Belts, hoses, wiring condition.','Yes',NULL),
+(285,9,'Service and Operation Inspection','Brake operation check, brakes, pedal, parking brake.','Yes',NULL),
+(286,9,'Service and Operation Inspection','Brakes-rotor, pads, caliper, lining, drums.','Yes',NULL),
+(287,9,'Service and Operation Inspection','Hood, transmission fluid level, filter & liner, cooler','No','Needs attention — schedule with the motor pool.'),
+(288,9,'Service and Operation Inspection','Transmission shifts through all ranges, backup lights.','Yes',NULL),
+(289,9,'Service and Operation Inspection','Front wheel bearings, drive shaft, U joints','Yes',NULL),
+(290,9,'Service and Operation Inspection','Shocks, spring, lubricants linkages.','Yes',NULL),
+(291,9,'Service and Operation Inspection','Acceleration, steering, tracking, wheel balance.','Yes',NULL),
+(292,9,'Service and Operation Inspection','Chassis- check for leaks, condition of bushing, rear axle, differential fluid level.','Yes',NULL),
+(293,9,'Service and Operation Inspection','Engine tune-up- plugs, wires, carburetion.','Yes',NULL),
+(294,9,'Accessories','Two way radio-operational check.','Yes',NULL),
+(295,9,'Accessories','Spare tire, jack, tire tools.','Yes',NULL),
+(296,9,'Accessories','License plate, vehicle registration, operator manual.','No','Needs attention — schedule with the motor pool.'),
+(297,9,'Accessories','Air conditioning, system check, freon level, drier.','Yes',NULL),
+(298,10,'Interior Inspection','All seats- belts-condition, secure mounting, operation.','Yes',NULL),
+(299,10,'Interior Inspection','Doors condition, hinges, latches, operation of doors windows.','Yes',NULL),
+(300,10,'Interior Inspection','Flooring, headliner, side panels, vent louvers, operation and condition.','Yes',NULL),
+(301,10,'Interior Inspection','Mirror-inside, right & left side mirror, condition and operation.','Yes',NULL),
+(302,10,'Interior Inspection','Lights- interior, hi-lo beam, turn signals, hazard flasher, parking','Yes',NULL),
+(303,10,'Interior Inspection','Lights- clearance, backup, brakes, license, instrument panel.','Yes',NULL),
+(304,10,'Interior Inspection','Warning system, switches gauges, trouble lights, condition & operation','No','Needs attention — schedule with the motor pool.'),
+(305,10,'Interior Inspection','Starter system- key operation','Yes',NULL),
+(306,10,'Interior Inspection','Windshield wipers, w/s washer, w/s wiper speed-condition & operation.','Yes',NULL),
+(307,10,'Interior Inspection','Comfort room- heater, defroster, air conditioning, blower speed.','Yes',NULL),
+(308,10,'Interior Inspection','Fire extinguisher- charged, first aid kit- complete.','Yes',NULL),
+(309,10,'Exterior Inspection','Paint, dents, rust decals, bumpers-brackets, condition','Yes',NULL),
+(310,10,'Exterior Inspection','Tire - tread wear, wheel lugs, hubcaps, valves cores, condition.','Yes',NULL),
+(311,10,'Exterior Inspection','Access doors, fuelport & cap, engine covers & latch operation.','Yes',NULL),
+(312,10,'Exterior Inspection','Engine oil & filter- change and replace','Yes',NULL),
+(313,10,'Exterior Inspection','Inspect & lubricate- ball joints, steering & driveline, etc.','No','Needs attention — schedule with the motor pool.'),
+(314,10,'Service and Operation Inspection','Battery- terminals, water level, battery box & hold down condition','Yes',NULL),
+(315,10,'Service and Operation Inspection','Cooling system, hoses, fan shroud, belts, overflow tank, radiator.','Yes',NULL),
+(316,10,'Service and Operation Inspection','Air cleaner, crankcase, air filter, PVC filter.','Yes',NULL),
+(317,10,'Service and Operation Inspection','Belts, hoses, wiring condition.','Yes',NULL),
+(318,10,'Service and Operation Inspection','Brake operation check, brakes, pedal, parking brake.','Yes',NULL),
+(319,10,'Service and Operation Inspection','Brakes-rotor, pads, caliper, lining, drums.','Yes',NULL),
+(320,10,'Service and Operation Inspection','Hood, transmission fluid level, filter & liner, cooler','Yes',NULL),
+(321,10,'Service and Operation Inspection','Transmission shifts through all ranges, backup lights.','Yes',NULL),
+(322,10,'Service and Operation Inspection','Front wheel bearings, drive shaft, U joints','No','Needs attention — schedule with the motor pool.'),
+(323,10,'Service and Operation Inspection','Shocks, spring, lubricants linkages.','Yes',NULL),
+(324,10,'Service and Operation Inspection','Acceleration, steering, tracking, wheel balance.','Yes',NULL),
+(325,10,'Service and Operation Inspection','Chassis- check for leaks, condition of bushing, rear axle, differential fluid level.','Yes',NULL),
+(326,10,'Service and Operation Inspection','Engine tune-up- plugs, wires, carburetion.','Yes',NULL),
+(327,10,'Accessories','Two way radio-operational check.','Yes',NULL),
+(328,10,'Accessories','Spare tire, jack, tire tools.','Yes',NULL),
+(329,10,'Accessories','License plate, vehicle registration, operator manual.','Yes',NULL),
+(330,10,'Accessories','Air conditioning, system check, freon level, drier.','Yes',NULL),
+(331,11,'Interior Inspection','All seats- belts-condition, secure mounting, operation.','Yes',NULL),
+(332,11,'Interior Inspection','Doors condition, hinges, latches, operation of doors windows.','Yes',NULL),
+(333,11,'Interior Inspection','Flooring, headliner, side panels, vent louvers, operation and condition.','Yes',NULL),
+(334,11,'Interior Inspection','Mirror-inside, right & left side mirror, condition and operation.','Yes',NULL),
+(335,11,'Interior Inspection','Lights- interior, hi-lo beam, turn signals, hazard flasher, parking','Yes',NULL),
+(336,11,'Interior Inspection','Lights- clearance, backup, brakes, license, instrument panel.','Yes',NULL),
+(337,11,'Interior Inspection','Warning system, switches gauges, trouble lights, condition & operation','Yes',NULL),
+(338,11,'Interior Inspection','Starter system- key operation','Yes',NULL),
+(339,11,'Interior Inspection','Windshield wipers, w/s washer, w/s wiper speed-condition & operation.','No','Needs attention — schedule with the motor pool.'),
+(340,11,'Interior Inspection','Comfort room- heater, defroster, air conditioning, blower speed.','Yes',NULL),
+(341,11,'Interior Inspection','Fire extinguisher- charged, first aid kit- complete.','Yes',NULL),
+(342,11,'Exterior Inspection','Paint, dents, rust decals, bumpers-brackets, condition','Yes',NULL),
+(343,11,'Exterior Inspection','Tire - tread wear, wheel lugs, hubcaps, valves cores, condition.','Yes',NULL),
+(344,11,'Exterior Inspection','Access doors, fuelport & cap, engine covers & latch operation.','Yes',NULL),
+(345,11,'Exterior Inspection','Engine oil & filter- change and replace','Yes',NULL),
+(346,11,'Exterior Inspection','Inspect & lubricate- ball joints, steering & driveline, etc.','Yes',NULL),
+(347,11,'Service and Operation Inspection','Battery- terminals, water level, battery box & hold down condition','Yes',NULL),
+(348,11,'Service and Operation Inspection','Cooling system, hoses, fan shroud, belts, overflow tank, radiator.','No','Needs attention — schedule with the motor pool.'),
+(349,11,'Service and Operation Inspection','Air cleaner, crankcase, air filter, PVC filter.','Yes',NULL),
+(350,11,'Service and Operation Inspection','Belts, hoses, wiring condition.','Yes',NULL),
+(351,11,'Service and Operation Inspection','Brake operation check, brakes, pedal, parking brake.','Yes',NULL),
+(352,11,'Service and Operation Inspection','Brakes-rotor, pads, caliper, lining, drums.','Yes',NULL),
+(353,11,'Service and Operation Inspection','Hood, transmission fluid level, filter & liner, cooler','Yes',NULL),
+(354,11,'Service and Operation Inspection','Transmission shifts through all ranges, backup lights.','Yes',NULL),
+(355,11,'Service and Operation Inspection','Front wheel bearings, drive shaft, U joints','Yes',NULL),
+(356,11,'Service and Operation Inspection','Shocks, spring, lubricants linkages.','Yes',NULL),
+(357,11,'Service and Operation Inspection','Acceleration, steering, tracking, wheel balance.','No','Needs attention — schedule with the motor pool.'),
+(358,11,'Service and Operation Inspection','Chassis- check for leaks, condition of bushing, rear axle, differential fluid level.','Yes',NULL),
+(359,11,'Service and Operation Inspection','Engine tune-up- plugs, wires, carburetion.','Yes',NULL),
+(360,11,'Accessories','Two way radio-operational check.','Yes',NULL),
+(361,11,'Accessories','Spare tire, jack, tire tools.','Yes',NULL),
+(362,11,'Accessories','License plate, vehicle registration, operator manual.','Yes',NULL),
+(363,11,'Accessories','Air conditioning, system check, freon level, drier.','Yes',NULL),
+(364,12,'Interior Inspection','All seats- belts-condition, secure mounting, operation.','Yes',NULL),
+(365,12,'Interior Inspection','Doors condition, hinges, latches, operation of doors windows.','No','Needs attention — schedule with the motor pool.'),
+(366,12,'Interior Inspection','Flooring, headliner, side panels, vent louvers, operation and condition.','Yes',NULL),
+(367,12,'Interior Inspection','Mirror-inside, right & left side mirror, condition and operation.','Yes',NULL),
+(368,12,'Interior Inspection','Lights- interior, hi-lo beam, turn signals, hazard flasher, parking','Yes',NULL),
+(369,12,'Interior Inspection','Lights- clearance, backup, brakes, license, instrument panel.','Yes',NULL),
+(370,12,'Interior Inspection','Warning system, switches gauges, trouble lights, condition & operation','Yes',NULL),
+(371,12,'Interior Inspection','Starter system- key operation','Yes',NULL),
+(372,12,'Interior Inspection','Windshield wipers, w/s washer, w/s wiper speed-condition & operation.','Yes',NULL),
+(373,12,'Interior Inspection','Comfort room- heater, defroster, air conditioning, blower speed.','Yes',NULL),
+(374,12,'Interior Inspection','Fire extinguisher- charged, first aid kit- complete.','No','Needs attention — schedule with the motor pool.'),
+(375,12,'Exterior Inspection','Paint, dents, rust decals, bumpers-brackets, condition','Yes',NULL),
+(376,12,'Exterior Inspection','Tire - tread wear, wheel lugs, hubcaps, valves cores, condition.','Yes',NULL),
+(377,12,'Exterior Inspection','Access doors, fuelport & cap, engine covers & latch operation.','Yes',NULL),
+(378,12,'Exterior Inspection','Engine oil & filter- change and replace','Yes',NULL),
+(379,12,'Exterior Inspection','Inspect & lubricate- ball joints, steering & driveline, etc.','Yes',NULL),
+(380,12,'Service and Operation Inspection','Battery- terminals, water level, battery box & hold down condition','Yes',NULL),
+(381,12,'Service and Operation Inspection','Cooling system, hoses, fan shroud, belts, overflow tank, radiator.','Yes',NULL),
+(382,12,'Service and Operation Inspection','Air cleaner, crankcase, air filter, PVC filter.','Yes',NULL),
+(383,12,'Service and Operation Inspection','Belts, hoses, wiring condition.','No','Needs attention — schedule with the motor pool.'),
+(384,12,'Service and Operation Inspection','Brake operation check, brakes, pedal, parking brake.','Yes',NULL),
+(385,12,'Service and Operation Inspection','Brakes-rotor, pads, caliper, lining, drums.','Yes',NULL),
+(386,12,'Service and Operation Inspection','Hood, transmission fluid level, filter & liner, cooler','Yes',NULL),
+(387,12,'Service and Operation Inspection','Transmission shifts through all ranges, backup lights.','Yes',NULL),
+(388,12,'Service and Operation Inspection','Front wheel bearings, drive shaft, U joints','Yes',NULL),
+(389,12,'Service and Operation Inspection','Shocks, spring, lubricants linkages.','Yes',NULL),
+(390,12,'Service and Operation Inspection','Acceleration, steering, tracking, wheel balance.','Yes',NULL),
+(391,12,'Service and Operation Inspection','Chassis- check for leaks, condition of bushing, rear axle, differential fluid level.','Yes',NULL),
+(392,12,'Service and Operation Inspection','Engine tune-up- plugs, wires, carburetion.','No','Needs attention — schedule with the motor pool.'),
+(393,12,'Accessories','Two way radio-operational check.','Yes',NULL),
+(394,12,'Accessories','Spare tire, jack, tire tools.','Yes',NULL),
+(395,12,'Accessories','License plate, vehicle registration, operator manual.','Yes',NULL),
+(396,12,'Accessories','Air conditioning, system check, freon level, drier.','Yes',NULL);
 /*!40000 ALTER TABLE `vehicle_inspection_items` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `vehicle_maintenance`;

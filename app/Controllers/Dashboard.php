@@ -269,7 +269,7 @@ class Dashboard extends BaseController
             ['title' => 'Safety and Security', 'icon' => 'bi-shield-fill-check', 'url' => 'safety', 'links' => [
                 ['label' => 'Fire Safety', 'url' => 'safety', 'icon' => 'bi-fire', 'count' => $overdueFe . ' overdue'],
                 ['label' => 'Safety Inspection', 'url' => 'security-dept/inspection', 'icon' => 'bi-clipboard2-check', 'count' => ''],
-                ['label' => 'Guard Monitoring', 'url' => 'security-dept/guard', 'icon' => 'bi-shield-check', 'count' => ''],
+                ['label' => 'Guard Monitoring', 'url' => 'safety/guard-dashboard', 'icon' => 'bi-shield-check', 'count' => ''],
                 ['label' => 'List of Keys', 'url' => 'security-dept/keys', 'icon' => 'bi-list-ul', 'count' => $keysOut . ' out'],
             ]],
             ['title' => 'Vehicle Management', 'icon' => 'bi-truck', 'url' => 'vehicles/dashboard', 'links' => [

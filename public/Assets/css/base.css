@@ -3066,3 +3066,11 @@ table.gps-table tbody td .vehicle-cell {
 :root[data-theme="dark"] svg[id$="MapSVG"], :root[data-theme="dark"] svg[id$="ImgSVG"] { background: #141414 !important; }
 :root[data-theme="dark"] svg[id$="MapSVG"] image, :root[data-theme="dark"] svg[id$="ImgSVG"] image { filter: invert(0.92) hue-rotate(180deg); }
 :root[data-theme="dark"] svg .map-cover { fill: #141414 !important; }
+
+/* Add / Edit pop-ups: two columns, long fields (notes, checkboxes) span the full width */
+.auto-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: .85rem; }
+.auto-grid .fg { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
+.auto-grid .fg > label { margin-top: 0; }
+.auto-grid .fg.span2 { grid-column: 1 / -1; }
+.modal-box:has(.auto-grid) { width: min(780px, 94vw); max-width: 780px; }
+@media (max-width: 640px) { .auto-grid { grid-template-columns: 1fr; } }

@@ -274,7 +274,7 @@
       <?php endif; ?>
 
       <?php if ($isFullAccess): ?>
-      <?php $isAdminSecSection = $currentUri === 'safety' || strpos($currentUri, 'safety/') === 0 || in_array($currentUri, ['security-dept/inspection', 'security-dept/guard', 'security-dept/keys'], true); ?>
+      <?php $isAdminSecSection = $currentUri === 'safety' || strpos($currentUri, 'safety/') === 0 || in_array($currentUri, ['security-dept/inspection', 'security-dept/guard', 'security-dept/keys', 'safety/guard-dashboard'], true); ?>
       <div class="nav-parent-group <?= $isAdminSecSection ? 'open' : '' ?>">
         <a href="<?= base_url('safety') ?>" class="nav-parent-link <?= $isAdminSecSection ? 'open' : '' ?>" data-secdept-toggle data-tooltip="Safety & Security">
           <i class="bi bi-shield-fill-check"></i>
@@ -284,7 +284,7 @@
         <div class="nav-submenu" id="secdept-submenu">
           <a href="<?= base_url('safety') ?>" class="<?= $currentUri === 'safety/floor-plans' ? 'active' : navActive('safety') ?>"><i class="bi bi-fire"></i> <span class="nav-label">Fire Safety</span></a>
           <a href="<?= base_url('security-dept/inspection') ?>" class="<?= navActive('security-dept/inspection') ?>"><i class="bi bi-clipboard2-check"></i> <span class="nav-label">Safety Inspection</span></a>
-          <a href="<?= base_url('security-dept/guard') ?>" class="<?= navActive('security-dept/guard') ?>"><i class="bi bi-shield-check"></i> <span class="nav-label">Guard Monitoring</span></a>
+          <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>"><i class="bi bi-shield-check"></i> <span class="nav-label">Guard Monitoring</span></a>
           <a href="<?= base_url('security-dept/keys') ?>" class="<?= navActive('security-dept/keys') ?>"><i class="bi bi-list-ul"></i> <span class="nav-label">List of Keys</span></a>
         </div>
       </div>
@@ -1053,6 +1053,47 @@ if (safetyLink && safetyGroup) {
   });
 }
 </script>
+<script>
+// Add / Edit pop-up forms: fields sit side by side (2 columns) instead of one long column.
+// Forms written as flat "label, field, label, field…" are regrouped here; forms that already use a grid are left alone.
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.modal-box form, .modal-content form').forEach(form => {
+    if (form.querySelector('.form-grid2, .form-grid, .form-row, .detail-grid, .auto-grid')) return;
+    const kids = Array.from(form.children);
+    const isCtl = el => /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) && el.type !== 'hidden';
+    const isHidden = el => el.tagName === 'INPUT' && el.type === 'hidden';
+    const isHint = el => el.tagName === 'SMALL' || el.classList.contains('field-hint');
+    let start = kids.findIndex(el => el.tagName === 'LABEL');
+    if (start < 0) return;
+    const groups = []; let cur = null; let end = start;
+    for (let i = start; i < kids.length; i++) {
+      const el = kids[i];
+      if (isHidden(el)) { end = i + 1; continue; }
+      if (el.tagName === 'LABEL') {
+        if (el.querySelector('input, select, textarea')) { groups.push([el]); cur = null; }
+        else { cur = [el]; groups.push(cur); }
+        end = i + 1; continue;
+      }
+      if (isCtl(el) || isHint(el)) { if (!cur) { cur = []; groups.push(cur); } cur.push(el); end = i + 1; continue; }
+      break;
+    }
+    const real = groups.filter(g => g.length);
+    if (real.length < 4) return;
+    const grid = document.createElement('div');
+    grid.className = 'form-grid2 auto-grid';
+    real.forEach(g => {
+      const box = document.createElement('div');
+      box.className = 'fg' + (g.some(n => n.tagName === 'TEXTAREA' || (n.querySelector && n.querySelector('textarea')) || n.type === 'checkbox' || (n.querySelector && n.querySelector('input[type=checkbox]'))) ? ' span2' : '');
+      g[0].parentNode.insertBefore(box, g[0]);
+      g.forEach(n => box.appendChild(n));
+      grid.appendChild(box);
+    });
+    const anchor = kids[end] || null;
+    form.insertBefore(grid, anchor);
+  });
+});
+</script>
+
   <script src="<?= assetVer('assets/js/dashboard.js') ?>"></script>
 
 <?php if (session()->get('isLoggedIn') && $currentUri !== 'ubra'): ?>
