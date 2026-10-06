@@ -166,3 +166,9 @@
     -webkit-appearance: none;
     margin: 0;
 }
+
+/* Category tabs above the borrowing ledger (All / Sports Equipment) */
+#borrowTabs { display: flex; align-items: center; gap: .35rem; border-bottom: 2px solid var(--bdr, #e5e7eb); padding-bottom: .6rem; flex-wrap: wrap; }
+#borrowTabs .sub-tab { display: flex; align-items: center; gap: .35rem; padding: .45rem .9rem; border-radius: 8px; border: 1.5px solid transparent; background: transparent; font-size: .8rem; font-weight: 600; color: #111; cursor: pointer; }
+#borrowTabs .sub-tab.active { background: var(--m, #7b0f1a); color: #fff; }
+#borrowTabs .sub-tab.active .text-muted { color: #fff; }

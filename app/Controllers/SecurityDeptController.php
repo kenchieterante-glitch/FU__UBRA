@@ -61,7 +61,7 @@ class SecurityDeptController extends BaseController
     }
 
     // Everything the Fire Safety tab shows, as one flat list of equipment rows.
-    private function equipmentRows(): array
+    public function equipmentRows(): array
     {
         $rows = [];
 
@@ -237,6 +237,7 @@ class SecurityDeptController extends BaseController
             'section'     => $section,
             'pageCss'     => 'safety.css',
             'buildings'   => FireExtinguisherModel::BUILDINGS,
+            'open_plans'  => $section === 'fire-safety' && ($this->request->getGet('plans') === '1' || trim(uri_string(), '/') === 'safety/floor-plans'),
             'active_stat' => $stat ?: null,
             'stat_rows'   => ($data['stat_detail'][$stat] ?? null),
         ], $data));

@@ -16,7 +16,7 @@ class FacilitiesController extends BaseController
     private const SECTIONS = [
         'work-orders' => 'Repair Requests',
         'aircon'      => 'Aircon Care',
-        'janitorial'  => 'Cleaning Checks',
+        'janitorial'  => 'Janitorial Check',
         'buildings'   => 'Building Check',
     ];
 
@@ -56,7 +56,7 @@ class FacilitiesController extends BaseController
             'sections' => [
                 ['label' => 'Repair Requests', 'url' => 'facilities/work-orders', 'icon' => 'bi-clipboard2-check', 'desc' => 'Ask for repairs and see what is waiting or finished.'],
                 ['label' => 'Aircon Care', 'url' => 'facilities/aircon', 'icon' => 'bi-snow2', 'desc' => 'Check each aircon unit and when it needs care.'],
-                ['label' => 'Cleaning Checks', 'url' => 'facilities/janitorial', 'icon' => 'bi-brush', 'desc' => 'Daily cleaning checks, all zones, and supplies.'],
+                ['label' => 'Janitorial Check', 'url' => 'facilities/janitorial', 'icon' => 'bi-brush', 'desc' => 'Daily cleaning checks, all zones, and supplies.'],
                 ['label' => 'Building Check', 'url' => 'facilities/buildings', 'icon' => 'bi-building-check', 'desc' => 'Monthly building checks and the building map.'],
             ],
         ]);
@@ -431,7 +431,7 @@ class FacilitiesController extends BaseController
             'clean_alerts_json' => $this->jsonForScript($cleanAlerts),
             'ac_alerts_json'    => $this->jsonForScript($acAlerts),
             'bld_alerts_json'   => $this->jsonForScript($bldAlerts),
-            'zones_json'        => $this->jsonForScript(array_map(fn($z) => ['id' => $z['id'], 'zone' => $z['zone'], 'floor' => $z['floor'], 'staff' => $z['staff'], 'shift' => $z['shift'], 'priority' => $z['priority'], 'status' => $z['status'], 'progress' => $z['progress'], 'done' => $z['done'], 'total' => $z['total'], 'tasks' => $z['tasks']], $zones)),
+            'zones_json'        => $this->jsonForScript(array_map(fn($z) => ['id' => $z['id'], 'zone' => $z['zone'], 'building' => $zoneToBuilding[$z['zone']] ?? $z['zone'], 'floor' => $z['floor'], 'staff' => $z['staff'], 'shift' => $z['shift'], 'priority' => $z['priority'], 'status' => $z['status'], 'progress' => $z['progress'], 'done' => $z['done'], 'total' => $z['total'], 'tasks' => $z['tasks']], $zones)),
         ]);
     }
 

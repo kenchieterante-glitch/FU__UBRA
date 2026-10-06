@@ -342,10 +342,6 @@ function viewTicket(id) {
                         <div class="ts-sub">Trip ID: ${t.trip_id || '—'}</div>
                         <div class="ts-verify ${verifyTone}"><i class="bi ${verifyIcon}"></i> ${verifyText}</div>
                     </div>
-                    <div class="ticket-action-row" style="margin-top:1rem;">
-                        <button class="btn-submit" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
-                        <button class="btn-cancel" onclick="closeTicketModal()"><i class="bi bi-x-lg"></i> Close</button>
-                    </div>
                 </div>
             </div>`;
         })

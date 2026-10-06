@@ -3,6 +3,7 @@
 <?= $this->section('content') ?>
 
 <?php
+helper('facilities');
 $recordList = $records ?? [];
 $badgeClassFor = fn($status) => match ($status) {
     'Borrowed'          => 'badge blue',
@@ -74,6 +75,15 @@ foreach ($recordList as $r) {
             </select>
           </div>
           <div class="filter-row">
+            <label for="borrowCategoryFilter">Category</label>
+            <select id="borrowCategoryFilter" onchange="filterBorrowingTable()">
+              <option value="">All Categories</option>
+              <?php foreach (array_unique(array_filter(array_column($recordList, 'category'))) as $cat): ?>
+                <option value="<?= esc($cat) ?>"><?= esc(tool_cat_label($cat)) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="filter-row">
             <label for="borrowSort">Sort by</label>
             <select id="borrowSort" onchange="sortBorrowingRows()">
               <option value="newest">Newest</option>
@@ -116,7 +126,7 @@ foreach ($recordList as $r) {
             };
             $rowClass = $computedStatus === 'Overdue' ? 'row-overdue' : '';
           ?>
-          <tr class="borrow-row <?= $rowClass ?>" data-id="<?= (int) $r['id'] ?>" data-status="<?= esc($computedStatus) ?>" data-borrowed="<?= esc((string) ($r['borrowed_date'] ?? '')) ?>" data-due="<?= esc((string) ($r['expected_return'] ?? '')) ?>" data-name="<?= esc($r['asset_name'] ?? '') ?>">
+          <tr class="borrow-row <?= $rowClass ?>" data-id="<?= (int) $r['id'] ?>" data-status="<?= esc($computedStatus) ?>" data-borrowed="<?= esc((string) ($r['borrowed_date'] ?? '')) ?>" data-due="<?= esc((string) ($r['expected_return'] ?? '')) ?>" data-name="<?= esc($r['asset_name'] ?? '') ?>" data-category="<?= esc($r['category'] ?? '') ?>">
             <td class="tool-name-cell"><?= esc($r['asset_name'] ?? 'Unknown tool') ?></td>
             <td><?= esc($r['asset_code'] ?? '—') ?></td>
             <td><?= esc($r['borrower'] ?? 'Not on record') ?></td>
@@ -215,10 +225,12 @@ function closeBorrowDetail() {
 function filterBorrowingTable() {
   const search = document.getElementById('borrowingSearch').value.toLowerCase();
   const status = document.getElementById('borrowStatusFilter').value;
+  const borrowCategory = document.getElementById('borrowCategoryFilter').value;
   document.querySelectorAll('#borrowingTable tbody tr').forEach(row => {
     const okSearch = row.innerText.toLowerCase().includes(search);
     const okStatus = !status || row.dataset.status === status;
-    row.style.display = okSearch && okStatus ? '' : 'none';
+    const okCat = !borrowCategory || row.dataset.category === borrowCategory;
+    row.style.display = okSearch && okStatus && okCat ? '' : 'none';
   });
 }
 

@@ -113,6 +113,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
       <span><i class="map-alert"></i> Red warning = needs repair or missing</span>
     </div>
     <div class="fac-map-wrap"><svg id="fsMapSVG" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg></div>
+    <div id="fsFloorPanel" class="floor-break" style="display:none"></div>
   </div>
 
   <div id="fpPanel" class="guard-card" style="display:none;padding:18px;margin-bottom:16px;">
@@ -680,6 +681,44 @@ const fpRegister = <?= $rows_json ?>.filter(r => r.src !== 'plan');
 const fpDated = ['Fire Extinguisher', 'Smoke Detector'];
 function fpTypeChanged() { document.getElementById('fpExpWrap').style.display = fpDated.includes(document.getElementById('fpType').value) ? 'flex' : 'none'; }
 // Effective state: a working item past its expiry date is "Expired"; within 30 days it is "Due Soon".
+// ---- Fire safety map: floor-by-floor breakdown of fire extinguishers, fire alarms and fire exits
+const FB_TYPES = [['Fire Extinguisher', 'Fire Extinguishers'], ['Fire Alarm', 'Fire Alarms'], ['Emergency Exit Sign', 'Fire Exits']];
+function fbItems(building) {
+  const items = fpRegister.filter(r => r.building === building).map(r => ({ type: r.type, floor: r.floor || 'Ground Floor', bad: r.status !== 'Working' && r.status !== 'Good', soon: !(r.status !== 'Working' && r.status !== 'Good') && ['Overdue', 'Due in 7 Days', 'Due Soon'].includes(r.due), late: r.due === 'Overdue' }));
+  fpMarkers.forEach(m => {
+    const p = fpPlanOf(m.plan);
+    if ((p.campus || p.building) !== building) return;
+    const st = fpState(m);
+    items.push({ type: m.type, floor: p.floor, bad: fpIsRed(st), soon: st === 'Due Soon', late: false });
+  });
+  return items.map(i => Object.assign(i, { bad: i.bad || i.late }));
+}
+function fbCell(list) {
+  if (!list.length) return '<span class="fb-none">—</span>';
+  const bad = list.filter(i => i.bad).length, soon = list.filter(i => !i.bad && i.soon).length;
+  let h = '<span class="fb-chip fb-ok">' + list.length + ' total</span>';
+  if (bad) h += '<span class="fb-chip fb-bad fac-blink"><i class="bi bi-exclamation-triangle-fill"></i> ' + bad + '</span>';
+  if (soon) h += '<span class="fb-chip fb-warn"><i class="bi bi-exclamation-triangle-fill"></i> ' + soon + '</span>';
+  if (!bad && !soon) h = '<span class="fb-chip fb-ok"><i class="bi bi-check-circle-fill"></i> ' + list.length + ' good</span>';
+  return h;
+}
+function fbShowFloors(name) {
+  const box = document.getElementById('fsFloorPanel');
+  if (!box) return;
+  if (!name) { box.style.display = 'none'; return; }
+  const items = fbItems(name);
+  const order = ['Ground Floor', '2nd Floor', '3rd Floor', '4th Floor'];
+  const floors = [...new Set(fpPlans.filter(p => p.campus === name).map(p => p.floor).concat(items.map(i => i.floor)))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  const badTotal = items.filter(i => i.bad).length;
+  box.innerHTML = '<div class="floor-break-title"><i class="bi bi-layers"></i> ' + esc(name) + ' — by floor' +
+    (badTotal ? ' <span class="fb-chip fb-bad fac-blink"><i class="bi bi-exclamation-triangle-fill"></i> ' + badTotal + ' need attention</span>' : ' <span class="fb-chip fb-ok"><i class="bi bi-check-circle-fill"></i> all good</span>') + '</div>' +
+    (floors.length ? '<table><thead><tr><th>Floor</th>' + FB_TYPES.map(t => '<th>' + t[1] + '</th>').join('') + '</tr></thead><tbody>' +
+      floors.map(fl => '<tr><td>' + esc(fl) + '</td>' + FB_TYPES.map(t => '<td>' + fbCell(items.filter(i => i.floor === fl && i.type === t[0])) + '</td>').join('') + '</tr>').join('') + '</tbody></table>'
+      : '<div class="text-muted">No fire safety equipment recorded for this building yet.</div>');
+  box.style.display = '';
+}
+document.addEventListener('campus-map-select', e => { if (e.detail.svgId === 'fsMapSVG') fbShowFloors(e.detail.name); });
+
 function fpState(m) {
   if (m.status !== 'Working') return m.status;
   if (!m.exp || !fpDated.includes(m.type)) return 'Working';
@@ -783,6 +822,7 @@ document.getElementById('fpLayer').addEventListener('click', e => {
   }).then(m => { fpMarkers.push(m); fpDraw(); fpToast('Marker added'); }).catch(err => fpToast(err.message, true));
 });
 fpSync(); // red alert icon + table reflect floor-plan markers as soon as the page loads
+if (<?= !empty($open_plans) ? 'true' : 'false' ?>) toggleFloorPlans(true); // opened from the Maintenance page's Floors icon
 function fpShowMarker(m) {
   const opt = (list, cur) => list.map(v => '<option' + (v === cur ? ' selected' : '') + '>' + esc(v) + '</option>').join('');
   document.getElementById('fsDetailTitle').textContent = (m.label ? m.label + ' — ' : '') + m.type;

@@ -46,8 +46,10 @@ $routes->get('security-dashboard', 'SecurityDashboardController::index');
 $routes->get('tools-dashboard', 'ToolsDashboardController::index');
 $routes->get('facilities-dashboard', 'FacilitiesDashboardController::index');
 $routes->get('janitorial-dashboard', 'JanitorialDashboardController::index');
-$routes->get('portals', 'PortalController::index');
-$routes->get('portals/(:segment)', 'PortalController::show/$1');
+// The department portal picker is gone: everyone signs in directly and lands on their own department.
+// Old /portals links keep working by sending people to the sign-in page.
+$routes->get('portals', static fn () => redirect()->to(base_url('login')));
+$routes->get('portals/(:segment)', static fn () => redirect()->to(base_url('login')));
 $routes->get('security-dept', 'SecurityDeptController::overview');
 $routes->get('security-dept/status', 'SecurityDeptController::status');
 $routes->get('security-dept/plan-image', 'SecurityDeptController::planImage');
@@ -132,6 +134,7 @@ $routes->get ('tools',                  'ToolsController::index');
 $routes->get ('tools/refresh',          'ToolsController::refreshData');
 $routes->get ('tools/power-tools',      'ToolsController::powerTools');
 $routes->get ('tools/consumable',       'ToolsController::consumable');
+$routes->get ('tools/sports-equipment', 'ToolsController::sportsEquipment');
 $routes->get ('tools/borrowing',        'ToolsController::borrowing');
 // "Tools Equipment" was merged into Power Tools — redirect any old
 // bookmarks/links instead of leaving them as a dead 404.
@@ -184,6 +187,7 @@ $routes->post('maintenance-forms/restroom/updateHeader/(:num)',    'MaintenanceF
 // ============================================================
 // VEHICLE MANAGEMENT
 // ============================================================
+$routes->get ('vehicles/dashboard',    'VehicleController::dashboard');
 $routes->get ('vehicles',              'VehicleController::index');
 $routes->get ('vehicles/refresh',      'VehicleController::refreshData');
 $routes->post('vehicles/add',          'VehicleController::add');
@@ -220,6 +224,7 @@ $routes->post('gps/logPing',             'GPSController::logPing');
 // SAFETY MONITORING (Separated from Janitorial)
 // ============================================================
 $routes->get ('safety',                        'SafetyController::index');
+$routes->get ('safety/floor-plans',            'SafetyController::floorPlans');
 $routes->get ('safety/guard-dashboard',        'SafetyController::guardDashboard');
 $routes->get ('safety/keylogs',                'SafetyController::keylogs');
 $routes->get ('safety/keylogs/lookup/(:any)',  'SafetyController::lookupBorrower/$1');
@@ -377,9 +382,9 @@ $routes->post('auth/login',   'AuthController::attemptLogin');
 $routes->get ('logout',       'AuthController::logout');
 $routes->get ('auth/logout',  'AuthController::logout');
 
-// Landing page is the department portal hub; sign-in happens after a box is picked
+// Landing page is the sign-in page; the account decides which department portal opens
 $routes->get('/', function() {
-    return redirect()->to(base_url('portals'));
+    return redirect()->to(base_url('login'));
 });
 
 // ============================================================

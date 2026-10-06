@@ -13,6 +13,7 @@
   $buildings_not_covered_json = $buildings_not_covered_json ?? '[]';
   $floors_not_covered_json = $floors_not_covered_json ?? '[]';
   $travel_history = $travel_history ?? [];
+  $dept_sections = $dept_sections ?? [];
 ?>
 
 <div class="groundworks-shell">
@@ -45,6 +46,7 @@
     <?php endforeach; ?>
   </section>
 
+
   <!-- Pending Requests detail — shows both halves of the count (borrowed
        tools + open work orders) right here, since they live on two
        different pages and a single click can't route to both. -->
@@ -62,7 +64,7 @@
       <div class="pending-column">
         <h3><i class="bi bi-wrench-adjustable"></i> Open Work Orders</h3>
         <div id="pendingWorkOrdersList" class="pending-list"></div>
-        <a class="overview-link" href="<?= esc(site_url('safety?filter=duework')) ?>">View in Maintenance →</a>
+        <a class="overview-link" href="<?= esc(site_url('safety?filter=duework')) ?>">View in Safety and Security →</a>
       </div>
     </div>
   </section>
@@ -80,6 +82,20 @@
       <div id="kpiBannerList" class="pending-list"></div>
       <a id="kpiBannerLink" class="overview-link" href="#">View details →</a>
     </div>
+  </section>
+
+  <section class="dept-sections" aria-label="Departments">
+    <?php foreach ($dept_sections as $d): ?>
+      <div class="panel-card dept-card">
+        <a class="dept-card-head" href="<?= esc(site_url($d['url'])) ?>"><i class="bi <?= esc($d['icon'], 'attr') ?>"></i> <?= esc($d['title']) ?></a>
+        <?php foreach ($d['links'] as $l): ?>
+          <a class="dept-link" href="<?= esc(site_url($l['url'])) ?>">
+            <span><i class="bi <?= esc($l['icon'], 'attr') ?>"></i> <?= esc($l['label']) ?></span>
+            <?php if ($l['count'] !== ''): ?><small><?= esc($l['count']) ?></small><?php endif; ?>
+          </a>
+        <?php endforeach; ?>
+      </div>
+    <?php endforeach; ?>
   </section>
 
   <div class="lower-grid">

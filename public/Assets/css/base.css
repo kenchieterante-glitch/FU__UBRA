@@ -3057,3 +3057,12 @@ table.gps-table tbody td .vehicle-cell {
 #statInline > .gc-title {
   display: none;
 }
+
+/* Sidebar: every top-level icon lines up on the same left edge (the dropdown groups no longer add their own side padding/border) */
+.sidebar-nav .nav-parent-group { padding: 2px 0; border: 0; }
+.sidebar-nav .nav-parent-group.open { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07); }
+
+/* Dark mode: the campus map picture is dark too (picture inverted, white legend covers matched to the dark background) */
+:root[data-theme="dark"] svg[id$="MapSVG"], :root[data-theme="dark"] svg[id$="ImgSVG"] { background: #141414 !important; }
+:root[data-theme="dark"] svg[id$="MapSVG"] image, :root[data-theme="dark"] svg[id$="ImgSVG"] image { filter: invert(0.92) hue-rotate(180deg); }
+:root[data-theme="dark"] svg .map-cover { fill: #141414 !important; }

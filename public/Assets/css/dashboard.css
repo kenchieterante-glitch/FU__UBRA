@@ -348,3 +348,11 @@
     background: #38d66b;
     flex-shrink: 0;
 }
+/* Department sections (mirrors the sidebar dropdowns) */
+.dept-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 16px 0; }
+.dept-card { padding: 16px 18px; }
+.dept-card-head { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #7b0f1a; text-decoration: none; margin-bottom: 8px; font-size: 15px; }
+.dept-link { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 4px; border-top: 1px solid rgba(0,0,0,.07); color: inherit; text-decoration: none; font-size: 13.5px; }
+.dept-link i { color: #7b0f1a; margin-right: 6px; }
+.dept-link small { color: #6b7280; }
+.dept-link:hover { background: rgba(123,15,26,.05); }

@@ -35,6 +35,13 @@
 
   <!-- ── JANITORIAL MAP ───────────────────────────────────────── -->
   <div id="janitorial-janmap" class="sub-pane active">
+    <div class="map-bar">
+      <div class="map-bar-label"><i class="bi bi-geo-alt"></i> Campus map</div>
+      <div class="map-tool-icons">
+        <button type="button" class="map-tool-btn active" id="janToggleBtn" onclick="toggleJanMap()" title="Show / hide the campus map" aria-label="Show or hide the campus map"><i class="bi bi-map"></i></button>
+      </div>
+    </div>
+    <div id="janMapSection">
     <div class="map-layout" id="janMapLayout">
       <div class="map-container" id="janMapContainer">
         <div class="map-search-row">
@@ -46,9 +53,12 @@
           </div>
         </div>
         <div class="map-legend-toggle-wrap">
+          <div class="map-legend-row">
           <button type="button" class="map-legend-btn" id="janMapLegendBtn" onclick="toggleJanMapLegend()" aria-label="Toggle legend">
             <i class="bi bi-funnel"></i> Legend
           </button>
+            <button type="button" class="map-close-side map-close-icon" onclick="toggleJanMap()" title="Close the map" aria-label="Close the map"><i class="bi bi-x-lg"></i></button>
+          </div>
           <div class="map-legend-popup" id="janMapLegendPopup">
             <div class="map-legend">
               <span class="leg-title">Zone Status</span>
@@ -60,7 +70,8 @@
           </div>
         </div>
 
-        <svg id="janSVG" viewBox="0 0 950 900" xmlns="http://www.w3.org/2000/svg">
+        <svg id="janImgSVG" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg>
+        <svg id="janSVG" viewBox="0 0 950 900" xmlns="http://www.w3.org/2000/svg" style="display:none">
           <rect id="z-main" class="campus-area jan-area" x="280" y="175" width="205" height="430" rx="4" fill="transparent" stroke="#2a2a2a" stroke-width="1.4" data-name="Main evacuation open space" data-cat="Assembly zone — no building number" onclick="selectJanMapBuilding(this)"/>
           <line x1="382" y1="175" x2="382" y2="605" stroke="#2a2a2a" stroke-width="1" opacity=".6" />
           <line x1="280" y1="390" x2="485" y2="390" stroke="#2a2a2a" stroke-width="1" opacity=".6" />
@@ -82,6 +93,18 @@
           <button class="dp-close" onclick="closeJanDrill()"><i class="bi bi-x-lg"></i></button>
         </div>
         <div id="janDpContent"></div>
+      </div>
+    </div>
+    </div>
+
+    <!-- ── TABULATED LIST: under the map, stays visible when the map is closed ── -->
+    <div class="guard-card" style="padding:18px;margin-top:16px;">
+      <div class="dp-section-title"><i class="bi bi-list-ul"></i> Janitorial Zone List</div>
+      <div class="table-wrap" id="janZoneListWrap">
+        <table class="sj-table" id="janZoneTable">
+          <thead><tr><th>Zone</th><th>Assigned Staff</th><th>Shift</th><th>Tasks Done</th><th>Status</th></tr></thead>
+          <tbody id="janZoneTableBody"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -318,6 +341,7 @@
   </div>
 </div>
 
+<script src="<?= base_url('Assets/js/campus-map.js') ?>?v=<?= @filemtime(FCPATH . 'Assets/js/campus-map.js') ?>"></script>
 <script>
 function esc(s) {
   const d = document.createElement('div');
@@ -375,6 +399,8 @@ function refreshJanitorialData(isPoll) {
       renderInventory();
       renderRefillLog();
       renderJanitorialSummary();
+      drawJanImageMap();
+renderJanZoneList();
 
       if (!isPoll) showToast('Synced with the mobile app.');
     })
@@ -434,6 +460,28 @@ function getJanStatusDisplay(areaKey) {
 function reloadOnTab(tab, message) {
   try { sessionStorage.setItem('janAfterReload', JSON.stringify({ tab, message })); } catch (e) {}
   window.location.reload();
+}
+
+// Tabulated list of every janitorial zone, from the same checklist data the map is coloured from.
+function renderJanZoneList() {
+  const body = document.getElementById('janZoneTableBody');
+  if (!body) return;
+  const label = { clean: ['Clean', 'tt-badge zb-done'], pending: ['Pending', 'tt-badge zb-needs'], needs: ['Needs to Clean', 'tt-badge zb-overdue'], untracked: ['No tasks', 'tt-badge zb-needs'] };
+  const rows = Object.keys(janAreaChecklists).map(key => {
+    const d = janAreaChecklists[key];
+    const done = (d.tasks || []).filter(t => t.done).length, total = (d.tasks || []).length;
+    const st = label[getJanStatusValue(key)] || label.untracked;
+    return '<tr><td><strong>' + esc(AREAS[key]?.name || key) + '</strong></td><td>' + esc(d.staff || '—') + '</td><td>' + esc(d.shift || '—') + '</td><td>' + done + ' / ' + total + '</td><td><span class="' + st[1] + '">' + st[0] + '</span></td></tr>';
+  });
+  body.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="5" class="empty-row">No janitorial zones yet.</td></tr>';
+}
+
+// The campus map is open by default; Close hides it and the Map icon brings it back.
+function toggleJanMap() {
+  const sec = document.getElementById('janMapSection');
+  const show = sec.style.display === 'none';
+  sec.style.display = show ? '' : 'none';
+  document.getElementById('janToggleBtn').classList.toggle('active', show);
 }
 
 function switchJanTab(id) {
@@ -825,14 +873,37 @@ function zoomToJanBuilding(name) {
   const vh = b.h + pad * 2;
   document.getElementById('janSVG').setAttribute('viewBox', `${vx} ${vy} ${vw} ${vh}`);
   document.getElementById('janMapContainer').classList.add('map-zoomed');
+  if (typeof zoomMapTo === 'function') zoomMapTo('janImgSVG', name);
 
   const shape = Array.from(document.querySelectorAll('#janSVG .jan-area'))
     .find(el => el.getAttribute('data-name') === name);
   if (shape) selectJanMapBuilding(shape);
 }
 
+// The campus map picture, coloured from the same cleaning statuses as the drawn shapes it replaces.
+function drawJanImageMap() {
+  if (typeof renderMapImage !== 'function' || !document.getElementById('janImgSVG')) return;
+  const state = {};
+  janMapBuildings.forEach(b => {
+    if (!b.areaKey) return;
+    const status = getJanStatusValue(b.areaKey);
+    if (mapStatusFilter && status !== mapStatusFilter) return;
+    if (status === 'clean') state[b.name] = { red: null, yellow: null, done: true };
+    else if (status === 'needs') state[b.name] = { red: [], yellow: null, done: false };
+    else if (status === 'pending') state[b.name] = { red: null, yellow: [], done: false };
+  });
+  renderMapImage('janImgSVG', {
+    imageUrl: '<?= base_url('images/MAP.jpg') ?>',
+    stateByName: state,
+    hideFloorText: true,
+    legend: 'cleaning',
+    onSelect: name => { if (janMapBuildings.some(b => b.name === name)) zoomToJanBuilding(name); },
+  });
+}
+
 function resetJanMapZoom() {
   document.getElementById('janSVG').setAttribute('viewBox', JAN_CAMPUS_VIEWBOX);
+  if (typeof zoomMapTo === 'function') zoomMapTo('janImgSVG', '');
   document.getElementById('janMapContainer').classList.remove('map-zoomed');
   document.getElementById('janMapBuildingSelect').value = '';
 }
@@ -852,13 +923,20 @@ function filterMapByStatus(status) {
     const match = !mapStatusFilter || el.getAttribute('data-status') === mapStatusFilter;
     el.classList.toggle('jan-area-dimmed', !match);
   });
+  drawJanImageMap();
+renderJanZoneList();
 }
 
 function clearMapFilter() {
   mapStatusFilter = null;
+  drawJanImageMap();
+renderJanZoneList();
   document.querySelectorAll('.map-legend .leg-item').forEach(el => el.classList.remove('leg-active'));
   document.querySelectorAll('#janSVG .jan-area').forEach(el => el.classList.remove('jan-area-dimmed'));
 }
+
+drawJanImageMap();
+renderJanZoneList();
 
 let shiftsFilter = null;
 let shiftsFloorFilter = null;

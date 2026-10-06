@@ -242,7 +242,6 @@
     </div>
 
     <div class="auth-actions">
-        <a href="<?= base_url('portals') ?>" class="auth-back-btn"><i class="bi bi-arrow-left"></i> Back</a>
         <button type="submit" class="auth-submit">Sign In</button>
     </div>
 </form>

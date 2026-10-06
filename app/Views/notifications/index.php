@@ -91,7 +91,7 @@ $draft_count = $draft_count ?? 0;
                                     <option value="">All Categories</option>
                                     <?php
                                     $catAllowed = \App\Models\NotificationModel::allowedModulesForRole((string) session()->get('role'));
-                                    foreach (['Vehicle Inspection', 'Vehicle Expiry', 'Trip Ticket Request', 'Trip Ticket Assignment', 'Travel Reminder', 'Vehicle Service Due', 'Motor Pool Work Order', 'Equipment Needs Repair', 'Air-Con Cleaning', 'Janitorial Assignment', 'Inventory Low Stock', 'Tool Borrowed', 'Fire Extinguisher Installed', 'Fire Extinguisher Expiring Soon', 'Aircon Unit Registered', 'Aircon Needs Cleaning', 'Cleaning Scheduled', 'Urgent Cleaning Scheduled'] as $catName):
+                                    foreach (['Vehicle Inspection', 'Vehicle Expiry', 'Trip Ticket Request', 'Trip Ticket Assignment', 'Travel Reminder', 'Vehicle Service Due', 'Motor Pool Work Order', 'Equipment Needs Repair', 'Air-Con Cleaning', 'Janitorial Assignment', 'Inventory Low Stock', 'Tool Borrowed', 'Fire Extinguisher Installed', 'Fire Extinguisher Expiring Soon', 'Aircon Unit Registered', 'Aircon Needs Cleaning', 'Cleaning Scheduled', 'Urgent Cleaning Scheduled', 'Consumable Low Stock', 'Maintenance Scheduled', 'Sports Equipment Borrowed', 'Sports Equipment Overdue', 'Sports Equipment Needs Repair', 'Job Order Expiring Soon', 'Job Order Expired', 'Contract Expiring Soon', 'Contract Expired', 'Personnel Document Incomplete'] as $catName):
                                         $catModule = \App\Models\NotificationModel::CATEGORY_MODULE[$catName] ?? null;
                                         if ($catAllowed !== null && $catModule !== null && !in_array($catModule, $catAllowed, true)) continue;
                                     ?>
@@ -149,6 +149,8 @@ $draft_count = $draft_count ?? 0;
                                     'Janitorial Assignment' => 'bi-brush',
                                     'Inventory Low Stock'   => 'bi-box-seam',
                                     'Tool Borrowed'         => 'bi-hand-index-thumb-fill',
+                                    'Sports Equipment Borrowed', 'Sports Equipment Overdue', 'Sports Equipment Needs Repair' => 'bi-trophy-fill',
+                                    'Job Order Expiring Soon', 'Job Order Expired', 'Contract Expiring Soon', 'Contract Expired', 'Personnel Document Incomplete' => 'bi-person-lines-fill',
                                     'Vehicle Expiry'        => 'bi-card-checklist',
                                     'Fire Extinguisher Installed' => 'bi-fire',
                                     'Fire Extinguisher Expiring Soon' => 'bi-hourglass-split',
@@ -180,8 +182,19 @@ $draft_count = $draft_count ?? 0;
                                     'Equipment Needs Repair'                                   => 'assets-dept/vehicles',
                                     'Vehicle Service Due'                                      => 'assets-dept/vehicles',
                                     'Travel Reminder'                                          => 'travel',
+                                    'Sports Equipment Borrowed', 'Sports Equipment Overdue',
+                                    'Sports Equipment Needs Repair'                            => 'tools/sports-equipment',
+                                    'Consumable Low Stock'                                     => 'facilities/janitorial',
+                                    'Job Order Expiring Soon', 'Job Order Expired',
+                                    'Contract Expiring Soon', 'Contract Expired',
+                                    'Personnel Document Incomplete'                            => 'personnel',
                                     default                                                     => null,
                                 };
+                                // Aircon and janitorial pages now live under Facilities.
+                                $roleNow = strtolower((string) session()->get('role'));
+                                if (in_array($n['category'] ?? '', ['Air-Con Cleaning', 'Aircon Unit Registered', 'Aircon Needs Cleaning'], true)) $catRoute = 'facilities/aircon';
+                                if ($catRoute === 'janitorial' && $roleNow !== 'janitorial') $catRoute = 'facilities/janitorial';
+                                if (in_array($n['category'] ?? '', ['Vehicle Inspection', 'Vehicle Expiry', 'Trip Ticket Request', 'Trip Ticket Assignment', 'Travel Reminder'], true) && $catRoute === 'vehicles') $catRoute = 'vehicles';
                                 // Department accounts open their own department's pages.
                                 $roleKey = strtolower((string) session()->get('role'));
                                 if ($roleKey === 'assets' && $catRoute) {
@@ -192,6 +205,7 @@ $draft_count = $draft_count ?? 0;
                                     };
                                 }
                                 if ($roleKey === 'security' && $catRoute) $catRoute = 'security-dept/fire-safety';
+                                if ($roleKey === 'sports' && $catRoute) $catRoute = 'sports-dept/borrowing';
                                 // Matches NotificationController::index()'s $today_count definition exactly.
                                 $isToday = substr($n['created_at'] ?? '', 0, 10) === date('Y-m-d');
                                 $isDraft = ($n['_kind'] ?? 'live') === 'draft';

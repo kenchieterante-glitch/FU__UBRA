@@ -10,6 +10,10 @@ use App\Models\SafetyWorkOrderModel;
 use App\Models\JanitorialAssignmentModel;
 use App\Models\JanitorialTaskModel;
 use App\Models\TravelModel;
+use App\Models\WorkOrderModel;
+use App\Models\AirconUnitModel;
+use App\Models\JanitorialInspectionModel;
+use App\Models\KeyBorrowLogModel;
 
 class Dashboard extends BaseController
 {
@@ -240,14 +244,58 @@ class Dashboard extends BaseController
             [
                 'icon' => 'bi-hourglass-split',
                 'tone' => 'pending',
-                'title' => "{$openWorkOrders} maintenance work orders open",
-                'subtitle' => 'Maintenance',
+                'title' => "{$openWorkOrders} safety work orders open",
+                'subtitle' => 'Safety and Security',
                 'time' => 'This week',
                 'url' => 'safety',
             ],
         ];
 
+        // Department sections: one card per sidebar group, with its sub-pages and a live count where there is one.
+        $month = date('Y-m');
+        $facOpen  = (new WorkOrderModel())->whereIn('status', ['Pending', 'In Progress'])->countAllResults();
+        $facAir   = (new AirconUnitModel())->where('next_schedule <=', date('Y-m-d', strtotime('+7 days')))->countAllResults();
+        $facCheck = (new JanitorialInspectionModel())->where('inspection_month', $month)->where('result', 'Needs Attention')->countAllResults();
+        $keysOut  = (new KeyBorrowLogModel())->where('status', 'Active')->countAllResults();
+        $gpsOnline = $vehicleModel->where('is_archived', 0)->where('gps_status', 'Online')->countAllResults();
+        $tripsOpen = $travelModel->whereIn('status', ['Pending', 'Reviewed', 'Approved', 'In Transit'])->countAllResults();
+        $deptSections = [
+            ['title' => 'Facilities', 'icon' => 'bi-building-gear', 'url' => 'facilities/status', 'links' => [
+                // Repair Requests hidden for now: ['label' => 'Repair Requests', 'url' => 'facilities/work-orders', 'count' => $facOpen . ' open'],
+                ['label' => 'Aircon Care', 'url' => 'facilities/aircon', 'icon' => 'bi-snow2', 'count' => $facAir . ' due'],
+                ['label' => 'Janitorial Check', 'url' => 'facilities/janitorial', 'icon' => 'bi-brush', 'count' => ($totalZones - $cleanedZones) . ' zones left'],
+                ['label' => 'Building Check', 'url' => 'facilities/buildings', 'icon' => 'bi-building-check', 'count' => $facCheck . ' need attention'],
+            ]],
+            ['title' => 'Safety and Security', 'icon' => 'bi-shield-fill-check', 'url' => 'safety', 'links' => [
+                ['label' => 'Fire Safety', 'url' => 'safety', 'icon' => 'bi-fire', 'count' => $overdueFe . ' overdue'],
+                ['label' => 'Safety Inspection', 'url' => 'security-dept/inspection', 'icon' => 'bi-clipboard2-check', 'count' => ''],
+                ['label' => 'Guard Monitoring', 'url' => 'security-dept/guard', 'icon' => 'bi-shield-check', 'count' => ''],
+                ['label' => 'List of Keys', 'url' => 'security-dept/keys', 'icon' => 'bi-list-ul', 'count' => $keysOut . ' out'],
+            ]],
+            ['title' => 'Vehicle Management', 'icon' => 'bi-truck', 'url' => 'vehicles/dashboard', 'links' => [
+                ['label' => 'Vehicle List', 'url' => 'vehicles', 'icon' => 'bi-truck', 'count' => $fleetStats['total'] . ' vehicles'],
+                ['label' => 'GPS Tracker', 'url' => 'gps', 'icon' => 'bi-geo-alt-fill', 'count' => $gpsOnline . ' online'],
+                ['label' => 'Trip Ticket', 'url' => 'travel', 'icon' => 'bi-ticket-perforated', 'count' => $tripsOpen . ' open'],
+            ]],
+            ['title' => 'Personnel Management', 'icon' => 'bi-people', 'url' => 'personnel', 'links' => [
+                ['label' => 'All Personnel', 'url' => 'personnel', 'icon' => 'bi-people-fill', 'count' => ''],
+                ['label' => 'Drivers', 'url' => 'personnel/drivers', 'icon' => 'bi-person-vcard-fill', 'count' => ''],
+                ['label' => 'Janitors', 'url' => 'personnel/janitors', 'icon' => 'bi-brush', 'count' => ''],
+                ['label' => 'Carpentries Shop', 'url' => 'personnel/carpentries', 'icon' => 'bi-hammer', 'count' => ''],
+                ['label' => 'Maintenance', 'url' => 'personnel/maintenance', 'icon' => 'bi-wrench', 'count' => ''],
+                ['label' => 'Construction Workers', 'url' => 'personnel/construction-workers', 'icon' => 'bi-cone-striped', 'count' => ''],
+            ]],
+            ['title' => 'Tools Management', 'icon' => 'bi-tools', 'url' => 'tools', 'links' => [
+                ['label' => 'All Tools', 'url' => 'tools', 'icon' => 'bi-boxes', 'count' => $borrowedTools . ' borrowed'],
+                ['label' => 'Power Tools', 'url' => 'tools/power-tools', 'icon' => 'bi-lightning-fill', 'count' => (new ToolsModel())->where('category', 'Power Tools')->where('is_archived', 0)->countAllResults() . ' items'],
+                ['label' => 'Supplies & Materials', 'url' => 'tools/consumable', 'icon' => 'bi-box-seam-fill', 'count' => (new ToolsModel())->where('category', 'Consumable')->where('is_archived', 0)->countAllResults() . ' items'],
+                ['label' => 'Sports Equipment', 'url' => 'tools/sports-equipment', 'icon' => 'bi-trophy-fill', 'count' => (new ToolsModel())->where('category', 'Sports Equipment')->where('is_archived', 0)->countAllResults() . ' items'],
+                ['label' => 'Borrowing', 'url' => 'tools/borrowing', 'icon' => 'bi-hand-index-thumb-fill', 'count' => $dueBackToday . ' due today'],
+            ]],
+        ];
+
         $data = [
+            'dept_sections' => $deptSections,
             'title' => 'UBRA Monitoring Dashboard',
             'pageCss' => 'dashboard.css',
             'showTopbar' => true,

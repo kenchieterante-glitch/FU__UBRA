@@ -106,6 +106,12 @@ class ToolsController extends BaseController
         return $this->categoryView('Consumable');
     }
 
+    // Same Sports Equipment records the Sports Equipment Monitoring portal manages (tools.category), so both stay in step.
+    public function sportsEquipment()
+    {
+        return $this->categoryView('Sports Equipment');
+    }
+
     // Borrowing ledger — one row per borrow_records transaction (active and
     // returned), not per tool, so it's a history view rather than a live
     // inventory filter like the category tabs above. 'Overdue' is derived

@@ -29,6 +29,60 @@ class VehicleController extends BaseController
         $this->travelModel = new TravelModel();
     }
 
+    // Vehicle Management dashboard: the whole fleet at a glance, each box opens its own list.
+    public function dashboard()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        (new TraccarSync())->run();
+
+        $vehicles = $this->vehicleModel->getAllWithDetails();
+        $vehicles = array_values(array_filter($vehicles, fn($v) => empty($v['is_archived'])));
+        $trips    = $this->travelModel->getAllWithDetails();
+
+        $vrow = fn($v) => [
+            $v['vehicle_name'] ?? '—',
+            $v['plate_no'] ?? '—',
+            $v['driver_name'] ?? 'Unassigned',
+            $v['availability'] ?? '—',
+            $v['gps_status'] ?? 'Offline',
+            $v['inspection_status'] ?? '—',
+        ];
+        $vcols = ['Vehicle', 'Plate No.', 'Assigned Driver', 'Availability', 'GPS', 'Inspection'];
+        $by = fn(callable $f) => array_map($vrow, array_values(array_filter($vehicles, $f)));
+
+        $trow = fn($t) => [
+            $t['trip_id'] ?? '—',
+            $t['destination'] ?? '—',
+            $t['requester_name'] ?? '—',
+            !empty($t['travel_date']) ? date('M d, Y', strtotime($t['travel_date'])) : '—',
+            !empty($t['vehicle_name']) ? $t['vehicle_name'] . ' (' . ($t['plate_no'] ?? '') . ')' : 'Unassigned',
+            $t['status'] ?? '—',
+        ];
+        $tcols = ['Trip ID', 'Destination', 'Requester', 'Date', 'Vehicle', 'Status'];
+        $tby = fn(array $statuses) => array_map($trow, array_values(array_filter($trips, fn($t) => in_array($t['status'] ?? '', $statuses, true))));
+
+        $cards = [
+            ['key' => 'total', 'label' => 'Total Vehicles', 'icon' => 'bi-truck', 'tone' => 'maroon', 'title' => 'All vehicles', 'columns' => $vcols, 'rows' => $by(fn($v) => true)],
+            ['key' => 'available', 'label' => 'Available', 'icon' => 'bi-check-circle-fill', 'tone' => 'green', 'title' => 'Available vehicles', 'columns' => $vcols, 'rows' => $by(fn($v) => ($v['availability'] ?? '') === 'Available')],
+            ['key' => 'inuse', 'label' => 'In Use', 'icon' => 'bi-speedometer2', 'tone' => 'gold', 'title' => 'Vehicles in use', 'columns' => $vcols, 'rows' => $by(fn($v) => ($v['availability'] ?? '') === 'In Use')],
+            ['key' => 'maint', 'label' => 'Reserved / Maintenance', 'icon' => 'bi-wrench-adjustable', 'tone' => 'red', 'title' => 'Reserved or under maintenance', 'columns' => $vcols, 'rows' => $by(fn($v) => in_array($v['availability'] ?? '', ['Reserved', 'Maintenance'], true))],
+            ['key' => 'gps_on', 'label' => 'GPS Online', 'icon' => 'bi-broadcast', 'tone' => 'green', 'title' => 'Vehicles with GPS online', 'columns' => $vcols, 'rows' => $by(fn($v) => ($v['gps_status'] ?? '') === 'Online')],
+            ['key' => 'gps_off', 'label' => 'GPS Offline', 'icon' => 'bi-wifi-off', 'tone' => 'red', 'title' => 'Vehicles with GPS offline', 'columns' => $vcols, 'rows' => $by(fn($v) => ($v['gps_status'] ?? 'Offline') !== 'Online')],
+            ['key' => 'insp', 'label' => 'Inspection Due', 'icon' => 'bi-clipboard2-check', 'tone' => 'gold', 'title' => 'Vehicles with an inspection due', 'columns' => $vcols, 'rows' => $by(fn($v) => ($v['inspection_status'] ?? '') !== 'Completed')],
+            ['key' => 'trips_open', 'label' => 'Trips Waiting / Approved', 'icon' => 'bi-ticket-perforated', 'tone' => 'gold', 'title' => 'Trip tickets waiting or approved', 'columns' => $tcols, 'rows' => $tby(['Pending', 'Reviewed', 'Approved'])],
+            ['key' => 'trips_live', 'label' => 'Trips In Transit', 'icon' => 'bi-signpost-2', 'tone' => 'maroon', 'title' => 'Trips in transit', 'columns' => $tcols, 'rows' => $tby(['In Transit'])],
+        ];
+
+        return view('vehicles/dashboard', [
+            'title'   => 'Vehicle Management Dashboard',
+            'pageCss' => 'safety.css',
+            'cards'   => $cards,
+        ]);
+    }
+
     public function index()
     {
         if (!session()->get('isLoggedIn')) {

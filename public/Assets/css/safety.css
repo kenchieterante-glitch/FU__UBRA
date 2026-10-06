@@ -2942,3 +2942,113 @@ tr.row-blink td {
 /* Supplies: every category table uses the same fixed columns so Item / Location / Stock / Status line up from one table to the next */
 table.sup-table { table-layout: fixed; width: 100%; }
 table.sup-table td, table.sup-table th { overflow-wrap: anywhere; }
+
+/* Floor-by-floor breakdown under the campus maps */
+.floor-break { margin-top: 14px; border-top: 1px dashed #dcdce2; padding-top: 12px; }
+.floor-break-title { font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.floor-break table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.floor-break th { background: #7b0f1a; color: #fff; padding: 7px 10px; text-align: center; font-weight: 600; }
+.floor-break td { border-bottom: 1px solid #eee; padding: 7px 10px; text-align: center; }
+.floor-break td:first-child, .floor-break th:first-child { text-align: left; font-weight: 600; }
+.fb-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; margin: 1px 2px; }
+.fb-ok { background: #e6f4ea; color: #1e7e34; }
+.fb-warn { background: #fff4cc; color: #8a6100; }
+.fb-bad { background: #fde7e7; color: #c62828; }
+.fb-none { color: #aaa; }
+
+/* Map / Floors icon buttons beside the building dropdown on the Maintenance page */
+.map-tool-icons { display: inline-flex; gap: 8px; margin-left: 10px; vertical-align: middle; }
+.map-tool-btn {
+    width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid #d9d9de; border-radius: 10px; background: #fff; color: #7b0f1a; font-size: 17px;
+    cursor: pointer; text-decoration: none; transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.map-tool-btn:hover, .map-tool-btn.active { background: #7b0f1a; color: #fff; border-color: #7b0f1a; }
+.map-search-row { display: flex; align-items: center; gap: 10px; }
+.map-search-row .map-search-box { flex: 1; min-width: 0; }
+.map-search-row .map-tool-icons { margin-left: 0; }
+
+/* Maintenance map: dropdown on the left, Map / Floors icons on the right (next to Legend), map is optional */
+.map-search-row { padding-right: 112px; }
+.map-search-row .map-tool-icons { margin-left: auto; }
+.campus-map-box { position: relative; }
+
+/* Equipment list card: header row, and air between the tabs, the search bar and the table */
+.reg-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+#regTabs { margin: 14px 0 20px !important; padding-bottom: 8px; }
+.reg-pane .tt-toolbar { margin-top: 6px; margin-bottom: 14px; }
+.map-section { position: relative; margin-bottom: 16px; }
+.map-search-row { padding-right: 112px; }
+/* Map / Floors icons sit in a bar above the (optional) map, both before the equipment list */
+.map-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding: 0 2px; }
+.map-bar-label { font-weight: 700; color: #7b0f1a; display: flex; align-items: center; gap: 8px; }
+.map-bar .map-tool-icons { margin-left: auto; }
+
+/* Close X sits right beside the Legend button */
+.map-legend-row { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.map-close-side { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--bdr); background: var(--surf); color: var(--txt); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.map-close-side:hover { background: var(--bdr); }
+
+/* Cleaning map: the building's details open on the RIGHT of the map */
+.map-split { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+.map-split:has(> .floor-break:not([style*="display: none"]):not([style*="display:none"])) { grid-template-columns: minmax(0, 1fr) 380px; }
+.map-split > .floor-break { margin-top: 0; border-top: 0; border-left: 3px solid #7b0f1a; padding: 4px 0 4px 16px; }
+@media (max-width: 900px) { .map-split:has(> .floor-break:not([style*="display: none"]):not([style*="display:none"])) { grid-template-columns: 1fr; } }
+
+/* "Close" button on every map (maps now open by default) */
+.map-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.map-head .gc-title { margin: 0; }
+.map-close-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid #7b0f1a; background: #fff; color: #7b0f1a; font-weight: 700; font-size: 13px; cursor: pointer; }
+.map-close-btn:hover { background: #7b0f1a; color: #fff; }
+.map-close-side { width: auto !important; height: auto !important; border-radius: 999px !important; padding: 7px 14px; gap: 6px; font-weight: 700; font-size: 13px; border-color: #7b0f1a !important; color: #7b0f1a !important; }
+.map-close-side:hover { background: #7b0f1a !important; color: #fff !important; }
+.floor-close-row { display: flex; justify-content: flex-end; margin-top: 12px; }
+
+.map-close-side.map-close-icon { width: 34px !important; height: 34px !important; padding: 0 !important; justify-content: center; border-radius: 50% !important; }
+
+/* Right-hand details card (Building Check / Janitorial Check) — same look as the Fire Safety building panel */
+.map-split > .floor-break.fd-wrap { border: 0; padding: 0; margin: 0; }
+.fd-card { background: #fff; border-radius: 14px; border-left: 3px solid #e0a100; box-shadow: 0 6px 22px rgba(0,0,0,.10); padding: 16px 18px; }
+.fd-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.fd-title { font-weight: 800; color: #7b0f1a; font-size: 16px; }
+.fd-sub { font-size: 12px; color: #111; margin-top: 2px; }
+.fd-x { border: 0; background: #eee; border-radius: 8px; width: 30px; height: 28px; cursor: pointer; color: #555; }
+.fd-banner { margin: 12px 0; padding: 10px 12px; border-radius: 8px; font-size: 12.5px; color: #111; border-left: 3px solid #bbb; background: #f6f6f8; }
+.fd-banner strong { display: block; color: #7b0f1a; margin-bottom: 2px; }
+.fd-ok { background: #e6f4ea; border-left-color: #1e7e34; }
+.fd-warn { background: #fff8e6; border-left-color: #e0a100; }
+.fd-bad { background: #fde7e7; border-left-color: #c62828; }
+.fd-label { font-size: 11px; font-weight: 800; letter-spacing: .04em; color: #111; margin: 10px 0 6px; }
+.fd-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fd-chip { border: 1px solid #d6d6dc; background: #fff; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; color: #111; cursor: pointer; }
+.fd-chip.active { background: #7b0f1a; border-color: #7b0f1a; color: #fff; }
+.fd-detail { margin-top: 10px; border: 1px dashed #d6d6dc; border-radius: 10px; padding: 10px 12px; }
+.fd-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 12.5px; color: #111; border-bottom: 1px solid #f0f0f2; }
+.fd-row:last-child { border-bottom: 0; }
+.fd-none { font-size: 12.5px; color: #111; }
+.fd-footer { margin-top: 12px; display: flex; justify-content: flex-end; }
+
+/* Right-hand panel in the Facilities maps uses the Fire Safety drill panel itself, 400px wide like there */
+.map-split:has(> .floor-break.fd-wrap:not([style*="display: none"]):not([style*="display:none"])) { grid-template-columns: minmax(0, 1fr) 400px; }
+.map-split > .floor-break.fd-wrap .drill-panel { margin: 0; }
+.floor-plan .fd-row { background: transparent; }
+
+/* Dark mode: readable text inside the right-hand details panel (Fire Safety, Building Check, Janitorial Check) */
+:root[data-theme="dark"] .drill-panel .dp-title,
+:root[data-theme="dark"] .drill-panel .dp-section-title { color: #ff9a9a; }
+:root[data-theme="dark"] .drill-panel .dp-sub { color: #c9c9d6; }
+:root[data-theme="dark"] .drill-panel .dp-status-box { background: #2b2620; border-color: #4a4338; border-left-color: #e0a100; color: #f3ead7; }
+:root[data-theme="dark"] .drill-panel .dp-status-box strong { color: #ffd479; }
+:root[data-theme="dark"] .drill-panel .fd-row { color: #ececf2; border-bottom-color: #3a3a46; }
+:root[data-theme="dark"] .drill-panel .fd-row span { color: #c9c9d6; }
+:root[data-theme="dark"] .drill-panel .fd-none { color: #ececf2; }
+:root[data-theme="dark"] .drill-panel .floor-tab { color: #ececf2; }
+:root[data-theme="dark"] .drill-panel .floor-tab.active { color: #fff; }
+:root[data-theme="dark"] .drill-panel .floor-plan { border-color: #4a4a58; }
+:root[data-theme="dark"] .fb-ok { background: #1f3d2a; color: #8fe0a8; }
+:root[data-theme="dark"] .fb-warn { background: #4a3a10; color: #ffd479; }
+:root[data-theme="dark"] .fb-bad { background: #4a1c1c; color: #ff9a9a; }
+:root[data-theme="dark"] .gc-title,
+:root[data-theme="dark"] .dp-section-title,
+:root[data-theme="dark"] .map-bar-label { color: #ff9a9a; }
+:root[data-theme="dark"] .map-close-btn, :root[data-theme="dark"] .map-close-side { color: #ff9a9a !important; border-color: #ff9a9a !important; background: transparent !important; }

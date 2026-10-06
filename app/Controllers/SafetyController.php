@@ -121,8 +121,27 @@ class SafetyController extends BaseController
             'logged'   => $w['date_logged'],
         ], $openWorkOrders);
 
+        // Tabulated lists for the (optional) map: fire extinguishers, smoke detectors and fire exits, same data as Safety and Security.
+        $registerRows = (new SecurityDeptController())->equipmentRows();
+        $fmt = fn($d) => !empty($d) ? date('M d, Y', strtotime($d)) : '—';
+        $registerTabs = [];
+        foreach (['Fire Extinguisher' => 'Fire Extinguishers', 'Smoke Detector' => 'Smoke Detectors', 'Emergency Exit Sign' => 'Fire Exits'] as $type => $label) {
+            $list = array_values(array_filter($registerRows, fn($r) => $r['type'] === $type));
+            $registerTabs[] = [
+                'key'     => strtolower(str_replace(' ', '-', $type)),
+                'label'   => $label,
+                'columns' => ['Code', 'Building', 'Floor', 'Details', 'Status', 'Next Check', 'Expires'],
+                'rows'    => array_map(fn($r) => [
+                    $r['code'], $r['building'], $r['floor'] ?? '—', $r['detail'] ?: '—',
+                    $r['status'] !== 'Working' ? $r['status'] : ($r['due'] === 'OK' ? 'Good' : $r['due']),
+                    $fmt($r['next'] ?? null), $fmt($r['expires'] ?? null),
+                ], $list),
+            ];
+        }
+
         return view('safety/index', [
-            'title' => 'Maintenance',
+            'register_tabs' => $registerTabs,
+            'title' => 'Safety and Security',
             'openModule' => 'safety',
             'fe_registry_json' => $this->jsonForScript($feRegistry),
             'coverage_total'      => count($units),
@@ -309,6 +328,14 @@ class SafetyController extends BaseController
                 'created_at'  => date('Y-m-d H:i:s'),
             ]);
         }
+    }
+
+    // Floor plans for the admin account: same page the Safety and Security department uses, opened under the admin's own Safety & Security menu.
+    public function floorPlans()
+    {
+        $dept = new SecurityDeptController();
+        $dept->initController($this->request, $this->response, service('logger'));
+        return $dept->index('fire-safety');
     }
 
     public function guardDashboard()
