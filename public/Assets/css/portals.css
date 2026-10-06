@@ -588,3 +588,42 @@ body.portal-lobby .portal-card:nth-child(4) { animation-delay: -3.6s; animation-
 body.portal-lobby .portal-icon {
     animation: portalIconFloat 3.4s ease-in-out infinite;
 }
+
+/* ===== White cards again (the floating animation stays) ===== */
+body.portal-lobby .portal-card,
+body.portal-lobby .portal-card:hover {
+    background: #ffffff;
+    border: 1px solid #ececf0;
+    border-radius: 14px;
+    color: #383838;
+    padding: 24px 20px 20px;
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, .35), 0 4px 8px -4px rgba(0, 0, 0, .25);
+}
+body.portal-lobby .portal-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 36px -8px rgba(0, 0, 0, .5), 0 6px 12px -4px rgba(0, 0, 0, .3);
+}
+body.portal-lobby .portal-card h2 {
+    color: #383838;
+    text-shadow: none;
+}
+body.portal-lobby .portal-desc {
+    color: #6b6b75;
+    text-shadow: none;
+}
+body.portal-lobby .portal-covers {
+    color: #6b6b75;
+    border-top: 1px dashed #dcdce2;
+    text-shadow: none;
+}
+body.portal-lobby .portal-covers strong {
+    color: #383838;
+    font-weight: 600;
+}
+body.portal-lobby .portal-icon {
+    border: 3px solid #fff;
+    box-shadow: 0 6px 16px rgba(122, 0, 0, .35);
+}
+body.portal-lobby .portal-card:hover .portal-icon {
+    box-shadow: 0 8px 20px rgba(122, 0, 0, .5);
+}
