@@ -49,7 +49,7 @@ class FacilitiesController extends BaseController
         unset($st);
 
         return view('facilities/dashboard', [
-            'title'   => 'Facilities Administration and General Services',
+            'title'   => strtolower((string) session()->get('role')) === 'facilities' ? 'Facilities Administration and General Services' : 'Unified Buildings Resources Administration',
             'pageCss' => 'safety.css',
             'stats'   => $stats,
             'details' => $details,

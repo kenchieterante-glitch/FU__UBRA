@@ -2,7 +2,7 @@
 
 <?= $this->section('content') ?>
 <?php
-  $title = $title ?? 'Facilities Administration & General Services';
+  $title = $title ?? (strtolower((string) session()->get('role')) === 'facilities' ? 'Facilities Administration & General Services' : 'Unified Buildings Resources Administration');
 ?>
 
 <?php
@@ -16,7 +16,7 @@
 <div class="page-header">
   <div>
     <h1><?= esc($title) ?></h1>
-    <p class="page-subtitle">Facilities Administration &amp; General Services — <?= esc($subtitles[$section] ?? '') ?></p>
+    <p class="page-subtitle"><?= strtolower((string) session()->get('role')) === 'facilities' ? 'Facilities Administration and General Services' : 'Unified Buildings Resources Administration' ?> — <?= esc($subtitles[$section] ?? '') ?></p>
   </div>
   <?php if ($section === 'buildings'): ?>
   <button type="button" class="btn-add" onclick="openInspectionModal()">+ Record Inspection</button>

@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 <div class="page-header">
   <div>
-    <h1>Facilities Administration and General Services</h1>
+    <h1><?= strtolower((string) session()->get('role')) === 'facilities' ? 'Facilities Administration and General Services' : 'Unified Buildings Resources Administration' ?></h1>
     <p class="page-subtitle">The whole department at a glance.</p>
   </div>
 </div>
