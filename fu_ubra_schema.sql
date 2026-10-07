@@ -22,7 +22,7 @@ CREATE TABLE `activity_logs` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`department_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=76 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `activity_logs` WRITE;
@@ -100,7 +100,8 @@ INSERT INTO `activity_logs` VALUES
 (72,15,'Janitorial','Admin Test Account: Created restroom checklist for Administration Building — Ground Floor','2026-10-07 03:10:46'),
 (73,15,'Janitorial','Admin Test Account: Created restroom checklist for College of Law Building — 2nd Floor','2026-10-07 03:10:52'),
 (74,15,'Janitorial','Admin Test Account: Created restroom checklist for University Library — Ground Floor','2026-10-07 03:10:56'),
-(75,15,'Janitorial','Admin Test Account: Created restroom checklist for LG Sinco Computer Center — 2nd Floor','2026-10-07 03:11:02');
+(75,15,'Janitorial','Admin Test Account: Created restroom checklist for LG Sinco Computer Center — 2nd Floor','2026-10-07 03:11:02'),
+(76,2,'Motorpool','Kenchie Terante: Acknowledged notification: Motor Pool Work Order','2026-10-07 15:05:14');
 /*!40000 ALTER TABLE `activity_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `aircon_checklist_items`;
@@ -865,7 +866,7 @@ CREATE TABLE `floor_plan_markers` (
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `plan_file` (`plan_file`)
-) ENGINE=InnoDB AUTO_INCREMENT=147 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=150 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `floor_plan_markers` WRITE;
@@ -1764,7 +1765,7 @@ INSERT INTO `notifications` VALUES
 (198,'Sports Equipment Needs Repair','Table Tennis Paddle Set is in Poor condition.','Sports Equipment Office','MODERATE','Pending','system',0,NULL,'2026-10-03 21:27:14'),
 (200,'Motor Pool Work Order','MP-002 is now Completed.','Motor Pool','ROUTINE','Pending','system',0,NULL,'2026-10-04 04:32:13'),
 (201,'Motor Pool Work Order','MP-001 is now In Progress.','Motor Pool','ROUTINE','Pending','system',0,NULL,'2026-10-04 13:19:14'),
-(202,'Motor Pool Work Order','MP-001 is now Completed.','Motor Pool','ROUTINE','Pending','system',1,'2026-10-04 13:20:21','2026-10-04 13:19:20');
+(202,'Motor Pool Work Order','MP-001 is now Completed.','Motor Pool','ROUTINE','Acknowledged','system',1,'2026-10-07 15:05:14','2026-10-04 13:19:20');
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `personnel`;
@@ -2076,7 +2077,7 @@ CREATE TABLE `restroom_checklist_entries` (
   `signature` varchar(150) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `checklist_id` (`checklist_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `restroom_checklist_entries` WRITE;
@@ -2551,7 +2552,7 @@ CREATE TABLE `ubra_chat_logs` (
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `emp_id` (`emp_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=309 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=323 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `ubra_chat_logs` WRITE;
@@ -2592,7 +2593,21 @@ INSERT INTO `ubra_chat_logs` VALUES
 (305,'20230251','user','what can you say to this system?','2026-10-07 02:50:36'),
 (306,'20230251','assistant','You can interact with UBRA’s integrated management system in many ways. Here are the primary actions I can help you perform:\n\n- **Dashboard & KPI snapshots** – Get real‑time overviews of vehicles, personnel, tools, safety alerts, janitorial zones, and travel tickets.  \n- **Personnel Management** – Look up staff records, filter by role (Drivers, Janitors, Maintenance, etc.), view shift assignments, and manage contracts.  \n- **Vehicle Management** – Check fleet availability, view live GPS status, approve or reject trip tickets, see fuel logs, and predict refueling needs.  \n- **Tools & Equipment** – See inventory counts, current borrowings, and generate borrowing ledgers or tool‑maintenance reports.  \n- **Safety & Maintenance** – List overdue fire‑extinguisher inspections, open work orders, schedule preventative maintenance, and view building‑map status.  \n- **Janitorial Monitoring** – Track zone‑by‑zone cleaning completion, assign staff, and monitor consumable inventory.  \n- **Travel (Trip Tickets)** – Review pending travel requests, approve/distribute tickets, and see vehicle assignment.  \n- **Calendar & Scheduling** – View or modify cleaning and maintenance calendars.  \n- **Notifications** – Get role‑specific alerts (e.g., overdue inspections, vehicle issues).  \n- **Information Hub** – Export logs and reports in PDF, Excel, or CSV formats.  \n- **Settings & User Management** – (Administrator only) Add or modify user accounts, adjust notification preferences, and configure system parameters.\n\nJust tell me the module, date range, and output format you need, and I’ll pull the data or generate the appropriate report for you.','2026-10-07 02:50:36'),
 (307,'20230251','user','in your own opinion for what this system for?','2026-10-07 02:51:36'),
-(308,'20230251','assistant','The UBRA system is a **single‑pane‑of‑glass platform for managing everything that keeps the university’s physical campus running smoothly**. It brings together:\n\n- **Asset oversight** (vehicles, tools, equipment) so the university knows what’s available, where it is, and when it needs service or refueling.  \n- **People coordination** (drivers, janitors, maintenance crews, contractors) to schedule shifts, assign tasks, and track who’s on‑duty.  \n- **Safety & compliance** (fire‑extinguisher inspections, work orders, guard gate logs) to ensure regulatory requirements are met and risks are mitigated.  \n- **Operational logistics** (trip tickets, fuel predictions, cleaning zones) that streamline daily workflows and reduce manual paperwork.  \n- **Real‑time monitoring & reporting** via dashboards, alerts, and exportable reports, giving leadership instant visibility into key performance indicators.\n\nIn short, it’s a **comprehensive facilities‑management solution** that centralizes data, automates routine processes, and supports proactive decision‑making for the university’s buildings, grounds, and support services.','2026-10-07 02:51:36');
+(308,'20230251','assistant','The UBRA system is a **single‑pane‑of‑glass platform for managing everything that keeps the university’s physical campus running smoothly**. It brings together:\n\n- **Asset oversight** (vehicles, tools, equipment) so the university knows what’s available, where it is, and when it needs service or refueling.  \n- **People coordination** (drivers, janitors, maintenance crews, contractors) to schedule shifts, assign tasks, and track who’s on‑duty.  \n- **Safety & compliance** (fire‑extinguisher inspections, work orders, guard gate logs) to ensure regulatory requirements are met and risks are mitigated.  \n- **Operational logistics** (trip tickets, fuel predictions, cleaning zones) that streamline daily workflows and reduce manual paperwork.  \n- **Real‑time monitoring & reporting** via dashboards, alerts, and exportable reports, giving leadership instant visibility into key performance indicators.\n\nIn short, it’s a **comprehensive facilities‑management solution** that centralizes data, automates routine processes, and supports proactive decision‑making for the university’s buildings, grounds, and support services.','2026-10-07 02:51:36'),
+(309,'20230251','user','hello','2026-10-07 15:06:07'),
+(310,'20230251','assistant','Hello! How can I assist you with UBRA operations today?','2026-10-07 15:06:07'),
+(311,'20230251','user','help me quick summary for the entire system','2026-10-07 15:06:30'),
+(312,'20230251','assistant','**UBRA System – Quick Summary (as of Oct 7 2026, 03:06 PM)**  \n\n- **Fleet**\n  - Total vehicles: **5**\n  - Available now: **3** (2 in use / under maintenance)\n\n- **Personnel**\n  - Total staff: **78**\n  - On‑duty today: **56** (22 off‑duty or on leave)\n\n- **Tools & Equipment**\n  - Total items tracked: **75**\n  - Currently borrowed: **3** (all logged in the borrowing ledger)\n\n- **Safety & Maintenance**\n  - Overdue fire‑extinguisher inspections: **4**\n  - Open maintenance work orders: **4** (pending assignment/closure)\n\n- **Janitorial Operations**\n  - Zones cleaned today: **0 / 8** (no zones completed yet)\n\n- **Travel**\n  - Trip tickets awaiting dispatch/approval: **6** (pending review in Vehicle Management)\n\n- **Key Pending Alerts**\n  - Fire‑extinguisher inspections – schedule immediate follow‑up.\n  - Maintenance work orders – prioritize to avoid service disruptions.\n  - Janitorial cleaning – assign staff to start zone coverage.\n  - Trip tickets – review and approve to keep travel on schedule.\n\nLet me know if you need a deeper dive into any specific module (Vehicle Management, Personnel, Tools, Maintenance, Janitorial, etc.) or a formatted report.','2026-10-07 15:06:30'),
+(313,'20230251','user','can you speak bisaya?','2026-10-07 15:07:15'),
+(314,'20230251','assistant','Oo, makasulti ko ug Bisaya. Unsa man akong ikatabang nimo karon?','2026-10-07 15:07:15'),
+(315,'20230251','user','tabangi kog ihap sa fire extinguisher nga hapit na ma expired','2026-10-07 15:07:37'),
+(316,'20230251','assistant','Sa pagkakaron, ang snapshot nagpakita **4 ka fire extinguisher nga overdue na ang inspection**, apan wala koy eksaktong datos kung pila pa ang hapit na ma‑expire.  \n\n**Aksyon nga pwede nimo buhaton:**  \n\n1. **Adto sa *Maintenance (Safety)* module** – i‑filter ang fire‑extinguisher list sa “Expiry Date” ug pili-a ang “Within 30 days” (o bisan unsang time‑frame nga imong gusto).  \n2. **I‑generate ang report** (PDF/Excel/CSV) gamit ang filter aron makuha ang eksaktong ihap ug detalye sa mga unit nga hapit na mag‑expire.  \n3. **Schedule ang inspection/rehydration** para sa mga napili nga unit aron malikayan ang overdue nga status.\n\nKung gusto nimo, i‑specify lang ang format (pananglitan “generate an Excel report for fire extinguishers expiring in the next 30 days”) ug mag‑himo ang sistema og downloadable link para nimo.','2026-10-07 15:07:37'),
+(317,'20230251','user','Give me a fleet health check — vehicle status, GPS status, and anything needing attention.','2026-10-07 17:22:45'),
+(318,'20230251','assistant','**Fleet Health Check – Overview (as of Oct 7 2026)**  \n\n- **Total vehicles:** **5**  \n- **Available now:** **3** (idle, fuel‑checked, GPS online)  \n- **In use / unavailable:** **2**  \n  - One is currently assigned to a pending **Trip Ticket** (see Vehicle Management → Trip Ticket).  \n  - One is flagged in a **maintenance work order** (open work orders = 4 system‑wide).  \n\n- **GPS status:**  \n  - All fleet units have live GPS tracking enabled.  \n  - No GPS outages reported in the Dashboard’s live tracker.  \n\n- **Items needing attention:**  \n  - **Vehicle # ?** – under open maintenance work order; schedule service before next deployment.  \n  - **Vehicle # ?** – currently on a trip; confirm driver’s trip ticket is approved to avoid dispatch delay.  \n  - **Fuel‑need prediction:** with 2 vehicles out, monitor fuel logs; consider pre‑emptive refuel for the two in‑service units.  \n\n**Next steps**  \n- Review the **Vehicle Management** module for detailed per‑vehicle status, mileage, and upcoming service dates.  \n- Approve/dispatch the **6 pending trip tickets** to free up an additional vehicle if needed.  \n- Resolve the two open maintenance work orders that involve fleet assets.\n\n---\n\n**Actionable report**  \nIf you’d like a detailed, printable summary, just let me know:\n\n> *generate a pdf report for fleet health this week*  \n\nA downloadable link will be provided automatically.','2026-10-07 17:22:45'),
+(319,'20230251','user','generate me an sumary report in pdf','2026-10-07 17:23:20'),
+(320,'20230251','assistant','Here\'s your PDF report:\n\n**Covers:** All modules\n**Date range:** Oct 1, 2026 to Oct 7, 2026\n\nTip: say something like \"generate an excel report for tools this month\" to change the format, module, or date range.','2026-10-07 17:23:20'),
+(321,'20230251','user','use bisaya word pls','2026-10-07 17:24:21'),
+(322,'20230251','assistant','**Para makakuha og PDF nga summary report, isulti lang kini nga command (gamit ang Bisaya nga mga pulong):**\n\n> **“generate a pdf report para sa kahimtang sa fleet karong semana.”**  \n\nPag‑type o i‑click ang command sa ubos, ug awtomatikong mag‑generate ang sistema og downloadable nga PDF file. \n\nKung gusto nimo laing detalye (sama sa tools, maintenance, o janitorial), ilisi ra ang **“fleet”** sa gustong module. \n\n**Pananglitan:**  \n- *“generate a pdf report para sa tools karong bulan.”*  \n- *“generate a pdf report para sa maintenance work orders karong quarter.”*  \n\nPahibalo lang kung unsa nga report ang imong gusto, ug andam ko motabang!','2026-10-07 17:24:21');
 /*!40000 ALTER TABLE `ubra_chat_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `users`;

@@ -18,7 +18,7 @@
 
 <div class="groundworks-shell">
   <div class="groundworks-header">
-    <h1>Facilities Administration and General Services</h1>
+    <h1>Unified Buildings Resources Administration</h1>
     <p class="subtle">Monitoring dashboard for the Head of the Department — status at a glance, no data entry.</p>
   </div>
 
