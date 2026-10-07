@@ -1,9 +1,4 @@
 /*M!999999\- enable the sandbox mode */ 
--- MariaDB dump 10.19-11.4.13-MariaDB, for Win64 (AMD64)
---
--- Host: localhost    Database: fu_ubra
--- ------------------------------------------------------
--- Server version	11.4.13-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -15,11 +10,6 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
-
---
--- Table structure for table `activity_logs`
---
-
 DROP TABLE IF EXISTS `activity_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -32,12 +22,8 @@ CREATE TABLE `activity_logs` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`department_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=76 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `activity_logs`
---
 
 LOCK TABLES `activity_logs` WRITE;
 /*!40000 ALTER TABLE `activity_logs` DISABLE KEYS */;
@@ -59,14 +45,64 @@ INSERT INTO `activity_logs` VALUES
 (17,2,'Settings','Kenchie Terante: Updated AI configuration','2026-09-30 22:21:49'),
 (18,2,'Safety','Kenchie Terante: Set installer for aircon unit #9 to Fernando Reyes','2026-10-01 02:23:18'),
 (19,12,'Safety','Security Test Account: Key \"ZZ Key\" scanned out to ZZ Tester','2026-10-03 22:36:30'),
-(20,12,'Safety','Security Test Account: Key \"ZZ Key\" returned by ZZ Tester','2026-10-03 22:36:31');
+(20,12,'Safety','Security Test Account: Key \"ZZ Key\" returned by ZZ Tester','2026-10-03 22:36:31'),
+(21,15,'Safety','Admin Test Account: Created facility maintenance checklist for Administration Building','2026-10-07 03:03:29'),
+(22,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Law Building','2026-10-07 03:03:30'),
+(23,15,'Safety','Admin Test Account: Created facility maintenance checklist for University Library','2026-10-07 03:03:31'),
+(24,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Education Building','2026-10-07 03:03:32'),
+(25,15,'Safety','Admin Test Account: Created facility maintenance checklist for LG Sinco Computer Center Building','2026-10-07 03:03:33'),
+(26,15,'Safety','Admin Test Account: Created facility maintenance checklist for Administration Building','2026-10-07 03:04:28'),
+(27,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Law Building','2026-10-07 03:04:29'),
+(28,15,'Safety','Admin Test Account: Created facility maintenance checklist for University Library','2026-10-07 03:04:30'),
+(29,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Education Building','2026-10-07 03:04:32'),
+(30,15,'Safety','Admin Test Account: Created facility maintenance checklist for LG Sinco Computer Center Building','2026-10-07 03:04:33'),
+(31,15,'Safety','Admin Test Account: Created facility maintenance checklist for Administration Building','2026-10-07 03:05:18'),
+(32,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Law Building','2026-10-07 03:05:19'),
+(33,15,'Safety','Admin Test Account: Created facility maintenance checklist for University Library','2026-10-07 03:05:20'),
+(34,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Education Building','2026-10-07 03:05:21'),
+(35,15,'Safety','Admin Test Account: Created facility maintenance checklist for LG Sinco Computer Center Building','2026-10-07 03:05:21'),
+(36,15,'Safety','Admin Test Account: Created facility maintenance checklist for Administration Building','2026-10-07 03:05:59'),
+(37,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Law Building','2026-10-07 03:06:00'),
+(38,15,'Safety','Admin Test Account: Created facility maintenance checklist for University Library','2026-10-07 03:06:01'),
+(39,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Education Building','2026-10-07 03:06:02'),
+(40,15,'Safety','Admin Test Account: Created facility maintenance checklist for LG Sinco Computer Center Building','2026-10-07 03:06:03'),
+(41,15,'Safety','Admin Test Account: Created equipment maintenance log for Facilities','2026-10-07 03:06:37'),
+(42,15,'Safety','Admin Test Account: Created equipment maintenance log for Logistics','2026-10-07 03:06:43'),
+(43,15,'Safety','Admin Test Account: Created equipment maintenance log for College of IT','2026-10-07 03:06:50'),
+(44,15,'Safety','Admin Test Account: Created aircon inspection log by Fernando Reyes','2026-10-07 03:06:54'),
+(45,15,'Safety','Admin Test Account: Created aircon inspection log by Cardo Garcia','2026-10-07 03:06:59'),
+(46,15,'Safety','Admin Test Account: Created aircon inspection log by Remedios Mendoza','2026-10-07 03:07:03'),
+(47,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 466','2026-10-07 03:07:09'),
+(48,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 90HJI87','2026-10-07 03:07:10'),
+(49,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 4567HUJI','2026-10-07 03:07:11'),
+(50,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 5678','2026-10-07 03:07:12'),
+(51,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 230345','2026-10-07 03:07:13'),
+(52,15,'Janitorial','Admin Test Account: Created restroom checklist for Administration Building — Ground Floor','2026-10-07 03:07:40'),
+(53,15,'Janitorial','Admin Test Account: Created restroom checklist for College of Law Building — 2nd Floor','2026-10-07 03:07:47'),
+(54,15,'Janitorial','Admin Test Account: Created restroom checklist for University Library — Ground Floor','2026-10-07 03:07:57'),
+(55,15,'Janitorial','Admin Test Account: Created restroom checklist for LG Sinco Computer Center — 2nd Floor','2026-10-07 03:08:09'),
+(56,15,'Safety','Admin Test Account: Created facility maintenance checklist for Administration Building','2026-10-07 03:08:59'),
+(57,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Law Building','2026-10-07 03:08:59'),
+(58,15,'Safety','Admin Test Account: Created facility maintenance checklist for University Library','2026-10-07 03:09:00'),
+(59,15,'Safety','Admin Test Account: Created facility maintenance checklist for College of Education Building','2026-10-07 03:09:01'),
+(60,15,'Safety','Admin Test Account: Created facility maintenance checklist for LG Sinco Computer Center Building','2026-10-07 03:09:02'),
+(61,15,'Safety','Admin Test Account: Created equipment maintenance log for Facilities','2026-10-07 03:09:36'),
+(62,15,'Safety','Admin Test Account: Created equipment maintenance log for Logistics','2026-10-07 03:09:43'),
+(63,15,'Safety','Admin Test Account: Created equipment maintenance log for College of IT','2026-10-07 03:09:50'),
+(64,15,'Safety','Admin Test Account: Created aircon inspection log by Fernando Reyes','2026-10-07 03:09:53'),
+(65,15,'Safety','Admin Test Account: Created aircon inspection log by Cardo Garcia','2026-10-07 03:09:58'),
+(66,15,'Safety','Admin Test Account: Created aircon inspection log by Remedios Mendoza','2026-10-07 03:10:03'),
+(67,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 466','2026-10-07 03:10:10'),
+(68,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 90HJI87','2026-10-07 03:10:11'),
+(69,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 4567HUJI','2026-10-07 03:10:14'),
+(70,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 5678','2026-10-07 03:10:17'),
+(71,15,'Vehicle','Admin Test Account: Created vehicle inspection checklist for 230345','2026-10-07 03:10:18'),
+(72,15,'Janitorial','Admin Test Account: Created restroom checklist for Administration Building — Ground Floor','2026-10-07 03:10:46'),
+(73,15,'Janitorial','Admin Test Account: Created restroom checklist for College of Law Building — 2nd Floor','2026-10-07 03:10:52'),
+(74,15,'Janitorial','Admin Test Account: Created restroom checklist for University Library — Ground Floor','2026-10-07 03:10:56'),
+(75,15,'Janitorial','Admin Test Account: Created restroom checklist for LG Sinco Computer Center — 2nd Floor','2026-10-07 03:11:02');
 /*!40000 ALTER TABLE `activity_logs` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `aircon_checklist_items`
---
-
 DROP TABLE IF EXISTS `aircon_checklist_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -80,10 +116,6 @@ CREATE TABLE `aircon_checklist_items` (
   KEY `aircon_unit_id` (`aircon_unit_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=78 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `aircon_checklist_items`
---
 
 LOCK TABLES `aircon_checklist_items` WRITE;
 /*!40000 ALTER TABLE `aircon_checklist_items` DISABLE KEYS */;
@@ -146,11 +178,6 @@ INSERT INTO `aircon_checklist_items` VALUES
 (70,10,'Record unit temperature output',0,NULL);
 /*!40000 ALTER TABLE `aircon_checklist_items` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `aircon_inspection_entries`
---
-
 DROP TABLE IF EXISTS `aircon_inspection_entries`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -166,22 +193,21 @@ CREATE TABLE `aircon_inspection_entries` (
   `remarks` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `log_id` (`log_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `aircon_inspection_entries`
---
 
 LOCK TABLES `aircon_inspection_entries` WRITE;
 /*!40000 ALTER TABLE `aircon_inspection_entries` DISABLE KEYS */;
+INSERT INTO `aircon_inspection_entries` VALUES
+(7,6,'2026-09-16','College of Law',1,'LAW-105','Window type','Coil cleaning and drain flush.','Working'),
+(8,6,'2026-09-23','Library',3,'LIB-GF','Split type','Filters cleaned, one unit recharged with refrigerant.','Monitor cooling'),
+(9,7,'2026-09-27','College of IT',2,'CCS-LAB1','Cassette type','Replaced capacitor on one unit.','Working'),
+(10,8,'2026-10-04','Art and Sciences',2,'ART-2F','Split type','Routine cleaning.','Working'),
+(11,6,'2026-09-09','Administration',2,'ADM-201','Split type','General cleaning, filter wash, gas pressure check.','Working'),
+(12,7,'2026-09-20','College of Education',2,'EDU-3F','Split type','Cleaned indoor and outdoor units.','Working'),
+(13,8,'2026-10-01','Business and Finance Office',1,'BFO-201','Split type','Not cooling — compressor checked, needs replacement.','For repair');
 /*!40000 ALTER TABLE `aircon_inspection_entries` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `aircon_inspection_logs`
---
-
 DROP TABLE IF EXISTS `aircon_inspection_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -196,22 +222,17 @@ CREATE TABLE `aircon_inspection_logs` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `aircon_inspection_logs`
---
 
 LOCK TABLES `aircon_inspection_logs` WRITE;
 /*!40000 ALTER TABLE `aircon_inspection_logs` DISABLE KEYS */;
+INSERT INTO `aircon_inspection_logs` VALUES
+(6,'Fernando Reyes','2026-09-09',NULL,NULL,NULL,0,'2026-10-07 03:09:53','2026-10-07 03:09:53'),
+(7,'Cardo Garcia','2026-09-20',NULL,NULL,NULL,0,'2026-10-07 03:09:58','2026-10-07 03:09:58'),
+(8,'Remedios Mendoza','2026-10-01',NULL,NULL,NULL,0,'2026-10-07 03:10:03','2026-10-07 03:10:03');
 /*!40000 ALTER TABLE `aircon_inspection_logs` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `aircon_units`
---
-
 DROP TABLE IF EXISTS `aircon_units`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -231,10 +252,6 @@ CREATE TABLE `aircon_units` (
   KEY `location` (`location`)
 ) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `aircon_units`
---
 
 LOCK TABLES `aircon_units` WRITE;
 /*!40000 ALTER TABLE `aircon_units` DISABLE KEYS */;
@@ -257,11 +274,6 @@ INSERT INTO `aircon_units` VALUES
 (18,'Registrar\'s Office','1st Floor','AC-REG-1F','2026-09-23','2026-10-08','Operational','Cardo Garcia','Fernando Reyes','2026-10-03 17:51:50',NULL);
 /*!40000 ALTER TABLE `aircon_units` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `borrow_records`
---
-
 DROP TABLE IF EXISTS `borrow_records`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -287,10 +299,6 @@ CREATE TABLE `borrow_records` (
   CONSTRAINT `borrow_records_ibfk_1` FOREIGN KEY (`tool_id`) REFERENCES `tools` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=98 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `borrow_records`
---
 
 LOCK TABLES `borrow_records` WRITE;
 /*!40000 ALTER TABLE `borrow_records` DISABLE KEYS */;
@@ -373,17 +381,12 @@ INSERT INTO `borrow_records` VALUES
 (76,71,1.00,'Juan Santos','Facilities','2026-08-27','2026-09-14','Returned','2026-09-05 17:45:21',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:06:36'),
 (77,72,1.00,'Maria Domingo','Maintenance','2026-08-26','2026-09-15','Returned','2026-09-05 17:45:21',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:06:36'),
 (78,73,1.00,'Fernando Cruz','Maintenance','2026-08-25','2026-09-16','Returned','2026-09-05 17:45:21',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:06:36'),
-(93,2,1.00,'Rico Dela Cruz','Athletics','2026-09-06','2026-09-13','Borrowed','2026-09-06 01:30:35',0,NULL,'None',NULL,NULL,NULL,'2026-09-06 01:30:35'),
+(93,2,1.00,'Rico Dela Cruz','Athletics','2026-09-06','2026-09-13','Returned','2026-09-06 01:30:35',0,NULL,'None',NULL,NULL,NULL,'2026-10-04 02:47:47'),
 (94,74,1.00,'Coach Reyes (sample)','Athletics','2026-10-02','2026-10-09','Borrowed','2026-10-04 02:27:14',0,NULL,'None',NULL,NULL,NULL,'2026-10-04 02:27:14'),
 (95,77,1.00,'Mina Santos (sample)','Athletics','2026-09-25','2026-10-01','Borrowed','2026-10-04 02:27:14',0,NULL,'None',NULL,NULL,NULL,'2026-10-04 02:27:14'),
 (96,82,1.00,'PE Instructor Cruz (sample)','Student Affairs','2026-10-03','2026-10-05','Borrowed','2026-10-04 02:27:14',0,NULL,'None',NULL,NULL,NULL,'2026-10-04 02:27:14');
 /*!40000 ALTER TABLE `borrow_records` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `consumable_inventory`
---
-
 DROP TABLE IF EXISTS `consumable_inventory`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -404,10 +407,6 @@ CREATE TABLE `consumable_inventory` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `consumable_inventory`
---
 
 LOCK TABLES `consumable_inventory` WRITE;
 /*!40000 ALTER TABLE `consumable_inventory` DISABLE KEYS */;
@@ -433,11 +432,6 @@ INSERT INTO `consumable_inventory` VALUES
 (19,'Hand Soap Refill','Disposable','Facilities','Liters','Bunk House','Ground Floor',NULL,0.00,4.00,'2026-10-03','2026-10-03 17:51:50',NULL);
 /*!40000 ALTER TABLE `consumable_inventory` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `consumable_stock_reports`
---
-
 DROP TABLE IF EXISTS `consumable_stock_reports`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -455,19 +449,10 @@ CREATE TABLE `consumable_stock_reports` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `consumable_stock_reports`
---
-
 LOCK TABLES `consumable_stock_reports` WRITE;
 /*!40000 ALTER TABLE `consumable_stock_reports` DISABLE KEYS */;
 /*!40000 ALTER TABLE `consumable_stock_reports` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `departments`
---
-
 DROP TABLE IF EXISTS `departments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -479,10 +464,6 @@ CREATE TABLE `departments` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `departments`
---
 
 LOCK TABLES `departments` WRITE;
 /*!40000 ALTER TABLE `departments` DISABLE KEYS */;
@@ -497,11 +478,6 @@ INSERT INTO `departments` VALUES
 (8,'Finance','2026-07-18 20:20:56');
 /*!40000 ALTER TABLE `departments` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `disposal_logs`
---
-
 DROP TABLE IF EXISTS `disposal_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -519,10 +495,6 @@ CREATE TABLE `disposal_logs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `disposal_logs`
---
-
 LOCK TABLES `disposal_logs` WRITE;
 /*!40000 ALTER TABLE `disposal_logs` DISABLE KEYS */;
 INSERT INTO `disposal_logs` VALUES
@@ -531,11 +503,6 @@ INSERT INTO `disposal_logs` VALUES
 (3,'borrow',69,2,'data:image/png;base64,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','2026-09-05','','2026-09-05 20:15:47');
 /*!40000 ALTER TABLE `disposal_logs` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `document_requirement_types`
---
-
 DROP TABLE IF EXISTS `document_requirement_types`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -550,19 +517,10 @@ CREATE TABLE `document_requirement_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `document_requirement_types`
---
-
 LOCK TABLES `document_requirement_types` WRITE;
 /*!40000 ALTER TABLE `document_requirement_types` DISABLE KEYS */;
 /*!40000 ALTER TABLE `document_requirement_types` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `equipment_maintenance_entries`
---
-
 DROP TABLE IF EXISTS `equipment_maintenance_entries`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -580,22 +538,20 @@ CREATE TABLE `equipment_maintenance_entries` (
   `signature` varchar(150) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `log_id` (`log_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `equipment_maintenance_entries`
---
 
 LOCK TABLES `equipment_maintenance_entries` WRITE;
 /*!40000 ALTER TABLE `equipment_maintenance_entries` DISABLE KEYS */;
+INSERT INTO `equipment_maintenance_entries` VALUES
+(6,6,'2026-09-24','Water Pump 5HP','WP-1120','Quarterly','Bearings greased, pressure checked.','Completed','2026-12-24','Cardo Garcia','Cardo Garcia'),
+(7,7,'2026-09-29','Pallet Jack PJ-04','PJ-0412','Monthly','Wheels replaced, lubricated.','Pending','2026-10-29','Remedios Mendoza','Remedios Mendoza'),
+(8,8,'2026-10-02','Network Switch 48-port','SW-4802','Quarterly','Cleaned dust filters, ports tested.','Completed','2027-01-02','Pedro Penduko','Pedro Penduko'),
+(9,6,'2026-09-10','Generator Set 20kVA','GS-2041','Monthly','Oil and filter change, load test passed.','Completed','2026-10-10','Fernando Reyes','Fernando Reyes'),
+(10,7,'2026-09-15','Forklift FL-02','FL-0233','Monthly','Hydraulic hose replaced.','Completed','2026-10-15','Remedios Mendoza','Remedios Mendoza'),
+(11,8,'2026-09-18','Server Rack UPS 3kVA','UPS-3310','Quarterly','Battery test, firmware updated.','Completed','2026-12-18','Pedro Penduko','Pedro Penduko');
 /*!40000 ALTER TABLE `equipment_maintenance_entries` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `equipment_maintenance_logs`
---
-
 DROP TABLE IF EXISTS `equipment_maintenance_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -610,22 +566,17 @@ CREATE TABLE `equipment_maintenance_logs` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `equipment_maintenance_logs`
---
 
 LOCK TABLES `equipment_maintenance_logs` WRITE;
 /*!40000 ALTER TABLE `equipment_maintenance_logs` DISABLE KEYS */;
+INSERT INTO `equipment_maintenance_logs` VALUES
+(6,'Facilities','2026-09-10',NULL,NULL,NULL,0,'2026-10-07 03:09:36','2026-10-07 03:09:36'),
+(7,'Logistics','2026-09-15',NULL,NULL,NULL,0,'2026-10-07 03:09:43','2026-10-07 03:09:43'),
+(8,'College of IT','2026-09-18',NULL,NULL,NULL,0,'2026-10-07 03:09:50','2026-10-07 03:09:50');
 /*!40000 ALTER TABLE `equipment_maintenance_logs` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `facility_checklist_items`
---
-
 DROP TABLE IF EXISTS `facility_checklist_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -639,22 +590,119 @@ CREATE TABLE `facility_checklist_items` (
   `corrective_action` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `checklist_id` (`checklist_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=568 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `facility_checklist_items`
---
 
 LOCK TABLES `facility_checklist_items` WRITE;
 /*!40000 ALTER TABLE `facility_checklist_items` DISABLE KEYS */;
+INSERT INTO `facility_checklist_items` VALUES
+(463,23,'General & Building Integrity','1.1','Exterior/Grounds: Are sidewalks, ramps, and stairs in good condition, free of cracks and trip hazards? Is lighting adequate?','C',NULL),
+(464,23,'General & Building Integrity','1.2','Interior Floors: Are floors, carpets, and stair tread free from damage and tripping hazards?','C',NULL),
+(465,23,'General & Building Integrity','1.3','Walls & Ceilings: Are walls and ceilings free of water damage, cracks, or missing tiles?','C',NULL),
+(466,23,'General & Building Integrity','1.4','Lighting: Is all lighting operational and providing sufficient illumination?','C',NULL),
+(467,23,'General & Building Integrity','1.5','Exits & Egress: Are all exit signs illuminated and exit pathways clear of obstructions? Do doors open and close properly?','C',NULL),
+(468,23,'General & Building Integrity','1.6','ADA Accessibility: Are ramps, door hardware, and restrooms compliant with accessibility standards?','N/A',NULL),
+(469,23,'General & Building Integrity','1.7','Housekeeping: Is the overall area clean, organized, and free of clutter?','C',NULL),
+(470,23,'Fire & Emergency Safety','2.1','Fire Extinguishers: Are fire extinguishers in their designated spots, easily accessible, and within their inspection dates?','C',NULL),
+(471,23,'Fire & Emergency Safety','2.2','Emergency Plans: Are emergency evacuation plans and contact numbers posted and visible?','C',NULL),
+(472,23,'Fire & Emergency Safety','2.3','First Aid Kits: Is a fully stocked and accessible first aid kit available in the area?','C',NULL),
+(473,23,'Fire & Emergency Safety','2.4','Fire Doors: Are fire doors kept closed and not propped open?','MI','Schedule minor repair within 2 weeks.'),
+(474,23,'Academic & Laboratory Specifics','3.1','Chemical Storage: Are chemicals properly labeled and stored in designated cabinets, segregated by hazard class?','C',NULL),
+(475,23,'Academic & Laboratory Specifics','3.2','Lab Safety: Are emergency eyewash stations and safety showers present and checked weekly?','C',NULL),
+(476,23,'Academic & Laboratory Specifics','3.3','Hazard Communication: Are Safety Data Sheets (SDS) for all chemicals readily accessible?','C',NULL),
+(477,23,'Academic & Laboratory Specifics','3.4','Equipment Safety: Are machine guards in place on all equipment, and is damaged equipment tagged \"Out of Service\"?','C',NULL),
+(478,23,'Academic & Laboratory Specifics','3.5','Personal Protective Equipment (PPE): Is required PPE available and in good condition for all personnel?','C',NULL),
+(479,23,'Academic & Laboratory Specifics','3.6','Wastes: Are hazardous wastes properly labeled and stored for disposal?','C',NULL),
+(480,23,'Electrical & Technology Safety','4.1','Electrical Cords: Are extension cords used only for temporary purposes and not as permanent wiring?','C',NULL),
+(481,23,'Electrical & Technology Safety','4.2','Power Strips: Are power strips UL listed and not \"daisy-chained\" together?','N/A',NULL),
+(482,23,'Electrical & Technology Safety','4.3','Electrical Panels: Is there a clear 3-foot clearance in front of all electrical panels?','C',NULL),
+(483,23,'Electrical & Technology Safety','4.4','Outlets & Switches: Are all electrical outlets and switches in good condition with no exposed wiring?','C',NULL),
+(484,24,'General & Building Integrity','1.1','Exterior/Grounds: Are sidewalks, ramps, and stairs in good condition, free of cracks and trip hazards? Is lighting adequate?','C',NULL),
+(485,24,'General & Building Integrity','1.2','Interior Floors: Are floors, carpets, and stair tread free from damage and tripping hazards?','C',NULL),
+(486,24,'General & Building Integrity','1.3','Walls & Ceilings: Are walls and ceilings free of water damage, cracks, or missing tiles?','C',NULL),
+(487,24,'General & Building Integrity','1.4','Lighting: Is all lighting operational and providing sufficient illumination?','C',NULL),
+(488,24,'General & Building Integrity','1.5','Exits & Egress: Are all exit signs illuminated and exit pathways clear of obstructions? Do doors open and close properly?','C',NULL),
+(489,24,'General & Building Integrity','1.6','ADA Accessibility: Are ramps, door hardware, and restrooms compliant with accessibility standards?','C',NULL),
+(490,24,'General & Building Integrity','1.7','Housekeeping: Is the overall area clean, organized, and free of clutter?','C',NULL),
+(491,24,'Fire & Emergency Safety','2.1','Fire Extinguishers: Are fire extinguishers in their designated spots, easily accessible, and within their inspection dates?','C',NULL),
+(492,24,'Fire & Emergency Safety','2.2','Emergency Plans: Are emergency evacuation plans and contact numbers posted and visible?','C',NULL),
+(493,24,'Fire & Emergency Safety','2.3','First Aid Kits: Is a fully stocked and accessible first aid kit available in the area?','C',NULL),
+(494,24,'Fire & Emergency Safety','2.4','Fire Doors: Are fire doors kept closed and not propped open?','MI','Schedule minor repair within 2 weeks.'),
+(495,24,'Academic & Laboratory Specifics','3.1','Chemical Storage: Are chemicals properly labeled and stored in designated cabinets, segregated by hazard class?','C',NULL),
+(496,24,'Academic & Laboratory Specifics','3.2','Lab Safety: Are emergency eyewash stations and safety showers present and checked weekly?','C',NULL),
+(497,24,'Academic & Laboratory Specifics','3.3','Hazard Communication: Are Safety Data Sheets (SDS) for all chemicals readily accessible?','C',NULL),
+(498,24,'Academic & Laboratory Specifics','3.4','Equipment Safety: Are machine guards in place on all equipment, and is damaged equipment tagged \"Out of Service\"?','C',NULL),
+(499,24,'Academic & Laboratory Specifics','3.5','Personal Protective Equipment (PPE): Is required PPE available and in good condition for all personnel?','C',NULL),
+(500,24,'Academic & Laboratory Specifics','3.6','Wastes: Are hazardous wastes properly labeled and stored for disposal?','C',NULL),
+(501,24,'Electrical & Technology Safety','4.1','Electrical Cords: Are extension cords used only for temporary purposes and not as permanent wiring?','C',NULL),
+(502,24,'Electrical & Technology Safety','4.2','Power Strips: Are power strips UL listed and not \"daisy-chained\" together?','C',NULL),
+(503,24,'Electrical & Technology Safety','4.3','Electrical Panels: Is there a clear 3-foot clearance in front of all electrical panels?','C',NULL),
+(504,24,'Electrical & Technology Safety','4.4','Outlets & Switches: Are all electrical outlets and switches in good condition with no exposed wiring?','C',NULL),
+(505,25,'General & Building Integrity','1.1','Exterior/Grounds: Are sidewalks, ramps, and stairs in good condition, free of cracks and trip hazards? Is lighting adequate?','C',NULL),
+(506,25,'General & Building Integrity','1.2','Interior Floors: Are floors, carpets, and stair tread free from damage and tripping hazards?','C',NULL),
+(507,25,'General & Building Integrity','1.3','Walls & Ceilings: Are walls and ceilings free of water damage, cracks, or missing tiles?','N/A',NULL),
+(508,25,'General & Building Integrity','1.4','Lighting: Is all lighting operational and providing sufficient illumination?','C',NULL),
+(509,25,'General & Building Integrity','1.5','Exits & Egress: Are all exit signs illuminated and exit pathways clear of obstructions? Do doors open and close properly?','C',NULL),
+(510,25,'General & Building Integrity','1.6','ADA Accessibility: Are ramps, door hardware, and restrooms compliant with accessibility standards?','C',NULL),
+(511,25,'General & Building Integrity','1.7','Housekeeping: Is the overall area clean, organized, and free of clutter?','C',NULL),
+(512,25,'Fire & Emergency Safety','2.1','Fire Extinguishers: Are fire extinguishers in their designated spots, easily accessible, and within their inspection dates?','C',NULL),
+(513,25,'Fire & Emergency Safety','2.2','Emergency Plans: Are emergency evacuation plans and contact numbers posted and visible?','C',NULL),
+(514,25,'Fire & Emergency Safety','2.3','First Aid Kits: Is a fully stocked and accessible first aid kit available in the area?','C',NULL),
+(515,25,'Fire & Emergency Safety','2.4','Fire Doors: Are fire doors kept closed and not propped open?','MI','Schedule minor repair within 2 weeks.'),
+(516,25,'Academic & Laboratory Specifics','3.1','Chemical Storage: Are chemicals properly labeled and stored in designated cabinets, segregated by hazard class?','C',NULL),
+(517,25,'Academic & Laboratory Specifics','3.2','Lab Safety: Are emergency eyewash stations and safety showers present and checked weekly?','C',NULL),
+(518,25,'Academic & Laboratory Specifics','3.3','Hazard Communication: Are Safety Data Sheets (SDS) for all chemicals readily accessible?','C',NULL),
+(519,25,'Academic & Laboratory Specifics','3.4','Equipment Safety: Are machine guards in place on all equipment, and is damaged equipment tagged \"Out of Service\"?','C',NULL),
+(520,25,'Academic & Laboratory Specifics','3.5','Personal Protective Equipment (PPE): Is required PPE available and in good condition for all personnel?','N/A',NULL),
+(521,25,'Academic & Laboratory Specifics','3.6','Wastes: Are hazardous wastes properly labeled and stored for disposal?','C',NULL),
+(522,25,'Electrical & Technology Safety','4.1','Electrical Cords: Are extension cords used only for temporary purposes and not as permanent wiring?','C',NULL),
+(523,25,'Electrical & Technology Safety','4.2','Power Strips: Are power strips UL listed and not \"daisy-chained\" together?','C',NULL),
+(524,25,'Electrical & Technology Safety','4.3','Electrical Panels: Is there a clear 3-foot clearance in front of all electrical panels?','C',NULL),
+(525,25,'Electrical & Technology Safety','4.4','Outlets & Switches: Are all electrical outlets and switches in good condition with no exposed wiring?','C',NULL),
+(526,26,'General & Building Integrity','1.1','Exterior/Grounds: Are sidewalks, ramps, and stairs in good condition, free of cracks and trip hazards? Is lighting adequate?','C',NULL),
+(527,26,'General & Building Integrity','1.2','Interior Floors: Are floors, carpets, and stair tread free from damage and tripping hazards?','C',NULL),
+(528,26,'General & Building Integrity','1.3','Walls & Ceilings: Are walls and ceilings free of water damage, cracks, or missing tiles?','C',NULL),
+(529,26,'General & Building Integrity','1.4','Lighting: Is all lighting operational and providing sufficient illumination?','C',NULL),
+(530,26,'General & Building Integrity','1.5','Exits & Egress: Are all exit signs illuminated and exit pathways clear of obstructions? Do doors open and close properly?','C',NULL),
+(531,26,'General & Building Integrity','1.6','ADA Accessibility: Are ramps, door hardware, and restrooms compliant with accessibility standards?','C',NULL),
+(532,26,'General & Building Integrity','1.7','Housekeeping: Is the overall area clean, organized, and free of clutter?','C',NULL),
+(533,26,'Fire & Emergency Safety','2.1','Fire Extinguishers: Are fire extinguishers in their designated spots, easily accessible, and within their inspection dates?','N/A',NULL),
+(534,26,'Fire & Emergency Safety','2.2','Emergency Plans: Are emergency evacuation plans and contact numbers posted and visible?','C',NULL),
+(535,26,'Fire & Emergency Safety','2.3','First Aid Kits: Is a fully stocked and accessible first aid kit available in the area?','C',NULL),
+(536,26,'Fire & Emergency Safety','2.4','Fire Doors: Are fire doors kept closed and not propped open?','MI','Schedule minor repair within 2 weeks.'),
+(537,26,'Academic & Laboratory Specifics','3.1','Chemical Storage: Are chemicals properly labeled and stored in designated cabinets, segregated by hazard class?','C',NULL),
+(538,26,'Academic & Laboratory Specifics','3.2','Lab Safety: Are emergency eyewash stations and safety showers present and checked weekly?','C',NULL),
+(539,26,'Academic & Laboratory Specifics','3.3','Hazard Communication: Are Safety Data Sheets (SDS) for all chemicals readily accessible?','C',NULL),
+(540,26,'Academic & Laboratory Specifics','3.4','Equipment Safety: Are machine guards in place on all equipment, and is damaged equipment tagged \"Out of Service\"?','C',NULL),
+(541,26,'Academic & Laboratory Specifics','3.5','Personal Protective Equipment (PPE): Is required PPE available and in good condition for all personnel?','MJ','Escalate to Facilities for immediate repair.'),
+(542,26,'Academic & Laboratory Specifics','3.6','Wastes: Are hazardous wastes properly labeled and stored for disposal?','C',NULL),
+(543,26,'Electrical & Technology Safety','4.1','Electrical Cords: Are extension cords used only for temporary purposes and not as permanent wiring?','C',NULL),
+(544,26,'Electrical & Technology Safety','4.2','Power Strips: Are power strips UL listed and not \"daisy-chained\" together?','C',NULL),
+(545,26,'Electrical & Technology Safety','4.3','Electrical Panels: Is there a clear 3-foot clearance in front of all electrical panels?','C',NULL),
+(546,26,'Electrical & Technology Safety','4.4','Outlets & Switches: Are all electrical outlets and switches in good condition with no exposed wiring?','N/A',NULL),
+(547,27,'General & Building Integrity','1.1','Exterior/Grounds: Are sidewalks, ramps, and stairs in good condition, free of cracks and trip hazards? Is lighting adequate?','C',NULL),
+(548,27,'General & Building Integrity','1.2','Interior Floors: Are floors, carpets, and stair tread free from damage and tripping hazards?','C',NULL),
+(549,27,'General & Building Integrity','1.3','Walls & Ceilings: Are walls and ceilings free of water damage, cracks, or missing tiles?','C',NULL),
+(550,27,'General & Building Integrity','1.4','Lighting: Is all lighting operational and providing sufficient illumination?','C',NULL),
+(551,27,'General & Building Integrity','1.5','Exits & Egress: Are all exit signs illuminated and exit pathways clear of obstructions? Do doors open and close properly?','C',NULL),
+(552,27,'General & Building Integrity','1.6','ADA Accessibility: Are ramps, door hardware, and restrooms compliant with accessibility standards?','C',NULL),
+(553,27,'General & Building Integrity','1.7','Housekeeping: Is the overall area clean, organized, and free of clutter?','C',NULL),
+(554,27,'Fire & Emergency Safety','2.1','Fire Extinguishers: Are fire extinguishers in their designated spots, easily accessible, and within their inspection dates?','C',NULL),
+(555,27,'Fire & Emergency Safety','2.2','Emergency Plans: Are emergency evacuation plans and contact numbers posted and visible?','C',NULL),
+(556,27,'Fire & Emergency Safety','2.3','First Aid Kits: Is a fully stocked and accessible first aid kit available in the area?','C',NULL),
+(557,27,'Fire & Emergency Safety','2.4','Fire Doors: Are fire doors kept closed and not propped open?','MI','Schedule minor repair within 2 weeks.'),
+(558,27,'Academic & Laboratory Specifics','3.1','Chemical Storage: Are chemicals properly labeled and stored in designated cabinets, segregated by hazard class?','C',NULL),
+(559,27,'Academic & Laboratory Specifics','3.2','Lab Safety: Are emergency eyewash stations and safety showers present and checked weekly?','N/A',NULL),
+(560,27,'Academic & Laboratory Specifics','3.3','Hazard Communication: Are Safety Data Sheets (SDS) for all chemicals readily accessible?','C',NULL),
+(561,27,'Academic & Laboratory Specifics','3.4','Equipment Safety: Are machine guards in place on all equipment, and is damaged equipment tagged \"Out of Service\"?','C',NULL),
+(562,27,'Academic & Laboratory Specifics','3.5','Personal Protective Equipment (PPE): Is required PPE available and in good condition for all personnel?','C',NULL),
+(563,27,'Academic & Laboratory Specifics','3.6','Wastes: Are hazardous wastes properly labeled and stored for disposal?','C',NULL),
+(564,27,'Electrical & Technology Safety','4.1','Electrical Cords: Are extension cords used only for temporary purposes and not as permanent wiring?','C',NULL),
+(565,27,'Electrical & Technology Safety','4.2','Power Strips: Are power strips UL listed and not \"daisy-chained\" together?','C',NULL),
+(566,27,'Electrical & Technology Safety','4.3','Electrical Panels: Is there a clear 3-foot clearance in front of all electrical panels?','C',NULL),
+(567,27,'Electrical & Technology Safety','4.4','Outlets & Switches: Are all electrical outlets and switches in good condition with no exposed wiring?','C',NULL);
 /*!40000 ALTER TABLE `facility_checklist_items` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `facility_checklists`
---
-
 DROP TABLE IF EXISTS `facility_checklists`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -674,22 +722,19 @@ CREATE TABLE `facility_checklists` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `facility_checklists`
---
 
 LOCK TABLES `facility_checklists` WRITE;
 /*!40000 ALTER TABLE `facility_checklists` DISABLE KEYS */;
+INSERT INTO `facility_checklists` VALUES
+(23,'Col. Arthur Miller','Administration Building','2026-09-08','Monthly','Satisfactory','Building is in good order with a few minor items to follow up.','Repair flagged items and re-inspect within 14 days.','Sonia G. Ramirez','2026-09-08','Dr. Helen Peralta',0,'2026-10-07 03:08:58','2026-10-07 03:09:29'),
+(24,'Isabel Castillo','College of Law Building','2026-09-12','Monthly','Excellent','Building is clean, safe and fully functional. No issues found.','Continue regular monthly checks.','Sonia G. Ramirez','2026-09-12','Dr. Helen Peralta',0,'2026-10-07 03:08:59','2026-10-07 03:09:30'),
+(25,'Fernando Navarro','University Library','2026-09-19','Quarterly','Satisfactory','Building is in good order with a few minor items to follow up.','Repair flagged items and re-inspect within 14 days.','Sonia G. Ramirez','2026-09-19','Dr. Helen Peralta',0,'2026-10-07 03:09:00','2026-10-07 03:09:31'),
+(26,'Josefa Garcia','College of Education Building','2026-09-26','Monthly','Unsatisfactory','Several items need repair; follow-up inspection required.','Repair flagged items and re-inspect within 14 days.','Sonia G. Ramirez','2026-09-26','Dr. Helen Peralta',0,'2026-10-07 03:09:01','2026-10-07 03:09:32'),
+(27,'Col. Arthur Miller','LG Sinco Computer Center Building','2026-10-03','Annual','Satisfactory','Building is in good order with a few minor items to follow up.','Repair flagged items and re-inspect within 14 days.','Sonia G. Ramirez','2026-10-03','Dr. Helen Peralta',0,'2026-10-07 03:09:02','2026-10-07 03:09:33');
 /*!40000 ALTER TABLE `facility_checklists` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `facility_keys`
---
-
 DROP TABLE IF EXISTS `facility_keys`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -697,28 +742,27 @@ CREATE TABLE `facility_keys` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `key_name` varchar(150) NOT NULL,
   `location` varchar(150) DEFAULT NULL,
+  `floor` varchar(50) DEFAULT NULL,
   `nfc_uid` varchar(100) NOT NULL,
   `status` enum('Available','Borrowed') NOT NULL DEFAULT 'Available',
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nfc_uid` (`nfc_uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `facility_keys`
---
 
 LOCK TABLES `facility_keys` WRITE;
 /*!40000 ALTER TABLE `facility_keys` DISABLE KEYS */;
+INSERT INTO `facility_keys` VALUES
+(4,'Admin Filing Room Key',NULL,NULL,'KEY-8E4BF210','Available','2026-10-04 10:48:12','2026-10-04 10:48:12'),
+(5,'Conference Room Key',NULL,NULL,'KEY-908094ED','Available','2026-10-04 10:48:14','2026-10-04 10:48:14'),
+(6,'Gymnasium Storage Key',NULL,NULL,'KEY-5F7E4FDF','Available','2026-10-04 10:48:19','2026-10-04 10:48:19'),
+(7,'Lab Cabinet Keys',NULL,NULL,'KEY-7A14AC3B','Available','2026-10-04 10:48:21','2026-10-04 10:48:21'),
+(8,'Library Storeroom Key',NULL,NULL,'KEY-D6BC7BA5','Available','2026-10-04 10:48:22','2026-10-04 10:48:22'),
+(9,'Server Room Key',NULL,NULL,'KEY-9C5458C1','Available','2026-10-04 10:48:24','2026-10-04 10:48:24');
 /*!40000 ALTER TABLE `facility_keys` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `fire_extinguishers`
---
-
 DROP TABLE IF EXISTS `fire_extinguishers`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -750,10 +794,6 @@ CREATE TABLE `fire_extinguishers` (
   CONSTRAINT `fire_extinguishers_department_id_foreign` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `fire_extinguishers`
---
 
 LOCK TABLES `fire_extinguishers` WRITE;
 /*!40000 ALTER TABLE `fire_extinguishers` DISABLE KEYS */;
@@ -809,11 +849,6 @@ INSERT INTO `fire_extinguishers` VALUES
 (77,'FE-FB1B7B','Wet Chemical','University Library','3rd Floor',NULL,6.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2026-10-13','Jose Protacio Rizal Mercado y Realonzo Realonda',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50');
 /*!40000 ALTER TABLE `fire_extinguishers` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `floor_plan_markers`
---
-
 DROP TABLE IF EXISTS `floor_plan_markers`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -830,12 +865,8 @@ CREATE TABLE `floor_plan_markers` (
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `plan_file` (`plan_file`)
-) ENGINE=InnoDB AUTO_INCREMENT=146 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=147 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `floor_plan_markers`
---
 
 LOCK TABLES `floor_plan_markers` WRITE;
 /*!40000 ALTER TABLE `floor_plan_markers` DISABLE KEYS */;
@@ -974,11 +1005,6 @@ INSERT INTO `floor_plan_markers` VALUES
 (145,'Agriculture Building_ThirdFloorPlan.png','Fire Extinguisher',NULL,16.664,58.133,'Working',NULL,'Security Test Account','2026-10-04 00:47:48');
 /*!40000 ALTER TABLE `floor_plan_markers` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `fuel_logs`
---
-
 DROP TABLE IF EXISTS `fuel_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -997,10 +1023,6 @@ CREATE TABLE `fuel_logs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `fuel_logs`
---
-
 LOCK TABLES `fuel_logs` WRITE;
 /*!40000 ALTER TABLE `fuel_logs` DISABLE KEYS */;
 INSERT INTO `fuel_logs` VALUES
@@ -1008,11 +1030,6 @@ INSERT INTO `fuel_logs` VALUES
 (2,7,10.0,5.00,'2026-09-21','Kenchie Terante','','2026-09-20 16:06:37');
 /*!40000 ALTER TABLE `fuel_logs` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `gps_logs`
---
-
 DROP TABLE IF EXISTS `gps_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1030,10 +1047,6 @@ CREATE TABLE `gps_logs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `gps_logs`
---
-
 LOCK TABLES `gps_logs` WRITE;
 /*!40000 ALTER TABLE `gps_logs` DISABLE KEYS */;
 INSERT INTO `gps_logs` VALUES
@@ -1042,11 +1055,6 @@ INSERT INTO `gps_logs` VALUES
 (3,5,'FU-GPS-204',9.3120000,123.3150000,'Medium (74%)','Online','2026-07-31 23:20:24');
 /*!40000 ALTER TABLE `gps_logs` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `janitorial`
---
-
 DROP TABLE IF EXISTS `janitorial`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1068,19 +1076,10 @@ CREATE TABLE `janitorial` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `janitorial`
---
-
 LOCK TABLES `janitorial` WRITE;
 /*!40000 ALTER TABLE `janitorial` DISABLE KEYS */;
 /*!40000 ALTER TABLE `janitorial` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `janitorial_assignments`
---
-
 DROP TABLE IF EXISTS `janitorial_assignments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1100,10 +1099,6 @@ CREATE TABLE `janitorial_assignments` (
   KEY `idx_zone` (`assigned_zone`)
 ) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `janitorial_assignments`
---
 
 LOCK TABLES `janitorial_assignments` WRITE;
 /*!40000 ALTER TABLE `janitorial_assignments` DISABLE KEYS */;
@@ -1130,17 +1125,13 @@ INSERT INTO `janitorial_assignments` VALUES
 (21,'Bautista, J.','Clinic','2nd Floor','12:00:00','18:00:00','2026-10-03','Active','Routine','2026-10-03 18:30:23');
 /*!40000 ALTER TABLE `janitorial_assignments` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `janitorial_inspections`
---
-
 DROP TABLE IF EXISTS `janitorial_inspections`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `janitorial_inspections` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `building` varchar(150) NOT NULL,
+  `floor` varchar(50) DEFAULT NULL,
   `inspection_month` char(7) NOT NULL,
   `result` enum('Passed','Needs Attention') NOT NULL,
   `inspected_by` varchar(150) NOT NULL,
@@ -1148,32 +1139,23 @@ CREATE TABLE `janitorial_inspections` (
   `inspected_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `building` (`building`,`inspection_month`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `janitorial_inspections`
---
 
 LOCK TABLES `janitorial_inspections` WRITE;
 /*!40000 ALTER TABLE `janitorial_inspections` DISABLE KEYS */;
 INSERT INTO `janitorial_inspections` VALUES
-(2,'University Library','2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:50:50'),
-(3,'College of Nursing','2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:50:50'),
-(4,'Administration Building','2026-10','Needs Attention','Facilities Test Account',NULL,'2026-10-03 17:50:50'),
-(5,'College of Law Building','2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:51:50'),
-(6,'Executive House','2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:51:50'),
-(7,'Guest House','2026-10','Needs Attention','Facilities Test Account','Lights in hallway need replacing','2026-10-03 17:51:50'),
-(8,'HRM Kitchen','2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:51:50'),
-(11,'University Cafeteria, Bookstore, Sewing','2026-10','Passed','Facilities Test Account','okay natu','2026-10-03 20:53:05'),
-(13,'Guest House','2026-10','Passed','Facilities Test Account','Goods Nani','2026-10-03 20:57:34');
+(2,'University Library',NULL,'2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:50:50'),
+(3,'College of Nursing',NULL,'2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:50:50'),
+(4,'Administration Building',NULL,'2026-10','Needs Attention','Facilities Test Account',NULL,'2026-10-03 17:50:50'),
+(5,'College of Law Building',NULL,'2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:51:50'),
+(6,'Executive House',NULL,'2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:51:50'),
+(7,'Guest House',NULL,'2026-10','Needs Attention','Facilities Test Account','Lights in hallway need replacing','2026-10-03 17:51:50'),
+(8,'HRM Kitchen',NULL,'2026-10','Passed','Facilities Test Account',NULL,'2026-10-03 17:51:50'),
+(11,'University Cafeteria, Bookstore, Sewing',NULL,'2026-10','Passed','Facilities Test Account','okay natu','2026-10-03 20:53:05'),
+(13,'Guest House',NULL,'2026-10','Passed','Facilities Test Account','Goods Nani','2026-10-03 20:57:34');
 /*!40000 ALTER TABLE `janitorial_inspections` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `janitorial_task_history`
---
-
 DROP TABLE IF EXISTS `janitorial_task_history`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1188,12 +1170,8 @@ CREATE TABLE `janitorial_task_history` (
   `archived_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `assignment_id` (`assignment_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `janitorial_task_history`
---
 
 LOCK TABLES `janitorial_task_history` WRITE;
 /*!40000 ALTER TABLE `janitorial_task_history` DISABLE KEYS */;
@@ -1225,14 +1203,28 @@ INSERT INTO `janitorial_task_history` VALUES
 (26,8,'Clinic','Sanitize consultation room','done','2025-07-18 07:05:00','Mendez, R.','2026-09-28 10:38:38'),
 (27,8,'Clinic','Mop clinic floor','done','2025-07-18 07:30:00','Mendez, R.','2026-09-28 10:38:38'),
 (28,8,'Clinic','Clean restroom','done','2025-07-18 07:55:00','Mendez, R.','2026-09-28 10:38:38'),
-(29,8,'Clinic','Replace biohazard bags','done','2025-07-18 08:20:00','Mendez, R.','2026-09-28 10:38:38');
+(29,8,'Clinic','Replace biohazard bags','done','2025-07-18 08:20:00','Mendez, R.','2026-09-28 10:38:38'),
+(30,2,'Library','Dust bookshelves','done','2026-10-03 17:50:50','Dizon, L.','2026-10-06 20:30:04'),
+(31,2,'Library','Vacuum reading area','done','2026-10-03 17:50:50','Dizon, L.','2026-10-06 20:30:04'),
+(32,2,'Library','Mop entrance','done','2026-10-03 17:50:50','Dizon, L.','2026-10-06 20:30:04'),
+(33,11,'Admin Building','Scheduled Cleaning: Admin Building','done','2026-10-03 17:50:50','Janitorial Staff','2026-10-06 20:30:04'),
+(34,12,'Canteen','Sweep dining area','done','2026-10-03 18:29:44','Ramos, E.','2026-10-06 20:30:04'),
+(35,12,'Canteen','Wipe tables','done','2026-10-03 18:29:44','Ramos, E.','2026-10-06 20:30:04'),
+(36,13,'Clinic','Disinfect waiting area','done','2026-10-03 18:29:44','Aquino, J.','2026-10-06 20:30:04'),
+(37,13,'Clinic','Clean restroom','done','2026-10-03 18:29:44','Aquino, J.','2026-10-06 20:30:04'),
+(38,13,'Clinic','Refill soap dispensers','done','2026-10-03 18:29:44','Aquino, J.','2026-10-06 20:30:04'),
+(39,15,'Gymnasium','Sweep court','done','2026-10-03 18:30:23','Dela Cruz, P.','2026-10-06 20:30:04'),
+(40,16,'Engineering','Clean workshop floor','done','2026-10-03 18:30:23','Reyes, A.','2026-10-06 20:30:04'),
+(41,16,'Engineering','Wipe equipment tables','done','2026-10-03 18:30:23','Reyes, A.','2026-10-06 20:30:04'),
+(42,18,'Library','Sweep reading room','done','2026-10-03 18:30:23','Garcia, R.','2026-10-06 20:30:04'),
+(43,18,'Library','Dust bookshelves','done','2026-10-03 18:30:23','Garcia, R.','2026-10-06 20:30:04'),
+(44,18,'Library','Clean restroom','done','2026-10-03 18:30:23','Garcia, R.','2026-10-06 20:30:04'),
+(45,18,'Library','Empty trash bins','done','2026-10-03 18:30:23','Garcia, R.','2026-10-06 20:30:04'),
+(46,21,'Clinic','Disinfect exam rooms','done','2026-10-03 18:30:23','Bautista, J.','2026-10-06 20:30:04'),
+(47,21,'Clinic','Restock tissue','done','2026-10-03 18:30:23','Bautista, J.','2026-10-06 20:30:04'),
+(48,21,'Clinic','Mop floor','done','2026-10-03 18:30:23','Bautista, J.','2026-10-06 20:30:04');
 /*!40000 ALTER TABLE `janitorial_task_history` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `janitorial_tasks`
---
-
 DROP TABLE IF EXISTS `janitorial_tasks`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1249,10 +1241,6 @@ CREATE TABLE `janitorial_tasks` (
 ) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `janitorial_tasks`
---
-
 LOCK TABLES `janitorial_tasks` WRITE;
 /*!40000 ALTER TABLE `janitorial_tasks` DISABLE KEYS */;
 INSERT INTO `janitorial_tasks` VALUES
@@ -1264,9 +1252,9 @@ INSERT INTO `janitorial_tasks` VALUES
 (6,1,'Replenish soap & tissue',0,NULL,'2026-07-19 05:37:22'),
 (7,1,'Clean comfort rooms — Floor 2',0,NULL,'2026-07-19 05:37:22'),
 (8,1,'General sanitizing',0,NULL,'2026-07-19 05:37:22'),
-(9,2,'Dust bookshelves',1,'2026-10-03 17:50:50','2026-07-19 05:37:22'),
-(10,2,'Vacuum reading area',1,'2026-10-03 17:50:50','2026-07-19 05:37:22'),
-(11,2,'Mop entrance',1,'2026-10-03 17:50:50','2026-07-19 05:37:22'),
+(9,2,'Dust bookshelves',0,NULL,'2026-07-19 05:37:22'),
+(10,2,'Vacuum reading area',0,NULL,'2026-07-19 05:37:22'),
+(11,2,'Mop entrance',0,NULL,'2026-07-19 05:37:22'),
 (12,2,'Clean restrooms',0,NULL,'2026-07-19 05:37:22'),
 (13,2,'Empty trash bins',0,NULL,'2026-07-19 05:37:22'),
 (14,2,'Wipe computer tables',0,NULL,'2026-07-19 05:37:22'),
@@ -1302,47 +1290,42 @@ INSERT INTO `janitorial_tasks` VALUES
 (44,8,'Clean restroom',0,NULL,'2026-07-19 05:37:22'),
 (45,8,'Replace biohazard bags',0,NULL,'2026-07-19 05:37:22'),
 (47,10,'Scheduled Cleaning: CCS Building',0,NULL,'2026-08-03 15:42:45'),
-(48,11,'Scheduled Cleaning: Admin Building',1,'2026-10-03 17:50:50','2026-08-04 07:43:56'),
-(49,12,'Sweep dining area',1,'2026-10-03 18:29:44','2026-10-03 18:29:44'),
-(50,12,'Wipe tables',1,'2026-10-03 18:29:44','2026-10-03 18:29:44'),
+(48,11,'Scheduled Cleaning: Admin Building',0,NULL,'2026-08-04 07:43:56'),
+(49,12,'Sweep dining area',0,NULL,'2026-10-03 18:29:44'),
+(50,12,'Wipe tables',0,NULL,'2026-10-03 18:29:44'),
 (51,12,'Mop kitchen floor',0,NULL,'2026-10-03 18:29:44'),
 (52,12,'Empty trash bins',0,NULL,'2026-10-03 18:29:44'),
-(53,13,'Disinfect waiting area',1,'2026-10-03 18:29:44','2026-10-03 18:29:44'),
-(54,13,'Clean restroom',1,'2026-10-03 18:29:44','2026-10-03 18:29:44'),
-(55,13,'Refill soap dispensers',1,'2026-10-03 18:29:44','2026-10-03 18:29:44'),
+(53,13,'Disinfect waiting area',0,NULL,'2026-10-03 18:29:44'),
+(54,13,'Clean restroom',0,NULL,'2026-10-03 18:29:44'),
+(55,13,'Refill soap dispensers',0,NULL,'2026-10-03 18:29:44'),
 (56,14,'Sweep laboratory floor',0,NULL,'2026-10-03 18:29:44'),
 (57,14,'Clean lab benches',0,NULL,'2026-10-03 18:29:44'),
 (58,14,'Empty trash bins',0,NULL,'2026-10-03 18:29:44'),
 (59,14,'Mop corridor',0,NULL,'2026-10-03 18:29:44'),
-(60,15,'Sweep court',1,'2026-10-03 18:30:23','2026-10-03 18:30:23'),
+(60,15,'Sweep court',0,NULL,'2026-10-03 18:30:23'),
 (61,15,'Mop court',0,NULL,'2026-10-03 18:30:23'),
 (62,15,'Empty trash bins',0,NULL,'2026-10-03 18:30:23'),
-(63,16,'Clean workshop floor',1,'2026-10-03 18:30:23','2026-10-03 18:30:23'),
-(64,16,'Wipe equipment tables',1,'2026-10-03 18:30:23','2026-10-03 18:30:23'),
+(63,16,'Clean workshop floor',0,NULL,'2026-10-03 18:30:23'),
+(64,16,'Wipe equipment tables',0,NULL,'2026-10-03 18:30:23'),
 (65,16,'Empty trash bins',0,NULL,'2026-10-03 18:30:23'),
 (66,16,'Restock supplies',0,NULL,'2026-10-03 18:30:23'),
 (67,17,'Dust office desks',0,NULL,'2026-10-03 18:30:23'),
 (68,17,'Clean windows',0,NULL,'2026-10-03 18:30:23'),
 (69,17,'Mop hallway',0,NULL,'2026-10-03 18:30:23'),
-(70,18,'Sweep reading room',1,'2026-10-03 18:30:23','2026-10-03 18:30:23'),
-(71,18,'Dust bookshelves',1,'2026-10-03 18:30:23','2026-10-03 18:30:23'),
-(72,18,'Clean restroom',1,'2026-10-03 18:30:23','2026-10-03 18:30:23'),
-(73,18,'Empty trash bins',1,'2026-10-03 18:30:23','2026-10-03 18:30:23'),
+(70,18,'Sweep reading room',0,NULL,'2026-10-03 18:30:23'),
+(71,18,'Dust bookshelves',0,NULL,'2026-10-03 18:30:23'),
+(72,18,'Clean restroom',0,NULL,'2026-10-03 18:30:23'),
+(73,18,'Empty trash bins',0,NULL,'2026-10-03 18:30:23'),
 (74,19,'Clean computer lab',0,NULL,'2026-10-03 18:30:23'),
 (75,19,'Wipe keyboards',0,NULL,'2026-10-03 18:30:23'),
 (76,19,'Empty trash bins',0,NULL,'2026-10-03 18:30:23'),
 (77,20,'Clean bleachers',0,NULL,'2026-10-03 18:30:23'),
 (78,20,'Mop locker rooms',0,NULL,'2026-10-03 18:30:23'),
-(79,21,'Disinfect exam rooms',1,'2026-10-03 18:30:23','2026-10-03 18:30:23'),
-(80,21,'Restock tissue',1,'2026-10-03 18:30:23','2026-10-03 18:30:23'),
-(81,21,'Mop floor',1,'2026-10-03 18:30:23','2026-10-03 18:30:23');
+(79,21,'Disinfect exam rooms',0,NULL,'2026-10-03 18:30:23'),
+(80,21,'Restock tissue',0,NULL,'2026-10-03 18:30:23'),
+(81,21,'Mop floor',0,NULL,'2026-10-03 18:30:23');
 /*!40000 ALTER TABLE `janitorial_tasks` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `job_orders`
---
-
 DROP TABLE IF EXISTS `job_orders`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1370,10 +1353,6 @@ CREATE TABLE `job_orders` (
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `job_orders`
---
-
 LOCK TABLES `job_orders` WRITE;
 /*!40000 ALTER TABLE `job_orders` DISABLE KEYS */;
 INSERT INTO `job_orders` VALUES
@@ -1384,11 +1363,6 @@ INSERT INTO `job_orders` VALUES
 (5,'JO-2026-005','New Gymnasium Construction Support','Gymnasium Expansion','Construction Foreman',1,'Gymnasium Site',5,'Remedios Ocampo','2026-10-01','2027-04-01','PENDING','Support labor for the new gymnasium construction project.',NULL,0,'2026-08-29 22:31:31',NULL);
 /*!40000 ALTER TABLE `job_orders` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `key_borrow_logs`
---
-
 DROP TABLE IF EXISTS `key_borrow_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1417,10 +1391,6 @@ CREATE TABLE `key_borrow_logs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `key_borrow_logs`
---
-
 LOCK TABLES `key_borrow_logs` WRITE;
 /*!40000 ALTER TABLE `key_borrow_logs` DISABLE KEYS */;
 INSERT INTO `key_borrow_logs` VALUES
@@ -1433,11 +1403,6 @@ INSERT INTO `key_borrow_logs` VALUES
 (8,'KL-007','EMP-2018-021',NULL,'Peralta, H.','Administration','Conference Room Key',NULL,'2026-10-01 08:00:00','2026-10-01 09:15:00','Returned','Santos, J.','2026-10-01 02:27:39');
 /*!40000 ALTER TABLE `key_borrow_logs` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `mechanical_equipment`
---
-
 DROP TABLE IF EXISTS `mechanical_equipment`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1457,10 +1422,6 @@ CREATE TABLE `mechanical_equipment` (
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `mechanical_equipment`
---
-
 LOCK TABLES `mechanical_equipment` WRITE;
 /*!40000 ALTER TABLE `mechanical_equipment` DISABLE KEYS */;
 INSERT INTO `mechanical_equipment` VALUES
@@ -1474,11 +1435,6 @@ INSERT INTO `mechanical_equipment` VALUES
 (8,'ME-WLD-01','Welding Machine','Workshop Equipment','Carpentry Shop','Out of Service','2026-03-18',NULL,'Sample data - beyond repair','2026-10-04 01:15:24');
 /*!40000 ALTER TABLE `mechanical_equipment` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `migrations`
---
-
 DROP TABLE IF EXISTS `migrations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1493,10 +1449,6 @@ CREATE TABLE `migrations` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `migrations`
---
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
@@ -1528,11 +1480,6 @@ INSERT INTO `migrations` VALUES
 (39,'2026-09-14-000001','App\\Database\\Migrations\\CreateFacilityKeysTable','default','App',1789396190,5);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `motorpool_wo_history`
---
-
 DROP TABLE IF EXISTS `motorpool_wo_history`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1545,12 +1492,8 @@ CREATE TABLE `motorpool_wo_history` (
   `notes` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `work_order_id` (`work_order_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `motorpool_wo_history`
---
 
 LOCK TABLES `motorpool_wo_history` WRITE;
 /*!40000 ALTER TABLE `motorpool_wo_history` DISABLE KEYS */;
@@ -1568,14 +1511,12 @@ INSERT INTO `motorpool_wo_history` VALUES
 (11,6,'In Progress','Motor Pool Mechanic','2026-09-28 01:15:24','Work started'),
 (15,3,'Completed','Motor Pool Mechanic','2026-09-24 01:15:24','Work finished'),
 (16,6,'Completed','Motor Pool Mechanic','2026-09-28 01:15:24','Work finished'),
-(18,7,'Cancelled','Motor Pool Head','2026-09-15 01:15:24','Request cancelled');
+(18,7,'Cancelled','Motor Pool Head','2026-09-15 01:15:24','Request cancelled'),
+(22,2,'Completed','Assets Test Account','2026-10-04 04:32:13','Work finished'),
+(23,1,'In Progress','Assets Test Account','2026-10-04 13:19:14','Work started'),
+(24,1,'Completed','Assets Test Account','2026-10-04 13:19:19','Work finished');
 /*!40000 ALTER TABLE `motorpool_wo_history` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `motorpool_work_orders`
---
-
 DROP TABLE IF EXISTS `motorpool_work_orders`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1599,15 +1540,11 @@ CREATE TABLE `motorpool_work_orders` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `motorpool_work_orders`
---
-
 LOCK TABLES `motorpool_work_orders` WRITE;
 /*!40000 ALTER TABLE `motorpool_work_orders` DISABLE KEYS */;
 INSERT INTO `motorpool_work_orders` VALUES
-(1,'MP-001','Vehicle Repair',2,NULL,'Air conditioning not cooling','Routine','Pending','Sample Requester',NULL,'2026-10-03 01:15:24',NULL,NULL),
-(2,'MP-002','Vehicle Repair',3,NULL,'Brake noise when stopping','Urgent','In Progress','Sample Requester','Motor Pool Mechanic','2026-10-01 01:15:24','2026-10-02 01:15:24',NULL),
+(1,'MP-001','Vehicle Repair',2,NULL,'Air conditioning not cooling','Routine','Completed','Sample Requester','Assets Test Account','2026-10-03 01:15:24','2026-10-04 13:19:19','2026-10-04 13:19:19'),
+(2,'MP-002','Vehicle Repair',3,NULL,'Brake noise when stopping','Urgent','Completed','Sample Requester','Motor Pool Mechanic','2026-10-01 01:15:24','2026-10-04 04:32:13','2026-10-04 04:32:13'),
 (3,'MP-003','Vehicle Repair',5,NULL,'Replace worn front tires','Routine','Completed','Sample Requester','Motor Pool Mechanic','2026-09-20 01:15:24','2026-09-24 01:15:24','2026-09-24 01:15:24'),
 (4,'MP-004','Mechanical Equipment',NULL,2,'Generator fails to start','Urgent','In Progress','Sample Requester','Motor Pool Mechanic','2026-10-02 01:15:24','2026-10-03 01:15:24',NULL),
 (5,'MP-005','Mechanical Equipment',NULL,6,'Engine overheats after 10 minutes','Routine','Pending','Sample Requester',NULL,'2026-10-03 21:15:24',NULL,NULL),
@@ -1615,11 +1552,6 @@ INSERT INTO `motorpool_work_orders` VALUES
 (7,'MP-007','Vehicle Repair',5,NULL,'Request cancelled - vehicle sold','Routine','Cancelled','Sample Requester',NULL,'2026-09-14 01:15:24','2026-09-15 01:15:24',NULL);
 /*!40000 ALTER TABLE `motorpool_work_orders` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `notifications`
---
-
 DROP TABLE IF EXISTS `notifications`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1638,12 +1570,8 @@ CREATE TABLE `notifications` (
   KEY `idx_is_read` (`is_read`),
   KEY `idx_priority` (`priority`),
   KEY `idx_created` (`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=200 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=203 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `notifications`
---
 
 LOCK TABLES `notifications` WRITE;
 /*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
@@ -1833,14 +1761,12 @@ INSERT INTO `notifications` VALUES
 (195,'Sports Equipment Overdue','Badminton Racket Set (4pcs) was due back 3 days ago - borrowed by Mina Santos (Athletics).','Sports Equipment Office','CRITICAL','Pending','system',0,NULL,'2026-10-03 23:27:14'),
 (196,'Sports Equipment Borrowed','Gym Mats (Set of 5) borrowed by PE Instructor Cruz - due back tomorrow.','Sports Equipment Office','ROUTINE','Pending','system',0,NULL,'2026-10-03 02:27:14'),
 (197,'Sports Equipment Borrowed','Basketball (Molten GG7) borrowed by Coach Reyes - due back in 5 days.','Sports Equipment Office','ROUTINE','Pending','system',0,NULL,'2026-10-02 02:27:14'),
-(198,'Sports Equipment Needs Repair','Table Tennis Paddle Set is in Poor condition.','Sports Equipment Office','MODERATE','Pending','system',0,NULL,'2026-10-03 21:27:14');
+(198,'Sports Equipment Needs Repair','Table Tennis Paddle Set is in Poor condition.','Sports Equipment Office','MODERATE','Pending','system',0,NULL,'2026-10-03 21:27:14'),
+(200,'Motor Pool Work Order','MP-002 is now Completed.','Motor Pool','ROUTINE','Pending','system',0,NULL,'2026-10-04 04:32:13'),
+(201,'Motor Pool Work Order','MP-001 is now In Progress.','Motor Pool','ROUTINE','Pending','system',0,NULL,'2026-10-04 13:19:14'),
+(202,'Motor Pool Work Order','MP-001 is now Completed.','Motor Pool','ROUTINE','Pending','system',1,'2026-10-04 13:20:21','2026-10-04 13:19:20');
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `personnel`
---
-
 DROP TABLE IF EXISTS `personnel`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1864,10 +1790,6 @@ CREATE TABLE `personnel` (
   CONSTRAINT `personnel_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=85 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `personnel`
---
 
 LOCK TABLES `personnel` WRITE;
 /*!40000 ALTER TABLE `personnel` DISABLE KEYS */;
@@ -1952,11 +1874,6 @@ INSERT INTO `personnel` VALUES
 (84,'202101999','Eddie Murphy','eddie.murphy@gmail.com','09123456789',2,'Regular','Carpenter','PlyWood Shining','Active',0,NULL,'2026-09-21 14:11:36');
 /*!40000 ALTER TABLE `personnel` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `personnel_assignments`
---
-
 DROP TABLE IF EXISTS `personnel_assignments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1980,10 +1897,6 @@ CREATE TABLE `personnel_assignments` (
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `personnel_assignments`
---
-
 LOCK TABLES `personnel_assignments` WRITE;
 /*!40000 ALTER TABLE `personnel_assignments` DISABLE KEYS */;
 INSERT INTO `personnel_assignments` VALUES
@@ -1998,11 +1911,6 @@ INSERT INTO `personnel_assignments` VALUES
 (9,77,2,'Driver','ccs',NULL,'Corazon Castillo','2026-08-29','2026-08-31','ACTIVE',NULL,'2026-08-29 22:51:45','2026-08-29 22:51:45');
 /*!40000 ALTER TABLE `personnel_assignments` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `personnel_contracts`
---
-
 DROP TABLE IF EXISTS `personnel_contracts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2024,10 +1932,6 @@ CREATE TABLE `personnel_contracts` (
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `personnel_contracts`
---
-
 LOCK TABLES `personnel_contracts` WRITE;
 /*!40000 ALTER TABLE `personnel_contracts` DISABLE KEYS */;
 INSERT INTO `personnel_contracts` VALUES
@@ -2042,11 +1946,6 @@ INSERT INTO `personnel_contracts` VALUES
 (9,77,2,NULL,'2026-08-29','2026-08-31','ACTIVE',NULL,NULL,'2026-08-29 22:51:45','2026-08-29 22:51:45');
 /*!40000 ALTER TABLE `personnel_contracts` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `personnel_documents`
---
-
 DROP TABLE IF EXISTS `personnel_documents`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2068,19 +1967,10 @@ CREATE TABLE `personnel_documents` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `personnel_documents`
---
-
 LOCK TABLES `personnel_documents` WRITE;
 /*!40000 ALTER TABLE `personnel_documents` DISABLE KEYS */;
 /*!40000 ALTER TABLE `personnel_documents` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `predictions`
---
-
 DROP TABLE IF EXISTS `predictions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2094,10 +1984,6 @@ CREATE TABLE `predictions` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `predictions`
---
-
 LOCK TABLES `predictions` WRITE;
 /*!40000 ALTER TABLE `predictions` DISABLE KEYS */;
 INSERT INTO `predictions` VALUES
@@ -2106,11 +1992,6 @@ INSERT INTO `predictions` VALUES
 (3,'Dashboard','Inventory of cleaning chemicals is running low.','Notify Personnel','2026-07-18 20:20:56');
 /*!40000 ALTER TABLE `predictions` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `refill_log`
---
-
 DROP TABLE IF EXISTS `refill_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2128,10 +2009,6 @@ CREATE TABLE `refill_log` (
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `refill_log`
---
-
 LOCK TABLES `refill_log` WRITE;
 /*!40000 ALTER TABLE `refill_log` DISABLE KEYS */;
 INSERT INTO `refill_log` VALUES
@@ -2143,11 +2020,6 @@ INSERT INTO `refill_log` VALUES
 (6,10,'Trash Bag',4.00,'Rolls','Kenchie Terante','2026-09-21 14:21:10');
 /*!40000 ALTER TABLE `refill_log` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `reports`
---
-
 DROP TABLE IF EXISTS `reports`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2168,10 +2040,6 @@ CREATE TABLE `reports` (
 ) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `reports`
---
-
 LOCK TABLES `reports` WRITE;
 /*!40000 ALTER TABLE `reports` DISABLE KEYS */;
 INSERT INTO `reports` VALUES
@@ -2190,11 +2058,6 @@ INSERT INTO `reports` VALUES
 (14,'Fire Extinguisher Replaced/Renewed — FE-ADM-021 (Administration building)',NULL,'Maintenance Compliance','Completed',NULL,0,NULL,'2026-09-05 11:22:19','2026-09-05 12:09:45','2026-09-05 11:22:19');
 /*!40000 ALTER TABLE `reports` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `restroom_checklist_entries`
---
-
 DROP TABLE IF EXISTS `restroom_checklist_entries`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2213,24 +2076,29 @@ CREATE TABLE `restroom_checklist_entries` (
   `signature` varchar(150) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `checklist_id` (`checklist_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `restroom_checklist_entries`
---
 
 LOCK TABLES `restroom_checklist_entries` WRITE;
 /*!40000 ALTER TABLE `restroom_checklist_entries` DISABLE KEYS */;
 INSERT INTO `restroom_checklist_entries` VALUES
-(3,3,'2026-09-20','21:32:00',0,0,0,0,0,0,'',NULL);
+(3,3,'2026-09-20','21:32:00',0,0,0,0,0,0,'',NULL),
+(14,9,'2026-10-02','07:30:00',1,1,1,1,1,1,'Mina Santos','Mina Santos'),
+(15,9,'2026-10-03','14:00:00',1,1,0,1,1,1,'Mina Santos','Mina Santos'),
+(16,9,'2026-10-04','07:30:00',1,1,1,1,1,1,'Mina Santos','Mina Santos'),
+(17,10,'2026-10-02','07:30:00',1,1,1,1,1,1,'Lapu-lapu','Lapu-lapu'),
+(18,10,'2026-10-03','14:00:00',1,1,0,1,1,1,'Lapu-lapu','Lapu-lapu'),
+(19,11,'2026-10-02','07:30:00',1,1,1,1,1,1,'Juan dela Beto','Juan dela Beto'),
+(20,11,'2026-10-03','14:00:00',1,1,0,1,1,1,'Juan dela Beto','Juan dela Beto'),
+(21,11,'2026-10-04','07:30:00',1,1,1,1,1,1,'Juan dela Beto','Juan dela Beto'),
+(22,12,'2026-10-02','07:30:00',1,1,1,1,1,1,'Juan Cruz','Juan Cruz'),
+(23,12,'2026-10-03','14:00:00',1,1,0,1,1,1,'Juan Cruz','Juan Cruz'),
+(24,9,'2026-10-01','07:30:00',1,1,1,1,1,1,'Mina Santos','Mina Santos'),
+(25,10,'2026-10-01','07:30:00',1,1,1,1,1,1,'Lapu-lapu','Lapu-lapu'),
+(26,11,'2026-10-01','07:30:00',1,1,1,1,1,1,'Juan dela Beto','Juan dela Beto'),
+(27,12,'2026-10-01','07:30:00',1,1,1,1,1,1,'Juan Cruz','Juan Cruz');
 /*!40000 ALTER TABLE `restroom_checklist_entries` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `restroom_checklists`
---
-
 DROP TABLE IF EXISTS `restroom_checklists`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2243,25 +2111,20 @@ CREATE TABLE `restroom_checklists` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `restroom_checklists`
---
 
 LOCK TABLES `restroom_checklists` WRITE;
 /*!40000 ALTER TABLE `restroom_checklists` DISABLE KEYS */;
 INSERT INTO `restroom_checklists` VALUES
 (2,'Cisco Lab',NULL,NULL,0,'2026-09-05 20:09:20','2026-09-05 20:09:20'),
-(3,'Test Restroom API',NULL,NULL,0,'2026-09-05 22:15:00','2026-09-05 22:15:00');
+(3,'Test Restroom API',NULL,NULL,0,'2026-09-05 22:15:00','2026-09-05 22:15:00'),
+(9,'Administration Building — Ground Floor',NULL,NULL,0,'2026-10-07 03:10:46','2026-10-07 03:10:46'),
+(10,'College of Law Building — 2nd Floor',NULL,NULL,0,'2026-10-07 03:10:52','2026-10-07 03:10:52'),
+(11,'University Library — Ground Floor',NULL,NULL,0,'2026-10-07 03:10:56','2026-10-07 03:10:56'),
+(12,'LG Sinco Computer Center — 2nd Floor',NULL,NULL,0,'2026-10-07 03:11:02','2026-10-07 03:11:02');
 /*!40000 ALTER TABLE `restroom_checklists` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `return_records`
---
-
 DROP TABLE IF EXISTS `return_records`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2280,26 +2143,18 @@ CREATE TABLE `return_records` (
   KEY `tool_id` (`tool_id`),
   CONSTRAINT `return_records_ibfk_1` FOREIGN KEY (`borrow_id`) REFERENCES `borrow_records` (`id`),
   CONSTRAINT `return_records_ibfk_2` FOREIGN KEY (`tool_id`) REFERENCES `tools` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `return_records`
---
 
 LOCK TABLES `return_records` WRITE;
 /*!40000 ALTER TABLE `return_records` DISABLE KEYS */;
 INSERT INTO `return_records` VALUES
 (1,10,55,1.00,'John Doe','2026-08-01','Good',NULL,'2026-08-02 03:34:15'),
 (2,11,55,1.00,'John Doe','2026-08-01','Good',NULL,'2026-08-02 04:10:55'),
-(3,12,55,1.00,'Sherina Banosong','2026-08-02','Good',NULL,'2026-08-02 17:42:30');
+(3,12,55,1.00,'Sherina Banosong','2026-08-02','Good',NULL,'2026-08-02 17:42:30'),
+(5,93,2,1.00,'Rico Dela Cruz','2026-10-04','Excellent',NULL,'2026-10-04 02:47:47');
 /*!40000 ALTER TABLE `return_records` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `safety_equipment`
---
-
 DROP TABLE IF EXISTS `safety_equipment`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2323,10 +2178,6 @@ CREATE TABLE `safety_equipment` (
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `safety_equipment`
---
-
 LOCK TABLES `safety_equipment` WRITE;
 /*!40000 ALTER TABLE `safety_equipment` DISABLE KEYS */;
 INSERT INTO `safety_equipment` VALUES
@@ -2346,11 +2197,6 @@ INSERT INTO `safety_equipment` VALUES
 (14,'Emergency Exit Sign','FE-EDU-01','College of Education Building','Ground Floor','North corridor','Working','2026-09-05','2026-12-04','2026-10-03',NULL,NULL,'2026-10-03 22:30:52');
 /*!40000 ALTER TABLE `safety_equipment` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `safety_inspections`
---
-
 DROP TABLE IF EXISTS `safety_inspections`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2364,12 +2210,8 @@ CREATE TABLE `safety_inspections` (
   `inspected_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `building` (`building`,`inspection_month`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `safety_inspections`
---
 
 LOCK TABLES `safety_inspections` WRITE;
 /*!40000 ALTER TABLE `safety_inspections` DISABLE KEYS */;
@@ -2380,14 +2222,11 @@ INSERT INTO `safety_inspections` VALUES
 (4,'College of Nursing','2026-10','Safe',NULL,'Timothy Eraham','2026-10-03 22:30:52'),
 (5,'Administration Building','2026-09','Safe','All good last month','Timothy Eraham','2026-09-03 22:30:52'),
 (6,'University Library','2026-09','Safe',NULL,'Timothy Eraham','2026-09-03 22:30:52'),
-(7,'College of Law Building','2026-09','Needs Attention','Exit sign dim','Timothy Eraham','2026-09-03 22:30:52');
+(7,'College of Law Building','2026-09','Needs Attention','Exit sign dim','Timothy Eraham','2026-09-03 22:30:52'),
+(9,'College of Law Building','2026-10','Safe','Good','Security Test Account','2026-10-04 03:44:32'),
+(10,'College of Education Building','2026-10','Needs Attention',NULL,'Security Test Account','2026-10-04 03:46:39');
 /*!40000 ALTER TABLE `safety_inspections` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `safety_reports`
---
-
 DROP TABLE IF EXISTS `safety_reports`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2405,19 +2244,10 @@ CREATE TABLE `safety_reports` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `safety_reports`
---
-
 LOCK TABLES `safety_reports` WRITE;
 /*!40000 ALTER TABLE `safety_reports` DISABLE KEYS */;
 /*!40000 ALTER TABLE `safety_reports` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `safety_work_orders`
---
-
 DROP TABLE IF EXISTS `safety_work_orders`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2442,10 +2272,6 @@ CREATE TABLE `safety_work_orders` (
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `safety_work_orders`
---
-
 LOCK TABLES `safety_work_orders` WRITE;
 /*!40000 ALTER TABLE `safety_work_orders` DISABLE KEYS */;
 INSERT INTO `safety_work_orders` VALUES
@@ -2456,11 +2282,6 @@ INSERT INTO `safety_work_orders` VALUES
 (6,'WO-005','Clean Urgent','University library','John Doe','Maintenance Team','Medium','Issue Logged','2026-08-05',NULL,NULL,'2026-08-03 01:24:41',NULL);
 /*!40000 ALTER TABLE `safety_work_orders` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `system_settings`
---
-
 DROP TABLE IF EXISTS `system_settings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2474,10 +2295,6 @@ CREATE TABLE `system_settings` (
   KEY `idx_key` (`setting_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `system_settings`
---
 
 LOCK TABLES `system_settings` WRITE;
 /*!40000 ALTER TABLE `system_settings` DISABLE KEYS */;
@@ -2500,11 +2317,6 @@ INSERT INTO `system_settings` VALUES
 (17,'ai_api_key','REDACTED_API_KEY','2026-09-30 22:20:01');
 /*!40000 ALTER TABLE `system_settings` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `tools`
---
-
 DROP TABLE IF EXISTS `tools`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2530,14 +2342,10 @@ CREATE TABLE `tools` (
 ) ENGINE=InnoDB AUTO_INCREMENT=86 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `tools`
---
-
 LOCK TABLES `tools` WRITE;
 /*!40000 ALTER TABLE `tools` DISABLE KEYS */;
 INSERT INTO `tools` VALUES
-(2,'MacBook Pro 16','AST-92041','IT Equipment','Deans Office, CCS','Maria Clara Santos','Excellent','Borrowed',NULL,NULL,'pcs',0,'2026-07-18 20:20:56',0,NULL,'2026-09-06 01:30:35'),
+(2,'MacBook Pro 16','AST-92041','IT Equipment','Deans Office, CCS','Maria Clara Santos','Excellent','Available',NULL,NULL,'pcs',0,'2026-07-18 20:20:56',0,NULL,'2026-10-04 02:47:47'),
 (3,'Floors Buffer Matt','AST-03481','Janitorial','Janitor Depot B','Sonia G. Ramirez','Excellent','Available',NULL,NULL,'pcs',0,'2026-07-18 20:20:56',0,NULL,'2026-09-06 01:06:36'),
 (4,'Sony Alpha A7 III','AST-00612','Media Studio','Media Center','Col. Arthur Miller','Poor','Available',NULL,NULL,'pcs',0,'2026-07-18 20:20:56',0,NULL,'2026-09-06 01:06:36'),
 (5,'Epson Projector X50','AST-77120','IT Equipment','AVR Room 2','Pedro Penduko','Excellent','Available',NULL,NULL,'pcs',0,'2026-07-18 20:20:56',0,NULL,'2026-09-06 01:06:36'),
@@ -2614,11 +2422,6 @@ INSERT INTO `tools` VALUES
 (83,'Baseball Bat & Glove Set','AST-41010','Sports Equipment','Sports Complex',NULL,'Fair','Maintenance',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-10-04 02:27:14');
 /*!40000 ALTER TABLE `tools` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `tools_refill_log`
---
-
 DROP TABLE IF EXISTS `tools_refill_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2635,21 +2438,12 @@ CREATE TABLE `tools_refill_log` (
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `tools_refill_log`
---
-
 LOCK TABLES `tools_refill_log` WRITE;
 /*!40000 ALTER TABLE `tools_refill_log` DISABLE KEYS */;
 INSERT INTO `tools_refill_log` VALUES
 (1,52,'Electrical Tape Roll',3.00,'Kenchie Terante','2026-08-30 03:28:19');
 /*!40000 ALTER TABLE `tools_refill_log` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `travel_requests`
---
-
 DROP TABLE IF EXISTS `travel_requests`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2691,10 +2485,6 @@ CREATE TABLE `travel_requests` (
 ) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `travel_requests`
---
-
 LOCK TABLES `travel_requests` WRITE;
 /*!40000 ALTER TABLE `travel_requests` DISABLE KEYS */;
 INSERT INTO `travel_requests` VALUES
@@ -2718,11 +2508,6 @@ INSERT INTO `travel_requests` VALUES
 (24,'TR-SAMPLE-0006',3,'Dauin Marine Park','Field trip (sample)','2026-10-02','06:30:00','18:00:00',NULL,5,2,'Reviewed',NULL,NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-10-03 17:23:59','2026-10-03 17:23:59','2026-10-03 17:23:59');
 /*!40000 ALTER TABLE `travel_requests` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `trip_status_log`
---
-
 DROP TABLE IF EXISTS `trip_status_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2737,10 +2522,6 @@ CREATE TABLE `trip_status_log` (
   KEY `travel_request_id` (`travel_request_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `trip_status_log`
---
 
 LOCK TABLES `trip_status_log` WRITE;
 /*!40000 ALTER TABLE `trip_status_log` DISABLE KEYS */;
@@ -2759,11 +2540,6 @@ INSERT INTO `trip_status_log` VALUES
 (13,16,'Rejected','Assets Test Account','2026-10-04 01:54:33','Rejected by Asset Acquisition and Monitoring');
 /*!40000 ALTER TABLE `trip_status_log` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `ubra_chat_logs`
---
-
 DROP TABLE IF EXISTS `ubra_chat_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2775,12 +2551,8 @@ CREATE TABLE `ubra_chat_logs` (
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `emp_id` (`emp_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=281 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=309 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `ubra_chat_logs`
---
 
 LOCK TABLES `ubra_chat_logs` WRITE;
 /*!40000 ALTER TABLE `ubra_chat_logs` DISABLE KEYS */;
@@ -2792,14 +2564,37 @@ INSERT INTO `ubra_chat_logs` VALUES
 (271,'10005','user','Give me a fleet health check — vehicle status, GPS status, and anything needing attention.','2026-10-02 14:07:25'),
 (272,'10005','assistant','**Fleet Health Check – Summary (as of 02 Oct 2026, 14:07)**  \n\n- **Total fleet:** **5** vehicles  \n- **Available now:** **3** vehicles  \n- **In use / assigned:** **2** vehicles (the ones currently not listed as available)  \n\n**GPS Tracking**  \n- No GPS‑offline alerts are shown in the system snapshot.  \n- If any vehicle’s live tracker shows “no signal” or “inactive,” please verify in the **Vehicle Management → GPS Tracker** page.\n\n**Items Needing Attention**  \n- **Open maintenance work orders:** **4** (may involve vehicles or other assets). Review the **Maintenance (Safety) → Work Orders** list to see if any are tied to fleet equipment.  \n- **Fuel‑need predictions:** Not displayed in the snapshot; check the **Vehicle Management → Fuel Logs** module for any vehicles flagged for low fuel or upcoming refuel.  \n- **Trip tickets awaiting dispatch/approval:** **3** pending. Ensure drivers have approved tickets before dispatch to avoid scheduling conflicts.\n\n**Recommended Actions**  \n1. Open **Vehicle Management** and confirm the status (available, in‑service, under maintenance) of the two vehicles currently not listed as available.  \n2. Run the **GPS Tracker** live view to spot any devices showing “offline” or “error.”  \n3. Cross‑reference the **4 open maintenance work orders** with the fleet list; close or reassign any that pertain to vehicles.  \n4. Approve or reject the **3 pending trip tickets** to keep travel operations on schedule.  \n\nFor detailed per‑vehicle information (e.g., mileage, service due dates, GPS health), navigate to **Vehicle Management → Fleet Overview**. Let me know if you’d like a specific report (e.g., “generate a pdf report for fleet status this week”) and I’ll trigger the downloadable file.','2026-10-02 14:07:25'),
 (275,'20230251','user','Give me a fleet health check — vehicle status, GPS status, and anything needing attention.','2026-10-02 15:26:53'),
-(276,'20230251','assistant','**UBRA Fleet Health Check (as of Oct 2 2026 15:26)**  \n\n| Item | Current Status | Action Needed |\n|------|----------------|----------------|\n| **Total Vehicles** | **5** | – |\n| **Available** | **3** (idle) | No immediate action |\n| **In Use** | **2** (assigned to trips) | Verify driver logs & fuel levels |\n| **GPS Trackers** | Live status view available in **Vehicle Management → GPS Tracker** | • Confirm that both active units show a green “online” signal. <br>• Flag any unit showing “offline” or “signal lost” for replacement/repair. |\n| **Trip Tickets** | **3** tickets awaiting dispatch/approval | • Review and approve or reject the pending tickets to free vehicle capacity. |\n| **Maintenance Alerts** | No vehicle‑specific work orders listed in the snapshot, but **4 open maintenance work orders** exist system‑wide (may include vehicles). | • Open **Maintenance → Work Orders** and filter by “Vehicle” to address any pending repairs. |\n| **Safety Inspections** | Not listed for vehicles (fire‑extinguisher inspections are overdue). | • Ensure any required vehicle safety checks (e.g., brake, tire, oil) are up‑to‑date; schedule if missing. |\n\n### Recommended Immediate Steps\n1. **Check GPS health** – go to *Vehicle Management → GPS Tracker* and verify that the two vehicles currently in use report live locations.  \n2. **Process pending trip tickets** – approve/dispatch the three awaiting tickets to avoid idle time.  \n3. **Cross‑check work orders** – filter open work orders for vehicle‑related items and schedule repairs.  \n4. **Confirm routine vehicle inspections** – run a quick check in the Vehicle Management module to ensure all required preventative maintenance (oil change, tire rotation, safety inspection) is logged and up‑to‑date.\n\nIf you need a detailed PDF/Excel **fleet health report** (including GPS signal logs, mileage, fuel consumption, and upcoming maintenance), just let me know and I’ll generate the downloadable file for you.','2026-10-02 15:26:53');
+(276,'20230251','assistant','**UBRA Fleet Health Check (as of Oct 2 2026 15:26)**  \n\n| Item | Current Status | Action Needed |\n|------|----------------|----------------|\n| **Total Vehicles** | **5** | – |\n| **Available** | **3** (idle) | No immediate action |\n| **In Use** | **2** (assigned to trips) | Verify driver logs & fuel levels |\n| **GPS Trackers** | Live status view available in **Vehicle Management → GPS Tracker** | • Confirm that both active units show a green “online” signal. <br>• Flag any unit showing “offline” or “signal lost” for replacement/repair. |\n| **Trip Tickets** | **3** tickets awaiting dispatch/approval | • Review and approve or reject the pending tickets to free vehicle capacity. |\n| **Maintenance Alerts** | No vehicle‑specific work orders listed in the snapshot, but **4 open maintenance work orders** exist system‑wide (may include vehicles). | • Open **Maintenance → Work Orders** and filter by “Vehicle” to address any pending repairs. |\n| **Safety Inspections** | Not listed for vehicles (fire‑extinguisher inspections are overdue). | • Ensure any required vehicle safety checks (e.g., brake, tire, oil) are up‑to‑date; schedule if missing. |\n\n### Recommended Immediate Steps\n1. **Check GPS health** – go to *Vehicle Management → GPS Tracker* and verify that the two vehicles currently in use report live locations.  \n2. **Process pending trip tickets** – approve/dispatch the three awaiting tickets to avoid idle time.  \n3. **Cross‑check work orders** – filter open work orders for vehicle‑related items and schedule repairs.  \n4. **Confirm routine vehicle inspections** – run a quick check in the Vehicle Management module to ensure all required preventative maintenance (oil change, tire rotation, safety inspection) is logged and up‑to‑date.\n\nIf you need a detailed PDF/Excel **fleet health report** (including GPS signal logs, mileage, fuel consumption, and upcoming maintenance), just let me know and I’ll generate the downloadable file for you.','2026-10-02 15:26:53'),
+(281,'10030','user','unsay update sa Safety & Security?','2026-10-04 03:59:42'),
+(282,'10030','assistant','**Update sa Safety & Security (Alas 03:59 AM, Oct 4 2026)**  \n\n**Safety**  \n- **4** overdue fire‑extinguisher inspections – kinahanglan i‑schedule dayon aron malikayan penalties.  \n- **4** bukas nga maintenance work orders – tan‑awa ang *Maintenance* module para sa detalye sa mga pending tasks ug assign technicians.  \n\n**Security**  \n- **Vehicles:** 5 total; **3** available for patrol/response.  \n- **Personnel on duty:** **56** of 78 staff – may **22** off‑duty; siguroha nga coverage sa critical entry points.  \n- **Tools & Equipment borrowed:** **3** items currently out – verify return status sa *Tools Management* kung gigamit sa security ops.  \n\n**Suggested next steps**  \n1. Prioritize scheduling of the 4 overdue extinguisher inspections (Safety).  \n2. Review and close the 4 open work orders (Maintenance).  \n3. Verify vehicle availability for any upcoming security patrols or incident response.  \n4. Cross‑check borrowed tools to confirm they are returned before shift change.  \n\nKung gusto nimo ang detalyadong lista sa mga work order o inspeksyon, adto sa **Maintenance (Safety)** module. Kung kinahanglan nimo ang vehicle‑tracker o trip‑ticket status, adto sa **Vehicle Management**.','2026-10-04 03:59:42'),
+(283,'10030','user','unsay update sa janitorial?','2026-10-04 04:00:33'),
+(284,'10030','assistant','**Janitorial Update (Alas 04:00 AM, Oct 4 2026)**  \n\n- **Cleaning coverage:** **3** of **8** zones have been cleaned today ≈ 38 % completion.  \n- **Remaining zones:** 5 zones still pending cleaning for the current shift.  \n- **Staff on duty:** 56 security personnel are on shift; janitorial staff assignments are managed in the **Janitorial Monitoring** module (you can view exact crew allocations there).  \n\n**Recommended actions**  \n1. **Check the Janitorial Monitoring page** to see which crew members are assigned to the 5 pending zones and verify their shift status.  \n2. If additional support is needed, consider reallocating available security staff for spot‑cleaning of high‑traffic areas until janitorial crews arrive.  \n3. Monitor the **Cleaning Completion KPI** on the Dashboard to ensure the daily target (all 8 zones) is met before the end of the shift.  \n\nLet me know if you need a detailed zone‑by‑zone status or want to generate a cleaning‑report (e.g., “generate a pdf report for janitorial today”).','2026-10-04 04:00:33'),
+(285,'10040','user','unsay update sa janitorial','2026-10-04 04:40:22'),
+(286,'10040','assistant','**Janitorial Update (as of 04:40 AM, Oct 4, 2026)**  \n\n- **Zones cleaned today:** **3 / 8**  \n- **Remaining zones to clean:** 5 (scheduled for later today)  \n\nThe Janitorial Monitoring module shows the current progress for today’s cleaning schedule. Let me know if you need the detailed zone list, staff assignments, or a cleaning‑completion report.','2026-10-04 04:40:22'),
+(287,'10030','user','How many vehicles are available today?','2026-10-04 12:50:23'),
+(288,'10030','assistant','That\'s outside your account\'s access. This assistant only answers about **Safety and Security Department** — fire safety equipment (extinguishers, smoke detectors, alarms, exit signs), floor plans, guard monitoring and keys, and safety inspections. Please ask the account that handles that area, or ask me something about your own department.','2026-10-04 12:50:23'),
+(289,'10050','user','Which fire extinguishers are expired?','2026-10-04 12:50:31'),
+(290,'10050','assistant','I’m sorry, but I can only provide information about Sports equipment. If you need help with the sports equipment records, condition, location, or borrowing/returns, just let me know!','2026-10-04 12:50:31'),
+(291,'10050','user','generate a pdf report for vehicle this month','2026-10-04 12:50:35'),
+(292,'10050','assistant','That\'s outside your account\'s access. This assistant only answers about **Sports Equipment Monitoring** — sports equipment records, equipment condition and location, and borrowing and returns. Please ask the account that handles that area, or ask me something about your own department.','2026-10-04 12:50:35'),
+(293,'10040','user','How many motor pool work orders are open and how many are urgent? Answer in one line.','2026-10-04 12:50:44'),
+(294,'10040','assistant','Open work orders: **3**; Urgent: **1**.','2026-10-04 12:50:44'),
+(295,'10040','user','Any aircon units overdue for cleaning?','2026-10-04 12:50:49'),
+(296,'10040','assistant','That\'s outside your account\'s access. This assistant only answers about **Asset Acquisition and Monitoring Department** — vehicles and drivers, vehicle maintenance, mechanical equipment, motor pool work orders, trip tickets, and the GPS tracker. Please ask the account that handles that area, or ask me something about your own department.','2026-10-04 12:50:49'),
+(297,'20230251','user','hello mr.ubra','2026-10-07 02:47:23'),
+(298,'20230251','assistant','Hello! How can I assist you with UBRA facilities today?','2026-10-07 02:47:23'),
+(299,'20230251','user','help me to identify how many fire extinguisher has overdue','2026-10-07 02:47:53'),
+(300,'20230251','assistant','- **Overdue fire‑extinguisher inspections:** **4** units  \n\nYou can view the details and schedule the required inspections in **Maintenance (Safety) → Fire Extinguisher**. Let me know if you’d like a PDF/Excel summary of the overdue items.','2026-10-07 02:47:53'),
+(301,'20230251','user','generate me today\'s summary report safety and seurity','2026-10-07 02:48:40'),
+(302,'20230251','assistant','Sure! I can generate a **today’s Safety & Security summary report** for you.  \n\nWhich file format would you like the report in?\n\n- PDF  \n- Excel (XLSX)  \n- CSV  \n\nJust let me know your preference, and the downloadable link will be prepared.','2026-10-07 02:48:40'),
+(303,'20230251','user','pdf','2026-10-07 02:48:47'),
+(304,'20230251','assistant','Here\'s your PDF report:\n\n**Covers:** All modules\n**Date range:** Oct 1, 2026 to Oct 7, 2026\n\nTip: say something like \"generate an excel report for tools this month\" to change the format, module, or date range.','2026-10-07 02:48:47'),
+(305,'20230251','user','what can you say to this system?','2026-10-07 02:50:36'),
+(306,'20230251','assistant','You can interact with UBRA’s integrated management system in many ways. Here are the primary actions I can help you perform:\n\n- **Dashboard & KPI snapshots** – Get real‑time overviews of vehicles, personnel, tools, safety alerts, janitorial zones, and travel tickets.  \n- **Personnel Management** – Look up staff records, filter by role (Drivers, Janitors, Maintenance, etc.), view shift assignments, and manage contracts.  \n- **Vehicle Management** – Check fleet availability, view live GPS status, approve or reject trip tickets, see fuel logs, and predict refueling needs.  \n- **Tools & Equipment** – See inventory counts, current borrowings, and generate borrowing ledgers or tool‑maintenance reports.  \n- **Safety & Maintenance** – List overdue fire‑extinguisher inspections, open work orders, schedule preventative maintenance, and view building‑map status.  \n- **Janitorial Monitoring** – Track zone‑by‑zone cleaning completion, assign staff, and monitor consumable inventory.  \n- **Travel (Trip Tickets)** – Review pending travel requests, approve/distribute tickets, and see vehicle assignment.  \n- **Calendar & Scheduling** – View or modify cleaning and maintenance calendars.  \n- **Notifications** – Get role‑specific alerts (e.g., overdue inspections, vehicle issues).  \n- **Information Hub** – Export logs and reports in PDF, Excel, or CSV formats.  \n- **Settings & User Management** – (Administrator only) Add or modify user accounts, adjust notification preferences, and configure system parameters.\n\nJust tell me the module, date range, and output format you need, and I’ll pull the data or generate the appropriate report for you.','2026-10-07 02:50:36'),
+(307,'20230251','user','in your own opinion for what this system for?','2026-10-07 02:51:36'),
+(308,'20230251','assistant','The UBRA system is a **single‑pane‑of‑glass platform for managing everything that keeps the university’s physical campus running smoothly**. It brings together:\n\n- **Asset oversight** (vehicles, tools, equipment) so the university knows what’s available, where it is, and when it needs service or refueling.  \n- **People coordination** (drivers, janitors, maintenance crews, contractors) to schedule shifts, assign tasks, and track who’s on‑duty.  \n- **Safety & compliance** (fire‑extinguisher inspections, work orders, guard gate logs) to ensure regulatory requirements are met and risks are mitigated.  \n- **Operational logistics** (trip tickets, fuel predictions, cleaning zones) that streamline daily workflows and reduce manual paperwork.  \n- **Real‑time monitoring & reporting** via dashboards, alerts, and exportable reports, giving leadership instant visibility into key performance indicators.\n\nIn short, it’s a **comprehensive facilities‑management solution** that centralizes data, automates routine processes, and supports proactive decision‑making for the university’s buildings, grounds, and support services.','2026-10-07 02:51:36');
 /*!40000 ALTER TABLE `ubra_chat_logs` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `users`
---
-
 DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2820,10 +2615,6 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `users`
---
-
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES
@@ -2835,14 +2626,10 @@ INSERT INTO `users` VALUES
 (11,'Facilities Test Account','facilities.test@foundationu.local','facilities_test','10020','$2y$10$bWPZG.CKHw8AShc0uYV.fO9xC4MD.LI8m7FfK2We8neMgh7LY5/Hy','Facilities','Facilities',NULL,'2026-10-03 15:00:55'),
 (12,'Security Test Account','security.test@foundationu.local','security_test','10030','$2y$10$WdW62spkFCt0jlF5fOOaMOrOGqQ.65mq0epq6HWQSwf4k.7.W0Dy6','Security','Security',NULL,'2026-10-03 22:35:01'),
 (13,'Assets Test Account','assets.test@foundationu.local','assets_test','10040','$2y$10$DyXP2dO2KIxG1LdNKW2wnuVASr.dpGKGC4vRVpKbEaIFbNEBJI4gC','Assets','Asset Acquisition and Monitoring',NULL,'2026-10-04 01:10:16'),
-(14,'Sports Test Account','sports.test@foundationu.local','sports_test','10050','$2y$10$fOiVapffyFPdx9kt.NWSguiDDRgndabBwLtWbobYd04Iru9TzIcsm','Sports','Sports Equipment Monitoring',NULL,'2026-10-04 02:27:14');
+(14,'Sports Test Account','sports.test@foundationu.local','sports_test','10050','$2y$10$fOiVapffyFPdx9kt.NWSguiDDRgndabBwLtWbobYd04Iru9TzIcsm','Sports','Sports Equipment Monitoring',NULL,'2026-10-04 02:27:14'),
+(15,'Admin Test Account','admin.test@foundationu.local','admin_test','10099','$2y$10$64S3tTK3nb0GQ7fsG2jHUerL49HXLztIxlcEtd/T6zsLvCh6O8Vuu','Administrator','Operations Office',NULL,'2026-10-06 20:28:53');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `vehicle_inspection_checklists`
---
-
 DROP TABLE IF EXISTS `vehicle_inspection_checklists`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2858,22 +2645,19 @@ CREATE TABLE `vehicle_inspection_checklists` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `vehicle_inspection_checklists`
---
 
 LOCK TABLES `vehicle_inspection_checklists` WRITE;
 /*!40000 ALTER TABLE `vehicle_inspection_checklists` DISABLE KEYS */;
+INSERT INTO `vehicle_inspection_checklists` VALUES
+(8,'Motorcycle','466','12,480 km','Fernando Reyes','2026-10-05','2026-09-11',0,'2026-10-07 03:10:10','2026-10-07 03:10:10'),
+(9,'4 wheels','90HJI87','48,210 km','Cardo Garcia','2026-10-20','2026-09-14',0,'2026-10-07 03:10:11','2026-10-07 03:10:11'),
+(10,'Automatic Car','4567HUJI','33,905 km','Fernando Reyes','2026-11-02','2026-09-22',0,'2026-10-07 03:10:14','2026-10-07 03:10:14'),
+(11,'Van','5678','71,330 km','Remedios Mendoza','2026-10-30','2026-09-28',0,'2026-10-07 03:10:17','2026-10-07 03:10:17'),
+(12,'V2-4Wheels','230345','25,760 km','Cardo Garcia','2026-11-15','2026-10-04',0,'2026-10-07 03:10:18','2026-10-07 03:10:18');
 /*!40000 ALTER TABLE `vehicle_inspection_checklists` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `vehicle_inspection_items`
---
-
 DROP TABLE IF EXISTS `vehicle_inspection_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2886,22 +2670,179 @@ CREATE TABLE `vehicle_inspection_items` (
   `remarks` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `checklist_id` (`checklist_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=67 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=397 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `vehicle_inspection_items`
---
 
 LOCK TABLES `vehicle_inspection_items` WRITE;
 /*!40000 ALTER TABLE `vehicle_inspection_items` DISABLE KEYS */;
+INSERT INTO `vehicle_inspection_items` VALUES
+(232,8,'Interior Inspection','All seats- belts-condition, secure mounting, operation.','Yes',NULL),
+(233,8,'Interior Inspection','Doors condition, hinges, latches, operation of doors windows.','Yes',NULL),
+(234,8,'Interior Inspection','Flooring, headliner, side panels, vent louvers, operation and condition.','No','Needs attention — schedule with the motor pool.'),
+(235,8,'Interior Inspection','Mirror-inside, right & left side mirror, condition and operation.','Yes',NULL),
+(236,8,'Interior Inspection','Lights- interior, hi-lo beam, turn signals, hazard flasher, parking','Yes',NULL),
+(237,8,'Interior Inspection','Lights- clearance, backup, brakes, license, instrument panel.','Yes',NULL),
+(238,8,'Interior Inspection','Warning system, switches gauges, trouble lights, condition & operation','Yes',NULL),
+(239,8,'Interior Inspection','Starter system- key operation','Yes',NULL),
+(240,8,'Interior Inspection','Windshield wipers, w/s washer, w/s wiper speed-condition & operation.','Yes',NULL),
+(241,8,'Interior Inspection','Comfort room- heater, defroster, air conditioning, blower speed.','Yes',NULL),
+(242,8,'Interior Inspection','Fire extinguisher- charged, first aid kit- complete.','Yes',NULL),
+(243,8,'Exterior Inspection','Paint, dents, rust decals, bumpers-brackets, condition','No','Needs attention — schedule with the motor pool.'),
+(244,8,'Exterior Inspection','Tire - tread wear, wheel lugs, hubcaps, valves cores, condition.','Yes',NULL),
+(245,8,'Exterior Inspection','Access doors, fuelport & cap, engine covers & latch operation.','Yes',NULL),
+(246,8,'Exterior Inspection','Engine oil & filter- change and replace','Yes',NULL),
+(247,8,'Exterior Inspection','Inspect & lubricate- ball joints, steering & driveline, etc.','Yes',NULL),
+(248,8,'Service and Operation Inspection','Battery- terminals, water level, battery box & hold down condition','Yes',NULL),
+(249,8,'Service and Operation Inspection','Cooling system, hoses, fan shroud, belts, overflow tank, radiator.','Yes',NULL),
+(250,8,'Service and Operation Inspection','Air cleaner, crankcase, air filter, PVC filter.','Yes',NULL),
+(251,8,'Service and Operation Inspection','Belts, hoses, wiring condition.','Yes',NULL),
+(252,8,'Service and Operation Inspection','Brake operation check, brakes, pedal, parking brake.','No','Needs attention — schedule with the motor pool.'),
+(253,8,'Service and Operation Inspection','Brakes-rotor, pads, caliper, lining, drums.','Yes',NULL),
+(254,8,'Service and Operation Inspection','Hood, transmission fluid level, filter & liner, cooler','Yes',NULL),
+(255,8,'Service and Operation Inspection','Transmission shifts through all ranges, backup lights.','Yes',NULL),
+(256,8,'Service and Operation Inspection','Front wheel bearings, drive shaft, U joints','Yes',NULL),
+(257,8,'Service and Operation Inspection','Shocks, spring, lubricants linkages.','Yes',NULL),
+(258,8,'Service and Operation Inspection','Acceleration, steering, tracking, wheel balance.','Yes',NULL),
+(259,8,'Service and Operation Inspection','Chassis- check for leaks, condition of bushing, rear axle, differential fluid level.','Yes',NULL),
+(260,8,'Service and Operation Inspection','Engine tune-up- plugs, wires, carburetion.','Yes',NULL),
+(261,8,'Accessories','Two way radio-operational check.','No','Needs attention — schedule with the motor pool.'),
+(262,8,'Accessories','Spare tire, jack, tire tools.','Yes',NULL),
+(263,8,'Accessories','License plate, vehicle registration, operator manual.','Yes',NULL),
+(264,8,'Accessories','Air conditioning, system check, freon level, drier.','Yes',NULL),
+(265,9,'Interior Inspection','All seats- belts-condition, secure mounting, operation.','Yes',NULL),
+(266,9,'Interior Inspection','Doors condition, hinges, latches, operation of doors windows.','Yes',NULL),
+(267,9,'Interior Inspection','Flooring, headliner, side panels, vent louvers, operation and condition.','Yes',NULL),
+(268,9,'Interior Inspection','Mirror-inside, right & left side mirror, condition and operation.','Yes',NULL),
+(269,9,'Interior Inspection','Lights- interior, hi-lo beam, turn signals, hazard flasher, parking','No','Needs attention — schedule with the motor pool.'),
+(270,9,'Interior Inspection','Lights- clearance, backup, brakes, license, instrument panel.','Yes',NULL),
+(271,9,'Interior Inspection','Warning system, switches gauges, trouble lights, condition & operation','Yes',NULL),
+(272,9,'Interior Inspection','Starter system- key operation','Yes',NULL),
+(273,9,'Interior Inspection','Windshield wipers, w/s washer, w/s wiper speed-condition & operation.','Yes',NULL),
+(274,9,'Interior Inspection','Comfort room- heater, defroster, air conditioning, blower speed.','Yes',NULL),
+(275,9,'Interior Inspection','Fire extinguisher- charged, first aid kit- complete.','Yes',NULL),
+(276,9,'Exterior Inspection','Paint, dents, rust decals, bumpers-brackets, condition','Yes',NULL),
+(277,9,'Exterior Inspection','Tire - tread wear, wheel lugs, hubcaps, valves cores, condition.','Yes',NULL),
+(278,9,'Exterior Inspection','Access doors, fuelport & cap, engine covers & latch operation.','No','Needs attention — schedule with the motor pool.'),
+(279,9,'Exterior Inspection','Engine oil & filter- change and replace','Yes',NULL),
+(280,9,'Exterior Inspection','Inspect & lubricate- ball joints, steering & driveline, etc.','Yes',NULL),
+(281,9,'Service and Operation Inspection','Battery- terminals, water level, battery box & hold down condition','Yes',NULL),
+(282,9,'Service and Operation Inspection','Cooling system, hoses, fan shroud, belts, overflow tank, radiator.','Yes',NULL),
+(283,9,'Service and Operation Inspection','Air cleaner, crankcase, air filter, PVC filter.','Yes',NULL),
+(284,9,'Service and Operation Inspection','Belts, hoses, wiring condition.','Yes',NULL),
+(285,9,'Service and Operation Inspection','Brake operation check, brakes, pedal, parking brake.','Yes',NULL),
+(286,9,'Service and Operation Inspection','Brakes-rotor, pads, caliper, lining, drums.','Yes',NULL),
+(287,9,'Service and Operation Inspection','Hood, transmission fluid level, filter & liner, cooler','No','Needs attention — schedule with the motor pool.'),
+(288,9,'Service and Operation Inspection','Transmission shifts through all ranges, backup lights.','Yes',NULL),
+(289,9,'Service and Operation Inspection','Front wheel bearings, drive shaft, U joints','Yes',NULL),
+(290,9,'Service and Operation Inspection','Shocks, spring, lubricants linkages.','Yes',NULL),
+(291,9,'Service and Operation Inspection','Acceleration, steering, tracking, wheel balance.','Yes',NULL),
+(292,9,'Service and Operation Inspection','Chassis- check for leaks, condition of bushing, rear axle, differential fluid level.','Yes',NULL),
+(293,9,'Service and Operation Inspection','Engine tune-up- plugs, wires, carburetion.','Yes',NULL),
+(294,9,'Accessories','Two way radio-operational check.','Yes',NULL),
+(295,9,'Accessories','Spare tire, jack, tire tools.','Yes',NULL),
+(296,9,'Accessories','License plate, vehicle registration, operator manual.','No','Needs attention — schedule with the motor pool.'),
+(297,9,'Accessories','Air conditioning, system check, freon level, drier.','Yes',NULL),
+(298,10,'Interior Inspection','All seats- belts-condition, secure mounting, operation.','Yes',NULL),
+(299,10,'Interior Inspection','Doors condition, hinges, latches, operation of doors windows.','Yes',NULL),
+(300,10,'Interior Inspection','Flooring, headliner, side panels, vent louvers, operation and condition.','Yes',NULL),
+(301,10,'Interior Inspection','Mirror-inside, right & left side mirror, condition and operation.','Yes',NULL),
+(302,10,'Interior Inspection','Lights- interior, hi-lo beam, turn signals, hazard flasher, parking','Yes',NULL),
+(303,10,'Interior Inspection','Lights- clearance, backup, brakes, license, instrument panel.','Yes',NULL),
+(304,10,'Interior Inspection','Warning system, switches gauges, trouble lights, condition & operation','No','Needs attention — schedule with the motor pool.'),
+(305,10,'Interior Inspection','Starter system- key operation','Yes',NULL),
+(306,10,'Interior Inspection','Windshield wipers, w/s washer, w/s wiper speed-condition & operation.','Yes',NULL),
+(307,10,'Interior Inspection','Comfort room- heater, defroster, air conditioning, blower speed.','Yes',NULL),
+(308,10,'Interior Inspection','Fire extinguisher- charged, first aid kit- complete.','Yes',NULL),
+(309,10,'Exterior Inspection','Paint, dents, rust decals, bumpers-brackets, condition','Yes',NULL),
+(310,10,'Exterior Inspection','Tire - tread wear, wheel lugs, hubcaps, valves cores, condition.','Yes',NULL),
+(311,10,'Exterior Inspection','Access doors, fuelport & cap, engine covers & latch operation.','Yes',NULL),
+(312,10,'Exterior Inspection','Engine oil & filter- change and replace','Yes',NULL),
+(313,10,'Exterior Inspection','Inspect & lubricate- ball joints, steering & driveline, etc.','No','Needs attention — schedule with the motor pool.'),
+(314,10,'Service and Operation Inspection','Battery- terminals, water level, battery box & hold down condition','Yes',NULL),
+(315,10,'Service and Operation Inspection','Cooling system, hoses, fan shroud, belts, overflow tank, radiator.','Yes',NULL),
+(316,10,'Service and Operation Inspection','Air cleaner, crankcase, air filter, PVC filter.','Yes',NULL),
+(317,10,'Service and Operation Inspection','Belts, hoses, wiring condition.','Yes',NULL),
+(318,10,'Service and Operation Inspection','Brake operation check, brakes, pedal, parking brake.','Yes',NULL),
+(319,10,'Service and Operation Inspection','Brakes-rotor, pads, caliper, lining, drums.','Yes',NULL),
+(320,10,'Service and Operation Inspection','Hood, transmission fluid level, filter & liner, cooler','Yes',NULL),
+(321,10,'Service and Operation Inspection','Transmission shifts through all ranges, backup lights.','Yes',NULL),
+(322,10,'Service and Operation Inspection','Front wheel bearings, drive shaft, U joints','No','Needs attention — schedule with the motor pool.'),
+(323,10,'Service and Operation Inspection','Shocks, spring, lubricants linkages.','Yes',NULL),
+(324,10,'Service and Operation Inspection','Acceleration, steering, tracking, wheel balance.','Yes',NULL),
+(325,10,'Service and Operation Inspection','Chassis- check for leaks, condition of bushing, rear axle, differential fluid level.','Yes',NULL),
+(326,10,'Service and Operation Inspection','Engine tune-up- plugs, wires, carburetion.','Yes',NULL),
+(327,10,'Accessories','Two way radio-operational check.','Yes',NULL),
+(328,10,'Accessories','Spare tire, jack, tire tools.','Yes',NULL),
+(329,10,'Accessories','License plate, vehicle registration, operator manual.','Yes',NULL),
+(330,10,'Accessories','Air conditioning, system check, freon level, drier.','Yes',NULL),
+(331,11,'Interior Inspection','All seats- belts-condition, secure mounting, operation.','Yes',NULL),
+(332,11,'Interior Inspection','Doors condition, hinges, latches, operation of doors windows.','Yes',NULL),
+(333,11,'Interior Inspection','Flooring, headliner, side panels, vent louvers, operation and condition.','Yes',NULL),
+(334,11,'Interior Inspection','Mirror-inside, right & left side mirror, condition and operation.','Yes',NULL),
+(335,11,'Interior Inspection','Lights- interior, hi-lo beam, turn signals, hazard flasher, parking','Yes',NULL),
+(336,11,'Interior Inspection','Lights- clearance, backup, brakes, license, instrument panel.','Yes',NULL),
+(337,11,'Interior Inspection','Warning system, switches gauges, trouble lights, condition & operation','Yes',NULL),
+(338,11,'Interior Inspection','Starter system- key operation','Yes',NULL),
+(339,11,'Interior Inspection','Windshield wipers, w/s washer, w/s wiper speed-condition & operation.','No','Needs attention — schedule with the motor pool.'),
+(340,11,'Interior Inspection','Comfort room- heater, defroster, air conditioning, blower speed.','Yes',NULL),
+(341,11,'Interior Inspection','Fire extinguisher- charged, first aid kit- complete.','Yes',NULL),
+(342,11,'Exterior Inspection','Paint, dents, rust decals, bumpers-brackets, condition','Yes',NULL),
+(343,11,'Exterior Inspection','Tire - tread wear, wheel lugs, hubcaps, valves cores, condition.','Yes',NULL),
+(344,11,'Exterior Inspection','Access doors, fuelport & cap, engine covers & latch operation.','Yes',NULL),
+(345,11,'Exterior Inspection','Engine oil & filter- change and replace','Yes',NULL),
+(346,11,'Exterior Inspection','Inspect & lubricate- ball joints, steering & driveline, etc.','Yes',NULL),
+(347,11,'Service and Operation Inspection','Battery- terminals, water level, battery box & hold down condition','Yes',NULL),
+(348,11,'Service and Operation Inspection','Cooling system, hoses, fan shroud, belts, overflow tank, radiator.','No','Needs attention — schedule with the motor pool.'),
+(349,11,'Service and Operation Inspection','Air cleaner, crankcase, air filter, PVC filter.','Yes',NULL),
+(350,11,'Service and Operation Inspection','Belts, hoses, wiring condition.','Yes',NULL),
+(351,11,'Service and Operation Inspection','Brake operation check, brakes, pedal, parking brake.','Yes',NULL),
+(352,11,'Service and Operation Inspection','Brakes-rotor, pads, caliper, lining, drums.','Yes',NULL),
+(353,11,'Service and Operation Inspection','Hood, transmission fluid level, filter & liner, cooler','Yes',NULL),
+(354,11,'Service and Operation Inspection','Transmission shifts through all ranges, backup lights.','Yes',NULL),
+(355,11,'Service and Operation Inspection','Front wheel bearings, drive shaft, U joints','Yes',NULL),
+(356,11,'Service and Operation Inspection','Shocks, spring, lubricants linkages.','Yes',NULL),
+(357,11,'Service and Operation Inspection','Acceleration, steering, tracking, wheel balance.','No','Needs attention — schedule with the motor pool.'),
+(358,11,'Service and Operation Inspection','Chassis- check for leaks, condition of bushing, rear axle, differential fluid level.','Yes',NULL),
+(359,11,'Service and Operation Inspection','Engine tune-up- plugs, wires, carburetion.','Yes',NULL),
+(360,11,'Accessories','Two way radio-operational check.','Yes',NULL),
+(361,11,'Accessories','Spare tire, jack, tire tools.','Yes',NULL),
+(362,11,'Accessories','License plate, vehicle registration, operator manual.','Yes',NULL),
+(363,11,'Accessories','Air conditioning, system check, freon level, drier.','Yes',NULL),
+(364,12,'Interior Inspection','All seats- belts-condition, secure mounting, operation.','Yes',NULL),
+(365,12,'Interior Inspection','Doors condition, hinges, latches, operation of doors windows.','No','Needs attention — schedule with the motor pool.'),
+(366,12,'Interior Inspection','Flooring, headliner, side panels, vent louvers, operation and condition.','Yes',NULL),
+(367,12,'Interior Inspection','Mirror-inside, right & left side mirror, condition and operation.','Yes',NULL),
+(368,12,'Interior Inspection','Lights- interior, hi-lo beam, turn signals, hazard flasher, parking','Yes',NULL),
+(369,12,'Interior Inspection','Lights- clearance, backup, brakes, license, instrument panel.','Yes',NULL),
+(370,12,'Interior Inspection','Warning system, switches gauges, trouble lights, condition & operation','Yes',NULL),
+(371,12,'Interior Inspection','Starter system- key operation','Yes',NULL),
+(372,12,'Interior Inspection','Windshield wipers, w/s washer, w/s wiper speed-condition & operation.','Yes',NULL),
+(373,12,'Interior Inspection','Comfort room- heater, defroster, air conditioning, blower speed.','Yes',NULL),
+(374,12,'Interior Inspection','Fire extinguisher- charged, first aid kit- complete.','No','Needs attention — schedule with the motor pool.'),
+(375,12,'Exterior Inspection','Paint, dents, rust decals, bumpers-brackets, condition','Yes',NULL),
+(376,12,'Exterior Inspection','Tire - tread wear, wheel lugs, hubcaps, valves cores, condition.','Yes',NULL),
+(377,12,'Exterior Inspection','Access doors, fuelport & cap, engine covers & latch operation.','Yes',NULL),
+(378,12,'Exterior Inspection','Engine oil & filter- change and replace','Yes',NULL),
+(379,12,'Exterior Inspection','Inspect & lubricate- ball joints, steering & driveline, etc.','Yes',NULL),
+(380,12,'Service and Operation Inspection','Battery- terminals, water level, battery box & hold down condition','Yes',NULL),
+(381,12,'Service and Operation Inspection','Cooling system, hoses, fan shroud, belts, overflow tank, radiator.','Yes',NULL),
+(382,12,'Service and Operation Inspection','Air cleaner, crankcase, air filter, PVC filter.','Yes',NULL),
+(383,12,'Service and Operation Inspection','Belts, hoses, wiring condition.','No','Needs attention — schedule with the motor pool.'),
+(384,12,'Service and Operation Inspection','Brake operation check, brakes, pedal, parking brake.','Yes',NULL),
+(385,12,'Service and Operation Inspection','Brakes-rotor, pads, caliper, lining, drums.','Yes',NULL),
+(386,12,'Service and Operation Inspection','Hood, transmission fluid level, filter & liner, cooler','Yes',NULL),
+(387,12,'Service and Operation Inspection','Transmission shifts through all ranges, backup lights.','Yes',NULL),
+(388,12,'Service and Operation Inspection','Front wheel bearings, drive shaft, U joints','Yes',NULL),
+(389,12,'Service and Operation Inspection','Shocks, spring, lubricants linkages.','Yes',NULL),
+(390,12,'Service and Operation Inspection','Acceleration, steering, tracking, wheel balance.','Yes',NULL),
+(391,12,'Service and Operation Inspection','Chassis- check for leaks, condition of bushing, rear axle, differential fluid level.','Yes',NULL),
+(392,12,'Service and Operation Inspection','Engine tune-up- plugs, wires, carburetion.','No','Needs attention — schedule with the motor pool.'),
+(393,12,'Accessories','Two way radio-operational check.','Yes',NULL),
+(394,12,'Accessories','Spare tire, jack, tire tools.','Yes',NULL),
+(395,12,'Accessories','License plate, vehicle registration, operator manual.','Yes',NULL),
+(396,12,'Accessories','Air conditioning, system check, freon level, drier.','Yes',NULL);
 /*!40000 ALTER TABLE `vehicle_inspection_items` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `vehicle_maintenance`
---
-
 DROP TABLE IF EXISTS `vehicle_maintenance`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2920,10 +2861,6 @@ CREATE TABLE `vehicle_maintenance` (
   KEY `vehicle_id` (`vehicle_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `vehicle_maintenance`
---
 
 LOCK TABLES `vehicle_maintenance` WRITE;
 /*!40000 ALTER TABLE `vehicle_maintenance` DISABLE KEYS */;
@@ -2945,11 +2882,6 @@ INSERT INTO `vehicle_maintenance` VALUES
 (15,7,'Brake Inspection','2026-06-06',47000.0,1800.00,'Casa Service Center','2026-12-02','Sample data','2026-10-04 01:15:24');
 /*!40000 ALTER TABLE `vehicle_maintenance` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `vehicles`
---
-
 DROP TABLE IF EXISTS `vehicles`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2979,10 +2911,6 @@ CREATE TABLE `vehicles` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `vehicles`
---
-
 LOCK TABLES `vehicles` WRITE;
 /*!40000 ALTER TABLE `vehicles` DISABLE KEYS */;
 INSERT INTO `vehicles` VALUES
@@ -2993,11 +2921,6 @@ INSERT INTO `vehicles` VALUES
 (7,'Zusuki','230345',NULL,'V2-4Wheels',6,2,'Online','Completed',NULL,'In Use',0,NULL,'2026-08-04 01:24:15','2026-09-05 14:10:46','2026-08-04 01:24:15');
 /*!40000 ALTER TABLE `vehicles` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `work_orders`
---
-
 DROP TABLE IF EXISTS `work_orders`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -3018,10 +2941,6 @@ CREATE TABLE `work_orders` (
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `work_orders`
---
-
 LOCK TABLES `work_orders` WRITE;
 /*!40000 ALTER TABLE `work_orders` DISABLE KEYS */;
 INSERT INTO `work_orders` VALUES
@@ -3035,10 +2954,6 @@ INSERT INTO `work_orders` VALUES
 (9,'Broken window latch','HRM Kitchen','Ground Floor',NULL,'Routine','In Progress','Fernando Reyes','2026-10-03 17:51:50','2026-10-03 17:51:50',NULL);
 /*!40000 ALTER TABLE `work_orders` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Dumping routines for database 'fu_ubra'
---
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -3049,4 +2964,3 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-10-04  2:40:29

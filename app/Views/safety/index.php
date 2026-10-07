@@ -1,7 +1,7 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
 <?php
-$title = $title ?? 'Safety Maintenance';
+$title = $title ?? 'Safety and Security';
 $coverage_total = $coverage_total ?? 0;
 $coverage_attention = $coverage_attention ?? 0;
 $coverage_refill = $coverage_refill ?? 0;
@@ -118,13 +118,20 @@ $departments = $departments ?? [];
     <div id="overdueFeGrid" class="dp-fe-grid"></div>
   </div>
 
+  <!-- ── MAP & FLOOR PLANS: the icons and the optional map come before the equipment list ── -->
+  <div class="map-bar">
+    <div class="map-bar-label"><i class="bi bi-geo-alt"></i> Campus map and floor plans</div>
+    <div class="map-tool-icons">
+      <button type="button" class="map-tool-btn active" id="mapToggleBtn" onclick="toggleCampusMap()" title="Show / hide the campus map" aria-label="Show or hide the campus map"><i class="bi bi-map"></i></button>
+      <a class="map-tool-btn" href="<?= base_url('safety/floor-plans') ?>" title="Floors — open the floor plans" aria-label="Open the floor plans"><i class="bi bi-layers"></i></a>
+    </div>
+  </div>
+  <!-- ── OPTIONAL MAP: opened with the Map icon above the equipment list ── -->
+  <div id="mapSection" class="map-section">
   <!-- ── SUB-TABS: FIRE EXTINGUISHER / AIRCON CONDITION ───────────────── -->
   <div class="sub-tabs">
     <button class="sub-tab active" data-tab="fe" onclick="switchSafetyTab('fe')">
       <i class="bi bi-fire"></i> Fire Extinguisher
-    </button>
-    <button class="sub-tab" data-tab="aircon" onclick="switchSafetyTab('aircon')">
-      <i class="bi bi-snow2"></i> Aircon Condition
     </button>
   </div>
 
@@ -140,9 +147,12 @@ $departments = $departments ?? [];
           </div>
         </div>
         <div class="map-legend-toggle-wrap">
+          <div class="map-legend-row">
           <button type="button" class="map-legend-btn" id="mapLegendBtn" onclick="toggleMapLegend()" aria-label="Toggle legend">
             <i class="bi bi-funnel"></i> Legend
           </button>
+            <button type="button" class="map-close-side map-close-icon" onclick="toggleCampusMap()" title="Close the map" aria-label="Close the map"><i class="bi bi-x-lg"></i></button>
+          </div>
           <div class="map-legend-popup" id="mapLegendPopup">
             <div class="map-legend" id="legendFe">
               <span class="leg-title">Fire Extinguisher</span>
@@ -161,7 +171,10 @@ $departments = $departments ?? [];
           </div>
         </div>
 
-        <svg id="campusSVG" viewBox="0 0 950 900" xmlns="http://www.w3.org/2000/svg">
+        <div id="campusMapBox" class="campus-map-box">
+          <svg id="campusImgSVG" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg>
+        </div>
+        <svg id="campusSVG" viewBox="0 0 950 900" xmlns="http://www.w3.org/2000/svg" style="display:none">
           <rect id="z-main" class="campus-area" x="280" y="175" width="205" height="430" rx="3" fill="transparent" stroke="#2a2a2a" stroke-width="1.4" data-name="Main evacuation open space" onclick="selectMapBuilding(this)" />
           <line x1="382" y1="175" x2="382" y2="605" stroke="#2a2a2a" stroke-width="1" opacity=".6" />
           <line x1="280" y1="390" x2="485" y2="390" stroke="#2a2a2a" stroke-width="1" opacity=".6" />
@@ -200,6 +213,37 @@ $departments = $departments ?? [];
       </div>
     </div>
   </div>
+  </div>
+
+  <!-- ── EQUIPMENT LISTS: fire extinguishers, smoke detectors, fire exits ──── -->
+  <?php helper('facilities'); $registerTabs = $register_tabs ?? []; ?>
+  <div class="guard-card" style="padding:18px;margin-bottom:16px;">
+    <div class="reg-head">
+      <div class="dp-section-title" style="margin:0;"><i class="bi bi-list-ul"></i> Fire Safety Equipment List</div>
+    </div>
+    <div class="sub-tabs" id="regTabs">
+      <?php foreach ($registerTabs as $i => $t): ?>
+        <button type="button" class="sub-tab<?= $i === 0 ? ' active' : '' ?>" data-reg="<?= esc($t['key']) ?>" onclick="switchRegTab('<?= esc($t['key'], 'js') ?>')"><?= esc($t['label']) ?> <span class="text-muted">(<?= count($t['rows']) ?>)</span></button>
+      <?php endforeach; ?>
+    </div>
+    <?php foreach ($registerTabs as $i => $t): ?>
+      <div class="reg-pane" id="reg-pane-<?= esc($t['key']) ?>" style="<?= $i === 0 ? '' : 'display:none' ?>">
+        <div class="table-wrap">
+          <table class="sj-table">
+            <thead><tr><?php foreach ($t['columns'] as $col): ?><th><?= esc($col) ?></th><?php endforeach; ?></tr></thead>
+            <tbody>
+              <?php if (empty($t['rows'])): ?>
+                <tr><td colspan="<?= count($t['columns']) ?>" class="empty-row">None recorded yet.</td></tr>
+              <?php else: foreach ($t['rows'] as $row): ?>
+                <tr><?php foreach ($row as $cell): ?><?= fac_cell($cell) ?><?php endforeach; ?></tr>
+              <?php endforeach; endif; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+
 
 </div>
 
@@ -352,7 +396,14 @@ $departments = $departments ?? [];
 <!-- Report modal removed; reporting now lives in Records, Archiving & Reports -->
 <!-- Keyscan modal removed; Keylogs moved to Safety -> Keylogs page -->
 
+<script src="<?= base_url('Assets/js/campus-map.js') ?>?v=<?= @filemtime(FCPATH . 'Assets/js/campus-map.js') ?>"></script>
+<script src="<?= base_url('Assets/js/table-tools.js') ?>?v=<?= @filemtime(FCPATH . 'Assets/js/table-tools.js') ?>"></script>
 <script>
+function switchRegTab(key) {
+  document.querySelectorAll('#regTabs .sub-tab').forEach(b => b.classList.toggle('active', b.dataset.reg === key));
+  document.querySelectorAll('.reg-pane').forEach(p => p.style.display = p.id === 'reg-pane-' + key ? '' : 'none');
+}
+document.querySelectorAll('.reg-pane').forEach(attachTableTools);
   // feRegistry and airconRegistry come straight from the database
   // (fire_extinguishers / aircon_units) — see SafetyController::index().
   // Aircon units are registered from the mobile app; this just displays them.
@@ -401,7 +452,7 @@ $departments = $departments ?? [];
 
   function switchSafetyTab(tab) {
     activeSafetyTab = tab;
-    document.querySelectorAll('.sub-tab').forEach(b => b.classList.toggle('active', b.getAttribute('data-tab') === tab));
+    document.querySelectorAll('.sub-tab[data-tab]').forEach(b => b.classList.toggle('active', b.getAttribute('data-tab') === tab));
     document.getElementById('legendFe').style.display = tab === 'fe' ? 'flex' : 'none';
     document.getElementById('legendAircon').style.display = tab === 'aircon' ? 'flex' : 'none';
     // The 🧯 / ❄️ markers only make sense for the tab they belong to.
@@ -440,6 +491,7 @@ $departments = $departments ?? [];
       const status2 = computeAreaStatus(name, activeSafetyTab);
       shape.classList.toggle('campus-area-dimmed', !!mapStatusFilter && status2 !== mapStatusFilter);
     });
+    drawImageMap();
   }
 
   // Single source of truth for a zone's status, per category. The map
@@ -1304,7 +1356,38 @@ $departments = $departments ?? [];
     aircon: { warning: '❌', new: '✅', expires: '🧊', normal: '⚪' },
   };
 
+  // The campus map picture (same one Janitorial Check uses), coloured from the same building statuses as before.
+  function setCampusMap(show) {
+    document.getElementById('mapSection').style.display = show ? '' : 'none';
+    document.getElementById('mapToggleBtn').classList.toggle('active', show);
+  }
+  function toggleCampusMap() {
+    setCampusMap(document.getElementById('mapSection').style.display === 'none');
+  }
+
+  function drawImageMap() {
+    if (typeof renderMapImage !== 'function' || !document.getElementById('campusImgSVG')) return;
+    const names = new Set(MAP_BUILDINGS.map(b => b.name));
+    const state = {};
+    mapBuildings.forEach(b => {
+      if (!names.has(b.name)) return;
+      const status = computeAreaStatus(b.name, activeSafetyTab);
+      if (mapStatusFilter && status !== mapStatusFilter) return;
+      if (status === 'warning') state[b.name] = { red: [], yellow: null, done: false };
+      else if (status === 'expires') state[b.name] = { red: null, yellow: [], done: false };
+      else if (status === 'new') state[b.name] = { red: null, yellow: null, done: true };
+    });
+    renderMapImage('campusImgSVG', {
+      imageUrl: '<?= base_url('images/MAP.jpg') ?>',
+      stateByName: state,
+      hideFloorText: true,
+      legend: activeSafetyTab === 'aircon' ? 'aircon' : undefined,
+      onSelect: name => { if (mapBuildings.some(b => b.name === name)) zoomToBuilding(name); },
+    });
+  }
+
   function recolorMap() {
+    drawImageMap();
     document.querySelectorAll('#campusSVG .status-icon-badge').forEach(b => b.remove());
     const ns = 'http://www.w3.org/2000/svg';
     const icons = statusIconsByTab[activeSafetyTab];
@@ -1393,6 +1476,8 @@ $departments = $departments ?? [];
     const vh = b.h + pad * 2;
     document.getElementById('campusSVG').setAttribute('viewBox', `${vx} ${vy} ${vw} ${vh}`);
     document.getElementById('mapContainer').classList.add('map-zoomed');
+    setCampusMap(true);
+    if (typeof zoomMapTo === 'function') zoomMapTo('campusImgSVG', name);
 
     const shape = Array.from(document.querySelectorAll('#campusSVG .campus-area'))
       .find(el => el.getAttribute('data-name') === name);
@@ -1401,6 +1486,7 @@ $departments = $departments ?? [];
 
   function resetMapZoom() {
     document.getElementById('campusSVG').setAttribute('viewBox', CAMPUS_VIEWBOX);
+    if (typeof zoomMapTo === 'function') zoomMapTo('campusImgSVG', '');
     document.getElementById('mapContainer').classList.remove('map-zoomed');
     document.getElementById('mapBuildingSelect').value = '';
   }

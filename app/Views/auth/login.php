@@ -212,6 +212,7 @@
 
 <form action="<?= base_url('login') ?>" method="post">
     <?= csrf_field() ?>
+    <input type="hidden" name="portal" value="<?= esc($selectedPortalKey ?? '') ?>">
 
     <div class="auth-field">
         <label for="employee_id">ID</label>
@@ -241,7 +242,6 @@
     </div>
 
     <div class="auth-actions">
-        <a href="<?= base_url('portals') ?>" class="auth-back-btn"><i class="bi bi-arrow-left"></i> Back</a>
         <button type="submit" class="auth-submit">Sign In</button>
     </div>
 </form>

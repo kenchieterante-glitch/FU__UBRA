@@ -2,6 +2,19 @@
 
 <?= $this->section('content') ?>
 <?php
+// Values SportsDeptController::index() passes in — given safe defaults here so the page (and the editor) always know them.
+$title        = $title ?? 'Sports Equipment';
+$section      = $section ?? 'equipment';
+$tabs         = $tabs ?? [];
+$status       = $status ?? [];
+$stat_rows    = $stat_rows ?? null;
+$active_stat  = $active_stat ?? null;
+$alerts_json  = $alerts_json ?? '[]';
+$alert_cols   = $alert_cols ?? [];
+$alert_titles = $alert_titles ?? ['red' => '', 'yellow' => ''];
+$conditions   = $conditions ?? [];
+$locations    = $locations ?? [];
+$custodians   = $custodians ?? ['custodians' => [], 'others' => []];
 helper('facilities');
 $subtitles = [
   'equipment' => 'Equipment records, equipment status, and where each item is kept.',

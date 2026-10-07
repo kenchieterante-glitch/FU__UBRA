@@ -34,7 +34,7 @@
       <div class="table-wrap">
         <table class="sj-table">
           <thead>
-            <tr><th>Trip ID</th><th>Requester</th><th>Destination</th><th>Driver / Vehicle</th><th>Departure</th><th>Gate Status</th><th>Action</th></tr>
+            <tr><th>Trip ID</th><th>Requester</th><th>Destination</th><th>Assigned Driver</th><th>Departure</th><th>Gate Status</th><th>Action</th></tr>
           </thead>
           <tbody>
             <?php if (empty($trips)): ?>

@@ -6,7 +6,7 @@
 $toolList = $tools ?? [];
 $personnelList = $personnel ?? [];
 $title = $title ?? 'Tools Equipment Management';
-$showCategoryTabs = in_array($title, ['Power Tools', 'Consumable'], true);
+$showCategoryTabs = in_array($title, ['Power Tools', 'Consumable', 'Sports Equipment'], true);
 $isConsumablePage = ($title === 'Consumable');
 helper('facilities');
 ?>

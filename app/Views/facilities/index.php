@@ -204,7 +204,7 @@
     <div class="fe-toolbar-actions">
     <button type="button" class="fac-alert-icon fac-alert-btn alert-red fac-blink" id="acAlertRed" onclick="toggleAlertList('ac','red')" title="Overdue aircon units" aria-label="Overdue aircon units" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="acAlertRedCount"></strong></button>
       <button type="button" class="fac-alert-icon fac-alert-btn alert-red fac-blink" id="acAlertCircle" onclick="toggleAlertList('ac','circle')" title="Aircon units overdue in 7 days" aria-label="Aircon units expiring soon" style="display:none"><i class="bi bi-exclamation-circle-fill"></i> <strong id="acAlertCircleCount"></strong></button>
-    <button type="button" class="filter-btn" id="acMapBtn" onclick="toggleAirconMap()" title="Show map" aria-label="Show map">
+    <button type="button" class="filter-btn active" id="acMapBtn" style="" onclick="toggleAirconMap()" title="Show map" aria-label="Show map">
       <i class="bi bi-map"></i>
     </button>
     <div class="filter-menu-wrapper">
@@ -247,11 +247,11 @@
 
   <div id="acAlertList" class="guard-card" style="display:none;padding:18px;margin-bottom:16px;"></div>
 
-  <div id="acMapPanel" class="guard-card" style="display:none;padding:18px;margin-bottom:16px;">
-    <div class="gc-title"><i class="bi bi-map"></i> Aircon Alerts by Floor</div>
+  <div id="acMapPanel" class="guard-card" style="padding:18px;margin-bottom:16px;">
+    <div class="map-head"><div class="gc-title"><i class="bi bi-map"></i> Aircon Alerts by Floor</div></div>
 <?php $zoomId = 'acMapSVG'; ?>
     <div class="map-zoom-row">
-      <select class="fac-select" onchange="zoomMapTo('<?= $zoomId ?>', this.value)" aria-label="Zoom to a building">
+      <select class="fac-select" onchange="zoomMapTo('<?= $zoomId ?>', this.value); showBuildingDetail(this.value)" aria-label="Zoom to a building">
         <option value="">— Select a Building —</option>
         <?php foreach ($buildings as $zb): ?>
           <option value="<?= esc($zb) ?>"><?= esc($zb) ?></option>
@@ -259,12 +259,16 @@
       </select>
     </div>
     <div class="fac-map-legend">
-      <span><i class="map-alert"></i> Blinking = overdue or due within 7 days (floor shown)</span>
+      <span><i class="map-alert"></i> Red triangle = overdue</span>
+      <span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" style="vertical-align:middle;margin-right:6px;"><circle cx="7" cy="7" r="7" fill="#ff1414"/><text x="7" y="10.5" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">!</text></svg> Red circle = due within 7 days</span>
       <span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" style="vertical-align:middle;margin-right:6px;"><line x1="0" y1="7" x2="14" y2="7" stroke="#c62828" stroke-width="2" stroke-dasharray="4 3"/></svg> Emergency flow</span>
       <span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" style="vertical-align:middle;margin-right:6px;"><circle cx="7" cy="7" r="7" fill="#1c6dd0"/><g stroke="#fff" stroke-width="1.6" stroke-linecap="round"><line x1="7" y1="2.5" x2="7" y2="11.5"/><line x1="3.1" y1="4.7" x2="10.9" y2="9.3"/><line x1="3.1" y1="9.3" x2="10.9" y2="4.7"/></g></svg> Aircon units</span>
     </div>
-    <div class="fac-map-wrap">
-      <svg id="acMapSVG" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg>
+    <div class="map-split">
+      <div class="fac-map-wrap">
+        <svg id="acMapSVG" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg>
+      </div>
+      <div id="acDrillPanel" class="floor-break fd-wrap" style="display:none"></div>
     </div>
   </div>
 
@@ -313,7 +317,7 @@
     <div class="fe-toolbar-actions">
       <button type="button" class="fac-alert-icon fac-alert-btn alert-red fac-blink" id="cleanAlertRed" onclick="toggleAlertList('clean','red')" title="Overdue zones" aria-label="Overdue zones" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="cleanAlertRedCount"></strong></button>
       <button type="button" class="fac-alert-icon fac-alert-btn alert-yellow" id="cleanAlertYellow" onclick="toggleAlertList('clean','yellow')" title="Zones that need cleaning" aria-label="Zones that need cleaning" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="cleanAlertYellowCount"></strong></button>
-    <button type="button" class="filter-btn" id="janMapBtn" onclick="toggleCleaningMap()" title="Show map" aria-label="Show map">
+    <button type="button" class="filter-btn active" id="janMapBtn" onclick="toggleCleaningMap()" title="Show map" aria-label="Show map">
       <i class="bi bi-map"></i>
     </button>
     <div class="filter-menu-wrapper">
@@ -354,7 +358,7 @@
             <label for="supStatusFilter">Stock</label>
             <select id="supStatusFilter" onchange="applySupplyFilters()">
               <option value="">All</option>
-              <option value="OK">OK</option>
+              <option value="Good">Good</option>
               <option value="Out of Stock">Out of Stock</option>
             </select>
           </div>
@@ -374,19 +378,23 @@
   </div>
 
   <div id="cleanAlertList" class="guard-card" style="display:none;padding:18px;margin-bottom:16px;"></div>
-  <div id="cleanMapPanel" class="guard-card" style="display:none;padding:18px;margin-bottom:16px;">
-    <div class="gc-title"><i class="bi bi-map"></i> Cleaning Map</div>
+  <div id="cleanMapPanel" class="guard-card" style="padding:18px;margin-bottom:16px;">
+    <div class="map-head"><div class="gc-title"><i class="bi bi-map"></i> Cleaning Map</div></div>
 <?php $zoomId = 'cleanMapSVG'; ?>
     <div class="map-zoom-row">
-      <select class="fac-select" onchange="zoomMapTo('<?= $zoomId ?>', this.value)" aria-label="Zoom to a building">
+      <select class="fac-select" onchange="facBuildingPicked(this.value, '<?= $zoomId ?>', 'cleanFloorFilter', 'clean')" aria-label="Zoom to a building">
         <option value="">— Select a Building —</option>
         <?php foreach ($buildings as $zb): ?>
           <option value="<?= esc($zb) ?>"><?= esc($zb) ?></option>
         <?php endforeach; ?>
       </select>
+      <select class="fac-select" id="cleanFloorFilter" onchange="facFloorPicked('clean')" aria-label="Floor"><option value="">All floors</option></select>
     </div>
-    <div class="fac-map-wrap">
-      <svg id="cleanMapSVG" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg>
+    <div class="map-split">
+      <div class="fac-map-wrap">
+        <svg id="cleanMapSVG" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg>
+      </div>
+      <div id="cleanFloorPanel" class="floor-break fd-wrap" style="display:none"></div>
     </div>
     <div class="fac-map-legend">
       <span><i class="map-pass"></i> Cleaned (steady)</span>
@@ -482,7 +490,8 @@
       <div class="guard-card" style="padding:18px;margin-bottom:16px;">
         <div class="gc-title"><i class="bi bi-box-seam"></i> <?= esc($category) ?></div>
         <div class="table-wrap">
-          <table class="sj-table">
+          <table class="sj-table sup-table">
+            <colgroup><col style="width:30%"><col style="width:34%"><col style="width:18%"><col style="width:18%"></colgroup>
             <thead><tr><th>Item</th><th>Location</th><th>Stock</th><th>Status</th></tr></thead>
             <tbody>
               <?php foreach ($items as $it): ?>
@@ -491,8 +500,8 @@
                   <td><?= esc($it['building'] ?? '—') ?><?= !empty($it['floor']) ? ', ' . esc($it['floor']) : '' ?><?= !empty($it['place']) ? '<br><small class="text-muted">' . esc($it['place']) . '</small>' : '' ?></td>
                   <td><?= esc((string) $it['stock']) ?> <?= esc($it['unit']) ?></td>
                   <td>
-                    <?php if ($it['status'] === 'OK'): ?>
-                      <span class="inv-badge inv-ok">OK</span>
+                    <?php if ($it['status'] === 'Good'): ?>
+                      <span class="inv-badge inv-ok">Good</span>
                     <?php else: ?>
                       <span class="inv-badge inv-out">Out of Stock</span>
                     <?php endif; ?>
@@ -519,7 +528,7 @@
     <div class="fe-toolbar-actions">
       <button type="button" class="fac-alert-icon fac-alert-btn alert-red fac-blink" id="bldAlertRed" onclick="toggleAlertList('bld','red')" title="Buildings that need attention" aria-label="Buildings that need attention" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="bldAlertRedCount"></strong></button>
       <button type="button" class="fac-alert-icon fac-alert-btn alert-yellow" id="bldAlertYellow" onclick="toggleAlertList('bld','yellow')" title="Buildings to be inspected" aria-label="Buildings to be inspected" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="bldAlertYellowCount"></strong></button>
-      <button type="button" class="filter-btn" id="bldMapBtn" onclick="toggleBuildingMap()" title="Show map" aria-label="Show map">
+      <button type="button" class="filter-btn active" id="bldMapBtn" onclick="toggleBuildingMap()" title="Show map" aria-label="Show map">
         <i class="bi bi-map"></i>
       </button>
       <div class="filter-menu-wrapper">
@@ -550,19 +559,24 @@
     </div>
   </div>
   <div id="bldAlertList" class="guard-card" style="display:none;padding:18px;margin-bottom:16px;"></div>
-  <div id="janMapPanel" class="guard-card" style="display:none;padding:18px;margin-bottom:16px;">
-    <div class="gc-title"><i class="bi bi-map"></i> Building Map — <?= esc($inspection_month) ?></div>
+  <div id="janMapPanel" class="guard-card" style="padding:18px;margin-bottom:16px;">
+    <div class="map-head"><div class="gc-title"><i class="bi bi-map"></i> Building Map — <?= esc($inspection_month) ?></div></div>
 <?php $zoomId = 'facMapSVG'; ?>
     <div class="map-zoom-row">
-      <select class="fac-select" onchange="zoomMapTo('<?= $zoomId ?>', this.value)" aria-label="Zoom to a building">
+      <select class="fac-select" onchange="facBuildingPicked(this.value, '<?= $zoomId ?>', 'bldFloorFilter', 'bld')" aria-label="Zoom to a building">
         <option value="">— Select a Building —</option>
         <?php foreach ($buildings as $zb): ?>
           <option value="<?= esc($zb) ?>"><?= esc($zb) ?></option>
         <?php endforeach; ?>
       </select>
+      <select class="fac-select" id="bldFloorFilter" onchange="facFloorPicked('bld')" aria-label="Floor"><option value="">All floors</option></select>
     </div>
-    <div class="fac-map-wrap">
-      <svg id="facMapSVG" viewBox="0 0 950 900" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg>
+    <div id="bldFloorInfo" class="text-muted" style="display:none;margin:4px 0 12px;"></div>
+    <div class="map-split">
+      <div class="fac-map-wrap">
+        <svg id="facMapSVG" viewBox="0 0 950 900" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg>
+      </div>
+      <div id="bldDrillPanel" class="floor-break fd-wrap" style="display:none"></div>
     </div>
     <div class="fac-map-legend">
       <span><i class="map-pass"></i> Passed (steady)</span>
@@ -576,11 +590,12 @@
 
     <div class="table-wrap">
       <table class="sj-table">
-        <thead><tr><th>Building</th><th>Result (<?= esc($inspection_month) ?>)</th><th>Inspected By</th><th>Date</th><th>Notes</th></tr></thead>
+        <thead><tr><th>Building</th><th>Floor</th><th>Result (<?= esc($inspection_month) ?>)</th><th>Inspected By</th><th>Date</th><th>Notes</th></tr></thead>
         <tbody id="bldBody">
           <?php foreach ($inspections as $idx => $i): ?>
-            <tr class="bld-row" data-idx="<?= (int) $idx ?>" data-name="<?= esc($i['building']) ?>" data-result="<?= esc($i['result'] ?? 'Not checked') ?>" data-last="<?= esc($i['inspected_at'] ?? '') ?>" style="cursor:pointer;" onclick="showBuildingCheckDetail(this.dataset.name)">
+            <tr class="bld-row" data-idx="<?= (int) $idx ?>" data-name="<?= esc($i['building']) ?>" data-floor="<?= esc($i['floor'] ?? '') ?>" data-result="<?= esc($i['result'] ?? 'Not checked') ?>" data-last="<?= esc($i['inspected_at'] ?? '') ?>" style="cursor:pointer;" onclick="showBuildingCheckDetail(this.dataset.name)">
               <td><strong><?= esc($i['building']) ?></strong></td>
+              <td><?= esc($i['floor'] ?? '—') ?></td>
               <td>
                 <?php if ($i['result'] === null): ?>
                   <span class="tt-badge zb-needs badge-blink">Not Inspected</span>
@@ -611,12 +626,16 @@
       <div class="form-grid2">
         <div class="fg">
           <label>Building <span class="required-mark">*</span></label>
-          <select name="building" id="bldSelect" required>
+          <select name="building" id="bldSelect" required onchange="facFillFloors(this.value, 'bldFloorSelect', 'Whole building')">
             <option value="">— Select a Building —</option>
             <?php foreach ($buildings as $b): ?>
               <option value="<?= esc($b) ?>"><?= esc($b) ?></option>
             <?php endforeach; ?>
           </select>
+        </div>
+        <div class="fg">
+          <label>Floor</label>
+          <select name="floor" id="bldFloorSelect"><option value="">Whole building</option></select>
         </div>
         <div class="fg">
           <label>Result <span class="required-mark">*</span></label>
@@ -731,7 +750,7 @@
         </div>
         <div class="fg">
           <label>Building</label>
-          <select name="building">
+          <select name="building" onchange="facFillFloors(this.value, 'supFloorSelect', 'Unspecified')">
             <option value="">— Unspecified —</option>
             <?php foreach ($buildings as $b): ?>
               <option value="<?= esc($b) ?>"><?= esc($b) ?></option>
@@ -740,7 +759,7 @@
         </div>
         <div class="fg">
           <label>Floor</label>
-          <input type="text" name="floor" placeholder="e.g. 2nd Floor">
+          <select name="floor" id="supFloorSelect"><option value="">Unspecified</option></select>
         </div>
         <div class="fg">
           <label>Specific Place</label>
@@ -843,10 +862,11 @@
 
 <script src="<?= base_url('Assets/js/campus-map.js') ?>?v=<?= @filemtime(FCPATH . 'Assets/js/campus-map.js') ?>"></script>
 <script>
+const cleanMapState = <?= $clean_state_json ?>;
 if (document.getElementById('cleanMapSVG')) {
   renderMapImage('cleanMapSVG', {
     imageUrl: '<?= base_url('images/MAP.jpg') ?>',
-    stateByName: <?= $clean_state_json ?>,
+    stateByName: cleanMapState,
     legend: 'cleaning',
   });
 }
@@ -861,33 +881,158 @@ if (document.getElementById('facMapSVG')) {
 const buildingInspections = <?= json_encode($inspections, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 
 function showBuildingCheckDetail(name) {
-  const r = buildingInspections.find(b => b.building === name) || {};
-  document.getElementById('bldDetailTitle').textContent = name;
-  const fields = [
-    ['This month', r.result || 'Not checked'],
-    ['Checked by', r.inspected_by || '—'],
-    ['Date', r.inspected_at ? r.inspected_at.slice(0, 10) : '—'],
-  ];
-  document.getElementById('bldDetailBody').innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 18px;">
-      ${fields.map(([k, v]) => `<div><div class="text-muted">${esc(k)}</div><strong>${esc(v)}</strong></div>`).join('')}
-    </div>
-    <div style="margin-top:14px;"><div class="text-muted">Notes</div>${esc(r.notes || '—')}</div>
-    <div style="margin-top:16px;"><button type="button" class="btn-maroon-sm" data-building="${esc(name)}" onclick="pickBuildingForCheck(this.dataset.building)">Record a check for this building</button></div>`;
-  document.getElementById('bldDetailModal').style.display = 'flex';
+  if (!name) { document.getElementById('bldDrillPanel').style.display = 'none'; return; }
+  const r = buildingInspections.find(x => x.building === name) || {};
+  const checks = facFloorChecks[name] || {};
+  const floors = facFloors[name] && facFloors[name].length ? facFloors[name] : facAllFloors;
+  const res = r.result;
+  const banner = res === 'Passed' ? { cls: 'fd-ok', head: 'Passed', text: 'This building passed its check this month.' }
+    : res ? { cls: 'fd-bad', head: res, text: 'This building needs attention.' }
+    : { cls: 'fd-warn', head: 'Not checked yet', text: 'This building still needs to be inspected this month.' };
+  facDrill('bldDrillPanel', {
+    title: name, sub: 'Building Check — <?= esc($inspection_month) ?>', banner, floors,
+    close: "showBuildingCheckDetail('')", planLabel: 'check', alertsLabel: 'Check Alerts',
+    count: fl => (checks[fl] ? 1 : 0),
+    alerts: floors.map(fl => {
+      const c = checks[fl];
+      if (!c) return { cls: 'warn', html: '<strong>' + esc(fl) + '</strong> — not checked this month yet.' };
+      if ((c.result || '') !== 'Passed') return { cls: 'urgent', html: '<strong>' + esc(fl) + '</strong> — ' + esc(c.result || 'needs attention') + '.' };
+      return null;
+    }).filter(Boolean),
+    detail: fl => {
+      const c = checks[fl];
+      const body = c
+        ? '<div class="fd-row"><span>Result</span><strong>' + esc(c.result || '—') + '</strong></div><div class="fd-row"><span>Checked by</span><strong>' + esc(c.by || '—') + '</strong></div><div class="fd-row"><span>Date</span><strong>' + esc((c.at || '').slice(0, 10) || '—') + '</strong></div>' + (c.notes ? '<div class="fd-row"><span>Notes</span><strong>' + esc(c.notes) + '</strong></div>' : '')
+        : '<div class="fd-none">' + esc(fl) + ' has not been checked this month yet.</div>';
+      return body;
+    },
+    footer: '<button type="button" class="btn-maroon-sm" data-building="' + esc(name) + '" onclick="pickBuildingForCheck(this.dataset.building)">Record a check for this building</button>',
+  });
 }
+
+// One right-hand details card, shared by Building Check and Janitorial Check: title, status banner, floor chips, selected floor's details.
+const fdState = {};
+function facDrill(panelId, o) {
+  fdState[panelId] = Object.assign({ sel: o.floors[0] || '' }, o);
+  facDrillRender(panelId);
+}
+function facDrillRender(panelId) {
+  const o = fdState[panelId], box = document.getElementById(panelId);
+  if (!o || !box) return;
+  const st = o.banner.cls === 'fd-ok' ? 'st-new' : o.banner.cls === 'fd-bad' ? 'st-warning' : 'st-expires';
+  const tabs = o.floors.map(f => '<button type="button" class="floor-tab' + (f === o.sel ? ' active' : '') + '" data-f="' + esc(f) + '" onclick="facDrillPick(&quot;' + panelId + '&quot;, this.dataset.f)">' + esc(f) + ' <span class="floor-count">' + (o.count ? o.count(f) : '') + '</span></button>').join('');
+  const alerts = (o.alerts || []).map(a => '<div class="dp-alert-item ' + a.cls + '"><i class="bi bi-exclamation-triangle-fill"></i> ' + a.html + '</div>').join('') || '<div class="no-alert">No alerts for this building.</div>';
+  box.innerHTML = '<div class="drill-panel ' + st + '">' +
+    '<div class="dp-header"><div><div class="dp-title">' + esc(o.title) + '</div><div class="dp-sub">' + esc(o.sub) + '</div></div>' +
+    '<button type="button" class="dp-close" onclick="' + o.close + '" aria-label="Close"><i class="bi bi-x-lg"></i></button></div>' +
+    '<div class="dp-status-box"><strong>' + esc(o.banner.head) + '</strong>' + esc(o.banner.text) + '</div>' +
+    '<div class="dp-section-title"><i class="bi bi-building"></i> Floor</div>' +
+    '<div class="floor-tabs">' + tabs + '</div>' +
+    '<div class="floor-diagram"><div class="floor-plan"><div class="dp-section-title" style="margin-top:0">' + esc(o.sel) + ' ' + esc(o.planLabel || 'details') + '</div>' + o.detail(o.sel) + '</div></div>' +
+    '<div class="dp-section-title"><i class="bi bi-clock-history"></i> ' + esc(o.alertsLabel || 'Alerts') + '</div>' +
+    '<div class="dp-alerts">' + alerts + '</div>' +
+    (o.footer ? '<div class="fd-footer">' + o.footer + '</div>' : '') + '</div>';
+  box.style.display = '';
+}
+function facDrillPick(panelId, floor) { fdState[panelId].sel = floor; facDrillRender(panelId); }
 
 function closeBldDetail() {
   document.getElementById('bldDetailModal').style.display = 'none';
 }
 
+// ---- floors per building, taken from the floor plan files (names only — no plans are shown here)
+const facFloors = <?= $floors_json ?>;
+const facPick = { bld: { b: '', f: '' }, clean: { b: '', f: '' } };
+document.addEventListener('DOMContentLoaded', () => {
+  facFillFloors('', 'bldFloorFilter', 'All floors');
+  facFillFloors('', 'cleanFloorFilter', 'All floors');
+});
+const facAllFloors = ['Ground Floor', '2nd Floor', '3rd Floor', '4th Floor'];
+const facFloorChecks = <?= $floor_checks_json ?>;
+function facFillFloors(building, selectId, firstLabel) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const floors = building ? (facFloors[building] || []) : facAllFloors;
+  sel.innerHTML = '<option value="">' + esc(firstLabel) + '</option>' + floors.map(f => '<option>' + esc(f) + '</option>').join('');
+}
+function facBuildingPicked(building, svgId, floorId, key) {
+  zoomMapTo(svgId, building);
+  facFillFloors(building, floorId, 'All floors');
+  facPick[key] = { b: building, f: '' };
+  key === 'bld' ? applyBuildingFilters() : filterCleaning();
+  if (key === 'bld') showBuildingCheckDetail(building); else cleanShowFloors(building);
+}
+function facFloorPicked(key) {
+  facPick[key].f = document.getElementById(key === 'bld' ? 'bldFloorFilter' : 'cleanFloorFilter').value;
+  key === 'bld' ? applyBuildingFilters() : filterCleaning();
+}
+
+// Building Check: say how the chosen floor was checked this month (the table itself stays one row per building).
+function facShowFloorInfo() {
+  const box = document.getElementById('bldFloorInfo');
+  const { b, f } = facPick.bld;
+  if (!f) { box.style.display = 'none'; return; }
+  const fmt = c => '<strong>' + esc(c.result || '—') + '</strong> — checked by ' + esc(c.by || '—') + ' on ' + esc((c.at || '').slice(0, 10)) + (c.notes ? ' · ' + esc(c.notes) : '');
+  let html;
+  if (b) {
+    const c = (facFloorChecks[b] || {})[f];
+    html = esc(b) + ' — ' + esc(f) + ': ' + (c ? fmt(c) : 'not checked this month yet.');
+  } else {
+    const list = Object.keys(facFloorChecks).filter(x => facFloorChecks[x][f]).map(x => '<div>' + esc(x) + ': ' + fmt(facFloorChecks[x][f]) + '</div>');
+    html = '<div>' + esc(f) + ' — checked this month:</div>' + (list.join('') || '<div>No building has been checked on this floor yet.</div>');
+  }
+  box.innerHTML = html;
+  box.style.display = '';
+}
+
+// Cleaning map: how each floor of the chosen building stands (the map's red / yellow / green, floor by floor)
+function cleanShowFloors(name) {
+  const box = document.getElementById('cleanFloorPanel');
+  if (!box) return;
+  if (!name) { box.style.display = 'none'; return; }
+  const st = cleanMapState[name] || {};
+  const zones = zonesData.filter(z => z.building === name);
+  const order = ['Ground Floor', '2nd Floor', '3rd Floor', '4th Floor'];
+  const floors = [...new Set((facFloors[name] || []).concat(zones.map(z => z.floor)))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  const redN = (st.red || []).length, yelN = (st.yellow || []).length;
+  const banner = redN ? { cls: 'fd-bad', head: 'Overdue', text: redN + ' floor' + (redN === 1 ? '' : 's') + ' overdue — the shift ended and cleaning was not finished.' }
+    : yelN ? { cls: 'fd-warn', head: 'Needs cleaning', text: 'This building has floors that still need cleaning.' }
+    : zones.length && zones.every(z => z.progress === 'Completed') ? { cls: 'fd-ok', head: 'Cleaned', text: 'All assigned zones in this building are cleaned.' }
+    : { cls: 'fd-warn', head: 'In progress', text: 'Cleaning for this building is not complete yet.' };
+  facDrill('cleanFloorPanel', {
+    title: name, sub: 'Janitorial Check — cleaning by floor', banner, floors: floors.length ? floors : ['Ground Floor'],
+    close: "cleanShowFloors('')", planLabel: 'cleaning', alertsLabel: 'Cleaning Alerts',
+    count: fl => zones.filter(z => z.floor === fl).length,
+    alerts: floors.map(fl => {
+      if ((st.red || []).includes(fl)) return { cls: 'urgent', html: '<strong>' + esc(fl) + '</strong> — overdue: the shift ended and cleaning was not finished.' };
+      if ((st.yellow || []).includes(fl)) return { cls: 'warn', html: '<strong>' + esc(fl) + '</strong> — needs cleaning.' };
+      return null;
+    }).filter(Boolean),
+    detail: fl => {
+      const zs = zones.filter(z => z.floor === fl);
+      if (!zs.length) return '<div class="fd-none">No cleaning is assigned on ' + esc(fl) + '.</div>';
+      const done = zs.reduce((n, z) => n + z.done, 0), total = zs.reduce((n, z) => n + z.total, 0);
+      let chip;
+      if ((st.red || []).includes(fl)) chip = '<span class="fb-chip fb-bad fac-blink">Overdue</span>';
+      else if ((st.yellow || []).includes(fl)) chip = '<span class="fb-chip fb-warn">Needs cleaning</span>';
+      else if (zs.every(z => z.progress === 'Completed')) chip = '<span class="fb-chip fb-ok">Cleaned</span>';
+      else chip = '<span class="fb-chip fb-warn">In progress</span>';
+      return '<div class="fd-row"><span>Status</span>' + chip + '</div><div class="fd-row"><span>Zones</span><strong>' + zs.length + '</strong></div><div class="fd-row"><span>Tasks done</span><strong>' + done + ' / ' + total + '</strong></div>' +
+        zs.map(z => '<div class="fd-row"><span>' + esc(z.zone) + ' · ' + esc(z.staff || '—') + '</span><strong>' + esc(z.progress || '—') + '</strong></div>').join('');
+    },
+  });
+}
+document.addEventListener('campus-map-select', e => { if (e.detail.svgId === 'cleanMapSVG') cleanShowFloors(e.detail.name); });
+
 function applyBuildingFilters() {
+  facShowFloorInfo();
   const q = document.getElementById('bldSearch').value.trim().toLowerCase();
   const result = document.getElementById('bldResultFilter').value;
   document.querySelectorAll('#bldBody .bld-row').forEach(r => {
     const okResult = !result || r.dataset.result === result;
     const okSearch = !q || r.textContent.toLowerCase().includes(q);
-    r.style.display = okResult && okSearch ? '' : 'none';
+    const okBuilding = !facPick.bld.b || r.dataset.name === facPick.bld.b;
+    r.style.display = okResult && okSearch && okBuilding ? '' : 'none';
   });
 }
 
@@ -907,6 +1052,7 @@ function openInspectionModal(name) {
   const s = document.getElementById('bldSelect');
   if (!s) return;
   s.value = name || '';
+  facFillFloors(s.value, 'bldFloorSelect', 'Whole building');
   document.getElementById('inspectionModal').style.display = 'flex';
 }
 
@@ -923,7 +1069,7 @@ function showAirconBuildingDetail(name) {
   const s = document.getElementById('acBuildingFilter');
   if (s) s.value = name;
   filterAirconBuilding(name);
-  document.getElementById('acDetail').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('acDrillPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 const workOrdersData = <?= $wo_json ?>;
@@ -1055,23 +1201,24 @@ Object.keys(alertData).forEach(key => {
 
 const airconUnits = <?= $aircon_json ?>;
 
-function airconAlertFloors() {
-  const byBuilding = {};
-  airconUnits
-    .filter(u => u.schedule === 'Overdue' || u.schedule === 'Due Soon')
-    .forEach(u => {
-      byBuilding[u.building] ??= new Set();
-      byBuilding[u.building].add(u.floor);
-    });
-  const result = {};
-  Object.keys(byBuilding).forEach(b => result[b] = [...byBuilding[b]]);
-  return result;
+// Per building: floors with an overdue unit (red triangle) and floors with a unit due within 7 days (red circle).
+function airconMapState() {
+  const state = {};
+  airconUnits.forEach(u => {
+    const kind = (u.schedule === 'Overdue') ? 'red' : (u.schedule === 'Due Soon' ? 'circle' : null);
+    if (!kind) return;
+    state[u.building] ??= { red: null, circle: null, yellow: null, done: false };
+    (state[u.building][kind] ??= []);
+    if (!state[u.building][kind].includes(u.floor)) state[u.building][kind].push(u.floor);
+  });
+  Object.values(state).forEach(st => { if (st.red && st.circle) st.circle = st.circle.filter(f => !st.red.includes(f)); if (st.circle && !st.circle.length) st.circle = null; });
+  return state;
 }
 
 if (document.getElementById('acMapSVG')) {
   renderMapImage('acMapSVG', {
     imageUrl: '<?= base_url('images/MAP.jpg') ?>',
-    alertFloorsByName: airconAlertFloors(),
+    stateByName: airconMapState(),
     legend: 'aircon',
     onSelect: name => showAirconBuildingDetail(name),
   });
@@ -1104,29 +1251,45 @@ function applyAirconFilters() {
 function filterAirconBuilding(building) {
   document.getElementById('acBuildingFilter').value = building || '';
   applyAirconFilters();
-  const detail = document.getElementById('acDetail');
-  if (!building) { detail.style.display = 'none'; return; }
+  if (!building) { closeAirconDetail(); return; }
   showBuildingDetail(building);
 }
 
 function closeAirconDetail() {
-  document.getElementById('acDetail').style.display = 'none';
+  document.getElementById('acDrillPanel').style.display = 'none';
 }
 
+// Aircon Care: same right-hand details card as Building Check / Janitorial Check — status, floors, units on the chosen floor, alerts.
 function showBuildingDetail(building) {
+  if (!building) { closeAirconDetail(); return; }
   const units = airconUnits.filter(u => u.building === building);
-  const detail = document.getElementById('acDetail');
-  detail.style.display = '';
-  detail.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;"><div class="gc-title"><i class="bi bi-building"></i> ${esc(building)} — Maintenance Details</div><button type="button" class="dp-close" onclick="closeAirconDetail()" aria-label="Close"><i class="bi bi-x-lg"></i></button></div>
-    ${units.length ? units.map(u => `
-      <div style="margin:12px 0;">
-        <strong>${esc(u.unit)}</strong> <span class="text-muted">(${esc(u.floor)})</span>
-        — checklist ${u.tasks_done}/${u.tasks_total}
-        <ul style="margin:6px 0 0 18px;">
-          ${u.tasks.map(t => `<li>${t.done ? '✔' : '○'} ${esc(t.task)}</li>`).join('')}
-        </ul>
-      </div>`).join('') : '<div class="no-data">No aircon units in this building.</div>'}`;
+  const order = ['Ground Floor', '2nd Floor', '3rd Floor', '4th Floor'];
+  const floors = [...new Set((facFloors[building] || []).concat(units.map(u => u.floor)))].sort((x, y) => order.indexOf(x) - order.indexOf(y));
+  const bad = units.filter(u => u.schedule === 'Overdue' || u.condition === 'Not Working');
+  const warn = units.filter(u => u.schedule === 'Due Soon' || (u.condition && u.condition !== 'Operational'));
+  const banner = !units.length ? { cls: 'fd-warn', head: 'No aircon units', text: 'No aircon units are recorded in this building.' }
+    : bad.length ? { cls: 'fd-bad', head: 'Needs attention', text: bad.length + ' unit' + (bad.length === 1 ? ' is' : 's are') + ' overdue or not working.' }
+    : warn.length ? { cls: 'fd-warn', head: 'Due soon', text: warn.length + ' unit' + (warn.length === 1 ? '' : 's') + ' due for cleaning or needing care.' }
+    : { cls: 'fd-ok', head: 'All good', text: 'Every aircon unit here is operational and on schedule.' };
+  facDrill('acDrillPanel', {
+    title: building, sub: 'Aircon Care — maintenance by floor', banner, floors: floors.length ? floors : ['Ground Floor'],
+    close: 'closeAirconDetail()', planLabel: 'aircon units', alertsLabel: 'Aircon Alerts',
+    count: fl => units.filter(u => u.floor === fl).length,
+    alerts: units.map(u => {
+      if (u.schedule === 'Overdue') return { cls: 'urgent', html: '<strong>' + esc(u.unit) + '</strong> (' + esc(u.floor) + ') — cleaning overdue.' };
+      if (u.condition === 'Not Working') return { cls: 'urgent', html: '<strong>' + esc(u.unit) + '</strong> (' + esc(u.floor) + ') — not working.' };
+      if (u.schedule === 'Due Soon') return { cls: 'warn', html: '<strong>' + esc(u.unit) + '</strong> (' + esc(u.floor) + ') — cleaning due soon.' };
+      if (u.condition && u.condition !== 'Operational') return { cls: 'warn', html: '<strong>' + esc(u.unit) + '</strong> (' + esc(u.floor) + ') — ' + esc(u.condition) + '.' };
+      return null;
+    }).filter(Boolean),
+    detail: fl => {
+      const us = units.filter(u => u.floor === fl);
+      if (!us.length) return '<div class="fd-none">No aircon units on ' + esc(fl) + '.</div>';
+      return us.map(u => '<div class="fd-row"><span><strong>' + esc(u.unit) + '</strong> · ' + esc(u.condition || '—') + '</span><strong>' + esc(u.schedule || '—') + '</strong></div>' +
+        '<div class="fd-row"><span>Next schedule · ' + esc(u.tech || 'Unassigned') + '</span><strong>' + esc(u.next_schedule || '—') + '</strong></div>' +
+        '<div class="fd-row"><span>Checklist</span><strong>' + u.tasks_done + ' / ' + u.tasks_total + '</strong></div>').join('');
+    },
+  });
 }
 
 function showAirconDetail(id) {
@@ -1192,7 +1355,21 @@ function filterCleaning() {
     const inZoneTable = row.closest('#jan-daily, #jan-monitor');
     const matchesSearch = !q || text.includes(q);
     const matchesStatus = !status || !inZoneTable || text.includes(status.toLowerCase());
-    row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+    const matchesPlace = !inZoneTable || ((!facPick.clean.b || row.cells[0].textContent.trim() === facPick.clean.b) && (!facPick.clean.f || row.cells[1].textContent.trim() === facPick.clean.f));
+    row.style.display = matchesSearch && matchesStatus && matchesPlace ? '' : 'none';
+  });
+  // Say so when a building / floor has no cleaning assignments, instead of leaving an empty table.
+  document.querySelectorAll('#jan-daily tbody, #jan-monitor tbody').forEach(tb => {
+    const rows = [...tb.querySelectorAll('tr:not(.fac-nomatch)')].filter(r => !r.querySelector('.empty-row'));
+    let msg = tb.querySelector('.fac-nomatch');
+    const none = rows.length && rows.every(r => r.style.display === 'none');
+    if (none && !msg) {
+      msg = document.createElement('tr');
+      msg.className = 'fac-nomatch';
+      msg.innerHTML = '<td colspan="8" class="empty-row">Nothing matches — no cleaning assignments for that building / floor.</td>';
+      tb.appendChild(msg);
+    }
+    if (msg) msg.style.display = none ? '' : 'none';
   });
 }
 
@@ -1267,6 +1444,7 @@ function applyWoFilters() {
   const q = document.getElementById('woSearch').value.trim().toLowerCase();
   const pr = document.getElementById('woPriorityFilter').value;
   const st = document.getElementById('woStatusFilter').value;
+  document.querySelectorAll('#wo-buildings tbody tr').forEach(r => { r.style.display = !q || r.textContent.toLowerCase().includes(q) ? '' : 'none'; });
   document.querySelectorAll('.wo-row').forEach(r => {
     const t = r.textContent;
     const ok = (!q || t.toLowerCase().includes(q)) && (!pr || t.includes(pr)) && (!st || t.includes(st));
@@ -1296,8 +1474,11 @@ function closeWoForm() {
 }
 
 function switchWoTab(key) {
-  const tb = document.getElementById('woToolbar');
-  if (tb) tb.style.display = key === 'buildings' ? 'none' : '';
+  // The search bar stays on every tab; the priority/status filters only apply to work orders.
+  const acts = document.querySelector('#woToolbar .fe-toolbar-actions');
+  if (acts) acts.style.display = key === 'buildings' ? 'none' : '';
+  const ws = document.getElementById('woSearch');
+  if (ws) ws.placeholder = key === 'buildings' ? 'Search building…' : 'Search request, building, or requester…';
   document.querySelectorAll('#facWoTabs .sub-tab').forEach(b => b.classList.toggle('active', b.dataset.wo === key));
   document.querySelectorAll('.wo-pane').forEach(p => p.style.display = p.id === 'wo-' + key ? '' : 'none');
 }

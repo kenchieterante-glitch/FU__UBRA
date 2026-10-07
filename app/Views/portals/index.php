@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="<?= base_url('fonts/bebas-neue/bebas-neue.css') ?>">
   <link rel="stylesheet" href="<?= base_url('icons/bootstrap-icons/bootstrap-icons.css') ?>">
   <link rel="stylesheet" href="<?= base_url('Assets/css/base.css') ?>">
-  <link rel="stylesheet" href="<?= base_url('Assets/css/portals.css') ?>">
+  <link rel="stylesheet" href="<?= base_url('Assets/css/portals.css') ?>?v=<?= @filemtime(FCPATH . 'Assets/css/portals.css') ?>">
 </head>
 <body class="portal-lobby">
   <header class="portal-lobby-top">
@@ -19,13 +19,13 @@
   <main class="portal-hub">
     <div class="portal-grid">
       <?php foreach ($portals as $key => $p): ?>
-        <a class="portal-card" href="<?= base_url('portals/' . $key) ?>">
-          <span class="portal-badge"><?= esc($p['box']) ?></span>
+        <div class="portal-card">
+          <span class="portal-icon"><i class="bi <?= esc($p['icon'] ?? 'bi-building') ?>"></i></span>
           <h2><?= esc($p['short']) ?></h2>
           <p class="portal-desc"><?= esc($p['description']) ?></p>
           <div class="portal-covers">Covers: <strong><?= esc($p['covers']) ?></strong></div>
-          <span class="portal-btn">Sign in</span>
-        </a>
+          <a class="portal-btn" href="<?= base_url('portals/' . $key) ?>">Sign in</a>
+        </div>
       <?php endforeach; ?>
     </div>
   </main>

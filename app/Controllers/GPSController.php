@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\TraccarClient;
 use App\Libraries\TraccarSync;
 use App\Models\GPSModel;
 use App\Models\VehicleModel;
@@ -167,6 +168,14 @@ class GPSController extends BaseController
             ]);
         }
 
+        // Why the tracker's own history wasn't used — shown when the range comes back empty.
+        $client = new TraccarClient();
+        $note = empty($vehicle['gps_device_id'])
+            ? 'This vehicle is not linked to a GPS tracker yet, so only locally saved pings can be shown. Set its GPS Device ID in Vehicle Management.'
+            : (!$client->isConfigured()
+                ? 'The Traccar connection is not set up on this server (TRACCAR_URL / TRACCAR_USER / TRACCAR_PASS in .env), so the tracker history cannot be loaded.'
+                : 'Traccar did not answer, so the tracker history cannot be loaded right now.');
+
         $logs = $this->gpsModel->getHistoryInRange((int) $id, $from, $to);
 
         $points = array_values(array_filter(array_map(fn($p) => [
@@ -184,6 +193,7 @@ class GPSController extends BaseController
             'to'         => $to,
             'count'      => count($points),
             'points'     => $points,
+            'note'       => $note,
         ]);
     }
 

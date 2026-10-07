@@ -84,7 +84,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
             <label for="fsStatusFilter">Status</label>
             <select id="fsStatusFilter" onchange="applyFsFilters()">
               <option value="">All statuses</option>
-              <option>Working</option><option>Needs Repair</option><option>Needs Refill</option>
+              <option>Good</option><option>Needs Repair</option><option>Needs Refill</option>
               <option>Defective</option><option>Missing</option>
               <option value="Overdue">Check Overdue</option><option value="Due in 7 Days">Check Due in 7 Days</option>
             </select>
@@ -108,11 +108,12 @@ $zoomSelect = function (string $svgId) use ($buildings) {
     <div class="gc-title"><i class="bi bi-map"></i> Fire Safety Map</div>
     <?= $zoomSelect('fsMapSVG') ?>
     <div class="fac-map-legend">
-      <span><i class="map-pass"></i> All equipment OK</span>
+      <span><i class="map-pass"></i> All equipment Good</span>
       <span><i style="background:#ffc400"></i> Yellow alert = check due soon</span>
       <span><i class="map-alert"></i> Red warning = needs repair or missing</span>
     </div>
     <div class="fac-map-wrap"><svg id="fsMapSVG" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg></div>
+    <div id="fsFloorPanel" class="floor-break" style="display:none"></div>
   </div>
 
   <div id="fpPanel" class="guard-card" style="display:none;padding:18px;margin-bottom:16px;">
@@ -157,7 +158,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
           <tbody class="fs-body">
             <?php $list = $equipment_by_type[$t] ?? []; if (empty($list)): ?>
               <tr><td colspan="6" class="empty-row">No <?= esc(strtolower($t)) ?> recorded yet.</td></tr>
-            <?php else: foreach ($list as $r): $shown = $r['status'] === 'Working' ? $r['due'] : $r['status']; ?>
+            <?php else: foreach ($list as $r): $shown = $r['status'] !== 'Working' ? $r['status'] : ($r['due'] === 'OK' ? 'Good' : $r['due']); ?>
               <tr class="fs-row" style="cursor:pointer" onclick="showFsDetail(this)"
                   data-type="<?= esc($r['type']) ?>" data-code="<?= esc($r['code']) ?>" data-building="<?= esc($r['building']) ?>" data-floor="<?= esc($r['floor'] ?? '') ?>"
                   data-status="<?= esc($r['status']) ?>" data-due="<?= esc($r['due']) ?>" data-shown="<?= esc($shown) ?>" data-next="<?= esc((string) $r['next']) ?>"
@@ -277,7 +278,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
           <div class="filter-row">
             <label for="gStatusFilter">Key status</label>
             <select id="gStatusFilter" onchange="applyGFilters()">
-              <option value="">All</option><option value="Key Out">Key Out</option><option value="Returned">Returned</option>
+              <option value="">All</option><option value="Borrowed">Borrowed</option><option value="Returned">Returned</option>
             </select>
           </div>
           <div class="filter-row">
@@ -305,18 +306,18 @@ $zoomSelect = function (string $svgId) use ($buildings) {
     <div class="gc-title" style="margin:6px 0 10px;"><i class="bi bi-key-fill"></i> Keys Currently Out</div>
     <div class="table-wrap">
       <table class="sj-table">
-        <thead><tr><th>Log #</th><th>Borrower</th><th>Department</th><th>Key / Item</th><th>Borrowed</th><th>Status</th></tr></thead>
+        <thead><tr><th>Log #</th><th>Borrower</th><th>Department</th><th>Key Item</th><th>Date Borrowed</th><th>Status</th></tr></thead>
         <tbody class="g-body">
           <?php if (empty($active_keys)): ?>
             <tr><td colspan="6" class="empty-row">No keys are out right now.</td></tr>
           <?php else: foreach ($active_keys as $l): ?>
-            <tr class="g-row" style="cursor:pointer" onclick="showKeyDetail(<?= (int) $l['id'] ?>)" data-id="<?= (int) $l['id'] ?>" data-status="Key Out" data-time="<?= esc($l['scan_in']) ?>">
+            <tr class="g-row" style="cursor:pointer" onclick="showKeyDetail(<?= (int) $l['id'] ?>)" data-id="<?= (int) $l['id'] ?>" data-status="Borrowed" data-time="<?= esc($l['scan_in']) ?>">
               <td><strong><?= esc($l['log_number']) ?></strong></td>
               <td><?= esc($l['full_name']) ?></td>
               <td><?= esc($l['department']) ?></td>
               <td><?= esc($l['key_item']) ?></td>
               <td><?= date('M d, Y g:i A', strtotime($l['scan_in'])) ?></td>
-              <?= fac_cell('Key Out') ?>
+              <?= fac_cell('Borrowed') ?>
             </tr>
           <?php endforeach; endif; ?>
         </tbody>
@@ -327,11 +328,11 @@ $zoomSelect = function (string $svgId) use ($buildings) {
   <div class="g-pane" id="g-history" style="display:none">
     <div class="table-wrap">
       <table class="sj-table">
-        <thead><tr><th>Log #</th><th>Borrower</th><th>Key / Item</th><th>Borrowed</th><th>Returned</th><th>Status</th></tr></thead>
+        <thead><tr><th>Log #</th><th>Borrower</th><th>Key Item</th><th>Date Borrowed</th><th>Returned</th><th>Status</th></tr></thead>
         <tbody class="g-body">
           <?php if (empty($key_logs)): ?>
             <tr><td colspan="6" class="empty-row">No borrowing history yet.</td></tr>
-          <?php else: foreach ($key_logs as $l): $st = $l['status'] === 'Active' ? 'Key Out' : 'Returned'; ?>
+          <?php else: foreach ($key_logs as $l): $st = $l['status'] === 'Active' ? 'Borrowed' : 'Returned'; ?>
             <tr class="g-row" style="cursor:pointer" onclick="showKeyDetail(<?= (int) $l['id'] ?>)" data-id="<?= (int) $l['id'] ?>" data-status="<?= $st ?>" data-time="<?= esc($l['scan_in']) ?>">
               <td><strong><?= esc($l['log_number']) ?></strong></td>
               <td><?= esc($l['full_name']) ?></td>
@@ -349,13 +350,14 @@ $zoomSelect = function (string $svgId) use ($buildings) {
   <div class="g-pane" id="g-records" style="display:none">
     <div class="table-wrap">
       <table class="sj-table">
-        <thead><tr><th>Time</th><th>Guard</th><th>Activity</th></tr></thead>
+        <thead><tr><th>Date</th><th>Time</th><th>Guard</th><th>Activity</th></tr></thead>
         <tbody class="g-body">
           <?php if (empty($events)): ?>
-            <tr><td colspan="3" class="empty-row">No guard records yet.</td></tr>
+            <tr><td colspan="4" class="empty-row">No guard records yet.</td></tr>
           <?php else: foreach ($events as $e): ?>
             <tr class="g-row" data-status="" data-time="<?= esc($e['time']) ?>">
-              <td><?= date('M d, Y g:i A', strtotime($e['time'])) ?></td>
+              <td><?= date('M d, Y', strtotime($e['time'])) ?></td>
+              <td><?= date('g:i A', strtotime($e['time'])) ?></td>
               <td><?= esc($e['guard']) ?></td>
               <td><?= esc($e['action']) ?></td>
             </tr>
@@ -368,7 +370,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
   <div class="g-pane" id="g-vehicles" style="display:none">
     <div class="table-wrap">
       <table class="sj-table">
-        <thead><tr><th>Trip ID</th><th>Requester</th><th>Destination</th><th>Driver / Vehicle</th><th>Departure</th><th>Gate Status</th><th>Action</th></tr></thead>
+        <thead><tr><th>Trip ID</th><th>Requester</th><th>Destination</th><th>Assigned Driver</th><th>Departure</th><th>Gate Status</th><th>Action</th></tr></thead>
         <tbody class="g-body">
           <?php if (empty($gate_trips)): ?>
             <tr><td colspan="7" class="empty-row">No approved trips waiting at the gate.</td></tr>
@@ -398,7 +400,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
       <div class="gc-title"><i class="bi bi-eye"></i> Security Monitoring — what needs the guard's attention</div>
       <div class="table-wrap">
         <table class="sj-table">
-          <thead><tr><th>Who / What</th><th>Details</th><th>Reference</th><th>Alert</th></tr></thead>
+          <thead><tr><th>Name</th><th>Details</th><th>Reference</th><th>Alert</th></tr></thead>
           <tbody id="monitorBody"></tbody>
         </table>
       </div>
@@ -679,6 +681,44 @@ const fpRegister = <?= $rows_json ?>.filter(r => r.src !== 'plan');
 const fpDated = ['Fire Extinguisher', 'Smoke Detector'];
 function fpTypeChanged() { document.getElementById('fpExpWrap').style.display = fpDated.includes(document.getElementById('fpType').value) ? 'flex' : 'none'; }
 // Effective state: a working item past its expiry date is "Expired"; within 30 days it is "Due Soon".
+// ---- Fire safety map: floor-by-floor breakdown of fire extinguishers, fire alarms and fire exits
+const FB_TYPES = [['Fire Extinguisher', 'Fire Extinguishers'], ['Fire Alarm', 'Fire Alarms'], ['Emergency Exit Sign', 'Fire Exits']];
+function fbItems(building) {
+  const items = fpRegister.filter(r => r.building === building).map(r => ({ type: r.type, floor: r.floor || 'Ground Floor', bad: r.status !== 'Working' && r.status !== 'Good', soon: !(r.status !== 'Working' && r.status !== 'Good') && ['Overdue', 'Due in 7 Days', 'Due Soon'].includes(r.due), late: r.due === 'Overdue' }));
+  fpMarkers.forEach(m => {
+    const p = fpPlanOf(m.plan);
+    if ((p.campus || p.building) !== building) return;
+    const st = fpState(m);
+    items.push({ type: m.type, floor: p.floor, bad: fpIsRed(st), soon: st === 'Due Soon', late: false });
+  });
+  return items.map(i => Object.assign(i, { bad: i.bad || i.late }));
+}
+function fbCell(list) {
+  if (!list.length) return '<span class="fb-none">—</span>';
+  const bad = list.filter(i => i.bad).length, soon = list.filter(i => !i.bad && i.soon).length;
+  let h = '<span class="fb-chip fb-ok">' + list.length + ' total</span>';
+  if (bad) h += '<span class="fb-chip fb-bad fac-blink"><i class="bi bi-exclamation-triangle-fill"></i> ' + bad + '</span>';
+  if (soon) h += '<span class="fb-chip fb-warn"><i class="bi bi-exclamation-triangle-fill"></i> ' + soon + '</span>';
+  if (!bad && !soon) h = '<span class="fb-chip fb-ok"><i class="bi bi-check-circle-fill"></i> ' + list.length + ' good</span>';
+  return h;
+}
+function fbShowFloors(name) {
+  const box = document.getElementById('fsFloorPanel');
+  if (!box) return;
+  if (!name) { box.style.display = 'none'; return; }
+  const items = fbItems(name);
+  const order = ['Ground Floor', '2nd Floor', '3rd Floor', '4th Floor'];
+  const floors = [...new Set(fpPlans.filter(p => p.campus === name).map(p => p.floor).concat(items.map(i => i.floor)))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  const badTotal = items.filter(i => i.bad).length;
+  box.innerHTML = '<div class="floor-break-title"><i class="bi bi-layers"></i> ' + esc(name) + ' — by floor' +
+    (badTotal ? ' <span class="fb-chip fb-bad fac-blink"><i class="bi bi-exclamation-triangle-fill"></i> ' + badTotal + ' need attention</span>' : ' <span class="fb-chip fb-ok"><i class="bi bi-check-circle-fill"></i> all good</span>') + '</div>' +
+    (floors.length ? '<table><thead><tr><th>Floor</th>' + FB_TYPES.map(t => '<th>' + t[1] + '</th>').join('') + '</tr></thead><tbody>' +
+      floors.map(fl => '<tr><td>' + esc(fl) + '</td>' + FB_TYPES.map(t => '<td>' + fbCell(items.filter(i => i.floor === fl && i.type === t[0])) + '</td>').join('') + '</tr>').join('') + '</tbody></table>'
+      : '<div class="text-muted">No fire safety equipment recorded for this building yet.</div>');
+  box.style.display = '';
+}
+document.addEventListener('campus-map-select', e => { if (e.detail.svgId === 'fsMapSVG') fbShowFloors(e.detail.name); });
+
 function fpState(m) {
   if (m.status !== 'Working') return m.status;
   if (!m.exp || !fpDated.includes(m.type)) return 'Working';
@@ -782,6 +822,7 @@ document.getElementById('fpLayer').addEventListener('click', e => {
   }).then(m => { fpMarkers.push(m); fpDraw(); fpToast('Marker added'); }).catch(err => fpToast(err.message, true));
 });
 fpSync(); // red alert icon + table reflect floor-plan markers as soon as the page loads
+if (<?= !empty($open_plans) ? 'true' : 'false' ?>) toggleFloorPlans(true); // opened from the Maintenance page's Floors icon
 function fpShowMarker(m) {
   const opt = (list, cur) => list.map(v => '<option' + (v === cur ? ' selected' : '') + '>' + esc(v) + '</option>').join('');
   document.getElementById('fsDetailTitle').textContent = (m.label ? m.label + ' — ' : '') + m.type;
@@ -868,7 +909,7 @@ function fsAddToggle() {
 <?php endif; ?>
 
 <?php if ($section === 'guard'): ?>
-const alertData = { g: { items: <?= $alerts_json ?>, titles: { red: 'Keys out over 8 hours', yellow: 'Trips awaiting dispatch' }, cols: ['Who', 'Details', 'Reference', 'Alert'] } };
+const alertData = { g: { items: <?= $alerts_json ?>, titles: { red: 'Keys out over 8 hours', yellow: 'Trips awaiting dispatch' }, cols: ['Name', 'Details', 'Reference', 'Alert'] } };
 initAlertIcons();
 const keyLogsData = <?= $key_logs_json ?>;
 
@@ -909,7 +950,7 @@ function showKeyDetail(id) {
   document.getElementById('keyDetailTitle').textContent = `${l.log} — ${l.key}`;
   document.getElementById('keyDetailBody').innerHTML = detailGrid([
     ['Borrower', l.borrower], ['Borrower ID', l.borrower_id || '—'], ['Department', l.dept || '—'],
-    ['Borrowed', l.borrowed], ['Returned', l.returned], ['Status', l.status], ['Guard on duty', l.guard],
+    ['Date Borrowed', l.borrowed], ['Returned', l.returned], ['Status', l.status], ['Guard on duty', l.guard],
   ]);
   document.getElementById('keyDetailModal').style.display = 'flex';
 }

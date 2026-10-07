@@ -2,7 +2,12 @@
 
 namespace App\Controllers;
 
+use App\Models\AirconUnitModel;
+use App\Models\BorrowModel;
 use App\Models\FireExtinguisherModel;
+use App\Models\SafetyInspectionModel;
+use App\Models\ToolsModel;
+use App\Models\WorkOrderModel;
 use App\Models\MechanicalEquipmentModel;
 use App\Models\MotorpoolWorkOrderModel;
 use App\Models\VehicleMaintenanceModel;
@@ -32,28 +37,80 @@ class CalendarController extends BaseController
         'Installed'       => '#0d9488',
         'Check Due'       => '#f59e0b',
         'Expires'         => '#be123c',
+        'Borrowed'        => '#0ea5e9',
+        'Due Back'        => '#e11d48',
     ];
 
-    // Safety & Security does not handle janitorial work, so cleaning stays off its calendar.
+    private function roleKey(): string
+    {
+        return strtolower((string) $this->session->get('role'));
+    }
+
+    // Each department's calendar only carries its own schedule. Administrators (and any other role) see everything.
+    private function sources(): array
+    {
+        return match ($this->roleKey()) {
+            'facilities' => ['cleaning', 'maintenance', 'facilities'],
+            'janitorial' => ['cleaning'],
+            'security'   => ['safety'],
+            'assets'     => ['travel', 'asset'],
+            'sports'     => ['sports'],
+            default      => ['cleaning', 'maintenance', 'travel', 'safety', 'asset', 'sports', 'facilities'],
+        };
+    }
+
+    private function has(string $source): bool
+    {
+        return in_array($source, $this->sources(), true);
+    }
+
     private function isSecurity(): bool
     {
-        return strtolower((string) $this->session->get('role')) === 'security';
+        return $this->roleKey() === 'security';
     }
 
     private function isAssets(): bool
     {
-        return strtolower((string) $this->session->get('role')) === 'assets';
+        return $this->roleKey() === 'assets';
     }
 
-    // Neither Safety & Security nor Asset Acquisition handles janitorial work.
     private function hideCleaning(): bool
     {
-        return $this->isSecurity() || $this->isAssets();
+        return !$this->has('cleaning');
     }
 
     private function showSafety(): bool
     {
-        return in_array(strtolower((string) $this->session->get('role')), ['security', 'administrator'], true);
+        return $this->has('safety');
+    }
+
+    // Legend + "Type" choices for this department's calendar.
+    private function legendFor(): array
+    {
+        $all = [
+            'Inspection' => '#f59e0b', 'Maintenance' => '#7c3aed', 'Compliance' => '#2563eb', 'Cleaning' => '#16a34a', 'Urgent Cleaning' => '#dc2626',
+            'Travel' => '#0891b2', 'Check Due' => '#f59e0b', 'Installed' => '#0d9488', 'Expires' => '#be123c', 'Borrowed' => '#0ea5e9', 'Due Back' => '#e11d48',
+        ];
+        $names = match ($this->roleKey()) {
+            'facilities' => ['Maintenance', 'Cleaning', 'Urgent Cleaning', 'Check Due'],
+            'janitorial' => ['Cleaning', 'Urgent Cleaning'],
+            'security'   => ['Inspection', 'Installed', 'Check Due', 'Expires'],
+            'assets'     => ['Maintenance', 'Travel', 'Check Due'],
+            'sports'     => ['Borrowed', 'Due Back'],
+            default      => array_keys($all),
+        };
+
+        return array_map(fn($n) => ['label' => $n, 'color' => $all[$n]], $names);
+    }
+
+    private function typesFor(): array
+    {
+        return match ($this->roleKey()) {
+            'facilities' => ['Inspection', 'Maintenance', 'Compliance', 'Cleaning', 'Urgent Cleaning'],
+            'janitorial' => ['Cleaning', 'Urgent Cleaning'],
+            'security', 'assets', 'sports' => ['Inspection', 'Compliance'],
+            default      => ['Inspection', 'Maintenance', 'Compliance', 'Cleaning', 'Urgent Cleaning'],
+        };
     }
 
     // The only Janitorial-linked account today — cleaning schedules created
@@ -80,8 +137,14 @@ class CalendarController extends BaseController
             'hide_cleaning'    => $this->hideCleaning(),
             'is_assets'        => $this->isAssets(),
             'show_safety'      => $this->showSafety(),
-            'safety_renewals'  => $this->isSecurity() ? $this->safetyRenewals() : [],
-            'safety_upcoming'  => $this->isSecurity() ? $this->safetyUpcoming() : [],
+            'legend'           => $this->legendFor(),
+            'summary_modules'  => \App\Libraries\DepartmentScope::options((string) $this->session->get('role')),
+            'event_types'      => $this->typesFor(),
+            'renewals'         => $this->roleKey() === 'administrator' || !in_array($this->roleKey(), ['security', 'assets', 'sports', 'facilities', 'janitorial'], true) ? null : $this->renewalsFor(),
+            'upcoming_events'  => $this->upcomingEvents(),
+            'can_driver'       => $this->has('travel'),
+            'can_cleaning'     => $this->has('cleaning'),
+            'can_maintenance'  => $this->has('maintenance'),
             // Real people, with contact numbers when on file — power the
             // "Notify Driver" / "Notify Cleaning Personnel" suggested-action
             // pickers so they actually target someone instead of a hardcoded
@@ -320,7 +383,7 @@ class CalendarController extends BaseController
             $a['staff_name']
         ), (new JanitorialAssignmentModel())->findAll());
 
-        $maintenance = $this->isAssets() ? [] : array_map(fn($w) => $this->toMaintenanceEvent(
+        $maintenance = !$this->has('maintenance') ? [] : array_map(fn($w) => $this->toMaintenanceEvent(
             $w['id'],
             $w['issue'],
             $w['location'],
@@ -334,9 +397,107 @@ class CalendarController extends BaseController
             (new TravelModel())->getAllWithDetails(),
             fn($t) => !in_array($t['status'], ['Rejected', 'Cancelled'], true)
         );
-        $travel = array_map(fn($t) => $this->toTravelEvent($t), $trips);
+        $travel = !$this->has('travel') ? [] : array_map(fn($t) => $this->toTravelEvent($t), $trips);
 
-        return array_merge($cleaning, $maintenance, $travel, $this->showSafety() ? $this->safetyEvents() : [], $this->isAssets() ? $this->assetEvents() : []);
+        return array_merge($cleaning, $maintenance, $travel, $this->has('safety') ? $this->safetyEvents() : [], $this->has('asset') ? $this->assetEvents() : [], $this->has('sports') ? $this->sportsEvents() : [], $this->has('facilities') ? $this->facilitiesEvents() : []);
+    }
+
+    private function upcomingEvents(): array
+    {
+        $today = date('Y-m-d');
+        $list = array_values(array_filter($this->persistedEvents(), fn($e) => substr((string) $e['start'], 0, 10) >= $today && ($e['extendedProps']['type'] ?? '') !== 'Installed'));
+        usort($list, fn($a, $b) => strcmp((string) $a['start'], (string) $b['start']));
+
+        return array_slice($list, 0, 5);
+    }
+
+    // The "Pending Renewals" card, per department: what has run out or is about to.
+    private function renewalsFor(): array
+    {
+        $role = $this->roleKey();
+        $today = date('Y-m-d');
+        $soon = date('Y-m-d', strtotime('+7 days'));
+
+        if ($role === 'security') {
+            return ['title' => 'Pending Renewals', 'empty' => 'No fire safety renewals pending.', 'url' => 'security-dept/fire-safety',
+                'items' => array_map(fn($r) => ['title' => $r['title'], 'sub' => $r['place'] . ' · ' . $r['label']], $this->safetyRenewals())];
+        }
+        if ($role === 'assets') {
+            return ['title' => 'Pending Renewals', 'empty' => 'No vehicle renewals pending.', 'url' => 'assets-dept/vehicles',
+                'items' => array_map(fn($v) => ['title' => $v['vehicle_name'] . ' (' . $v['plate_no'] . ')', 'sub' => 'Inspection: ' . $v['inspection_status']], $this->pendingVehicleRenewals())];
+        }
+        if ($role === 'sports') {
+            $tools = [];
+            foreach ((new ToolsModel())->where('category', 'Sports Equipment')->findAll() as $t) $tools[$t['id']] = $t['asset_name'];
+            $items = [];
+            if ($tools) {
+                foreach ((new BorrowModel())->whereIn('tool_id', array_keys($tools))->where('status', 'Borrowed')->where('expected_return <=', $soon)->orderBy('expected_return', 'ASC')->findAll() as $b) {
+                    $items[] = ['title' => $tools[$b['tool_id']], 'sub' => ($b['borrower'] ?: '—') . ' · ' . ($b['expected_return'] < $today ? 'Overdue since ' : 'Due back ') . date('M j, Y', strtotime($b['expected_return']))];
+                }
+            }
+            return ['title' => 'Returns Due', 'empty' => 'No returns overdue or due soon.', 'url' => 'sports-dept/borrowing', 'items' => $items];
+        }
+        if ($role === 'facilities') {
+            $items = [];
+            foreach ((new AirconUnitModel())->where('next_schedule <=', $soon)->where('next_schedule IS NOT NULL', null, false)->orderBy('next_schedule', 'ASC')->limit(8)->findAll() as $a) {
+                $items[] = ['title' => $a['unit_name'], 'sub' => $a['location'] . ' · ' . ($a['next_schedule'] < $today ? 'Cleaning overdue since ' : 'Cleaning due ') . date('M j, Y', strtotime($a['next_schedule']))];
+            }
+            return ['title' => 'Aircon Cleaning Due', 'empty' => 'No aircon cleaning overdue or due soon.', 'url' => 'facilities/aircon', 'items' => $items];
+        }
+
+        return ['title' => 'Pending Renewals', 'empty' => 'Nothing pending.', 'url' => '', 'items' => []];
+    }
+
+    // Aircon cleaning dates and open repair requests — Facilities Administration and General Services.
+    private function facilitiesEvents(): array
+    {
+        $events = [];
+        foreach ((new AirconUnitModel())->where('next_schedule IS NOT NULL', null, false)->findAll() as $a) {
+            $color = self::CATEGORY_COLORS['Check Due'];
+            $events[] = [
+                'id' => 'fa-ac-' . $a['id'], 'title' => '❄️ Check Due — ' . $a['unit_name'], 'start' => $a['next_schedule'],
+                'backgroundColor' => $color, 'borderColor' => $color,
+                'extendedProps' => ['type' => 'Check Due', 'zone' => $a['location'] . ' — ' . $a['floor'], 'purpose' => 'Aircon cleaning: ' . $a['unit_name'], 'status' => $a['condition_status']],
+            ];
+        }
+        foreach ((new WorkOrderModel())->whereIn('status', ['Pending', 'In Progress'])->findAll() as $w) {
+            $color = self::CATEGORY_COLORS['Maintenance'];
+            $events[] = [
+                'id' => 'fa-wo-' . $w['id'], 'title' => '🔧 Maintenance — ' . $w['title'], 'start' => substr($w['created_at'], 0, 10),
+                'backgroundColor' => $color, 'borderColor' => $color,
+                'extendedProps' => ['type' => 'Maintenance', 'zone' => $w['building'] . ($w['floor'] ? ' — ' . $w['floor'] : ''), 'purpose' => $w['details'] ?: $w['title'], 'status' => $w['status'], 'assignedTo' => 'Facilities'],
+            ];
+        }
+
+        return $events;
+    }
+
+    // Sports equipment going out and due back.
+    private function sportsEvents(): array
+    {
+        $events = [];
+        $tools = [];
+        foreach ((new ToolsModel())->where('category', 'Sports Equipment')->findAll() as $t) $tools[$t['id']] = $t['asset_name'];
+        if (!$tools) return [];
+        foreach ((new BorrowModel())->whereIn('tool_id', array_keys($tools))->where('is_archived', 0)->findAll() as $b) {
+            $item = $tools[$b['tool_id']];
+            $color = self::CATEGORY_COLORS['Borrowed'];
+            $events[] = [
+                'id' => 'sp-b-' . $b['id'], 'title' => '🏀 Borrowed — ' . $item, 'start' => $b['borrowed_date'],
+                'backgroundColor' => $color, 'borderColor' => $color,
+                'extendedProps' => ['type' => 'Borrowed', 'zone' => $b['department'] ?: 'Sports', 'purpose' => $item . ' borrowed by ' . ($b['borrower'] ?: '—'), 'status' => $b['status']],
+            ];
+            if ($b['status'] === 'Borrowed' && $b['expected_return']) {
+                $due = self::CATEGORY_COLORS['Due Back'];
+                $events[] = [
+                    'id' => 'sp-d-' . $b['id'], 'title' => '⏰ Due Back — ' . $item, 'start' => $b['expected_return'],
+                    'backgroundColor' => $due, 'borderColor' => $due,
+                    'extendedProps' => ['type' => 'Due Back', 'zone' => $b['department'] ?: 'Sports', 'purpose' => $item . ' due back from ' . ($b['borrower'] ?: '—'), 'status' => 'Borrowed'],
+                ];
+            }
+        }
+
+        return $events;
     }
 
     // Safety & Security's own "renewals": fire safety items that have expired or expire within 30 days.
@@ -444,6 +605,14 @@ class CalendarController extends BaseController
             $add('Installed', $icon, (string) $e['installed_on'], $e['code'], $e['equipment_type'], $e['building'], $e['floor']);
             $add('Check Due', $icon, (string) $e['next_check'], $e['code'], $e['equipment_type'], $e['building'], $e['floor']);
             $add('Expires', $icon, (string) $e['expires_on'], $e['code'], $e['equipment_type'], $e['building'], $e['floor']);
+        }
+        foreach ((new SafetyInspectionModel())->findAll() as $i) {
+            $color = self::CATEGORY_COLORS['Inspection'];
+            $events[] = [
+                'id' => 'fs-in-' . $i['id'], 'title' => '📋 Inspection — ' . $i['building'], 'start' => substr((string) $i['inspected_at'], 0, 10),
+                'backgroundColor' => $color, 'borderColor' => $color,
+                'extendedProps' => ['type' => 'Inspection', 'zone' => $i['building'], 'purpose' => 'Safety inspection: ' . $i['safety_status'], 'status' => $i['safety_status']],
+            ];
         }
         foreach ((new FloorPlanMarkerModel())->findAll() as $m) {
             if (!in_array($m['equipment_type'], ['Fire Extinguisher', 'Smoke Detector'], true)) continue;

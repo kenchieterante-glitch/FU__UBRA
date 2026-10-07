@@ -24,10 +24,10 @@ class AuthFilter implements FilterInterface
 
     private const ROLE_ALLOWED_PREFIXES = [
         'security'   => ['security-dept', 'security-dashboard', 'safety', 'vehicles', 'gps', 'travel', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
-        'assets'     => ['assets-dept', 'vehicles', 'travel', 'gps', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
-        'sports'     => ['sports-dept', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings'],
+        'assets'     => ['assets-dept', 'vehicles', 'travel', 'gps', 'maintenance-forms', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
+        'sports'     => ['sports-dept', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
         'tools'      => ['tools-dashboard', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile'],
-        'facilities' => ['facilities', 'facilities-dashboard', 'personnel', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
+        'facilities' => ['facilities', 'facilities-dashboard', 'personnel', 'tools', 'maintenance-forms', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
     ];
 
     private function roleLanding(string $role): string

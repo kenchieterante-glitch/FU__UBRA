@@ -2,6 +2,22 @@
 
 <?= $this->section('content') ?>
 <?php
+// Values the controller passes in — given safe defaults here so the page (and the editor) always know them.
+$title = $title ?? 'Asset Acquisition and Monitoring';
+$section = $section ?? 'vehicles';
+$tabs = $tabs ?? [];
+$status = $status ?? [];
+$stat_rows = $stat_rows ?? null;
+$active_stat = $active_stat ?? null;
+$alerts_json = $alerts_json ?? '[]';
+$alert_cols = $alert_cols ?? [];
+$alert_titles = $alert_titles ?? ['red' => '', 'yellow' => ''];
+$driver_options = $driver_options ?? [];
+$vehicle_options = $vehicle_options ?? [];
+$equipment_options = $equipment_options ?? [];
+$equipment_statuses = $equipment_statuses ?? [];
+$people_options = $people_options ?? [];
+$me_emp_id = $me_emp_id ?? '';
 helper('facilities');
 $subtitles = [
   'vehicles'     => 'Vehicle records, driver information, vehicle maintenance, and mechanical equipment.',

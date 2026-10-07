@@ -614,7 +614,7 @@ function showVehicleRoute(id) {
 
             const points = res.points || [];
             if (!points.length) {
-                if (statusEl) statusEl.textContent = 'No GPS pings recorded in that range.';
+                if (statusEl) statusEl.textContent = 'No GPS pings recorded in that range.' + (res.note ? ' ' + res.note : '');
                 return;
             }
             if (points.length === 1) {

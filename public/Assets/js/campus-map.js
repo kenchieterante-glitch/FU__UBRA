@@ -52,30 +52,43 @@ window.renderMapImage = function (svgId, opts) {
   const heading = document.createElementNS(ns, 'rect');
   heading.setAttribute('x', 1400); heading.setAttribute('y', 196);
   heading.setAttribute('width', 640); heading.setAttribute('height', 62);
-  heading.setAttribute('fill', '#ffffff');
+  heading.setAttribute('fill', '#ffffff'); heading.setAttribute('class', 'map-cover');
   svg.appendChild(heading);
 
   const legendCover = document.createElementNS(ns, 'rect');
   legendCover.setAttribute('x', 958); legendCover.setAttribute('y', 74);
   legendCover.setAttribute('width', 424); legendCover.setAttribute('height', 220);
-  legendCover.setAttribute('fill', '#ffffff');
+  legendCover.setAttribute('fill', '#ffffff'); legendCover.setAttribute('class', 'map-cover');
   svg.appendChild(legendCover);
 
   if (opts.legend === 'aircon' || opts.legend === 'cleaning' || opts.legend === 'building') {
     const cover = document.createElementNS(ns, 'rect');
     cover.setAttribute('x', 958); cover.setAttribute('y', 74);
     cover.setAttribute('width', 424); cover.setAttribute('height', 220);
-    cover.setAttribute('fill', '#ffffff');
+    cover.setAttribute('fill', '#ffffff'); cover.setAttribute('class', 'map-cover');
     svg.appendChild(cover);
 
     ICON_POINTS.forEach(([x, y]) => {
-      if (opts.legend === 'cleaning') { drawBroom(svg, ns, x, y); return; }
-      if (opts.legend === 'building') { drawCheck(svg, ns, x, y); return; }
+      // The little icon at each building is clickable too: it opens that building, same as clicking its marker.
+      const ig = document.createElementNS(ns, 'g');
+      ig.style.cursor = 'pointer';
+      svg.appendChild(ig);
+      let nearB = null, nd = Infinity;
+      MAP_BUILDINGS.forEach(mb => { const d = Math.hypot(mb.x - x, mb.y - y); if (d < nd) { nd = d; nearB = mb; } });
+      if (nearB) {
+        const tt = document.createElementNS(ns, 'title'); tt.textContent = nearB.name; ig.appendChild(tt);
+        ig.addEventListener('click', () => {
+          document.dispatchEvent(new CustomEvent('campus-map-select', { detail: { svgId, name: nearB.name } }));
+          if (opts.onSelect) opts.onSelect(nearB.name);
+        });
+      }
+      if (opts.legend === 'cleaning') { drawBroom(ig, ns, x, y); return; }
+      if (opts.legend === 'building') { drawCheck(ig, ns, x, y); return; }
       const bg = document.createElementNS(ns, 'circle');
       bg.setAttribute('cx', x); bg.setAttribute('cy', y); bg.setAttribute('r', 22);
       bg.setAttribute('fill', '#1c6dd0');
       bg.setAttribute('stroke', '#ffffff'); bg.setAttribute('stroke-width', 3);
-      svg.appendChild(bg);
+      ig.appendChild(bg);
       [0, 60, 120].forEach(deg => {
         const rad = deg * Math.PI / 180;
         const dx = Math.cos(rad) * 14, dy = Math.sin(rad) * 14;
@@ -84,7 +97,7 @@ window.renderMapImage = function (svgId, opts) {
         arm.setAttribute('x2', x + dx); arm.setAttribute('y2', y + dy);
         arm.setAttribute('stroke', '#ffffff'); arm.setAttribute('stroke-width', 3);
         arm.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(arm);
+        ig.appendChild(arm);
       });
     });
 
@@ -99,8 +112,9 @@ window.renderMapImage = function (svgId, opts) {
   MAP_BUILDINGS.forEach(b => {
     const st = stateByName[b.name];
     const alerts = [];
-    if (st && (st.red || st.yellow)) {
+    if (st && (st.red || st.yellow || st.circle)) {
       if (st.red) alerts.push({ kind: 'red', floors: st.red });
+      if (st.circle) alerts.push({ kind: 'circle', floors: st.circle });
       if (st.yellow) alerts.push({ kind: 'yellow', floors: st.yellow });
     } else if (st) {
       if (st.state === 'overdue') alerts.push({ kind: 'red', floors: st.floors || [] });
@@ -123,7 +137,10 @@ window.renderMapImage = function (svgId, opts) {
     }
     const group = document.createElementNS(ns, 'g');
     group.style.cursor = 'pointer';
-    group.addEventListener('click', () => opts.onSelect && opts.onSelect(b.name));
+    group.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('campus-map-select', { detail: { svgId, name: b.name } }));
+      if (opts.onSelect) opts.onSelect(b.name);
+    });
 
     const title = document.createElementNS(ns, 'title');
     title.textContent = floors.length
@@ -141,20 +158,22 @@ window.renderMapImage = function (svgId, opts) {
 
     if (alerts.length) {
       alerts.forEach((al, i) => {
-        const cx = alerts.length === 2 ? bx + (i === 0 ? -42 : 42) : bx;
+        const cx = alerts.length > 1 ? bx + (i - (alerts.length - 1) / 2) * 84 : bx;
         const yellow = al.kind === 'yellow';
-        const blink = al.kind === 'red' && !opts.noBlink;
+        const isCircle = al.kind === 'circle';
+        const blink = (al.kind === 'red' || isCircle) && !opts.noBlink;
         const ag = document.createElementNS(ns, 'g');
         if (blink) ag.setAttribute('class', 'fac-blink');
         group.appendChild(ag);
-        const tri = document.createElementNS(ns, 'polygon');
-        Object.entries({
-          points: `${cx},${by - 36} ${cx + 36},${by + 26} ${cx - 36},${by + 26}`,
-          fill: yellow ? '#ffc400' : '#ff1414', stroke: '#ffffff', 'stroke-width': 5, 'stroke-linejoin': 'round',
-        }).forEach(([k, v]) => tri.setAttribute(k, v));
+        // Red triangle = overdue; red circle = due within 7 days; yellow triangle = needs attention.
+        const tri = document.createElementNS(ns, isCircle ? 'circle' : 'polygon');
+        Object.entries(isCircle
+          ? { cx, cy: by - 2, r: 34, fill: '#ff1414', stroke: '#ffffff', 'stroke-width': 5 }
+          : { points: `${cx},${by - 36} ${cx + 36},${by + 26} ${cx - 36},${by + 26}`, fill: yellow ? '#ffc400' : '#ff1414', stroke: '#ffffff', 'stroke-width': 5, 'stroke-linejoin': 'round' }
+        ).forEach(([k, v]) => tri.setAttribute(k, v));
         ag.appendChild(tri);
         const bang = document.createElementNS(ns, 'text');
-        Object.entries({ x: cx, y: by + 17, 'text-anchor': 'middle', 'font-size': 36, 'font-weight': 800, fill: yellow ? '#1a1a1a' : '#ffffff' }).forEach(([k, v]) => bang.setAttribute(k, v));
+        Object.entries({ x: cx, y: by + (isCircle ? 12 : 17), 'text-anchor': 'middle', 'font-size': 36, 'font-weight': 800, fill: yellow ? '#1a1a1a' : '#ffffff' }).forEach(([k, v]) => bang.setAttribute(k, v));
         bang.textContent = '!';
         ag.appendChild(bang);
         if (al.floors.length && !opts.hideFloorText) {
@@ -226,6 +245,7 @@ window.zoomMapTo = function (svgId, name) {
   const start = (svg.getAttribute('viewBox') || full.join(' ')).split(' ').map(Number);
   const t0 = performance.now();
   const dur = 350;
+  document.dispatchEvent(new CustomEvent('campus-map-select', { detail: { svgId, name: name || '' } }));
   (function step(now) {
     const k = Math.min(1, (now - t0) / dur);
     const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
