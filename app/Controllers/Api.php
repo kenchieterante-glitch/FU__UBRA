@@ -879,21 +879,18 @@ class Api extends BaseController
         $slug = $this->request->getGet('building');
         $locationName = array_search($slug, self::ZONE_SLUGS, true);
         if (!$locationName) {
-            return $this->response->setJSON(['unit' => null]);
+            return $this->response->setJSON(['unit' => null, 'units' => []]);
         }
 
-        $model = new AirconUnitModel();
-        $unit  = $model->getByLocation($locationName);
-
-        if (!$unit) {
-            return $this->response->setJSON(['unit' => null]);
-        }
-
+        // A building can have several aircon units — return all of them
+        // (newest first) so a newly registered unit doesn't replace or hide
+        // the existing ones. 'unit' stays as the newest for older app builds.
+        $rows = (new AirconUnitModel())->where('location', $locationName)->orderBy('id', 'DESC')->findAll();
         $checklistModel = new AirconChecklistItemModel();
-        $tasks = $checklistModel->getForUnit((int) $unit['id']);
 
-        return $this->response->setJSON([
-            'unit' => [
+        $units = array_map(function ($unit) use ($checklistModel) {
+            $tasks = $checklistModel->getForUnit((int) $unit['id']);
+            return [
                 'id'             => (int) $unit['id'],
                 'unit'           => $unit['unit_name'],
                 'location'       => $unit['location'],
@@ -907,8 +904,10 @@ class Api extends BaseController
                     'done'         => (bool) $t['is_done'],
                     'completed_at' => $this->toIso($t['completed_at']),
                 ], $tasks),
-            ],
-        ]);
+            ];
+        }, $rows);
+
+        return $this->response->setJSON(['unit' => $units[0] ?? null, 'units' => $units]);
     }
 
     // Registers a new aircon unit for a building (there was previously no way
