@@ -30,6 +30,7 @@ class NotificationModel extends Model
         'Sports Equipment Needs Repair'    => 'sports',
         'Inventory Low Stock'              => 'tools',
         'Tool Borrowed'                    => 'tools',
+        'Hazardous Waste Alert'            => 'waste',
         'Janitorial Assignment'            => 'janitorial',
         'Cleaning Scheduled'               => 'janitorial',
         'Urgent Cleaning Scheduled'        => 'janitorial',
@@ -53,7 +54,7 @@ class NotificationModel extends Model
     public static function allowedModulesForRole(string $role): ?array
     {
         return match (strtolower($role)) {
-            'facilities' => ['tools', 'personnel', 'aircon', 'safety'],
+            'facilities' => ['tools', 'personnel', 'aircon', 'safety', 'waste'],
             // Safety & Security: fire safety only (vehicles belong to Asset Acquisition now).
             'security'   => ['firesafety'],
             // Asset Acquisition and Monitoring: vehicles, trips and the motor pool.
@@ -63,7 +64,7 @@ class NotificationModel extends Model
             // Tools Head = the Tools & Equipment / "Maintenance" office —
             // only its own inventory/borrow notifications.
             'tools'      => ['tools'],
-            'janitorial' => ['janitorial'],
+            'janitorial' => ['janitorial', 'waste'],
             default      => null,
         };
     }

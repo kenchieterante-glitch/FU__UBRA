@@ -136,16 +136,27 @@ class Dashboard extends BaseController
         $totalZones   = count($zoneShifts);
         $cleanedZones = count(array_filter($zoneShifts, $zoneIsDone));
 
-        $cleaningIncompleteList = [];
-        foreach ($zoneShifts as $zoneName => $shifts) {
-            if ($zoneIsDone($shifts)) continue;
-            $doneCount  = array_sum(array_column($shifts, 'done'));
-            $totalCount = array_sum(array_column($shifts, 'total'));
-            $cleaningIncompleteList[] = [
-                'title'    => $zoneName,
-                'subtitle' => "{$doneCount} of {$totalCount} tasks done",
+        // ── Waste Watch: stations weighed today / still to do / missed (replaces the janitorial cleaning box) ──
+        $wdb = db_connect();
+        $wasteStations = $wdb->table('waste_stations')->where('is_archived', 0)->orderBy('building', 'ASC')->get()->getResultArray();
+        $wasteLast = [];
+        foreach ($wdb->query('SELECT station_id, MAX(log_date) AS last_date FROM waste_logs GROUP BY station_id')->getResultArray() as $w) $wasteLast[$w['station_id']] = $w['last_date'];
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+        $wasteTodoList = [];
+        $wasteDone = 0; $wasteMissed = 0;
+        foreach ($wasteStations as $ws) {
+            $last = $wasteLast[$ws['id']] ?? null;
+            if ($last === $today) { $wasteDone++; continue; }
+            $missed = $last === null || $last < $yesterday;
+            if ($missed) $wasteMissed++;
+            $wasteTodoList[] = [
+                'title'    => $ws['building'],
+                'subtitle' => $missed ? 'Missed — last weighed ' . ($last ? date('M j', strtotime($last)) : 'never') : 'To do — not weighed yet today',
             ];
         }
+        $wasteTotal = count($wasteStations);
+        $wastePending = count($wasteTodoList);
+        $wasteHazToday = (float) ($wdb->query('SELECT COALESCE(SUM(hazardous_kg),0) AS h FROM waste_logs WHERE log_date = ?', [$today])->getRow()->h ?? 0);
 
         // ── Detail lists behind each KPI banner — same idea as the Pending
         // Requests panel's two columns, just one real itemized list per
@@ -184,13 +195,11 @@ class Dashboard extends BaseController
                     : "{$b['asset_name']} borrowed by {$b['borrower']}.",
             ];
         }
-        foreach ($allTasks as $task) {
-            if ((int) $task['is_done'] !== 1 || empty($task['completed_at'])) continue;
-            $zone = $assignmentsById[$task['assignment_id']]['assigned_zone'] ?? 'a zone';
+        foreach ($wdb->query('SELECT l.*, s.building FROM waste_logs l JOIN waste_stations s ON s.id = l.station_id ORDER BY l.created_at DESC LIMIT 8')->getResultArray() as $wl) {
             $activityFeed[] = [
-                'ts'   => $task['completed_at'],
-                'tag'  => 'Janitorial',
-                'text' => "\"{$task['task_name']}\" completed in {$zone}.",
+                'ts'   => $wl['created_at'],
+                'tag'  => 'Waste',
+                'text' => "{$wl['building']}: " . round((float) $wl['non_bio_kg'] + (float) $wl['bio_kg'] + (float) $wl['hazardous_kg'], 1) . ' kg weighed' . (!empty($wl['checked_by']) ? " by {$wl['checked_by']}." : '.'),
             ];
         }
         usort($activityFeed, fn($a, $b) => strcmp($b['ts'], $a['ts']));
@@ -236,10 +245,10 @@ class Dashboard extends BaseController
             [
                 'icon' => 'bi-exclamation-circle-fill',
                 'tone' => 'urgent',
-                'title' => ($totalZones - $cleanedZones) . ' janitorial zones not yet complete',
-                'subtitle' => 'Janitorial Monitoring',
+                'title' => "{$wastePending} waste stations not weighed today",
+                'subtitle' => $wasteMissed > 0 ? "Waste Watch — {$wasteMissed} missed" : 'Waste Watch',
                 'time' => 'Today',
-                'url' => 'janitorial',
+                'url' => 'facilities/waste',
             ],
             [
                 'icon' => 'bi-hourglass-split',
@@ -263,7 +272,7 @@ class Dashboard extends BaseController
             ['title' => 'Facilities', 'icon' => 'bi-building-gear', 'url' => 'facilities/status', 'links' => [
                 // Repair Requests hidden for now: ['label' => 'Repair Requests', 'url' => 'facilities/work-orders', 'count' => $facOpen . ' open'],
                 ['label' => 'Aircon Care', 'url' => 'facilities/aircon', 'icon' => 'bi-snow2', 'count' => $facAir . ' due'],
-                ['label' => 'Janitorial Check', 'url' => 'facilities/janitorial', 'icon' => 'bi-brush', 'count' => ($totalZones - $cleanedZones) . ' zones left'],
+                ['label' => 'Waste Watch', 'url' => 'facilities/waste', 'icon' => 'bi-recycle', 'count' => $wastePending . ' to weigh today'],
                 ['label' => 'Building Check', 'url' => 'facilities/buildings', 'icon' => 'bi-building-check', 'count' => $facCheck . ' need attention'],
             ]],
             ['title' => 'Safety and Security', 'icon' => 'bi-shield-fill-check', 'url' => 'safety', 'links' => [
@@ -343,14 +352,14 @@ class Dashboard extends BaseController
                     'listKey' => 'maintenanceDueList',
                 ],
                 [
-                    'label' => 'Cleaning Completion',
-                    'value' => "{$cleanedZones}/{$totalZones} areas",
-                    'meta' => ($totalZones - $cleanedZones) . ' areas remaining',
-                    'sub' => 'As of ' . date('g:i A'),
-                    'tone' => 'tone-green',
-                    'icon' => 'bi-brush',
-                    'url' => 'janitorial?filter=pending',
-                    'listKey' => 'cleaningIncompleteList',
+                    'label' => 'Waste Check',
+                    'value' => "{$wasteDone}/{$wasteTotal} stations",
+                    'meta' => "{$wastePending} to do · {$wasteMissed} missed",
+                    'sub' => 'Weighed today',
+                    'tone' => $wastePending === 0 ? 'tone-green' : 'tone-gold',
+                    'icon' => 'bi-recycle',
+                    'url' => 'facilities/waste',
+                    'listKey' => 'wasteTodoList',
                 ],
                 [
                     'label' => 'Building Coverage',
@@ -383,7 +392,7 @@ class Dashboard extends BaseController
             'active_borrowings_json'   => $this->jsonForScript($activeBorrowingsList),
             'vehicles_inuse_json'      => $this->jsonForScript($vehiclesInUseList),
             'maintenance_due_json'     => $this->jsonForScript($maintenanceDueList),
-            'cleaning_incomplete_json' => $this->jsonForScript($cleaningIncompleteList),
+            'waste_todo_json' => $this->jsonForScript($wasteTodoList),
             'buildings_not_covered_json' => $this->jsonForScript(array_map(fn($b) => [
                 'title'    => $b,
                 'subtitle' => 'No fire extinguisher recorded yet',

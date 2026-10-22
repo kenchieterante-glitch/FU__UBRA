@@ -216,7 +216,7 @@
           <a href="<?= base_url('facilities/work-orders') ?>" class="<?= navActive('facilities/work-orders') ?>"><i class="bi bi-clipboard2-check"></i> <span class="nav-label">Repair Requests</span></a>
           <?php endif; ?>
           <a href="<?= base_url('facilities/aircon') ?>" class="<?= navActive('facilities/aircon') ?>"><i class="bi bi-snow2"></i> <span class="nav-label">Aircon Care</span></a>
-          <a href="<?= base_url('facilities/janitorial') ?>" class="<?= navActive('facilities/janitorial') ?>"><i class="bi bi-brush"></i> <span class="nav-label">Janitorial Check</span></a>
+          <a href="<?= base_url('facilities/waste') ?>" class="<?= navActive('facilities/waste') ?>"><i class="bi bi-recycle"></i> <span class="nav-label">Waste Watch</span></a>
           <a href="<?= base_url('facilities/buildings') ?>" class="<?= navActive('facilities/buildings') ?>"><i class="bi bi-building-check"></i> <span class="nav-label">Building Check</span></a>
         </div>
       </div>
@@ -291,7 +291,7 @@
       <?php endif; ?>
 
       <?php if ($isJanitorialSupervisor): ?>
-      <a href="<?= base_url('janitorial') ?>" class="<?= navActive('janitorial') ?>" data-tooltip="Janitorial Monitoring"><i class="bi bi-brush"></i> <span class="nav-label">Janitorial Check</span></a>
+      <a href="<?= base_url('facilities/waste') ?>" class="<?= navActive('facilities/waste') ?>" data-tooltip="Waste Watch"><i class="bi bi-recycle"></i> <span class="nav-label">Waste Watch</span></a>
       <?php endif; ?>
 
       <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor || $isJanitorialSupervisor || $isAssetsHead || $isSportsHead): ?>
@@ -653,6 +653,7 @@ document.querySelectorAll('[onsubmit*="confirm("], [onclick*="confirm("]').forEa
     ['janMapPanel', () => document.getElementById('bldMapBtn')?.click()],
     ['fsMapPanel', () => document.getElementById('fsMapBtn')?.click()],
     ['inMapPanel', () => document.getElementById('inMapBtn')?.click()],
+    ['wasteMapPanel', () => document.getElementById('wasteMapBtn')?.click()],
     ['fpPanel', () => document.getElementById('fpBtn')?.click()],
     ['mapPanel', () => (typeof toggleMapView === 'function' ? toggleMapView() : null)],
   ];

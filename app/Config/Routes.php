@@ -82,6 +82,8 @@ $routes->get('sports-dept/(:segment)', 'SportsDeptController::index/$1');
 $routes->post('sports-dept/equipment', 'SportsDeptController::storeEquipment');
 $routes->get('facilities', 'FacilitiesController::overview');
 $routes->get('facilities/status', 'FacilitiesController::status');
+$routes->get('facilities/waste', 'WasteController::index');
+$routes->post('facilities/waste/log', 'WasteController::log');
 $routes->get('facilities/(:segment)', 'FacilitiesController::index/$1');
 $routes->post('facilities/work-orders', 'FacilitiesController::store');
 $routes->post('facilities/work-orders/(:num)/status', 'FacilitiesController::updateStatus/$1');
