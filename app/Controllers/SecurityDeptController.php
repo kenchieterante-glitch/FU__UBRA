@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Code128;
 use App\Models\FacilityKeyModel;
 use App\Models\FireExtinguisherModel;
 use App\Models\FloorPlanMarkerModel;
@@ -166,7 +167,7 @@ class SecurityDeptController extends BaseController
             'pageCss' => 'safety.css',
             'stats'   => [
                 ['key' => 'sd_total', 'label' => 'Safety Equipment', 'value' => count($equipment), 'icon' => 'bi-fire', 'tone' => 'maroon'],
-                ['key' => 'sd_attn', 'label' => 'Equipment Needing Attention', 'value' => count(array_filter($equipment, fn($r) => $this->needsAttention($r))), 'icon' => 'bi-exclamation-triangle-fill', 'tone' => 'red'],
+                ['key' => 'sd_attn', 'label' => 'Urgent Equipment', 'value' => count(array_filter($equipment, fn($r) => $this->needsAttention($r))), 'icon' => 'bi-exclamation-triangle-fill', 'tone' => 'red'],
                 ['key' => 'sd_over', 'label' => 'Checks Overdue', 'value' => count($overdue), 'icon' => 'bi-calendar-x', 'tone' => 'red'],
                 ['key' => 'sd_keys', 'label' => 'Keys Currently Out', 'value' => $keyLogs, 'icon' => 'bi-key-fill', 'tone' => 'amber'],
                 ['key' => 'sd_veh', 'label' => 'Vehicles Out', 'value' => $trips, 'icon' => 'bi-truck', 'tone' => 'blue'],
@@ -283,14 +284,33 @@ class SecurityDeptController extends BaseController
             ?? $model->where('LOWER(key_name)', mb_strtolower($code))->first();
     }
 
+    // An ID card can carry a QR code and a barcode, and the QR may hold more than the bare number
+    // (a link, a name, several fields). Try the scan as it is; if that finds nobody, try each piece of it.
+    protected function guardFindPerson(string $raw): ?array
+    {
+        $model = new PersonnelModel();
+        $raw = trim($raw);
+        if ($raw === '') return null;
+        if ($p = $model->getByEmpId($raw)) return $p;
+
+        $pieces = preg_split('/[\s|,;:\/=&?#"\'<>{}\[\]()]+/', $raw) ?: [];
+        preg_match_all('/[A-Za-z0-9][A-Za-z0-9-]{3,}/', $raw, $m);
+        foreach (array_unique(array_merge($pieces, $m[0] ?? [])) as $piece) {
+            $piece = trim((string) $piece, " -\t\r\n");
+            if (strlen($piece) >= 4 && ($p = $model->getByEmpId($piece))) return $p;
+        }
+
+        return null;
+    }
+
     public function guardLookup($empId = '')
     {
         if (!session()->get('isLoggedIn')) return $this->guardJson(403, 'Please sign in.');
 
-        $person = (new PersonnelModel())->getByEmpId(trim((string) urldecode($empId)));
+        $person = $this->guardFindPerson((string) ($this->request->getGet('code') ?? urldecode($empId)));
         if (!$person) return $this->guardJson(404, 'No staff or faculty record for that ID.');
 
-        return $this->response->setJSON(['full_name' => $person['full_name'], 'department' => $person['department_name'] ?? '']);
+        return $this->response->setJSON(['full_name' => $person['full_name'], 'department' => $person['department_name'] ?? '', 'emp_id' => $person['emp_id']]);
     }
 
     public function guardBorrow()
@@ -301,7 +321,7 @@ class SecurityDeptController extends BaseController
         $empId = trim((string) $this->request->getPost('borrower_id'));
         if ($empId === '') return $this->guardJson(422, 'Scan or type the borrower\'s ID first.');
 
-        $person = (new PersonnelModel())->getByEmpId($empId);
+        $person = $this->guardFindPerson($empId);
         if (!$person) return $this->guardJson(403, 'No staff or faculty record found for that ID. Only staff and faculty can borrow keys.');
 
         $key = $this->guardFindKey();
@@ -311,7 +331,7 @@ class SecurityDeptController extends BaseController
         $logs = new KeyBorrowLogModel();
         $logs->insert([
             'log_number'    => 'KL-' . str_pad((string) ($logs->countAllResults() + 1), 3, '0', STR_PAD_LEFT),
-            'borrower_id'   => $empId,
+            'borrower_id'   => $person['emp_id'],
             'full_name'     => $person['full_name'],
             'department'    => $person['department_name'] ?? '',
             'key_item'      => $key['key_name'],
@@ -352,9 +372,70 @@ class SecurityDeptController extends BaseController
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
 
         $keys = (new FacilityKeyModel())->orderBy('key_name', 'ASC')->findAll();
-        $staff = (new PersonnelModel())->where('is_archived', 0)->where('emp_id !=', '')->orderBy('full_name', 'ASC')->findAll(12);
+        $staff = (new PersonnelModel())->where('is_archived', 0)->where('emp_id !=', '')->orderBy('full_name', 'ASC')->findAll();
 
         return view('security_dept/barcodes', ['keys' => $keys, 'staff' => $staff]);
+    }
+
+    // Downloadable PDF of test barcodes (staff IDs first, then the keys) for trying the scanner on paper.
+    public function barcodesPdf()
+    {
+        if (!session()->get('isLoggedIn')) return redirect()->to('/login');
+
+        $staff = (new PersonnelModel())->where('is_archived', 0)->where('emp_id !=', '')->orderBy('full_name', 'ASC')->findAll();
+        // the people the guard is most likely to test with come first
+        usort($staff, fn($a, $b) => [$a['emp_id'] === '20230407' ? 0 : 1, $a['full_name']] <=> [$b['emp_id'] === '20230407' ? 0 : 1, $b['full_name']]);
+        $staff = array_slice($staff, 0, 12);
+        $keys = (new FacilityKeyModel())->orderBy('key_name', 'ASC')->findAll();
+
+        $card = function (string $name, string $code, string $kind): string {
+            return '<td class="card"><div class="kind">' . esc($kind) . '</div><div class="nm">' . esc($name) . '</div>'
+                . '<img class="bc" src="' . Code128::dataUri($code, 3, 120) . '"><div class="cd">' . esc($code) . '</div></td>';
+        };
+        $grid = function (array $items) {
+            $rows = '';
+            foreach (array_chunk($items, 2) as $pair) {
+                $rows .= '<tr>' . $pair[0] . ($pair[1] ?? '<td class="card empty"></td>') . '</tr>';
+            }
+            return '<table class="grid">' . $rows . '</table>';
+        };
+
+        $staffCards = array_map(fn($p) => $card($p['full_name'], (string) $p['emp_id'], 'Staff ID'), $staff);
+        $keyCards = array_map(fn($k) => $card($k['key_name'], (string) $k['nfc_uid'], 'Key'), $keys);
+
+        $html = '<html><head><meta charset="utf-8"><style>
+            @page { margin: 12mm; }
+            body { font-family: Helvetica, Arial, sans-serif; color: #222; margin: 0; }
+            h1 { font-size: 17px; color: #800000; margin: 0 0 2px; }
+            .sub { font-size: 11px; color: #555; margin-bottom: 8px; }
+            h2 { font-size: 13px; color: #800000; margin: 10px 0 6px; border-bottom: 2px solid #800000; padding-bottom: 3px; }
+            .tip { background: #fbf3f4; border: 1px solid #e3c6c9; padding: 6px 10px; font-size: 10.5px; margin-bottom: 6px; }
+            table.grid { width: 100%; border-collapse: separate; border-spacing: 6px; table-layout: fixed; }
+            td.card { border: 0.3mm dashed #888; text-align: center; padding: 5px 4px 4px; height: 36mm; vertical-align: middle; }
+            td.empty { border: 0; }
+            .kind { font-size: 8px; color: #800000; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; }
+            .nm { font-size: 11px; font-weight: bold; margin: 2px 0 4px; }
+            img.bc { width: 62mm; height: 17mm; }
+            .cd { font-family: Courier, monospace; font-size: 10px; margin-top: 3px; letter-spacing: 1px; }
+        </style></head><body>
+        <h1>Barcode test sheet — Guard Station</h1>
+        <div class="sub">Foundation University — UBRA · Code 128 · generated ' . esc(date('M j, Y g:i A')) . '</div>
+        <div class="tip">Print this page at <b>100% / actual size</b> (not "fit to page"). On the Guard Station choose <b>Lend a key</b>, scan a <b>staff ID</b>, then scan a <b>key</b>.</div>
+        <h2>Staff IDs</h2>' . $grid($staffCards) . '
+        <div style="page-break-before:always"></div>
+        <h2>Keys</h2>' . $grid($keyCards) . '
+        </body></html>';
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('a4', 'portrait');
+        $dompdf->render();
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="fu-ubra-test-barcodes-' . date('Y-m-d') . '.pdf"')
+            ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->setBody($dompdf->output());
     }
 
     // List of Keys: every key on record (registered keys + any key that has ever been borrowed), and where it is now.
@@ -730,12 +811,12 @@ class SecurityDeptController extends BaseController
         return [
             'status' => [
                 ['key' => 'fs_total', 'label' => 'Total Equipment', 'value' => count($rows), 'icon' => 'bi-fire', 'tone' => 'maroon'],
-                ['key' => 'fs_attention', 'label' => 'Equipment Needing Attention', 'value' => count($attention), 'icon' => 'bi-exclamation-triangle-fill', 'tone' => 'red'],
+                ['key' => 'fs_attention', 'label' => 'Urgent Equipment', 'value' => count($attention), 'icon' => 'bi-exclamation-triangle-fill', 'tone' => 'red'],
                 ['key' => 'fs_due', 'label' => 'Check Due or Overdue', 'value' => count($due), 'icon' => 'bi-calendar-event', 'tone' => 'amber'],
             ],
             'stat_detail' => [
                 'fs_total'     => ['title' => 'All Fire Safety Equipment', 'columns' => $cols, 'rows' => array_map($row, $rows)],
-                'fs_attention' => ['title' => 'Equipment Needing Attention', 'columns' => $cols, 'rows' => array_map($row, $attention)],
+                'fs_attention' => ['title' => 'Urgent Equipment', 'columns' => $cols, 'rows' => array_map($row, $attention)],
                 'fs_due'       => ['title' => 'Checks Due or Overdue', 'columns' => $cols, 'rows' => array_map($row, $due)],
             ],
             'equipment_by_type' => $byType,
@@ -837,11 +918,11 @@ class SecurityDeptController extends BaseController
         foreach ($current as $i) {
             $s = $i['safety_status'];
             $mapState[$i['building']] = [
-                'red'    => in_array($s, ['Unsafe', 'Needs Attention'], true) ? [] : null,
+                'red'    => in_array($s, ['Unsafe', 'Urgent'], true) ? [] : null,
                 'yellow' => $s === null ? [] : null,
                 'done'   => $s === 'Safe',
             ];
-            if (in_array($s, ['Unsafe', 'Needs Attention'], true)) {
+            if (in_array($s, ['Unsafe', 'Urgent'], true)) {
                 $alerts[] = ['cols' => [$i['building'], $s, $i['remarks'] ?? '—'], 'level' => 'red'];
             } elseif ($s === null) {
                 $alerts[] = ['cols' => [$i['building'], 'Not inspected', '—'], 'level' => 'yellow'];
@@ -851,13 +932,13 @@ class SecurityDeptController extends BaseController
         return [
             'status' => [
                 ['key' => 'i_safe', 'label' => 'Safe', 'value' => count($by('Safe')), 'icon' => 'bi-shield-check', 'tone' => 'green'],
-                ['key' => 'i_attn', 'label' => 'Buildings Needing Attention', 'value' => count($by('Needs Attention')), 'icon' => 'bi-exclamation-circle-fill', 'tone' => 'amber'],
+                ['key' => 'i_attn', 'label' => 'Urgent Buildings', 'value' => count($by('Urgent')), 'icon' => 'bi-exclamation-circle-fill', 'tone' => 'amber'],
                 ['key' => 'i_unsafe', 'label' => 'Unsafe', 'value' => count($by('Unsafe')), 'icon' => 'bi-shield-exclamation', 'tone' => 'red'],
                 ['key' => 'i_none', 'label' => 'Not Inspected Yet', 'value' => count($notDone), 'icon' => 'bi-hourglass', 'tone' => 'gold'],
             ],
             'stat_detail' => [
                 'i_safe'   => ['title' => 'Safe Buildings', 'columns' => $cols, 'rows' => array_map($row, $by('Safe'))],
-                'i_attn'   => ['title' => 'Buildings Needing Attention', 'columns' => $cols, 'rows' => array_map($row, $by('Needs Attention'))],
+                'i_attn'   => ['title' => 'Urgent Buildings', 'columns' => $cols, 'rows' => array_map($row, $by('Urgent'))],
                 'i_unsafe' => ['title' => 'Unsafe Buildings', 'columns' => $cols, 'rows' => array_map($row, $by('Unsafe'))],
                 'i_none'   => ['title' => 'Buildings Not Inspected Yet', 'columns' => $cols, 'rows' => array_map($row, $notDone)],
             ],

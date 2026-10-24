@@ -264,7 +264,7 @@ class Dashboard extends BaseController
         $month = date('Y-m');
         $facOpen  = (new WorkOrderModel())->whereIn('status', ['Pending', 'In Progress'])->countAllResults();
         $facAir   = (new AirconUnitModel())->where('next_schedule <=', date('Y-m-d', strtotime('+7 days')))->countAllResults();
-        $facCheck = (new JanitorialInspectionModel())->where('inspection_month', $month)->where('result', 'Needs Attention')->countAllResults();
+        $facCheck = (new JanitorialInspectionModel())->where('inspection_month', $month)->where('result', 'Urgent')->countAllResults();
         $keysOut  = (new KeyBorrowLogModel())->where('status', 'Active')->countAllResults();
         $gpsOnline = $vehicleModel->where('is_archived', 0)->where('gps_status', 'Online')->countAllResults();
         $tripsOpen = $travelModel->whereIn('status', ['Pending', 'Reviewed', 'Approved', 'In Transit'])->countAllResults();
@@ -273,7 +273,7 @@ class Dashboard extends BaseController
                 // Repair Requests hidden for now: ['label' => 'Repair Requests', 'url' => 'facilities/work-orders', 'count' => $facOpen . ' open'],
                 ['label' => 'Aircon Care', 'url' => 'facilities/aircon', 'icon' => 'bi-snow2', 'count' => $facAir . ' due'],
                 ['label' => 'Waste Watch', 'url' => 'facilities/waste', 'icon' => 'bi-recycle', 'count' => $wastePending . ' to weigh today'],
-                ['label' => 'Building Check', 'url' => 'facilities/buildings', 'icon' => 'bi-building-check', 'count' => $facCheck . ' need attention'],
+                ['label' => 'Building Check', 'url' => 'facilities/buildings', 'icon' => 'bi-building-check', 'count' => $facCheck . ' urgent'],
             ]],
             ['title' => 'Safety and Security', 'icon' => 'bi-shield-fill-check', 'url' => 'safety', 'links' => [
                 ['label' => 'Fire Safety', 'url' => 'safety', 'icon' => 'bi-fire', 'count' => $overdueFe . ' overdue'],

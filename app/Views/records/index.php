@@ -82,7 +82,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                 <option value="good">Good</option>
                 <option value="safe">Safe</option>
                 <option value="unsafe">Unsafe</option>
-                <option value="needs-attention">Needs Attention</option>
+                <option value="needs-attention">Urgent</option>
                 <option value="low-stock">Low Stock</option>
                 <option value="in-transit">In Transit</option>
                 <option value="submitted">Submitted</option>

@@ -13,5 +13,5 @@ class JanitorialInspectionModel extends Model
         'building', 'floor', 'inspection_month', 'result', 'inspected_by', 'notes', 'inspected_at',
     ];
 
-    public const RESULTS = ['Passed', 'Needs Attention'];
+    public const RESULTS = ['Passed', 'Urgent'];
 }

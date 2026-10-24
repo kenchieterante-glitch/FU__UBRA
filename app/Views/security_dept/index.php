@@ -73,7 +73,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
       <i class="bi bi-search search-icon"></i>
     </div>
     <div class="fe-toolbar-actions">
-      <?= $alertBtns('fs', 'Equipment needing attention', 'Checks due soon') ?>
+      <?= $alertBtns('fs', 'Urgent equipment', 'Checks due soon') ?>
       <button type="button" class="filter-btn" id="fsMapBtn" onclick="toggleSecMap('fs')" title="Map" aria-label="Map"><i class="bi bi-map"></i></button>
       <button type="button" class="filter-btn" id="fpBtn" onclick="toggleFloorPlans()" title="Floor Plans" aria-label="Floor Plans"><i class="bi bi-layers"></i></button>
       <div class="filter-menu-wrapper">
@@ -118,7 +118,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
 
   <div id="fpPanel" class="guard-card" style="display:none;padding:18px;margin-bottom:16px;">
     <div class="gc-title"><i class="bi bi-layers"></i> Floor Plans
-      <button type="button" class="fac-alert-icon fac-alert-btn alert-red fac-blink" id="fpAlertBadge" style="display:none;margin-left:10px;" onclick="toggleAlertList('fs','red')" title="Equipment needing attention"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="fpAlertCount"></strong></button>
+      <button type="button" class="fac-alert-icon fac-alert-btn alert-red fac-blink" id="fpAlertBadge" style="display:none;margin-left:10px;" onclick="toggleAlertList('fs','red')" title="Urgent equipment"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="fpAlertCount"></strong></button>
     </div>
     <div class="fp-controls">
       <select id="fpBuilding" onchange="fpPickBuilding(this.value)"></select>
@@ -431,7 +431,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
       <i class="bi bi-search search-icon"></i>
     </div>
     <div class="fe-toolbar-actions">
-      <?= $alertBtns('in', 'Buildings needing attention', 'Buildings not inspected yet') ?>
+      <?= $alertBtns('in', 'Urgent buildings', 'Buildings not inspected yet') ?>
       <button type="button" class="filter-btn" id="inMapBtn" onclick="toggleSecMap('in')" title="Map" aria-label="Map"><i class="bi bi-map"></i></button>
       <div class="filter-menu-wrapper">
         <button type="button" class="filter-btn" onclick="toggleFacFilter(this)" aria-label="Open filters"><i class="bi bi-funnel"></i></button>
@@ -440,7 +440,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
           <div class="filter-row">
             <label for="inStatusFilter">Safety status</label>
             <select id="inStatusFilter" onchange="applyInFilters()">
-              <option value="">All</option><option>Safe</option><option>Needs Attention</option><option>Unsafe</option><option value="Not inspected">Not inspected</option>
+              <option value="">All</option><option>Safe</option><option>Urgent</option><option>Unsafe</option><option value="Not inspected">Not inspected</option>
             </select>
           </div>
           <div class="filter-row">
@@ -462,7 +462,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
     <div class="fac-map-legend">
       <span><i class="map-pass"></i> Safe</span>
       <span><i style="background:#ffc400"></i> Yellow alert = not inspected yet</span>
-      <span><i class="map-alert"></i> Red warning = needs attention or unsafe</span>
+      <span><i class="map-alert"></i> Red warning = urgent or unsafe</span>
     </div>
     <div class="fac-map-wrap"><svg id="inMapSVG" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg></div>
   </div>
@@ -529,7 +529,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
         </div>
         <div class="fg">
           <label>Safety Status <span class="required-mark">*</span></label>
-          <select name="safety_status" required><option>Safe</option><option>Needs Attention</option><option>Unsafe</option></select>
+          <select name="safety_status" required><option>Safe</option><option>Urgent</option><option>Unsafe</option></select>
         </div>
         <div class="fg fg-full">
           <label>Remarks</label>
@@ -575,7 +575,7 @@ document.addEventListener('click', e => {
 
 const alertBadges = {
   'Overdue': 'zb-overdue badge-blink', 'Needs Repair': 'zb-overdue badge-blink', 'Missing': 'zb-overdue badge-blink',
-  'Defective': 'zb-overdue badge-blink', 'Unsafe': 'zb-overdue badge-blink', 'Needs Attention': 'zb-overdue badge-blink',
+  'Defective': 'zb-overdue badge-blink', 'Unsafe': 'zb-overdue badge-blink', 'Urgent': 'zb-overdue badge-blink',
   'Key out over 8 hours': 'zb-overdue badge-blink',
   'Due in 7 Days': 'zb-needs', 'Not inspected': 'zb-needs', 'Awaiting dispatch': 'zb-needs',
 };
@@ -625,7 +625,7 @@ function detailGrid(fields) {
 }
 
 <?php if ($section === 'fire-safety'): ?>
-const alertData = { fs: { items: <?= $alerts_json ?>, titles: { red: 'Equipment needing attention', yellow: 'Checks due soon' }, cols: ['Type', 'Code', 'Building', 'Status'] } };
+const alertData = { fs: { items: <?= $alerts_json ?>, titles: { red: 'Urgent equipment', yellow: 'Checks due soon' }, cols: ['Type', 'Code', 'Building', 'Status'] } };
 initAlertIcons();
 renderMapImage('fsMapSVG', { imageUrl: '<?= base_url('images/MAP.jpg') ?>', stateByName: <?= $map_state_json ?>, hideFloorText: true,
   onSelect: name => {
@@ -714,7 +714,7 @@ function fbShowFloors(name) {
   const floors = [...new Set(fpPlans.filter(p => p.campus === name).map(p => p.floor).concat(items.map(i => i.floor)))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
   const badTotal = items.filter(i => i.bad).length;
   box.innerHTML = '<div class="floor-break-title"><i class="bi bi-layers"></i> ' + esc(name) + ' — by floor' +
-    (badTotal ? ' <span class="fb-chip fb-bad fac-blink"><i class="bi bi-exclamation-triangle-fill"></i> ' + badTotal + ' need attention</span>' : ' <span class="fb-chip fb-ok"><i class="bi bi-check-circle-fill"></i> all good</span>') + '</div>' +
+    (badTotal ? ' <span class="fb-chip fb-bad fac-blink"><i class="bi bi-exclamation-triangle-fill"></i> ' + badTotal + ' urgent</span>' : ' <span class="fb-chip fb-ok"><i class="bi bi-check-circle-fill"></i> all good</span>') + '</div>' +
     (floors.length ? '<table><thead><tr><th>Floor</th>' + FB_TYPES.map(t => '<th>' + t[1] + '</th>').join('') + '</tr></thead><tbody>' +
       floors.map(fl => '<tr><td>' + esc(fl) + '</td>' + FB_TYPES.map(t => '<td>' + fbCell(items.filter(i => i.floor === fl && i.type === t[0])) + '</td>').join('') + '</tr>').join('') + '</tbody></table>'
       : '<div class="text-muted">No fire safety equipment recorded for this building yet.</div>');
@@ -737,7 +737,7 @@ function fpTabAlerts() {
   document.querySelectorAll('#fpFloors .sub-tab').forEach(b => {
     const n = badCount(b.dataset.file);
     b.querySelector('.fp-tab-alert')?.remove();
-    if (n) b.insertAdjacentHTML('beforeend', ' <span class="fp-tab-alert fac-blink" title="' + n + ' need attention"><i class="bi bi-exclamation-triangle-fill"></i></span>');
+    if (n) b.insertAdjacentHTML('beforeend', ' <span class="fp-tab-alert fac-blink" title="' + n + ' urgent"><i class="bi bi-exclamation-triangle-fill"></i></span>');
   });
   document.querySelectorAll('#fpBuilding option').forEach(o => {
     const files = fpPlans.filter(p => p.building === o.value).map(p => p.file);
@@ -961,7 +961,7 @@ function showKeyDetail(id) {
 <?php endif; ?>
 
 <?php if ($section === 'inspection'): ?>
-const alertData = { in: { items: <?= $alerts_json ?>, titles: { red: 'Buildings needing attention', yellow: 'Buildings not inspected yet' }, cols: ['Building', 'Status', 'Remarks'] } };
+const alertData = { in: { items: <?= $alerts_json ?>, titles: { red: 'Urgent buildings', yellow: 'Buildings not inspected yet' }, cols: ['Building', 'Status', 'Remarks'] } };
 initAlertIcons();
 const currentInsp = <?= $current_json ?>;
 renderMapImage('inMapSVG', { imageUrl: '<?= base_url('images/MAP.jpg') ?>', stateByName: <?= $map_state_json ?>, legend: 'building',

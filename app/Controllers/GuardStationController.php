@@ -39,6 +39,11 @@ class GuardStationController extends SecurityDeptController
         return $this->guardReturn();
     }
 
+    public function deskBarcodesPdf()
+    {
+        return $this->barcodesPdf();
+    }
+
     public function deskBarcodes()
     {
         return $this->barcodes();

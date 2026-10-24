@@ -102,7 +102,7 @@
     <section class="panel-card alerts-panel" aria-label="Alerts">
       <div class="panel-head">
         <h2>Alerts</h2>
-        <p>Items needing attention.</p>
+        <p>Urgent items.</p>
       </div>
       <div class="alert-list" id="alertsList">
         <?php foreach ($alerts as $alert): ?>

@@ -32,7 +32,7 @@ const MAP_BUILDINGS = [
 ];
 
 // opts: { imageUrl, statusByName, alertFloorsByName }
-//   statusByName      – building name -> 'Passed' | 'Needs Attention' (monthly check)
+//   statusByName      – building name -> 'Passed' | 'Urgent' (monthly check)
 //   hideFloorText – true to leave the floor names off the alert icons (hover title still lists them)
 //   alertFloorsByName – building name -> [floor, ...] that have an upcoming or overdue aircon alert (blinks)
 window.renderMapImage = function (svgId, opts) {
@@ -104,7 +104,7 @@ window.renderMapImage = function (svgId, opts) {
 
   }
 
-  const statusColors = { 'Passed': '#2e7d32', 'Completed': '#2e7d32', 'Needs Attention': '#b3261e' };
+  const statusColors = { 'Passed': '#2e7d32', 'Completed': '#2e7d32', 'Urgent': '#b3261e' };
   const statusByName = opts.statusByName || {};
   const alertFloorsByName = opts.alertFloorsByName || {};
   const stateByName = opts.stateByName || {};
@@ -166,7 +166,7 @@ window.renderMapImage = function (svgId, opts) {
         const ag = document.createElementNS(ns, 'g');
         if (blink) ag.setAttribute('class', 'fac-blink');
         group.appendChild(ag);
-        // Red triangle = overdue; red circle = due within 7 days; yellow triangle = needs attention.
+        // Red triangle = overdue; red circle = due within 7 days; yellow triangle = urgent.
         const tri = document.createElementNS(ns, isCircle ? 'circle' : 'polygon');
         Object.entries(isCircle
           ? { cx, cy: by - 2, r: 34, fill: '#ff1414', stroke: '#ffffff', 'stroke-width': 5 }

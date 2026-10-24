@@ -39,12 +39,12 @@ class FacilitiesController extends BaseController
             ['key' => 'tasks', 'label' => 'Cleaning Tasks Done', 'value' => $tasks->where('is_done', 1)->countAllResults() . ' / ' . $tasks->countAllResults(), 'icon' => 'bi-brush', 'tone' => 'green'],
             ['key' => 'supplies', 'label' => 'Supplies Out of Stock', 'value' => (new ConsumableInventoryModel())->where('department', 'Facilities')->where('current_stock <= 0', null, false)->countAllResults(), 'icon' => 'bi-box-seam-fill', 'tone' => 'red'],
             ['key' => 'checked', 'label' => 'Buildings Checked This Month', 'value' => (int) $db->table('janitorial_inspections')->select('COUNT(DISTINCT building) AS n')->where('inspection_month', $month)->get()->getRow()->n . ' / ' . count(FireExtinguisherModel::BUILDINGS), 'icon' => 'bi-calendar-check', 'tone' => 'maroon'],
-            ['key' => 'attention', 'label' => 'Checks Needing Attention', 'value' => (new JanitorialInspectionModel())->where('inspection_month', $month)->where('result', 'Needs Attention')->countAllResults(), 'icon' => 'bi-clipboard2-x', 'tone' => 'red'],
+            ['key' => 'attention', 'label' => 'Urgent Checks', 'value' => (new JanitorialInspectionModel())->where('inspection_month', $month)->where('result', 'Urgent')->countAllResults(), 'icon' => 'bi-clipboard2-x', 'tone' => 'red'],
         ];
 
         $details = [];
         foreach ($this->statusCards() as $card) $details[$card['key']] = ['title' => $card['title'], 'columns' => $card['columns'], 'rows' => $card['rows']];
-        // "Checks Needing Attention" counts buildings (their latest check), so it matches the records shown under it.
+        // "Urgent Checks" counts buildings (their latest check), so it matches the records shown under it.
         foreach ($stats as &$st) { if ($st['key'] === 'attention') $st['value'] = count($details['attention']['rows']); }
         unset($st);
 
@@ -137,7 +137,7 @@ class FacilitiesController extends BaseController
         $checkRow = fn($c) => [$c['building'], $c['result'], $c['inspected_by'], date('M d, Y', strtotime($c['inspected_at']))];
         $checkCols = ['Building', 'Result', 'Checked By', 'Date'];
         $checked = array_values($latest);
-        $attention = array_values(array_filter($checked, fn($c) => $c['result'] === 'Needs Attention'));
+        $attention = array_values(array_filter($checked, fn($c) => $c['result'] === 'Urgent'));
         $notChecked = array_map(fn($b) => [$b], array_values(array_filter(FireExtinguisherModel::BUILDINGS, fn($b) => !isset($latest[$b]))));
 
         $cards = [
@@ -151,7 +151,7 @@ class FacilitiesController extends BaseController
             ['key' => 'tasks', 'label' => 'Tasks Done', 'value' => $taskDone . ' / ' . count($allTasks), 'icon' => 'bi-brush', 'tone' => 'maroon', 'title' => 'Cleaning Zones and Tasks', 'columns' => $zoneCols, 'rows' => $zoneRows],
             ['key' => 'supplies', 'label' => 'Supplies Out', 'value' => count($outSupplies), 'icon' => 'bi-box-seam', 'tone' => 'red', 'title' => 'Supplies Out of Stock', 'columns' => $supplyCols, 'rows' => array_map($supplyRow, $outSupplies)],
             ['key' => 'checked', 'label' => 'Checked This Month', 'value' => count($checked) . ' / ' . $buildingTotal, 'icon' => 'bi-calendar-check', 'tone' => 'green', 'title' => 'Buildings Checked This Month', 'columns' => $checkCols, 'rows' => array_map($checkRow, $checked)],
-            ['key' => 'attention', 'label' => 'Needs Attention', 'value' => count($attention), 'icon' => 'bi-exclamation-circle-fill', 'tone' => 'red', 'title' => 'Buildings Needing Attention', 'columns' => $checkCols, 'rows' => array_map($checkRow, $attention)],
+            ['key' => 'attention', 'label' => 'Urgent', 'value' => count($attention), 'icon' => 'bi-exclamation-circle-fill', 'tone' => 'red', 'title' => 'Urgent Buildings', 'columns' => $checkCols, 'rows' => array_map($checkRow, $attention)],
             ['key' => 'notchecked', 'label' => 'Not Checked Yet', 'value' => $buildingTotal - count($checked), 'icon' => 'bi-hourglass', 'tone' => 'gold', 'title' => 'Buildings Not Checked This Month', 'columns' => ['Building'], 'rows' => $notChecked],
         ];
 
@@ -309,7 +309,7 @@ class FacilitiesController extends BaseController
             ],
             'buildings' => [
                 ['key' => 'checked', 'label' => 'Checked This Month', 'value' => count(array_filter($inspections, fn($i) => $i['result'] !== null)) . ' / ' . count(FireExtinguisherModel::BUILDINGS), 'icon' => 'bi-calendar-check', 'tone' => 'green'],
-                ['key' => 'attention', 'label' => 'Needs Attention', 'value' => count(array_filter($inspections, fn($i) => $i['result'] === 'Needs Attention')), 'icon' => 'bi-exclamation-circle-fill', 'tone' => 'red'],
+                ['key' => 'attention', 'label' => 'Urgent', 'value' => count(array_filter($inspections, fn($i) => $i['result'] === 'Urgent')), 'icon' => 'bi-exclamation-circle-fill', 'tone' => 'red'],
                 ['key' => 'notchecked', 'label' => 'Not Checked Yet', 'value' => count(array_filter($inspections, fn($i) => $i['result'] === null)), 'icon' => 'bi-hourglass', 'tone' => 'gold'],
             ],
         };
@@ -383,7 +383,7 @@ class FacilitiesController extends BaseController
         $bldCols = ['Building', 'Result', 'Checked By', 'Date'];
         $bldRow = fn($i) => [$i['building'], $i['result'] ?? 'Not checked', $i['inspected_by'] ?? '—', !empty($i['inspected_at']) ? date('M d, Y', strtotime($i['inspected_at'])) : '—'];
         $statDetail['checked'] = ['title' => 'Buildings Checked This Month', 'columns' => $bldCols, 'rows' => array_values(array_map($bldRow, array_filter($inspections, fn($i) => $i['result'] !== null)))];
-        $statDetail['attention'] = ['title' => 'Buildings Needing Attention', 'columns' => $bldCols, 'rows' => array_values(array_map($bldRow, array_filter($inspections, fn($i) => $i['result'] === 'Needs Attention')))];
+        $statDetail['attention'] = ['title' => 'Urgent Buildings', 'columns' => $bldCols, 'rows' => array_values(array_map($bldRow, array_filter($inspections, fn($i) => $i['result'] === 'Urgent')))];
         $statDetail['notchecked'] = ['title' => 'Buildings Not Checked Yet', 'columns' => $bldCols, 'rows' => array_values(array_map($bldRow, array_filter($inspections, fn($i) => $i['result'] === null)))];
         $woCols2 = ['No.', 'Request', 'Building', 'Priority', 'Requested By', 'Status'];
         $woRow2 = fn($w) => ['WO-' . str_pad((string) $w['id'], 4, '0', STR_PAD_LEFT), $w['title'], $w['building'], $w['priority'], $w['requested_by'], $w['status']];

@@ -526,7 +526,7 @@
       <i class="bi bi-search search-icon"></i>
     </div>
     <div class="fe-toolbar-actions">
-      <button type="button" class="fac-alert-icon fac-alert-btn alert-red fac-blink" id="bldAlertRed" onclick="toggleAlertList('bld','red')" title="Buildings that need attention" aria-label="Buildings that need attention" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="bldAlertRedCount"></strong></button>
+      <button type="button" class="fac-alert-icon fac-alert-btn alert-red fac-blink" id="bldAlertRed" onclick="toggleAlertList('bld','red')" title="Urgent buildings" aria-label="Urgent buildings" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="bldAlertRedCount"></strong></button>
       <button type="button" class="fac-alert-icon fac-alert-btn alert-yellow" id="bldAlertYellow" onclick="toggleAlertList('bld','yellow')" title="Buildings to be inspected" aria-label="Buildings to be inspected" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="bldAlertYellowCount"></strong></button>
       <button type="button" class="filter-btn active" id="bldMapBtn" onclick="toggleBuildingMap()" title="Show map" aria-label="Show map">
         <i class="bi bi-map"></i>
@@ -542,7 +542,7 @@
             <select id="bldResultFilter" onchange="applyBuildingFilters()">
               <option value="">All results</option>
               <option value="Passed">Passed</option>
-              <option value="Needs Attention">Needs Attention</option>
+              <option value="Urgent">Urgent</option>
               <option value="Not checked">Not checked</option>
             </select>
           </div>
@@ -580,7 +580,7 @@
     </div>
     <div class="fac-map-legend">
       <span><i class="map-pass"></i> Passed (steady)</span>
-      <span><i class="map-alert"></i> Red warning = needs attention</span>
+      <span><i class="map-alert"></i> Red warning = urgent</span>
       <span><i style="background:#ffc400"></i> Yellow alert = needs to be inspected</span>
       <span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" style="vertical-align:middle;margin-right:6px;"><circle cx="7" cy="7" r="7" fill="#800000"/><polyline points="3.5,7 6,9.5 10.5,4.5" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg> Building check point</span>
     </div>
@@ -602,7 +602,7 @@
                 <?php elseif ($i['result'] === 'Passed'): ?>
                   <span class="tt-badge zb-done">Passed</span>
                 <?php else: ?>
-                  <span class="tt-badge zb-overdue badge-blink">Needs Attention</span>
+                  <span class="tt-badge zb-overdue badge-blink">Urgent</span>
                 <?php endif; ?>
               </td>
               <td><?= esc($i['inspected_by'] ?? '—') ?></td>
@@ -641,7 +641,7 @@
           <label>Result <span class="required-mark">*</span></label>
           <select name="result" required>
             <option value="Passed">Passed</option>
-            <option value="Needs Attention">Needs Attention</option>
+            <option value="Urgent">Urgent</option>
           </select>
         </div>
         <div class="fg fg-full">
@@ -887,7 +887,7 @@ function showBuildingCheckDetail(name) {
   const floors = facFloors[name] && facFloors[name].length ? facFloors[name] : facAllFloors;
   const res = r.result;
   const banner = res === 'Passed' ? { cls: 'fd-ok', head: 'Passed', text: 'This building passed its check this month.' }
-    : res ? { cls: 'fd-bad', head: res, text: 'This building needs attention.' }
+    : res ? { cls: 'fd-bad', head: res, text: 'This building is marked urgent.' }
     : { cls: 'fd-warn', head: 'Not checked yet', text: 'This building still needs to be inspected this month.' };
   facDrill('bldDrillPanel', {
     title: name, sub: 'Building Check — <?= esc($inspection_month) ?>', banner, floors,
@@ -896,7 +896,7 @@ function showBuildingCheckDetail(name) {
     alerts: floors.map(fl => {
       const c = checks[fl];
       if (!c) return { cls: 'warn', html: '<strong>' + esc(fl) + '</strong> — not checked this month yet.' };
-      if ((c.result || '') !== 'Passed') return { cls: 'urgent', html: '<strong>' + esc(fl) + '</strong> — ' + esc(c.result || 'needs attention') + '.' };
+      if ((c.result || '') !== 'Passed') return { cls: 'urgent', html: '<strong>' + esc(fl) + '</strong> — ' + esc(c.result || 'urgent') + '.' };
       return null;
     }).filter(Boolean),
     detail: fl => {
@@ -1152,14 +1152,14 @@ document.addEventListener('click', e => {
 
 const alertData = {
   clean: { items: <?= $clean_alerts_json ?>, titles: { red: 'Overdue zones', yellow: 'Zones that need cleaning' }, cols: ['Zone', 'Floor', 'Staff', 'Shift', 'Status'] },
-  bld:   { items: <?= $bld_alerts_json ?>, titles: { red: 'Buildings that need attention', yellow: 'Buildings to be inspected' }, cols: ['Building', 'Result', 'Checked By'] },
+  bld:   { items: <?= $bld_alerts_json ?>, titles: { red: 'Urgent buildings', yellow: 'Buildings to be inspected' }, cols: ['Building', 'Result', 'Checked By'] },
   ac:    { items: <?= $ac_alerts_json ?>, titles: { red: 'Overdue aircon units', circle: 'Aircon units overdue in 7 days' }, cols: ['Building', 'Floor', 'Unit', 'Next Schedule', 'Status'] },
 };
 const openAlert = {};
 
 const alertBadges = {
   'Overdue': 'zb-overdue badge-blink',
-  'Needs Attention': 'zb-overdue badge-blink',
+  'Urgent': 'zb-overdue badge-blink',
   'Needs Cleaning': 'zb-needs badge-blink',
   'Overdue in 7 Days': 'zb-overdue badge-blink',
   'In Progress': 'zb-needs',
@@ -1268,7 +1268,7 @@ function showBuildingDetail(building) {
   const bad = units.filter(u => u.schedule === 'Overdue' || u.condition === 'Not Working');
   const warn = units.filter(u => u.schedule === 'Due Soon' || (u.condition && u.condition !== 'Operational'));
   const banner = !units.length ? { cls: 'fd-warn', head: 'No aircon units', text: 'No aircon units are recorded in this building.' }
-    : bad.length ? { cls: 'fd-bad', head: 'Needs attention', text: bad.length + ' unit' + (bad.length === 1 ? ' is' : 's are') + ' overdue or not working.' }
+    : bad.length ? { cls: 'fd-bad', head: 'Urgent', text: bad.length + ' unit' + (bad.length === 1 ? ' is' : 's are') + ' overdue or not working.' }
     : warn.length ? { cls: 'fd-warn', head: 'Due soon', text: warn.length + ' unit' + (warn.length === 1 ? '' : 's') + ' due for cleaning or needing care.' }
     : { cls: 'fd-ok', head: 'All good', text: 'Every aircon unit here is operational and on schedule.' };
   facDrill('acDrillPanel', {

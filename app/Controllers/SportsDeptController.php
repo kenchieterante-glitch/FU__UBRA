@@ -75,7 +75,7 @@ class SportsDeptController extends BaseController
             'sp_avail' => ['Available', 'e_avail', 'bi-check-circle-fill', 'green', $e],
             'sp_out'   => ['Currently Borrowed', 'b_out', 'bi-box-arrow-up-right', 'gold', $b],
             'sp_over'  => ['Overdue Returns', 'b_over', 'bi-alarm-fill', 'red', $b],
-            'sp_attn'  => ['Needs Attention', 'e_attn', 'bi-exclamation-triangle-fill', 'red', $e],
+            'sp_attn'  => ['Urgent', 'e_attn', 'bi-exclamation-triangle-fill', 'red', $e],
             'sp_back'  => ['Returned This Month', 'b_back', 'bi-arrow-return-left', 'blue', $b],
         ];
         $stats = [];
@@ -200,13 +200,13 @@ class SportsDeptController extends BaseController
             'status' => [
                 ['key' => 'e_total', 'label' => 'Total Equipment', 'value' => count($tools), 'icon' => 'bi-trophy-fill', 'tone' => 'maroon'],
                 ['key' => 'e_avail', 'label' => 'Available', 'value' => count($avail), 'icon' => 'bi-check-circle-fill', 'tone' => 'green'],
-                ['key' => 'e_attn', 'label' => 'Needs Attention', 'value' => count($attention), 'icon' => 'bi-exclamation-triangle-fill', 'tone' => 'red'],
+                ['key' => 'e_attn', 'label' => 'Urgent', 'value' => count($attention), 'icon' => 'bi-exclamation-triangle-fill', 'tone' => 'red'],
             ],
             'stat_detail' => [
                 'e_total'    => ['title' => 'All Sports Equipment', 'columns' => $recCols, 'rows' => array_map($recRow, $tools)],
                 'e_avail'    => ['title' => 'Available Equipment', 'columns' => $recCols, 'rows' => array_map($recRow, $avail)],
                 'e_borrowed' => ['title' => 'Equipment On Loan', 'columns' => $statCols, 'rows' => array_map($statRow, $borrowed)],
-                'e_attn'     => ['title' => 'Equipment Needing Attention', 'columns' => $statCols, 'rows' => array_map($statRow, $attention)],
+                'e_attn'     => ['title' => 'Urgent Equipment', 'columns' => $statCols, 'rows' => array_map($statRow, $attention)],
             ],
             'tabs' => [
                 ['key' => 'records', 'label' => 'Equipment Records', 'columns' => $recCols, 'rows' => array_map($recRow, $tools), 'empty' => 'No sports equipment recorded yet.'],
@@ -215,7 +215,7 @@ class SportsDeptController extends BaseController
             ],
             'alerts_json'  => $this->jsonForScript($alerts),
             'alert_cols'   => ['Equipment', 'What', 'Status'],
-            'alert_titles' => ['red' => 'Needs attention now', 'yellow' => 'Keep an eye on'],
+            'alert_titles' => ['red' => 'Urgent now', 'yellow' => 'Keep an eye on'],
             'conditions' => self::CONDITIONS,
             'locations'  => $this->locationOptions($tools),
             'custodians' => $this->custodianOptions(),

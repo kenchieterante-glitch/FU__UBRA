@@ -3074,3 +3074,9 @@ table.gps-table tbody td .vehicle-cell {
 .auto-grid .fg.span2 { grid-column: 1 / -1; }
 .modal-box:has(.auto-grid) { width: min(780px, 94vw); max-width: 780px; }
 @media (max-width: 640px) { .auto-grid { grid-template-columns: 1fr; } }
+
+/* Status boxes: all visible in one frame, nothing scrolls sideways (Personnel, Vehicles, Facilities status).
+   The boxes keep the standard card size used on every other page (165px) — only the arrangement changes:
+   they wrap onto the next row and sit centred, like the Janitorial, Tools and Records pages. */
+.stat-carousel .carousel-nav-btn { display: none !important; }
+.stat-carousel-track { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; overflow: visible; scroll-snap-type: none; padding: 6px 0 10px; }

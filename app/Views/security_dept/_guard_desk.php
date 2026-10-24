@@ -116,15 +116,51 @@ function gdNoteKey(e) {
     gdKeyTimes.push(performance.now());
   }
 }
+let gdIgnoreKeyUntil = 0;
+async function gdBorrowerDone() {
+  const v = gdEl('gdBorrower').value.trim(); if (!v) return;
+  clearTimeout(gdLookupTimer); clearTimeout(gdPause);
+  if (await gdLookup(v)) {
+    gdIgnoreKeyUntil = Date.now() + 700; // anything the same card scan sends right after is not a key
+    gdEl('gdKey').value = '';
+    gdEl('gdKey').focus();
+  } else gdMsg('That ID is not a registered staff or faculty member.', false);
+}
+function gdKeyDone() {
+  clearTimeout(gdPause);
+  if (Date.now() < gdIgnoreKeyUntil) { gdEl('gdKey').value = ''; return; } // second code from the same card scan
+  if (gdEl('gdKey').value.trim()) gdSubmit();
+}
+let gdPause = null;
+function gdArmPause(id) {
+  clearTimeout(gdPause);
+  if (gdMethod !== 'scan') return;
+  const n = gdKeyTimes.length;
+  // a scan types many characters a few milliseconds apart; if it then goes quiet, treat it as finished
+  if (n >= 4 && (gdKeyTimes[n - 1] - gdKeyTimes[0]) / (n - 1) < 40) {
+    gdPause = setTimeout(() => {
+      gdKeyTimes = [];
+      gdScannerSeen = true; gdLastScan = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); gdUpdateReady();
+      if (id === 'gdBorrower') gdBorrowerDone(); else gdKeyDone();
+    }, 250);
+  }
+}
 function gdFocusFirst() { setTimeout(() => (gdMode === 'borrow' ? gdEl('gdBorrower') : gdEl('gdKey')).focus(), 30); }
 
+// Answers can arrive out of order (typing "20230407" also looks up "20" and "2023040" on the way).
+// Only the answer for the newest lookup may change what is shown.
+let gdLookupSeq = 0;
 async function gdLookup(id) {
   const who = gdEl('gdWho');
+  const seq = ++gdLookupSeq;
   if (!id) { who.innerHTML = ''; gdBorrowerOk = false; return false; }
   try {
-    const res = await fetch('<?= base_url($deskBase . '/lookup/') ?>' + encodeURIComponent(id));
+    const res = await fetch('<?= base_url($deskBase . '/lookup') ?>?code=' + encodeURIComponent(id));
+    if (seq !== gdLookupSeq) return gdBorrowerOk; // a newer lookup has started — ignore this late answer
     if (!res.ok) { who.innerHTML = '<span class="gd-who bad">No staff or faculty found for this ID</span>'; gdBorrowerOk = false; return false; }
     const d = await res.json();
+    if (seq !== gdLookupSeq) return gdBorrowerOk;
+    if (d.emp_id && gdEl('gdBorrower').value.trim() === id) gdEl('gdBorrower').value = d.emp_id;
     who.innerHTML = '<span class="gd-who"><i class="bi bi-person-check-fill"></i> ' + gdEsc(d.full_name) + (d.department ? ' — ' + gdEsc(d.department) : '') + '</span>';
     gdBorrowerOk = true; return true;
   } catch (e) { return false; }
@@ -164,15 +200,22 @@ document.addEventListener('DOMContentLoaded', () => {
     gdEl(id).addEventListener('focus', gdUpdateReady);
     gdEl(id).addEventListener('blur', () => setTimeout(gdUpdateReady, 60));
   });
-  gdEl('gdBorrower').addEventListener('input', () => { clearTimeout(gdLookupTimer); const v = gdEl('gdBorrower').value.trim(); gdLookupTimer = setTimeout(() => gdLookup(v), gdMethod === 'scan' ? 80 : 400); });
-  gdEl('gdBorrower').addEventListener('keydown', async e => {
-    if (e.key !== 'Enter') return; e.preventDefault();
-    const v = gdEl('gdBorrower').value.trim(); if (!v) return;
-    clearTimeout(gdLookupTimer);
-    if (await gdLookup(v)) gdEl('gdKey').focus(); else gdMsg('That ID is not a registered staff or faculty member.', false);
-  });
-  gdEl('gdKey').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (gdEl('gdKey').value.trim()) gdSubmit(); } });
+  gdEl('gdBorrower').addEventListener('input', () => { gdLookupSeq++; gdEl('gdWho').innerHTML = ''; gdBorrowerOk = false; clearTimeout(gdLookupTimer); const v = gdEl('gdBorrower').value.trim(); gdLookupTimer = setTimeout(() => gdLookup(v), gdMethod === 'scan' ? 80 : 400); });
+  // A scanner normally ends a scan with Enter. Some end with Tab, and some send nothing at all,
+  // so all three are accepted: Enter, Tab, or a short pause right after fast typing.
+  gdEl('gdBorrower').addEventListener('keydown', e => { if (e.key === 'Enter' || (e.key === 'Tab' && gdMethod === 'scan' && gdEl('gdBorrower').value.trim())) { e.preventDefault(); gdBorrowerDone(); } });
+  gdEl('gdKey').addEventListener('keydown', e => { if (e.key === 'Enter' || (e.key === 'Tab' && gdMethod === 'scan' && gdEl('gdKey').value.trim())) { e.preventDefault(); gdKeyDone(); } });
+  ['gdBorrower', 'gdKey'].forEach(id => gdEl(id).addEventListener('input', () => gdArmPause(id)));
   gdEl('gdKeyPick').addEventListener('change', () => { gdEl('gdKeyHint').textContent = ''; });
+  // Scan anywhere on the page: if the scan box isn't selected when a scan starts, send it to the right box.
+  document.addEventListener('keydown', e => {
+    if (gdMethod !== 'scan' || e.ctrlKey || e.altKey || e.metaKey) return;
+    const t = e.target;
+    if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+    if (e.key.length !== 1) return;
+    const key = gdEl('gdKey'), who = gdEl('gdBorrower');
+    (gdMode === 'borrow' && !(gdBorrowerOk && who.value) ? who : key).focus();
+  }, true);
   gdLayout();
 });
 </script>

@@ -13,5 +13,5 @@ class SafetyInspectionModel extends Model
         'building', 'inspection_month', 'safety_status', 'remarks', 'inspected_by', 'inspected_at',
     ];
 
-    public const STATUSES = ['Safe', 'Needs Attention', 'Unsafe'];
+    public const STATUSES = ['Safe', 'Urgent', 'Unsafe'];
 }

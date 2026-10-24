@@ -21,7 +21,7 @@
     <div class="role-dash-hero-status <?= $totalAlerts > 0 ? 'is-alert' : 'is-clear' ?>">
         <i class="bi <?= $totalAlerts > 0 ? 'bi-exclamation-triangle-fill' : 'bi-shield-check' ?>"></i>
         <div>
-            <strong><?= $totalAlerts > 0 ? $totalAlerts . ' Item' . ($totalAlerts === 1 ? '' : 's') . ' Need Attention' : 'All Systems Normal' ?></strong>
+            <strong><?= $totalAlerts > 0 ? $totalAlerts . ' Urgent Item' . ($totalAlerts === 1 ? '' : 's') : 'All Systems Normal' ?></strong>
             <small><?= $totalAlerts > 0 ? 'Maintenance, disposal, or low stock' : 'No issues right now' ?></small>
         </div>
     </div>

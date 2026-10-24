@@ -13,7 +13,7 @@ if (!function_exists('fac_cell')) {
             'Not checked'     => 'tt-badge zb-needs badge-blink',
             'Needs Cleaning'  => 'tt-badge zb-needs badge-blink',
             'Overdue'         => 'tt-badge zb-overdue badge-blink',
-            'Needs Attention' => 'tt-badge zb-overdue badge-blink',
+            'Urgent' => 'tt-badge zb-overdue badge-blink',
             'Overdue in 7 Days' => 'tt-badge zb-overdue badge-blink',
             'Not Working'     => 'tt-badge zb-overdue',
             'Completed'       => 'tt-badge zb-done',
