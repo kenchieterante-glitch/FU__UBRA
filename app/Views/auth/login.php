@@ -198,7 +198,7 @@
 </style>
 
 <div class="auth-title-block">
-    <div class="auth-badge"><img src="<?= base_url('images/' . rawurlencode('UBRA LOGO (cropped).png')) ?>" alt="UBRA logo"></div>
+    <div class="auth-badge"><img src="<?= base_url('images/' . rawurlencode('UBRA LOGO (cropped).png')) . '?v=' . filemtime(FCPATH . 'images/UBRA LOGO (cropped).png') ?>" alt="UBRA logo"></div>
     <h1>UBRA</h1>
     <p class="auth-subtitle">Sign in to your account</p>
     <?php if (!empty($selectedPortal)): ?>

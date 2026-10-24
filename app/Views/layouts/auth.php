@@ -12,6 +12,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>UBRA | <?= esc($title ?? 'Login') ?></title>
+    <link rel="icon" href="<?= base_url('images/' . rawurlencode('UBRA LOGO (cropped).png')) . '?v=' . filemtime(FCPATH . 'images/UBRA LOGO (cropped).png') ?>">
     <link rel="stylesheet" href="<?= base_url('fonts/bebas-neue/bebas-neue.css') ?>">
     <link rel="stylesheet" href="<?= base_url('icons/bootstrap-icons/bootstrap-icons.css') ?>">
     <style>

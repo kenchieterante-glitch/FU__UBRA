@@ -46,6 +46,7 @@
   $initials = strtoupper(substr($fullName,0,1) . (strpos($fullName,' ') !== false ? substr($fullName, strpos($fullName,' ')+1,1) : ''));
   $userPhoto = session()->get('photo');
   $userPhotoUrl = $userPhoto ? base_url('uploads/' . $userPhoto) : null;
+  if (session()->get('isLoggedIn')) { (new \App\Models\NotificationModel())->syncBorrowDueAlerts(); }
   $topbarUnreadCount = session()->get('isLoggedIn') ? (new \App\Models\NotificationModel())->getUnreadCountForRole((string) $role) : 0;
   $logoAsset = null;
   $logoCandidates = [
@@ -64,7 +65,8 @@
   ];
   foreach ($logoCandidates as $candidate) {
       if (file_exists($candidate)) {
-          $logoAsset = str_replace('\\', '/', str_replace(FCPATH, base_url(), $candidate));
+          // ?v=<file time> so a replaced logo isn't masked by the browser's cached copy.
+          $logoAsset = str_replace('\\', '/', str_replace(FCPATH, base_url(), $candidate)) . '?v=' . filemtime($candidate);
           break;
       }
   }
@@ -794,6 +796,54 @@ document.querySelectorAll('.flash-toast').forEach(toast => {
 
   poll();
   setInterval(poll, POLL_MS);
+})();
+
+// Site-wide live refresh: every 2s ask the server whether any operational
+// data changed (a key borrowed, a trip checked out, a tool returned...). When it
+// has, reload the current page - but only while the user is idle, so an open
+// popup or a half-filled form is never wiped. Pages that refresh their own
+// tables in place (Tools, Borrowing, Dashboard, Janitorial, Vehicles, GPS) set
+// window.FU_SELF_REFRESH = true and are skipped here.
+(function () {
+  const PULSE_MS = 2000;
+  let last = null;
+  let busyFetch = false;
+
+  function userIsBusy() {
+    const visible = el => el.offsetParent !== null || getComputedStyle(el).position === 'fixed';
+    if (Array.from(document.querySelectorAll('.modal, .sj-modal-overlay')).some(m => m.style.display === 'flex')) return true;
+    if (document.querySelector('.filter-popup.visible')) return true;
+    const a = document.activeElement;
+    if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return true;
+    // Anything typed or changed and not yet saved (search boxes, half-filled forms).
+    return Array.from(document.querySelectorAll('input, textarea, select')).some(el => {
+      if (el.type === 'hidden' || el.type === 'file' || el.disabled || !visible(el)) return false;
+      if (el.tagName === 'SELECT') return Array.from(el.options).some(o => o.selected !== o.defaultSelected);
+      if (el.type === 'checkbox' || el.type === 'radio') return el.checked !== el.defaultChecked;
+      return el.value !== el.defaultValue;
+    });
+  }
+
+  async function pulse() {
+    if (document.hidden || busyFetch || window.FU_SELF_REFRESH) return;
+    busyFetch = true;
+    try {
+      const res = await fetch('<?= base_url('notifications/pulse') ?>', { headers: csrfHeaders(), cache: 'no-store' });
+      if (!res.ok) return;
+      const v = (await res.json()).v;
+      if (last === null) { last = v; return; }
+      if (v === last) return;
+      if (userIsBusy()) return; // keep the old marker; try again on the next tick
+      last = v;
+      location.reload();
+    } catch (e) {
+      // Silent - the next tick retries.
+    } finally {
+      busyFetch = false;
+    }
+  }
+  setInterval(pulse, PULSE_MS);
+  pulse();
 })();
 <?php endif; ?>
 

@@ -210,6 +210,55 @@ class NotificationController extends BaseController
         return $this->response->setJSON(['success' => true]);
     }
 
+    /**
+     * GET /notifications/pulse - one cheap change marker covering the operational
+     * tables (borrows, returns, keys, trips, tools, vehicles, safety, janitorial,
+     * personnel...). The layout polls it every couple of seconds and refreshes
+     * the current page when it changes. Lives under /notifications so every role
+     * is allowed to call it. Chatty tables (GPS pings, logs, notifications
+     * themselves) are left out on purpose so they don't cause constant refreshes.
+     */
+    public function pulse()
+    {
+        if (!$this->session->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $watched = [
+            'aircon_checklist_items', 'aircon_inspection_entries', 'aircon_inspection_logs', 'aircon_units',
+            'borrow_records', 'return_records', 'consumable_inventory', 'consumable_stock_reports', 'disposal_logs',
+            'equipment_maintenance_entries', 'equipment_maintenance_logs', 'facility_checklist_items', 'facility_checklists',
+            'facility_keys', 'key_borrow_logs', 'fire_extinguishers', 'fuel_logs',
+            'janitorial', 'janitorial_assignments', 'janitorial_inspections', 'janitorial_task_history', 'janitorial_tasks',
+            'job_orders', 'mechanical_equipment', 'motorpool_wo_history', 'motorpool_work_orders',
+            'personnel', 'personnel_assignments', 'personnel_contracts', 'personnel_documents',
+            'refill_log', 'reports', 'restroom_checklist_entries', 'restroom_checklists',
+            'safety_equipment', 'safety_inspections', 'safety_reports', 'safety_work_orders',
+            'tools', 'tools_refill_log', 'travel_requests', 'trip_status_log',
+            'vehicle_inspection_checklists', 'vehicle_inspection_items', 'vehicle_maintenance', 'vehicles', 'work_orders',
+        ];
+
+        // Shared across everyone for a second, so many open pages cost one checksum, not many.
+        if (($cached = cache('pulse_marker')) !== null) {
+            return $this->response->setHeader('Cache-Control', 'no-store')->setJSON(['v' => $cached]);
+        }
+
+        $db = db_connect();
+        $existing = array_map('current', $db->query('SHOW TABLES')->getResultArray());
+        $tables = array_values(array_intersect($watched, $existing));
+        if (!$tables) {
+            return $this->response->setJSON(['v' => '']);
+        }
+
+        $list = implode(', ', array_map(fn($t) => $db->escapeIdentifiers($t), $tables));
+        $sums = array_map(fn($r) => ($r['Table'] ?? '') . ':' . ($r['Checksum'] ?? ''), $db->query('CHECKSUM TABLE ' . $list)->getResultArray());
+
+        $marker = md5(implode('|', $sums));
+        cache()->save('pulse_marker', $marker, 1);
+
+        return $this->response->setHeader('Cache-Control', 'no-store')->setJSON(['v' => $marker]);
+    }
+
     public function unreadCount()
     {
         if (!$this->session->get('isLoggedIn')) return $this->response->setJSON(['count' => 0, 'latest' => []]);

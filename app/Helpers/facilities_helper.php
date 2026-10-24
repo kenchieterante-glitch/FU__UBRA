@@ -76,3 +76,32 @@ if (!function_exists('tool_cat_label')) {
         return $category === 'Consumable' ? 'Supplies & Materials' : (string) $category;
     }
 }
+
+if (!function_exists('tool_borrow_details')) {
+    /** Per-borrow-record details used by the Borrowing page's popup (also sent by the refresh endpoint). */
+    function tool_borrow_details(array $recordList, callable $badgeClassFor): array
+    {
+        $borrowDetails = [];
+        foreach ($recordList as $r) {
+            $status = $r['computed_status'] ?? $r['status'];
+            $borrowDetails[$r['id']] = [
+                'tool'       => $r['asset_name'] ?? 'Unknown tool',
+                'code'       => $r['asset_code'] ?? '—',
+                'borrower'   => $r['borrower'] ?? 'Not on record',
+                'department' => $r['department'] ?: '—',
+                'borrowed'   => !empty($r['borrowed_date']) ? date('M j, Y', strtotime($r['borrowed_date'])) : '—',
+                'due'        => !empty($r['expected_return']) ? date('M j, Y', strtotime($r['expected_return'])) : '—',
+                'quantity'      => (float) ($r['quantity'] ?? 1),
+                'outstanding'   => (float) ($r['outstanding_qty'] ?? $r['quantity'] ?? 1),
+                'stockTracked'  => $r['current_stock'] !== null,
+                'unit'          => $r['unit'] ?: 'pcs',
+                'toolId'        => $r['tool_id'],
+                'category'      => $r['category'] ?? null,
+                'status'     => $status,
+                'statusBadgeClass' => $badgeClassFor($status),
+            ];
+        }
+
+        return $borrowDetails;
+    }
+}

@@ -103,6 +103,7 @@ abstract class BaseController extends Controller
             'tools'      => '/tools-dashboard',
             'facilities' => '/facilities',
             'janitorial' => '/janitorial-dashboard',
+            'safety'     => '/safety',
             'guard'      => '/guard-station',
             default      => '/dashboard',
         };

@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\QrSheetPdf;
 use App\Models\ToolsModel;
 use App\Models\BorrowModel;
 use App\Models\NotificationModel;
@@ -118,32 +119,69 @@ class ToolsController extends BaseController
     // on read from expected_return vs today, same reasoning as
     // MonitoringStatus::derive() elsewhere in the app: no cron exists here,
     // so compute-on-read is what keeps it correct without a background job.
+    // Borrow records with their computed status (Overdue) and how much of each is
+    // still out - shared by the page itself and its auto-refresh endpoint.
+    private function buildBorrowRecords(): array
+    {
+        $today = date('Y-m-d');
+
+        // Total already returned per borrow record, in a single query.
+        $returnedByBorrow = [];
+        foreach ((new ReturnModel())->select('borrow_id, SUM(quantity_returned) AS total')->groupBy('borrow_id')->findAll() as $row) {
+            $returnedByBorrow[$row['borrow_id']] = (float) $row['total'];
+        }
+
+        return array_map(function ($r) use ($today, $returnedByBorrow) {
+            $r['computed_status'] = ($r['status'] === 'Borrowed' && !empty($r['expected_return']) && $r['expected_return'] < $today)
+                ? 'Overdue'
+                : $r['status'];
+
+            // How much of this borrow record is still out, net of any
+            // partial returns already made against it - bounds the "Mark
+            // Returned" quantity stepper so it can't return more than that.
+            $r['outstanding_qty'] = (float) ($r['quantity'] ?? 1) - ($returnedByBorrow[$r['id']] ?? 0.0);
+
+            return $r;
+        }, $this->borrowModel->getAllWithDetails());
+    }
+
     public function borrowing()
     {
         if (!session()->get('isLoggedIn')) {
             return redirect()->to('/login');
         }
 
-        $today = date('Y-m-d');
-        $returnModel = new ReturnModel();
-        $records = array_map(function ($r) use ($today, $returnModel) {
-            $r['computed_status'] = ($r['status'] === 'Borrowed' && !empty($r['expected_return']) && $r['expected_return'] < $today)
-                ? 'Overdue'
-                : $r['status'];
-
-            // How much of this borrow record is still out, net of any
-            // partial returns already made against it — bounds the "Mark
-            // Returned" quantity stepper so it can't return more than that.
-            $alreadyReturned = $returnModel->where('borrow_id', $r['id'])->selectSum('quantity_returned')->first();
-            $r['outstanding_qty'] = (float) ($r['quantity'] ?? 1) - (float) ($alreadyReturned['quantity_returned'] ?? 0);
-
-            return $r;
-        }, $this->borrowModel->getAllWithDetails());
-
         return view('tools/borrowing', [
             'title'   => 'Borrowing',
             'pageCss' => 'borrowing.css',
-            'records' => $records,
+            'records' => $this->buildBorrowRecords(),
+        ]);
+    }
+
+    /**
+     * GET /tools/borrowing/refresh - the Borrowing table's rows (pre-rendered)
+     * plus the popup details, as JSON, for the page's polling script.
+     */
+    public function borrowingRefresh()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        helper('facilities');
+        $records = $this->buildBorrowRecords();
+        $badgeClassFor = fn($status) => match ($status) {
+            'Borrowed'          => 'badge blue',
+            'Overdue'           => 'badge red',
+            'Pending approval'  => 'badge amber',
+            'Returned'          => 'badge green',
+            'Consumed'          => 'badge dept',
+            default             => 'badge amber',
+        };
+
+        return $this->response->setJSON([
+            'rows_html' => view('Tools/_borrow_rows', ['recordList' => $records]),
+            'details'   => tool_borrow_details($records, $badgeClassFor),
         ]);
     }
 
@@ -204,6 +242,52 @@ class ToolsController extends BaseController
             ];
         }
         return $details;
+    }
+
+    // POST /tools/qr-pdf - PDF sheet of QR codes (asset code inside, which is
+    // exactly what the mobile app's scan-borrow / scan-return reads). The
+    // browser draws the QR pictures; Libraries\QrSheetPdf lays them out.
+    public function qrPdf()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        helper('facilities');
+        $paperKey = (string) $this->request->getPost('paper');
+        $per      = (int) $this->request->getPost('per');
+        $back     = (string) ($this->request->getPost('back') ?: 'tools');
+        if (!isset(QrSheetPdf::PAPERS[$paperKey]) || !isset(QrSheetPdf::GRIDS[$per])) {
+            return redirect()->to($back)->with('error', 'Choose the bond paper and how many QR codes per sheet.');
+        }
+
+        $images   = json_decode((string) $this->request->getPost('images'), true) ?: [];
+        $category = trim((string) $this->request->getPost('category'));
+        $only     = trim((string) $this->request->getPost('only'));
+
+        $builder = $this->toolsModel->where('is_archived', 0)->where('asset_code IS NOT NULL')->where("asset_code <> ''");
+        if ($category !== '') {
+            $builder->where('category', $category);
+        }
+        $items = [];
+        foreach ($builder->orderBy('category', 'ASC')->orderBy('asset_name', 'ASC')->findAll() as $t) {
+            $img = $images[$t['asset_code']] ?? '';
+            if (!is_string($img) || !preg_match('#^data:image/png;base64,[A-Za-z0-9+/=]+$#', $img)) continue;
+            if ($only !== '' && $t['asset_code'] !== $only) continue;
+            $items[] = ['name' => $t['asset_name'], 'place' => $t['asset_code'] . ($t['category'] ? ' · ' . $t['category'] : ''), 'img' => $img];
+        }
+        if (!$items) {
+            return redirect()->to($back)->with('error', 'No tools with a QR code to print.');
+        }
+
+        $label = $category !== '' ? tool_cat_label($category) . ' QR Codes' : 'Tools & Equipment QR Codes';
+        $pdf   = QrSheetPdf::render($items, $paperKey, $per, $label, 'item(s)');
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="fu-ubra-tool-qr-codes-' . date('Y-m-d') . '.pdf"')
+            ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->setBody($pdf);
     }
 
     private function getStatCounts(): array
@@ -332,6 +416,14 @@ class ToolsController extends BaseController
         ]);
 
         $dueText = !empty($expectedReturn) ? date('M j, Y', strtotime($expectedReturn)) : 'no due date set';
+        if (($tool['category'] ?? '') === 'Sports Equipment') {
+            (new NotificationModel())->notifySports(
+                'Sports Equipment Borrowed',
+                "{$tool['asset_name']} borrowed by " . ($borrowerName ?: 'an unrecorded borrower')
+                    . ($department ? " ({$department})" : '') . " — due back on {$dueText}."
+            );
+            return redirect()->to('/tools')->with('success', 'Tool marked as borrowed.');
+        }
         (new NotificationModel())->insert([
             'category'    => 'Tool Borrowed',
             'description' => "{$tool['asset_name']} borrowed by " . ($borrowerName ?: 'an unrecorded borrower')
@@ -416,6 +508,10 @@ class ToolsController extends BaseController
             'current_stock'     => $stockTracked ? (float) $tool['current_stock'] + $returnedQty : $tool['current_stock'],
             'last_activity_at'  => date('Y-m-d H:i:s'),
         ]);
+
+        if (($tool['category'] ?? '') === 'Sports Equipment' && $condition === 'Poor') {
+            (new NotificationModel())->notifySports('Sports Equipment Needs Repair', "{$tool['asset_name']} was returned in Poor condition.", 'MODERATE');
+        }
 
         return redirect()->to('/tools')->with('success', 'Asset marked as returned.');
     }

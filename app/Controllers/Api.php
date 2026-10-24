@@ -200,6 +200,10 @@ class Api extends BaseController
 
     // ---------- TOOLS ----------
 
+    // Mobile borrows are due back within this many days; the borrower can
+    // extend by up to the same amount at a time (see toolsExtendBorrow()).
+    private const BORROW_MAX_DAYS = 3;
+
     public function tools()
     {
         $category = $this->request->getGet('category');
@@ -333,7 +337,7 @@ class Api extends BaseController
         $borrows = (new BorrowModel())->where('tool_id', $tool['id'])->orderBy('id', 'DESC')->findAll();
 
         $returnModel = new ReturnModel();
-        $history = array_map(function ($b) use ($returnModel) {
+        $history = array_map(function ($b) use ($returnModel, $tool) {
             // A borrow can now be returned across more than one scan (see
             // toolsScanReturn()) — sum every return_records row against it
             // for the true total returned so far, and use the latest one
@@ -343,6 +347,8 @@ class Api extends BaseController
             $returnedQty = array_sum(array_column($returns, 'quantity_returned'));
 
             return [
+                'id'               => (int) $b['id'],
+                'can_extend'       => $b['status'] === 'Borrowed' && $tool['category'] !== 'Consumable',
                 'borrower'         => $b['borrower'],
                 'department'       => $b['department'] ?: null,
                 'borrowed_date'    => $b['borrowed_date'],
@@ -412,7 +418,7 @@ class Api extends BaseController
             'borrower'        => $borrowerName,
             'department'      => $department,
             'borrowed_date'   => date('Y-m-d'),
-            'expected_return' => $isConsumable ? null : date('Y-m-d', strtotime('+7 days')),
+            'expected_return' => $isConsumable ? null : date('Y-m-d', strtotime('+' . self::BORROW_MAX_DAYS . ' days')),
             'status'          => $isConsumable ? 'Consumed' : 'Borrowed',
             'created_at'      => date('Y-m-d H:i:s'),
             'last_activity_at'=> date('Y-m-d H:i:s'),
@@ -433,6 +439,18 @@ class Api extends BaseController
             'last_activity_at'  => date('Y-m-d H:i:s'),
         ], fn($v) => $v !== null));
 
+        $notif = new NotificationModel();
+        if ($isConsumable && $remainingStock !== null) {
+            $notif->notifyLowStock($tool['asset_name'], $remainingStock, (float) ($tool['reorder_threshold'] ?? 0), $tool['unit'] ?: 'pcs');
+        }
+        if ($tool['category'] === 'Sports Equipment') {
+            $due = date('M j, Y', strtotime('+' . self::BORROW_MAX_DAYS . ' days'));
+            $notif->notifySports(
+                'Sports Equipment Borrowed',
+                "{$tool['asset_name']} borrowed by {$borrowerName}" . ($department ? " ({$department})" : '') . " — due back on {$due}."
+            );
+        }
+
         return $this->response->setJSON([
             'action'        => $isConsumable ? 'item consumed' : 'borrow confirmed',
             'borrower_name' => $borrowerName,
@@ -442,6 +460,43 @@ class Api extends BaseController
             'consumed'      => $isConsumable,
             'timestamp'     => date('M j, Y — h:i A'),
         ]);
+    }
+
+    // Extends a still-outstanding borrow's due date by 1–BORROW_MAX_DAYS days.
+    // Counts from the current due date (or today, if it's already overdue)
+    // so an early extension doesn't lose the days already granted. Only the
+    // borrower themselves or an administrator may extend.
+    public function toolsExtendBorrow()
+    {
+        $body     = $this->request->getJSON(true) ?? [];
+        $borrowId = (int) ($body['borrow_id'] ?? 0);
+        $days     = (int) ($body['days'] ?? 0);
+
+        if ($days < 1 || $days > self::BORROW_MAX_DAYS) {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'You can extend by 1 to ' . self::BORROW_MAX_DAYS . ' days at a time.']);
+        }
+
+        $borrowModel = new BorrowModel();
+        $borrow = $borrowModel->where('id', $borrowId)->where('status', 'Borrowed')->first();
+        if (!$borrow) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'No active borrow found to extend.']);
+        }
+
+        $me = $this->currentApiUser();
+        $isOwner = $me && (strcasecmp((string) $borrow['borrower'], (string) $me['name']) === 0
+            || (string) $borrow['borrower'] === (string) $me['employee_id']);
+        if (!$me || (!$isOwner && strtolower((string) $me['role']) !== 'administrator')) {
+            return $this->response->setStatusCode(403)->setJSON(['message' => 'Only the borrower can extend this borrow.']);
+        }
+
+        $today   = date('Y-m-d');
+        $base    = (!empty($borrow['expected_return']) && $borrow['expected_return'] > $today) ? $borrow['expected_return'] : $today;
+        $newDue  = date('Y-m-d', strtotime($base . " +{$days} days"));
+
+        $borrowModel->update($borrow['id'], ['expected_return' => $newDue, 'last_activity_at' => date('Y-m-d H:i:s')]);
+        (new ToolsModel())->update($borrow['tool_id'], ['last_activity_at' => date('Y-m-d H:i:s')]);
+
+        return $this->response->setJSON(['expected_return' => $newDue, 'message' => 'Borrow extended to ' . date('M j, Y', strtotime($newDue)) . '.']);
     }
 
     public function toolsScanReturn()
@@ -532,6 +587,13 @@ class Api extends BaseController
             'last_activity_at'  => date('Y-m-d H:i:s'),
         ]);
 
+        if ($tool['category'] === 'Sports Equipment') {
+            $notif = new NotificationModel();
+            if ($condition === 'Poor') {
+                $notif->notifySports('Sports Equipment Needs Repair', "{$tool['asset_name']} was returned in Poor condition.", 'MODERATE');
+            }
+        }
+
         return $this->response->setJSON([
             'action'        => 'return confirmed',
             'borrower_name' => $borrowRecord['borrower'],
@@ -547,6 +609,11 @@ class Api extends BaseController
 
     public function vehicles()
     {
+        // Refresh gps_status (and log the latest fix) from Traccar first, the
+        // same way the web Vehicles/GPS pages do, so the list below doesn't
+        // show a stale Online/Offline when nobody has opened the web lately.
+        (new \App\Libraries\TraccarSync())->run();
+
         $model = new VehicleModel();
         $rows  = $model->getAllWithDetails();
 
@@ -640,6 +707,11 @@ class Api extends BaseController
         if (!empty($vehicle['gps_device_id'])) {
             $live = $this->traccarLatestPosition($vehicle['gps_device_id']);
             if ($live) {
+                // Keep the stored status in step with what the app just saw,
+                // so the web and the vehicle list agree with this screen.
+                if ($live['gps_status'] !== $vehicle['gps_status']) {
+                    (new VehicleModel())->update($vehicle['id'], ['gps_status' => $live['gps_status']]);
+                }
                 return $this->response->setJSON(array_merge($live, $vehicleStatus));
             }
             // Tracker assigned but Traccar has no fix yet (just installed,
@@ -879,21 +951,18 @@ class Api extends BaseController
         $slug = $this->request->getGet('building');
         $locationName = array_search($slug, self::ZONE_SLUGS, true);
         if (!$locationName) {
-            return $this->response->setJSON(['unit' => null]);
+            return $this->response->setJSON(['unit' => null, 'units' => []]);
         }
 
-        $model = new AirconUnitModel();
-        $unit  = $model->getByLocation($locationName);
-
-        if (!$unit) {
-            return $this->response->setJSON(['unit' => null]);
-        }
-
+        // A building can have several aircon units — return all of them
+        // (newest first) so a newly registered unit doesn't replace or hide
+        // the existing ones. 'unit' stays as the newest for older app builds.
+        $rows = (new AirconUnitModel())->where('location', $locationName)->orderBy('id', 'DESC')->findAll();
         $checklistModel = new AirconChecklistItemModel();
-        $tasks = $checklistModel->getForUnit((int) $unit['id']);
 
-        return $this->response->setJSON([
-            'unit' => [
+        $units = array_map(function ($unit) use ($checklistModel) {
+            $tasks = $checklistModel->getForUnit((int) $unit['id']);
+            return [
                 'id'             => (int) $unit['id'],
                 'unit'           => $unit['unit_name'],
                 'location'       => $unit['location'],
@@ -907,8 +976,10 @@ class Api extends BaseController
                     'done'         => (bool) $t['is_done'],
                     'completed_at' => $this->toIso($t['completed_at']),
                 ], $tasks),
-            ],
-        ]);
+            ];
+        }, $rows);
+
+        return $this->response->setJSON(['unit' => $units[0] ?? null, 'units' => $units]);
     }
 
     // Registers a new aircon unit for a building (there was previously no way
@@ -1323,19 +1394,8 @@ class Api extends BaseController
         $threshold = (float) $item['reorder_threshold'];
         $isLow = $qty <= $threshold;
 
-        if ($isLow) {
-            $zoneText = $zone !== '' ? " (reported from {$zone})" : '';
-            (new NotificationModel())->insert([
-                'category'    => 'Consumable Low Stock',
-                'description' => "{$item['item_name']} is running low{$zoneText} — {$qty} {$item['unit']} left, reorder threshold is {$threshold} {$item['unit']}. Reported by {$performedBy}.",
-                'recipient'   => 'Facilities Team',
-                'priority'    => $qty <= 0 ? 'CRITICAL' : 'MODERATE',
-                'status'      => 'Unread',
-                'channel'     => 'system',
-                'is_read'     => 0,
-                'created_at'  => date('Y-m-d H:i:s'),
-            ]);
-        }
+        $zoneText = $zone !== '' ? " (reported from {$zone})" : '';
+        (new NotificationModel())->notifyLowStock($item['item_name'], $qty, $threshold, $item['unit'], "{$zoneText}, reported by {$performedBy}");
 
         return $this->response->setJSON([
             'message'   => 'Stock level updated.',
@@ -1383,16 +1443,28 @@ class Api extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['message' => 'Scan a staff ID and tap the key\'s NFC tag.']);
         }
 
+        // Staff are on the personnel list (EMP-… ids), but the numeric campus ID
+        // on a badge belongs to a system account (also staff/faculty only) -
+        // accept either so a scanned badge resolves to the right person.
         $personnelModel = new PersonnelModel();
         $person = $personnelModel->getByEmpId($empId);
         if (!$person) {
-            return $this->response->setStatusCode(403)->setJSON(['message' => 'No staff/faculty record found for that ID — students are not authorized to borrow keys.']);
+            $account = (new UserModel())->getByEmployeeId($empId);
+            if ($account) {
+                $person = [
+                    'full_name'       => $account['full_name'],
+                    'department_name' => $account['department'] ?? '',
+                ];
+            }
+        }
+        if (!$person) {
+            return $this->response->setStatusCode(403)->setJSON(['message' => "No staff/faculty record found for ID \"{$empId}\" — students are not authorized to borrow keys."]);
         }
 
         $keyModel = new FacilityKeyModel();
         $key = $keyModel->findByNfcUid($nfcUid);
         if (!$key) {
-            return $this->response->setStatusCode(404)->setJSON(['message' => 'This key tag isn\'t registered yet.', 'unregistered' => true, 'nfc_uid' => $nfcUid]);
+            return $this->response->setStatusCode(404)->setJSON(['message' => "This key tag isn't registered yet (scanned: \"{$nfcUid}\").", 'unregistered' => true, 'nfc_uid' => $nfcUid]);
         }
         if ($key['status'] === 'Borrowed') {
             return $this->response->setStatusCode(409)->setJSON(['message' => "\"{$key['key_name']}\" is already checked out."]);
@@ -1432,7 +1504,7 @@ class Api extends BaseController
         $keyModel = new FacilityKeyModel();
         $key = $keyModel->findByNfcUid($nfcUid);
         if (!$key) {
-            return $this->response->setStatusCode(404)->setJSON(['message' => 'This key tag isn\'t registered.']);
+            return $this->response->setStatusCode(404)->setJSON(['message' => "This key tag isn't registered (scanned: \"{$nfcUid}\")."]);
         }
 
         $model = new KeyBorrowLogModel();
@@ -1490,28 +1562,194 @@ class Api extends BaseController
 
     public function guardTripTicketsToday()
     {
+        // Today's trips plus any approved / in-transit ticket still waiting on
+        // gate action (same set the web Guard page works from), so a trip
+        // approved for another day can still be checked in or out.
         $model = new TravelRequestModel();
-        $rows  = $model->getTodayWithDetails();
+        $rows  = $model->select('travel_requests.*, v.vehicle_name, v.plate_no, p.full_name as driver_name')
+            ->join('vehicles v', 'v.id = travel_requests.assigned_vehicle_id', 'left')
+            ->join('personnel p', 'p.id = travel_requests.assigned_driver_id', 'left')
+            ->where('travel_requests.is_archived', 0)
+            ->groupStart()
+                ->where('travel_requests.travel_date', date('Y-m-d'))
+                ->orWhereIn('travel_requests.status', ['Approved', 'In Transit'])
+            ->groupEnd()
+            ->orderBy('travel_requests.travel_date', 'ASC')
+            ->orderBy('travel_requests.departure_time', 'ASC')
+            ->findAll();
+
+        $requesters = [];
+        foreach ($rows as $t) {
+            if (!empty($t['requester_id']) && !isset($requesters[$t['requester_id']])) {
+                $requesters[$t['requester_id']] = (new UserModel())->find($t['requester_id'])['full_name'] ?? null;
+            }
+        }
 
         return $this->response->setJSON([
-            'tickets' => array_map(function ($t) {
+            'tickets' => array_map(function ($t) use ($requesters) {
                 $status = 'Pending';
                 if (!empty($t['check_in_time']) && empty($t['check_out_time'])) $status = 'In transit';
                 if (!empty($t['check_out_time'])) $status = 'Completed';
 
+                // Same gate rules as the web Guard page: only Approved trips
+                // can be checked in, and only In Transit trips checked out.
+                $canCheckIn  = $t['status'] === 'Approved' && empty($t['check_in_time']);
+                $canCheckOut = $t['status'] === 'In Transit' && empty($t['check_out_time']);
+
                 return [
+                    'id'          => (int) $t['id'],
                     'trip_id'     => $t['trip_id'],
+                    'driver_id'   => !empty($t['assigned_driver_id']) ? (int) $t['assigned_driver_id'] : null,
                     'driver'      => $t['driver_name'] ?? '—',
                     'vehicle'     => $t['vehicle_name'] ?? '—',
                     'plate'       => $t['plate_no'] ?? '—',
+                    'requester'   => $requesters[$t['requester_id']] ?? null,
                     'destination' => $t['destination'],
+                    'purpose'     => $t['purpose'] ?? null,
+                    'date'        => date('M j, Y', strtotime($t['travel_date'])),
                     'departure'   => date('h:i A', strtotime($t['departure_time'])),
+                    'check_in'    => !empty($t['check_in_time']) ? date('h:i A', strtotime($t['check_in_time'])) : null,
                     'return_time' => !empty($t['check_out_time']) ? date('h:i A', strtotime($t['check_out_time'])) : null,
                     'status'      => $status,
+                    'can_check_in'  => $canCheckIn,
+                    'can_check_out' => $canCheckOut,
                 ];
             }, $rows),
         ]);
     }
+
+    // Everything the web system holds about one driver (personnel record,
+    // department, assignment, contract, documents) plus their recent trips.
+    public function guardDriver($id = null)
+    {
+        $personnelModel = new PersonnelModel();
+        $driver = $personnelModel->select('personnel.*, departments.name as department_name')
+            ->join('departments', 'departments.id = personnel.department_id', 'left')
+            ->where('personnel.id', (int) $id)
+            ->first();
+        if (!$driver) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Driver not found.']);
+        }
+
+        $assignment = (new \App\Models\PersonnelAssignmentModel())->getActiveForPersonnel((int) $driver['id']);
+        $contracts  = (new \App\Models\PersonnelContractModel())->getForPersonnel((int) $driver['id']);
+        $documents  = (new \App\Models\PersonnelDocumentModel())->getForPersonnel((int) $driver['id']);
+
+        $trips = (new TravelRequestModel())
+            ->select('travel_requests.*, v.vehicle_name, v.plate_no')
+            ->join('vehicles v', 'v.id = travel_requests.assigned_vehicle_id', 'left')
+            ->where('assigned_driver_id', (int) $driver['id'])
+            ->orderBy('travel_date', 'DESC')->orderBy('departure_time', 'DESC')
+            ->findAll(10);
+
+        return $this->response->setJSON([
+            'driver' => [
+                'id'              => (int) $driver['id'],
+                'emp_id'          => $driver['emp_id'],
+                'full_name'       => $driver['full_name'],
+                'email'           => $driver['email'],
+                'contact_number'  => $driver['contact_number'],
+                'department'      => $driver['department_name'],
+                'employment_type' => $driver['employment_type'],
+                'position'        => $driver['position'],
+                'assigned_task'   => $driver['assigned_task'],
+                'status'          => $driver['status'],
+                'since'           => $driver['created_at'],
+            ],
+            'assignment' => $assignment ? [
+                'job_order'  => trim(($assignment['job_order_number'] ?? '') . ' ' . ($assignment['job_order_title'] ?? '')),
+                'position'   => $assignment['position'],
+                'location'   => $assignment['assignment_location'],
+                'supervisor' => $assignment['supervisor'],
+                'start'      => $assignment['assignment_start_date'],
+                'end'        => $assignment['assignment_end_date'],
+                'status'     => $assignment['status'],
+            ] : null,
+            'contracts' => array_map(fn($c) => [
+                'number'    => $c['contract_number'],
+                'start'     => $c['contract_start_date'],
+                'end'       => $c['contract_end_date'],
+                'status'    => $c['contract_status'],
+                'renewal'   => $c['renewal_status'] ?? null,
+                'remarks'   => $c['remarks'],
+            ], array_slice($contracts, 0, 3)),
+            'documents' => array_map(fn($d) => [
+                'type'       => $d['document_type_name'],
+                'number'     => $d['document_number'],
+                'issued'     => $d['issue_date'],
+                'expires'    => $d['expiration_date'],
+                'status'     => $d['verification_status'],
+            ], $documents),
+            'trips' => array_map(fn($t) => [
+                'trip_id'     => $t['trip_id'],
+                'date'        => $t['travel_date'],
+                'destination' => $t['destination'],
+                'vehicle'     => trim(($t['vehicle_name'] ?? '') . (!empty($t['plate_no']) ? " ({$t['plate_no']})" : '')) ?: '—',
+                'status'      => $t['status'],
+            ], $trips),
+        ]);
+    }
+
+    // Gate check-in / check-out from the app - mirrors TravelController::
+    // checkIn()/checkOut() on the web, including who may do it (the guard
+    // login or an administrator) and the Approved -> In Transit -> Completed flow.
+    private function guardTripAction(int $id, string $action)
+    {
+        $me = $this->currentApiUser();
+        if (!$me || !in_array(strtolower((string) $me['role']), ['security', 'administrator'], true)) {
+            return $this->response->setStatusCode(403)->setJSON(['message' => 'Only the guard can check trip tickets in or out.']);
+        }
+
+        $model = new TravelRequestModel();
+        $trip  = $model->find($id);
+        if (!$trip) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'Trip ticket not found.']);
+        }
+
+        $now = date('Y-m-d H:i:s');
+        if ($action === 'in') {
+            if ($trip['status'] !== 'Approved' || !empty($trip['check_in_time'])) {
+                return $this->response->setStatusCode(409)->setJSON(['message' => 'Only an approved trip that has not left yet can be checked in.']);
+            }
+            $model->update($id, ['check_in_time' => $now, 'status' => 'In Transit', 'last_activity_at' => $now]);
+            $note = 'Driver checked in at the gate for dispatch.';
+            $newStatus = 'In Transit';
+        } else {
+            if ($trip['status'] !== 'In Transit' || !empty($trip['check_out_time'])) {
+                return $this->response->setStatusCode(409)->setJSON(['message' => 'Only a trip that is in transit can be checked out.']);
+            }
+            if (!empty($trip['assigned_vehicle_id'])) {
+                (new VehicleModel())->update($trip['assigned_vehicle_id'], ['availability' => 'Available']);
+            }
+            $model->update($id, ['check_out_time' => $now, 'status' => 'Completed', 'last_activity_at' => $now]);
+            $note = 'Driver checked out at the gate — trip completed.';
+            $newStatus = 'Completed';
+        }
+
+        (new \App\Models\TripStatusLogModel())->insert([
+            'travel_request_id' => $id,
+            'status'            => $newStatus,
+            'changed_by'        => (string) $me['name'],
+            'changed_at'        => $now,
+            'notes'             => $note,
+        ]);
+
+        try {
+            $actor = (new UserModel())->getByEmployeeId((string) $me['employee_id']);
+            (new \App\Models\ActivityLogModel())->insert([
+                'user_id' => $actor['department_id'] ?? $actor['id'] ?? null,
+                'module'  => 'Vehicle',
+                'action'  => "{$me['name']}: Driver checked " . ($action === 'in' ? 'in' : 'out') . " for trip ticket {$trip['trip_id']}",
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'ActivityLog insert failed: ' . $e->getMessage());
+        }
+
+        return $this->response->setJSON(['message' => $note, 'status' => $newStatus]);
+    }
+
+    public function guardTripCheckIn($id = null)  { return $this->guardTripAction((int) $id, 'in'); }
+    public function guardTripCheckOut($id = null) { return $this->guardTripAction((int) $id, 'out'); }
 
     // ---------- NOTIFICATIONS ----------
 

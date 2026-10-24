@@ -26,11 +26,16 @@ class ToolsModel extends Model
     private const BORROWER_JOIN_COND = 'br.tool_id = tools.id AND br.status = "Borrowed" '
         . 'AND br.id = (SELECT MAX(id) FROM borrow_records WHERE tool_id = tools.id AND status = "Borrowed")';
 
+    // Most recently borrowed/returned tools first; never-borrowed tools keep
+    // the existing newest-added-first order below them.
+    private const RECENT_ACTIVITY_ORDER = '(SELECT MAX(bra.last_activity_at) FROM borrow_records bra WHERE bra.tool_id = tools.id)';
+
     public function getAllWithDetails()
     {
         $builder = $this->select('tools.*, tools.custodian as custodian_name, br.borrower as borrower_name')
                         ->join(self::BORROWER_JOIN_TABLE, self::BORROWER_JOIN_COND, 'left', false)
                         ->where('tools.is_archived', 0)
+                        ->orderBy(self::RECENT_ACTIVITY_ORDER, 'DESC', false)
                         ->orderBy('tools.id', 'DESC');
         return $builder->findAll();
     }
@@ -41,6 +46,7 @@ class ToolsModel extends Model
                     ->join(self::BORROWER_JOIN_TABLE, self::BORROWER_JOIN_COND, 'left', false)
                     ->where('tools.category', $category)
                     ->where('tools.is_archived', 0)
+                    ->orderBy(self::RECENT_ACTIVITY_ORDER, 'DESC', false)
                     ->orderBy('tools.id', 'DESC')
                     ->findAll();
     }

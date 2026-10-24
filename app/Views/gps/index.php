@@ -70,19 +70,13 @@
     <!-- ── MAP PANEL (hidden by default, toggled) ──────────────── -->
     <div id="mapPanel" class="map-panel" style="display:none;">
         <div class="map-header">
-            <span><i class="bi bi-map-fill"></i> Live Map View</span>
-            <span class="map-note">GPS coordinates display — connect Google Maps API key in Settings for full map.</span>
+            <span><i class="bi bi-map-fill"></i> Live Fleet Map</span>
+            <span class="map-note" id="fleetMapNote">Loading vehicle positions…</span>
         </div>
-        <div class="map-placeholder" id="mapContainer">
-            <div class="map-grid-bg"></div>
-            <div class="map-center-label">
-                <i class="bi bi-geo-alt-fill" style="font-size:2.5rem;color:var(--maroon)"></i>
-                <p>Live map renders here once Google Maps API key is configured in <strong>Settings → GPS API</strong>.</p>
-                <p class="map-note-sub">Vehicle pins are plotted from GPS log coordinates in real time.</p>
-            </div>
-            <!-- Vehicle pins overlay -->
-            <div id="vehiclePins" class="vehicle-pins"></div>
-        </div>
+        <!-- Same satellite/hybrid Leaflet map as a vehicle's own popup, with
+             one pin per tracked vehicle. Built the first time the panel is
+             opened (initFleetMap) and refreshed every 15s while it's open. -->
+        <div id="fleetMap" class="fleet-map"></div>
     </div>
 
     <!-- ── Body: Fleet Table ──────────────────────────────────────── -->
@@ -255,6 +249,8 @@
      SCRIPTS
 ════════════════════════════════════════════════════════════════ -->
 <script>
+window.FU_SELF_REFRESH = true; // this page refreshes its own data (layout live-refresh skips it)
+
 // ── PHP helper exposed to JS ───────────────────────────────────
 const GPS_AJAX_BASE = '<?= base_url('gps/getVehicle/') ?>';
 const SYNC_BASE     = '<?= base_url('gps/sync/') ?>';
@@ -591,6 +587,7 @@ function updateModalLiveData(v) {
 // it's a best-guess route between real recorded fixes, not literally the
 // exact road the vehicle drove.
 const OSRM_ROUTE_BASE = 'https://router.project-osrm.org/route/v1/driving/';
+const OSRM_CHUNK = 90; // public OSRM caps waypoints per request (~100)
 
 function showVehicleRoute(id) {
     if (!gpsMapInstance) return;
@@ -601,7 +598,8 @@ function showVehicleRoute(id) {
     const from = fromEl ? fromEl.value : '';
     const to = toEl ? toEl.value : '';
 
-    if (statusEl) statusEl.innerHTML = '<i class="bi bi-hourglass-split"></i> Loading route…';
+    // A multi-week range can take ~20s to come back from the tracker server.
+    if (statusEl) statusEl.innerHTML = '<i class="bi bi-hourglass-split"></i> Loading route… long date ranges can take up to ~20 seconds.';
 
     const qs = new URLSearchParams();
     if (from) qs.set('from', from);
@@ -623,21 +621,38 @@ function showVehicleRoute(id) {
                 return;
             }
 
-            // OSRM wants "lon,lat;lon,lat;…" (opposite order from ours/
-            // Leaflet's lat,lng), and needs at least 2 waypoints to route.
-            const coordStr = points.map(p => p.lng + ',' + p.lat).join(';');
+            if (statusEl) statusEl.innerHTML = '<i class="bi bi-hourglass-split"></i> Drawing road route…';
 
-            fetch(OSRM_ROUTE_BASE + coordStr + '?overview=full&geometries=geojson')
-                .then(r => r.json())
-                .then(osrm => {
-                    const geom = osrm && osrm.code === 'Ok' && osrm.routes && osrm.routes[0]
-                        ? osrm.routes[0].geometry.coordinates
-                        : null;
-                    // GeoJSON is [lng, lat] — flip to Leaflet's [lat, lng].
-                    const roadLatlngs = geom ? geom.map(c => [c[1], c[0]]) : null;
-                    drawRouteOnMap(points, roadLatlngs, !roadLatlngs);
-                })
-                .catch(() => drawRouteOnMap(points, null, true)); // road lookup failed — fall back to straight lines
+            // OSRM's public server rejects requests with too many waypoints,
+            // so route in chunks of OSRM_CHUNK points (consecutive chunks
+            // share one point so the path joins up) and stitch the results.
+            // A chunk that fails falls back to straight lines for just that
+            // stretch instead of losing the whole road route.
+            const chunks = [];
+            for (let i = 0; i < points.length - 1; i += OSRM_CHUNK - 1) {
+                chunks.push(points.slice(i, i + OSRM_CHUNK));
+            }
+
+            Promise.all(chunks.map(chunk => {
+                // OSRM wants "lon,lat;lon,lat;…" (opposite order from ours/
+                // Leaflet's lat,lng), and needs at least 2 waypoints to route.
+                const coordStr = chunk.map(p => p.lng + ',' + p.lat).join(';');
+                const straight = chunk.map(p => [p.lat, p.lng]);
+                return fetch(OSRM_ROUTE_BASE + coordStr + '?overview=full&geometries=geojson')
+                    .then(r => r.json())
+                    .then(osrm => {
+                        const geom = osrm && osrm.code === 'Ok' && osrm.routes && osrm.routes[0]
+                            ? osrm.routes[0].geometry.coordinates
+                            : null;
+                        // GeoJSON is [lng, lat] — flip to Leaflet's [lat, lng].
+                        return geom ? { latlngs: geom.map(c => [c[1], c[0]]), ok: true } : { latlngs: straight, ok: false };
+                    })
+                    .catch(() => ({ latlngs: straight, ok: false }));
+            })).then(results => {
+                const roadLatlngs = [].concat(...results.map(r => r.latlngs));
+                const allFailed = results.every(r => !r.ok);
+                drawRouteOnMap(points, roadLatlngs, allFailed, res.total);
+            });
         })
         .catch(() => {
             if (statusEl) statusEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Failed to load route.';
@@ -648,7 +663,7 @@ function showVehicleRoute(id) {
 // otherwise a straight line directly between the recorded points. The
 // timestamped circle markers always sit at the real recorded coordinates
 // either way — only the connecting line differs.
-function drawRouteOnMap(points, roadLatlngs, isFallback) {
+function drawRouteOnMap(points, roadLatlngs, isFallback, totalPings) {
     const statusEl = document.getElementById('gpsRouteStatus');
     const rawLatlngs = points.map(p => [p.lat, p.lng]);
     const lineLatlngs = roadLatlngs || rawLatlngs;
@@ -682,6 +697,9 @@ function drawRouteOnMap(points, roadLatlngs, isFallback) {
 
     if (statusEl) {
         let text = points.length + ' point' + (points.length === 1 ? '' : 's');
+        if (totalPings && totalPings > points.length) {
+            text += ' (simplified from ' + totalPings + ' recorded pings)';
+        }
         if (points.length > 1) {
             text += ', ' + new Date(points[0].loggedAt).toLocaleString() + ' → ' + new Date(points[points.length - 1].loggedAt).toLocaleString();
         }
@@ -874,6 +892,112 @@ function toggleMapView() {
     mapVisible = !mapVisible;
     document.getElementById('mapPanel').style.display = mapVisible ? 'block' : 'none';
     document.getElementById('mapToggleLabel').textContent = mapVisible ? 'Hide Map' : 'Show Map';
+
+    if (mapVisible) {
+        initFleetMap();
+        refreshFleetMap(true);
+        // Live feed: re-pull every vehicle's position while the map is open.
+        if (fleetPollTimer) clearInterval(fleetPollTimer);
+        fleetPollTimer = setInterval(() => refreshFleetMap(false), 15000);
+    } else if (fleetPollTimer) {
+        clearInterval(fleetPollTimer);
+        fleetPollTimer = null;
+    }
+}
+
+// ── Live fleet map (Show Map) ──────────────────────────────────
+// Same satellite + labels "hybrid" tiles as the map inside a vehicle's popup,
+// with one pin per vehicle that has a known position: red = tracker online,
+// grey = offline (pin shows its last known spot). Pins are moved in place on
+// each refresh, so the view isn't reset while someone is panning/zooming.
+const FLEET_URL = '<?= base_url('gps/fleet') ?>';
+let fleetMapInstance = null;
+let fleetMarkers = {};      // vehicle id -> L.marker
+let fleetPollTimer = null;
+
+function fleetPinIcon(color) {
+    return L.divIcon({
+        className: 'gps-pin-icon',
+        html: '<svg width="27" height="38" viewBox="0 0 27 38" xmlns="http://www.w3.org/2000/svg">'
+            + '<path d="M13.5 0C6.04 0 0 6.04 0 13.5 0 23.6 13.5 38 13.5 38S27 23.6 27 13.5C27 6.04 20.96 0 13.5 0z" fill="' + color + '"/>'
+            + '<circle cx="13.5" cy="13.5" r="5.5" fill="#fff"/></svg>',
+        iconSize: [27, 38],
+        iconAnchor: [13.5, 38],
+        popupAnchor: [0, -34],
+    });
+}
+
+function initFleetMap() {
+    if (typeof L === 'undefined') return;
+    const el = document.getElementById('fleetMap');
+    if (!el) return;
+
+    if (fleetMapInstance) {
+        // Panel was hidden (0x0) — re-measure now that it's visible again.
+        setTimeout(() => fleetMapInstance.invalidateSize(), 50);
+        return;
+    }
+
+    fleetMapInstance = L.map(el, { center: [9.3164, 123.2885], zoom: 15, attributionControl: false });
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19, attribution: 'Tiles &copy; Esri',
+    }).addTo(fleetMapInstance);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd', maxZoom: 19, maxNativeZoom: 16, pane: 'overlayPane',
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    }).addTo(fleetMapInstance);
+
+    setTimeout(() => fleetMapInstance.invalidateSize(), 200);
+}
+
+function fleetPopupHtml(v) {
+    return '<strong>' + esc(v.plate) + '</strong> — ' + esc(v.name) + '<br>'
+        + (v.online ? '<span style="color:#15803d">● Online</span>' : '<span style="color:#6b7280">● Offline (last known position)</span>') + '<br>'
+        + 'Speed: ' + esc(String(v.speed || 0)) + ' km/h<br>'
+        + 'Status: ' + esc(v.availability) + '<br>'
+        + (v.updated ? 'Updated ' + esc(timeAgoJS(v.updated)) + '<br>' : '')
+        + '<a href="#" onclick="openVehicleModal(' + Number(v.id) + '); return false;">View details &amp; route history</a>';
+}
+
+function refreshFleetMap(fitToPins) {
+    if (!fleetMapInstance) return;
+    const note = document.getElementById('fleetMapNote');
+
+    fetch(FLEET_URL)
+        .then(r => r.json())
+        .then(res => {
+            const vehicles = res.vehicles || [];
+            const withPos = vehicles.filter(v => v.lat !== null && v.lng !== null);
+            const seen = {};
+
+            withPos.forEach(v => {
+                seen[v.id] = true;
+                const icon = fleetPinIcon(v.online ? '#EA4335' : '#6b7280');
+                if (fleetMarkers[v.id]) {
+                    fleetMarkers[v.id].setLatLng([v.lat, v.lng]).setIcon(icon).setPopupContent(fleetPopupHtml(v));
+                } else {
+                    fleetMarkers[v.id] = L.marker([v.lat, v.lng], { icon: icon, title: v.plate })
+                        .addTo(fleetMapInstance).bindPopup(fleetPopupHtml(v));
+                }
+            });
+            // Drop pins for vehicles that no longer have a position / were archived.
+            Object.keys(fleetMarkers).forEach(id => {
+                if (!seen[id]) { fleetMapInstance.removeLayer(fleetMarkers[id]); delete fleetMarkers[id]; }
+            });
+
+            if (fitToPins && withPos.length) {
+                fleetMapInstance.fitBounds(L.latLngBounds(withPos.map(v => [v.lat, v.lng])), { padding: [40, 40], maxZoom: 16 });
+            }
+
+            if (note) {
+                const missing = vehicles.length - withPos.length;
+                note.textContent = withPos.length + ' of ' + vehicles.length + ' vehicles on map'
+                    + (missing ? ' · ' + missing + ' without a GPS position' : '')
+                    + ' · updated ' + new Date().toLocaleTimeString();
+            }
+        })
+        .catch(() => { if (note) note.textContent = 'Could not refresh positions — retrying…'; });
 }
 
 // ── Table filter ───────────────────────────────────────────────

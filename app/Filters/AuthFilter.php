@@ -20,6 +20,7 @@ class AuthFilter implements FilterInterface
         'sports'     => 'sports-dept',
         'tools'      => 'tools-dashboard',
         'facilities' => 'facilities',
+        'safety'     => 'safety',
         'guard'      => 'guard-station',
     ];
 
@@ -29,6 +30,8 @@ class AuthFilter implements FilterInterface
         'sports'     => ['sports-dept', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
         'tools'      => ['tools-dashboard', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile'],
         'facilities' => ['facilities', 'facilities-dashboard', 'personnel', 'tools', 'maintenance-forms', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
+        // Safety-only account: just the Safety module (plus the shared basics).
+        'safety'     => ['safety', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
         // The guard account: only its own desk, the gate check-in / check-out buttons, and its profile.
         'guard'      => ['guard-station', 'travel/checkin', 'travel/checkout', 'profile'],
     ];

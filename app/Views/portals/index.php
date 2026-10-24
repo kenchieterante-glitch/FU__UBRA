@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>UBRA — Choose Your Department Portal</title>
-  <link rel="icon" href="<?= base_url('images/' . rawurlencode('UBRA LOGO (cropped).png')) ?>">
+  <link rel="icon" href="<?= base_url('images/' . rawurlencode('UBRA LOGO (cropped).png')) . '?v=' . filemtime(FCPATH . 'images/UBRA LOGO (cropped).png') ?>">
   <link rel="stylesheet" href="<?= base_url('fonts/bebas-neue/bebas-neue.css') ?>">
   <link rel="stylesheet" href="<?= base_url('icons/bootstrap-icons/bootstrap-icons.css') ?>">
   <link rel="stylesheet" href="<?= base_url('Assets/css/base.css') ?>">
@@ -12,7 +12,7 @@
 </head>
 <body class="portal-lobby">
   <header class="portal-lobby-top">
-    <img src="<?= base_url('images/' . rawurlencode('UBRA LOGO (cropped).png')) ?>" alt="UBRA logo">
+    <img src="<?= base_url('images/' . rawurlencode('UBRA LOGO (cropped).png')) . '?v=' . filemtime(FCPATH . 'images/UBRA LOGO (cropped).png') ?>" alt="UBRA logo">
     <div class="portal-lobby-title"><span class="portal-lobby-sub">Foundation University</span><span class="portal-lobby-brand">UBRA</span></div>
   </header>
 

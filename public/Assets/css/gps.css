@@ -1168,3 +1168,10 @@
     background: var(--danger);
 }
 
+
+/* Live fleet map shown by the "Show Map" button (GPS Tracker page). */
+.fleet-map {
+    height: 460px;
+    width: 100%;
+    background: var(--surface-alt);
+}

@@ -241,6 +241,8 @@ $vehicle_details_json = $vehicle_details_json ?? '{}';
 </div>
 
 <script>
+window.FU_SELF_REFRESH = true; // this page refreshes its own data (layout live-refresh skips it)
+
 function esc(s) {
   const d = document.createElement('div');
   d.textContent = String(s ?? '');
