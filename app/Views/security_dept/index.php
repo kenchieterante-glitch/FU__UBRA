@@ -303,11 +303,14 @@ $zoomSelect = function (string $svgId) use ($buildings) {
   </div>
 
   <div class="g-pane" id="g-keys">
+<?php if (!empty($can_operate)): ?>
+<?= view('security_dept/_guard_desk', ['deskBase' => 'security-dept/guard', 'barcodeUrl' => 'security-dept/barcodes', 'guard_keys' => $guard_keys ?? []]) ?>
+<?php endif; ?>
     <div class="gc-title" style="margin:6px 0 10px;"><i class="bi bi-key-fill"></i> Keys Currently Out</div>
     <div class="table-wrap">
       <table class="sj-table">
         <thead><tr><th>Log #</th><th>Borrower</th><th>Department</th><th>Key Item</th><th>Date Borrowed</th><th>Status</th></tr></thead>
-        <tbody class="g-body">
+        <tbody class="g-body" id="gKeysOutBody">
           <?php if (empty($active_keys)): ?>
             <tr><td colspan="6" class="empty-row">No keys are out right now.</td></tr>
           <?php else: foreach ($active_keys as $l): ?>
@@ -919,6 +922,7 @@ const keyLogsData = <?= $key_logs_json ?>;
     ? items.map(i => `<tr>${i.cols.map(alertCell).join('')}</tr>`).join('')
     : '<tr><td colspan="4" class="empty-row">Nothing needs the guard\'s attention right now.</td></tr>';
 })();
+
 
 function switchGTab(key) {
   document.querySelectorAll('#gTabs .sub-tab').forEach(b => b.classList.toggle('active', b.dataset.g === key));

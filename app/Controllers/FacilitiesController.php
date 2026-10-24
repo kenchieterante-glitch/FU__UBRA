@@ -56,7 +56,7 @@ class FacilitiesController extends BaseController
             'sections' => [
                 ['label' => 'Repair Requests', 'url' => 'facilities/work-orders', 'icon' => 'bi-clipboard2-check', 'desc' => 'Ask for repairs and see what is waiting or finished.'],
                 ['label' => 'Aircon Care', 'url' => 'facilities/aircon', 'icon' => 'bi-snow2', 'desc' => 'Check each aircon unit and when it needs care.'],
-                ['label' => 'Janitorial Check', 'url' => 'facilities/janitorial', 'icon' => 'bi-brush', 'desc' => 'Daily cleaning checks, all zones, and supplies.'],
+                ['label' => 'Waste Watch', 'url' => 'facilities/waste', 'icon' => 'bi-recycle', 'desc' => 'Daily trash bin check: weigh non-biodegradable, biodegradable and hazardous waste at the end of the day.'],
                 ['label' => 'Building Check', 'url' => 'facilities/buildings', 'icon' => 'bi-building-check', 'desc' => 'Monthly building checks and the building map.'],
             ],
         ]);

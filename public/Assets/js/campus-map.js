@@ -61,7 +61,7 @@ window.renderMapImage = function (svgId, opts) {
   legendCover.setAttribute('fill', '#ffffff'); legendCover.setAttribute('class', 'map-cover');
   svg.appendChild(legendCover);
 
-  if (opts.legend === 'aircon' || opts.legend === 'cleaning' || opts.legend === 'building') {
+  if (opts.legend === 'aircon' || opts.legend === 'cleaning' || opts.legend === 'building' || opts.legend === 'waste') {
     const cover = document.createElementNS(ns, 'rect');
     cover.setAttribute('x', 958); cover.setAttribute('y', 74);
     cover.setAttribute('width', 424); cover.setAttribute('height', 220);
@@ -83,6 +83,7 @@ window.renderMapImage = function (svgId, opts) {
         });
       }
       if (opts.legend === 'cleaning') { drawBroom(ig, ns, x, y); return; }
+      if (opts.legend === 'waste') { drawBin(ig, ns, x, y); return; }
       if (opts.legend === 'building') { drawCheck(ig, ns, x, y); return; }
       const bg = document.createElementNS(ns, 'circle');
       bg.setAttribute('cx', x); bg.setAttribute('cy', y); bg.setAttribute('r', 22);
@@ -212,6 +213,16 @@ function drawBroom(svg, ns, x, y) {
   head.setAttribute('points', `${x - 1},${y + 2} ${x + 7},${y + 2} ${x + 11},${y + 13} ${x - 5},${y + 13}`);
   head.setAttribute('fill', '#ffffff');
   svg.appendChild(head);
+}
+
+// Waste Watch: a small trash-bin icon at each waste station.
+function drawBin(svg, ns, x, y) {
+  const mk = (tag, attrs) => { const el = document.createElementNS(ns, tag); Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v)); svg.appendChild(el); return el; };
+  mk('circle', { cx: x, cy: y, r: 22, fill: '#1b6b3a', stroke: '#ffffff', 'stroke-width': 3 });
+  mk('rect', { x: x - 9, y: y - 6, width: 18, height: 17, rx: 2, fill: '#ffffff' });
+  mk('rect', { x: x - 11, y: y - 10, width: 22, height: 4, rx: 1.5, fill: '#ffffff' });
+  mk('rect', { x: x - 3, y: y - 14, width: 6, height: 4, rx: 1, fill: '#ffffff' });
+  [-4, 0, 4].forEach(dx => mk('line', { x1: x + dx, y1: y - 2, x2: x + dx, y2: y + 7, stroke: '#1b6b3a', 'stroke-width': 1.6, 'stroke-linecap': 'round' }));
 }
 
 function drawCheck(svg, ns, x, y) {

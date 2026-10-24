@@ -356,3 +356,11 @@
 .dept-link i { color: #7b0f1a; margin-right: 6px; }
 .dept-link small { color: #6b7280; }
 .dept-link:hover { background: rgba(123,15,26,.05); }
+
+/* Main dashboard: all status boxes visible at once, same size, nothing cut off */
+.groundworks-shell .stat-cards { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 14px; }
+.groundworks-shell .stat-cards .stat-card { width: auto; min-width: 0; max-width: none; padding-left: 8px; padding-right: 8px; }
+.groundworks-shell .stat-cards .stat-card h3 { white-space: normal; text-align: center; min-height: 2.6em; display: flex; align-items: center; justify-content: center; line-height: 1.25; }
+.groundworks-shell .stat-cards .stat-card .value { white-space: nowrap; overflow: visible; text-overflow: clip; font-size: clamp(20px, 2vw, 28px); }
+@media (max-width: 1100px) { .groundworks-shell .stat-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .groundworks-shell .stat-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

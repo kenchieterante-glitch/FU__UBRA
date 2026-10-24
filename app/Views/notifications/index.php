@@ -91,7 +91,7 @@ $draft_count = $draft_count ?? 0;
                                     <option value="">All Categories</option>
                                     <?php
                                     $catAllowed = \App\Models\NotificationModel::allowedModulesForRole((string) session()->get('role'));
-                                    foreach (['Vehicle Inspection', 'Vehicle Expiry', 'Trip Ticket Request', 'Trip Ticket Assignment', 'Travel Reminder', 'Vehicle Service Due', 'Motor Pool Work Order', 'Equipment Needs Repair', 'Air-Con Cleaning', 'Janitorial Assignment', 'Inventory Low Stock', 'Tool Borrowed', 'Tool Due Soon', 'Tool Overdue', 'Sports Equipment Due Soon', 'Fire Extinguisher Installed', 'Fire Extinguisher Expiring Soon', 'Aircon Unit Registered', 'Aircon Needs Cleaning', 'Cleaning Scheduled', 'Urgent Cleaning Scheduled', 'Consumable Low Stock', 'Maintenance Scheduled', 'Sports Equipment Borrowed', 'Sports Equipment Overdue', 'Sports Equipment Needs Repair', 'Job Order Expiring Soon', 'Job Order Expired', 'Contract Expiring Soon', 'Contract Expired', 'Personnel Document Incomplete'] as $catName):
+                                    foreach (['Vehicle Inspection', 'Vehicle Expiry', 'Trip Ticket Request', 'Trip Ticket Assignment', 'Travel Reminder', 'Vehicle Service Due', 'Motor Pool Work Order', 'Equipment Needs Repair', 'Air-Con Cleaning', 'Janitorial Assignment', 'Inventory Low Stock', 'Tool Borrowed', 'Tool Due Soon', 'Tool Overdue', 'Sports Equipment Due Soon', 'Fire Extinguisher Installed', 'Fire Extinguisher Expiring Soon', 'Aircon Unit Registered', 'Aircon Needs Cleaning', 'Cleaning Scheduled', 'Urgent Cleaning Scheduled', 'Consumable Low Stock', 'Hazardous Waste Alert', 'Maintenance Scheduled', 'Sports Equipment Borrowed', 'Sports Equipment Overdue', 'Sports Equipment Needs Repair', 'Job Order Expiring Soon', 'Job Order Expired', 'Contract Expiring Soon', 'Contract Expired', 'Personnel Document Incomplete'] as $catName):
                                         $catModule = \App\Models\NotificationModel::CATEGORY_MODULE[$catName] ?? null;
                                         if ($catAllowed !== null && $catModule !== null && !in_array($catModule, $catAllowed, true)) continue;
                                     ?>
@@ -149,6 +149,7 @@ $draft_count = $draft_count ?? 0;
                                     'Janitorial Assignment' => 'bi-brush',
                                     'Inventory Low Stock'   => 'bi-box-seam',
                                     'Tool Borrowed', 'Tool Due Soon', 'Tool Overdue' => 'bi-hand-index-thumb-fill',
+                                    'Hazardous Waste Alert' => 'bi-radioactive',
                                     'Sports Equipment Borrowed', 'Sports Equipment Overdue', 'Sports Equipment Due Soon', 'Sports Equipment Needs Repair' => 'bi-trophy-fill',
                                     'Job Order Expiring Soon', 'Job Order Expired', 'Contract Expiring Soon', 'Contract Expired', 'Personnel Document Incomplete' => 'bi-person-lines-fill',
                                     'Vehicle Expiry'        => 'bi-card-checklist',
@@ -185,6 +186,7 @@ $draft_count = $draft_count ?? 0;
                                     'Sports Equipment Borrowed', 'Sports Equipment Overdue', 'Sports Equipment Due Soon',
                                     'Sports Equipment Needs Repair'                            => 'tools/sports-equipment',
                                     'Consumable Low Stock'                                     => 'facilities/janitorial',
+                                    'Hazardous Waste Alert'                                    => 'facilities/waste',
                                     'Job Order Expiring Soon', 'Job Order Expired',
                                     'Contract Expiring Soon', 'Contract Expired',
                                     'Personnel Document Incomplete'                            => 'personnel',

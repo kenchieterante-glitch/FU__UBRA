@@ -21,6 +21,7 @@ class AuthFilter implements FilterInterface
         'tools'      => 'tools-dashboard',
         'facilities' => 'facilities',
         'safety'     => 'safety',
+        'guard'      => 'guard-station',
     ];
 
     private const ROLE_ALLOWED_PREFIXES = [
@@ -31,6 +32,8 @@ class AuthFilter implements FilterInterface
         'facilities' => ['facilities', 'facilities-dashboard', 'personnel', 'tools', 'maintenance-forms', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
         // Safety-only account: just the Safety module (plus the shared basics).
         'safety'     => ['safety', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
+        // The guard account: only its own desk, the gate check-in / check-out buttons, and its profile.
+        'guard'      => ['guard-station', 'travel/checkin', 'travel/checkout', 'profile'],
     ];
 
     private function roleLanding(string $role): string

@@ -9,7 +9,7 @@
   $active_borrowings_json = $active_borrowings_json ?? '[]';
   $vehicles_inuse_json = $vehicles_inuse_json ?? '[]';
   $maintenance_due_json = $maintenance_due_json ?? '[]';
-  $cleaning_incomplete_json = $cleaning_incomplete_json ?? '[]';
+  $waste_todo_json = $waste_todo_json ?? '[]';
   $buildings_not_covered_json = $buildings_not_covered_json ?? '[]';
   $floors_not_covered_json = $floors_not_covered_json ?? '[]';
   $travel_history = $travel_history ?? [];
@@ -197,7 +197,7 @@ window.FU_SELF_REFRESH = true; // this page refreshes its own data (layout live-
     activeBorrowingsList: <?= $active_borrowings_json ?>,
     vehiclesInUseList: <?= $vehicles_inuse_json ?>,
     maintenanceDueList: <?= $maintenance_due_json ?>,
-    cleaningIncompleteList: <?= $cleaning_incomplete_json ?>,
+    wasteTodoList: <?= $waste_todo_json ?>,
     buildingsNotCoveredList: <?= $buildings_not_covered_json ?>,
     floorsNotCoveredList: <?= $floors_not_covered_json ?>,
   };
@@ -297,6 +297,7 @@ window.FU_SELF_REFRESH = true; // this page refreshes its own data (layout live-
         <div class="alert-time">${esc(a.time)}</div>
       </a>`).join('');
   }
+  renderAlerts(); // fill the Alerts panel straight away (it used to stay empty until the first refresh)
 
   function renderActivity() {
     const list = document.getElementById('activityList');
@@ -356,7 +357,7 @@ window.FU_SELF_REFRESH = true; // this page refreshes its own data (layout live-
         activeBorrowingsList: data.active_borrowings_json ? JSON.parse(data.active_borrowings_json) : kpiDetailLists.activeBorrowingsList,
         vehiclesInUseList: data.vehicles_inuse_json ? JSON.parse(data.vehicles_inuse_json) : kpiDetailLists.vehiclesInUseList,
         maintenanceDueList: data.maintenance_due_json ? JSON.parse(data.maintenance_due_json) : kpiDetailLists.maintenanceDueList,
-        cleaningIncompleteList: data.cleaning_incomplete_json ? JSON.parse(data.cleaning_incomplete_json) : kpiDetailLists.cleaningIncompleteList,
+        wasteTodoList: data.waste_todo_json ? JSON.parse(data.waste_todo_json) : kpiDetailLists.wasteTodoList,
         buildingsNotCoveredList: data.buildings_not_covered_json ? JSON.parse(data.buildings_not_covered_json) : kpiDetailLists.buildingsNotCoveredList,
         floorsNotCoveredList: data.floors_not_covered_json ? JSON.parse(data.floors_not_covered_json) : kpiDetailLists.floorsNotCoveredList,
       });
