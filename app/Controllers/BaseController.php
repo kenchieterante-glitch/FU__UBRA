@@ -82,7 +82,7 @@ abstract class BaseController extends Controller
      */
     protected function isGuard(): bool
     {
-        return $this->isAdmin() || $this->isSecurityHead();
+        return $this->isAdmin() || $this->isSecurityHead() || strtolower($this->userRole()) === 'guard';
     }
 
     protected function requireGuard()
@@ -103,6 +103,7 @@ abstract class BaseController extends Controller
             'tools'      => '/tools-dashboard',
             'facilities' => '/facilities',
             'janitorial' => '/janitorial-dashboard',
+            'guard'      => '/guard-station',
             default      => '/dashboard',
         };
     }

@@ -295,6 +295,7 @@
         <div class="alert-time">${esc(a.time)}</div>
       </a>`).join('');
   }
+  renderAlerts(); // fill the Alerts panel straight away (it used to stay empty until the first refresh)
 
   function renderActivity() {
     const list = document.getElementById('activityList');

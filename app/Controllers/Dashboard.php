@@ -352,8 +352,8 @@ class Dashboard extends BaseController
                     'listKey' => 'maintenanceDueList',
                 ],
                 [
-                    'label' => 'Waste Check',
-                    'value' => "{$wasteDone}/{$wasteTotal} stations",
+                    'label' => 'Waste Stations Done',
+                    'value' => "{$wasteDone}/{$wasteTotal}",
                     'meta' => "{$wastePending} to do · {$wasteMissed} missed",
                     'sub' => 'Weighed today',
                     'tone' => $wastePending === 0 ? 'tone-green' : 'tone-gold',
@@ -362,8 +362,8 @@ class Dashboard extends BaseController
                     'listKey' => 'wasteTodoList',
                 ],
                 [
-                    'label' => 'Building Coverage',
-                    'value' => "{$buildingCoverage['covered']}/{$buildingCoverage['total']} buildings",
+                    'label' => 'Buildings Covered',
+                    'value' => "{$buildingCoverage['covered']}/{$buildingCoverage['total']}",
                     'meta' => 'Fire extinguisher installed',
                     'sub' => 'Campus-wide',
                     'tone' => 'tone-green',
@@ -372,8 +372,8 @@ class Dashboard extends BaseController
                     'listKey' => 'buildingsNotCoveredList',
                 ],
                 [
-                    'label' => 'Floor Coverage',
-                    'value' => "{$floorCoverage['covered']}/{$floorCoverage['total']} floors",
+                    'label' => 'Floors Covered',
+                    'value' => "{$floorCoverage['covered']}/{$floorCoverage['total']}",
                     'meta' => ($floorCoverage['total'] - $floorCoverage['covered']) . ' floors need one',
                     'sub' => 'Per-floor, campus-wide',
                     'tone' => $floorCoverage['covered'] === $floorCoverage['total'] ? 'tone-green' : 'tone-gold',

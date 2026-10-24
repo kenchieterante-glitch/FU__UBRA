@@ -143,16 +143,22 @@
       $isJanitorialSupervisor = $userRole === 'janitorial';
       $isAssetsHead          = $userRole === 'assets';
       $isSportsHead          = $userRole === 'sports';
-      $isFullAccess          = !$isSecurityHead && !$isToolsHead && !$isFacilitiesSupervisor && !$isJanitorialSupervisor && !$isAssetsHead && !$isSportsHead;
-      $dashboardUrl          = $isSecurityHead ? 'security-dept'
+      $isGuardDesk           = $userRole === 'guard';
+      $isFullAccess          = !$isGuardDesk && !$isSecurityHead && !$isToolsHead && !$isFacilitiesSupervisor && !$isJanitorialSupervisor && !$isAssetsHead && !$isSportsHead;
+      $dashboardUrl          = $isGuardDesk ? 'guard-station'
+        : ($isSecurityHead ? 'security-dept'
         : ($isSportsHead ? 'sports-dept'
         : ($isAssetsHead ? 'assets-dept'
         : ($isToolsHead ? 'tools-dashboard'
         : ($isFacilitiesSupervisor ? 'facilities'
-        : ($isJanitorialSupervisor ? 'janitorial-dashboard' : 'dashboard')))));
+        : ($isJanitorialSupervisor ? 'janitorial-dashboard' : 'dashboard'))))));
     ?>
     <nav class="sidebar-nav">
+      <?php if ($isGuardDesk): ?>
+      <a href="<?= base_url('guard-station') ?>" class="active" data-tooltip="Guard Station"><i class="bi bi-shield-check"></i> <span class="nav-label">Guard Station</span></a>
+      <?php else: ?>
       <a href="<?= base_url($dashboardUrl) ?>" class="<?= navActive($dashboardUrl) ?>" data-tooltip="Dashboard"><i class="bi bi-grid-1x2"></i> <span class="nav-label">Dashboard</span></a>
+      <?php endif; ?>
 
       <?php if ($isSecurityHead): ?>
       <?php $isSecDeptSection = strpos($currentUri, 'security-dept/') === 0 && $currentUri !== 'security-dept/status'; ?>
@@ -298,6 +304,7 @@
       <a href="<?= base_url('calendar') ?>" class="<?= navActive('calendar') ?>" data-tooltip="Calendar"><i class="bi bi-calendar3"></i> <span class="nav-label">Calendar</span></a>
       <?php endif; ?>
 
+      <?php if (!$isGuardDesk): ?>
       <a href="<?= base_url('notifications') ?>" class="<?= navActive('notifications') ?>" data-tooltip="Notifications"><i class="bi bi-bell"></i> <span class="nav-label">Notifications</span><span class="nav-count" id="navBellCount" <?= $topbarUnreadCount > 0 ? '' : 'style="display:none"' ?>><?= $topbarUnreadCount > 99 ? '99+' : (int) $topbarUnreadCount ?></span></a>
       <?php $isInfoHubSection = $currentUri === 'reports' || strpos($currentUri, 'maintenance-forms/') === 0; ?>
       <div class="nav-parent-group <?= $isInfoHubSection ? 'open' : '' ?>">
@@ -326,7 +333,10 @@
         </div>
       </div>
       <div class="nav-sep"></div>
+      <?php endif; /* guard account */ ?>
+      <?php if (!$isGuardDesk): ?>
       <a href="<?= base_url('ubra') ?>" class="ai-link <?= navActive('ubra') ?>" data-tooltip="Mr. UBRA AI"><i class="bi bi-robot"></i> <span class="nav-label">Mr. UBRA AI</span> <span class="dot"></span></a>
+      <?php endif; ?>
       <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor || $isAssetsHead || $isSportsHead): ?>
       <a href="<?= base_url('settings') ?>" class="<?= navActive('settings') ?>" data-tooltip="Settings"><i class="bi bi-gear"></i> <span class="nav-label">Settings</span></a>
       <?php endif; ?>

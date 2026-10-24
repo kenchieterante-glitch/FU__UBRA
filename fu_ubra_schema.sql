@@ -22,7 +22,7 @@ CREATE TABLE `activity_logs` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`department_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=91 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `activity_logs` WRITE;
@@ -103,7 +103,19 @@ INSERT INTO `activity_logs` VALUES
 (75,15,'Janitorial','Admin Test Account: Created restroom checklist for LG Sinco Computer Center — 2nd Floor','2026-10-07 03:11:02'),
 (76,2,'Motorpool','Kenchie Terante: Acknowledged notification: Motor Pool Work Order','2026-10-07 15:05:14'),
 (77,2,'Vehicle','Kenchie Terante: Driver checked out for trip ticket TR-20261001-0002','2026-10-09 10:17:11'),
-(78,2,'Vehicle','Kenchie Terante: Driver checked in for trip ticket TR-20261001-0001','2026-10-09 10:17:25');
+(78,2,'Vehicle','Kenchie Terante: Driver checked in for trip ticket TR-20261001-0001','2026-10-09 10:17:25'),
+(79,12,'Safety','Security Test Account: Key \"Admin Filing Room Key\" lent to Col. Arthur Miller','2026-10-24 16:55:36'),
+(80,12,'Safety','Security Test Account: Key \"Conference Room Key\" lent to Sonia G. Ramirez','2026-10-24 16:55:40'),
+(81,12,'Safety','Security Test Account: Key \"Server Room Key\" lent to Sonia G. Ramirez','2026-10-24 16:55:42'),
+(82,12,'Safety','Security Test Account: Key \"Admin Filing Room Key\" returned by Col. Arthur Miller','2026-10-24 16:55:45'),
+(83,12,'Safety','Security Test Account: Key \"Conference Room Key\" returned by Sonia G. Ramirez','2026-10-24 16:55:46'),
+(84,12,'Safety','Security Test Account: Key \"Server Room Key\" returned by Sonia G. Ramirez','2026-10-24 16:55:47'),
+(85,16,'Safety','Guard Test Account: Key \"Conference Room Key\" lent to Col. Arthur Miller','2026-10-24 17:34:28'),
+(86,16,'Safety','Guard Test Account: Key \"Conference Room Key\" returned by Col. Arthur Miller','2026-10-24 17:34:29'),
+(87,16,'Safety','Guard Test Account: Key \"Conference Room Key\" lent to Col. Arthur Miller','2026-10-24 17:36:45'),
+(88,16,'Safety','Guard Test Account: Key \"Conference Room Key\" returned by Col. Arthur Miller','2026-10-24 17:36:46'),
+(89,16,'Safety','Guard Test Account: Key \"Conference Room Key\" lent to Sherina Banosong','2026-10-24 17:44:06'),
+(90,16,'Safety','Guard Test Account: Key \"Conference Room Key\" returned by Sherina Banosong','2026-10-24 17:44:08');
 /*!40000 ALTER TABLE `activity_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `aircon_checklist_items`;
@@ -758,12 +770,12 @@ CREATE TABLE `facility_keys` (
 LOCK TABLES `facility_keys` WRITE;
 /*!40000 ALTER TABLE `facility_keys` DISABLE KEYS */;
 INSERT INTO `facility_keys` VALUES
-(4,'Admin Filing Room Key',NULL,NULL,'KEY-8E4BF210','Available','2026-10-04 10:48:12','2026-10-04 10:48:12'),
-(5,'Conference Room Key',NULL,NULL,'KEY-908094ED','Available','2026-10-04 10:48:14','2026-10-04 10:48:14'),
-(6,'Gymnasium Storage Key',NULL,NULL,'KEY-5F7E4FDF','Available','2026-10-04 10:48:19','2026-10-04 10:48:19'),
+(4,'Admin Filing Room Key',NULL,NULL,'KEY-8E4BF210','Borrowed','2026-10-04 10:48:12','2026-10-24 16:55:45'),
+(5,'Conference Room Key',NULL,NULL,'KEY-908094ED','Available','2026-10-04 10:48:14','2026-10-24 17:44:08'),
+(6,'Gymnasium Storage Key',NULL,NULL,'KEY-5F7E4FDF','Borrowed','2026-10-04 10:48:19','2026-10-04 10:48:19'),
 (7,'Lab Cabinet Keys',NULL,NULL,'KEY-7A14AC3B','Available','2026-10-04 10:48:21','2026-10-04 10:48:21'),
 (8,'Library Storeroom Key',NULL,NULL,'KEY-D6BC7BA5','Available','2026-10-04 10:48:22','2026-10-04 10:48:22'),
-(9,'Server Room Key',NULL,NULL,'KEY-9C5458C1','Available','2026-10-04 10:48:24','2026-10-04 10:48:24');
+(9,'Server Room Key',NULL,NULL,'KEY-9C5458C1','Borrowed','2026-10-04 10:48:24','2026-10-24 16:55:47');
 /*!40000 ALTER TABLE `facility_keys` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `fire_extinguishers`;
@@ -1391,18 +1403,18 @@ CREATE TABLE `key_borrow_logs` (
   KEY `key_borrow_logs_key_id_foreign` (`key_id`),
   CONSTRAINT `fk_keylog_trip` FOREIGN KEY (`trip_ticket_id`) REFERENCES `travel_requests` (`id`) ON DELETE SET NULL,
   CONSTRAINT `key_borrow_logs_key_id_foreign` FOREIGN KEY (`key_id`) REFERENCES `facility_keys` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `key_borrow_logs` WRITE;
 /*!40000 ALTER TABLE `key_borrow_logs` DISABLE KEYS */;
 INSERT INTO `key_borrow_logs` VALUES
 (1,'KL-001','EMP-2021-042',NULL,'Dela Cruz, J.','Library','Library Storeroom Key',NULL,'2026-07-29 07:30:00','2026-07-29 12:00:00','Returned','Santos, J.','2026-07-19 05:37:22'),
-(2,'KL-002','EMP-2022-118',NULL,'Magsaysay, R.','CCS','Server Room Key',NULL,'2026-07-29 08:15:00',NULL,'Active','Santos, J.','2026-07-19 05:37:22'),
+(2,'KL-002','EMP-2022-118',NULL,'Magsaysay, R.','CCS','Server Room Key',9,'2026-07-29 08:15:00',NULL,'Active','Santos, J.','2026-07-19 05:37:22'),
 (3,'KL-003','FAC-2020-007',NULL,'Torres, F.','Science','Lab Cabinet Keys',NULL,'2026-07-29 09:00:00','2026-07-29 10:30:00','Returned','Dela Cruz, P.','2026-07-19 05:37:22'),
-(4,'KL-004','EMP-2019-055',NULL,'Reyes, A.','Admin','Admin Filing Room Key',NULL,'2026-07-29 10:45:00',NULL,'Active','Santos, J.','2026-07-19 05:37:22'),
+(4,'KL-004','EMP-2019-055',NULL,'Reyes, A.','Admin','Admin Filing Room Key',4,'2026-07-29 10:45:00',NULL,'Active','Santos, J.','2026-07-19 05:37:22'),
 (5,'KL-005','EMP-2020-034',NULL,'Juan dela Cruz','Logistics','Library storeroom key',NULL,'2026-08-01 19:34:59','2026-08-01 19:35:00','Returned','Test Guard','2026-08-02 03:34:59'),
-(7,'KL-006','EMP-2023-090',NULL,'Ramirez, S.','Athletics','Gymnasium Storage Key',NULL,'2026-10-01 06:45:00',NULL,'Active','Santos, J.','2026-10-01 02:27:39'),
+(7,'KL-006','EMP-2023-090',NULL,'Ramirez, S.','Athletics','Gymnasium Storage Key',6,'2026-10-01 06:45:00',NULL,'Active','Santos, J.','2026-10-01 02:27:39'),
 (8,'KL-007','EMP-2018-021',NULL,'Peralta, H.','Administration','Conference Room Key',NULL,'2026-10-01 08:00:00','2026-10-01 09:15:00','Returned','Santos, J.','2026-10-01 02:27:39');
 /*!40000 ALTER TABLE `key_borrow_logs` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -1805,7 +1817,7 @@ INSERT INTO `personnel` VALUES
 (6,'EMP-2020-034','Juan dela Cruz','juan.delacruz@foundation.edu.ph',NULL,2,'Regular','Driver','Van-01 Dispatch','Active',0,NULL,'2026-07-18 20:20:56'),
 (7,'EMP-2023-210','Rodrigo S. Cruz','rodrigo.cruz@foundation.edu.ph',NULL,2,'Regular','Senior Driver','Bus-02 Assignment','Active',0,NULL,'2026-07-18 20:20:56'),
 (8,'EMP-2018-009','Dr. Helen Peralta','helen.peralta@foundation.edu.ph',NULL,6,'Regular','Department Head','Trip Approvals','Active',0,NULL,'2026-07-18 20:20:56'),
-(9,'EMP-2023-301','sherina Banosong','sherina.banosong@foundation.edu.ph',NULL,2,'Regular','Staff','Front Office Records Filing','Active',0,NULL,'2026-07-19 02:54:16'),
+(9,'20230407','Sherina Banosong','sherina.banosong@foundation.edu.ph',NULL,2,'Regular','Staff','Front Office Records Filing','Active',0,NULL,'2026-07-19 02:54:16'),
 (14,'EMP-2024-302','Timothy Eraham','timothy.eraham@foundation.edu.ph',NULL,5,'Regular','Driver','Van-02 Dispatch','Active',0,NULL,'2026-07-26 00:20:05'),
 (15,'EMP-2024-303','TimothyLincon','timothy.lincon@foundation.edu.ph',NULL,1,'Regular','Janitor','Library Restroom Cleaning','Active',0,NULL,'2026-07-26 12:13:38'),
 (16,'EMP-2023-304','Juan dela Cruz','juan.delacruz@foundation.edu.ph',NULL,8,'Regular','Maintenance','HVAC Unit Inspection - Bldg 14','Active',0,NULL,'2026-07-27 22:20:10'),
@@ -2643,12 +2655,13 @@ INSERT INTO `users` VALUES
 (2,'Kenchie Terante','admin@fu.edu.ph','admin','20230251','$2b$12$c8vA1tfnL.JQGWsHuahepukT6/UGD41npxdErvEsNFlsGr7d4Rxwq','Administrator','Operations Office','1787991834_bae35548ba39207f21ec.jpeg','2026-07-18 22:18:46'),
 (5,'Sherina Banosong','sherina.banosong@foundationu.com','facilities','20230407','$2y$10$X7B8Zl3W/OOxATcABKwwqeFOvn77LV15ujUCcwd7QmMk6vfqNJcm6','Facilities',NULL,'1788029598_fca15c5bcb9244960756.jpg','2026-08-29 16:33:30'),
 (9,'Timothy Eraham','timothy.eraham@foundationu.com','security','10005','$2y$10$bAEiq/MrHZxqBLT3Y8j4nOCk3EQ0Fn3KuGGdmva5GEJSVGEveyuMG','Security','Safety & Security','1788029522_d47e818ca26ab4f0a98e.jpg','2026-08-21 20:32:29'),
-(10,'Maisie Therese Tigmo','janitorial@fu-ubra.local','janitorial','10010','$2y$10$PCVcLtcX319cDb4FqgyZOuHDcy3bPj/JpC21itpZSOdVRo3EBFyGK','Janitorial',NULL,'1789909237_3e7efa2c8eab9ec54d1f.jpg','2026-09-20 20:53:31'),
-(11,'Facilities Test Account','facilities.test@foundationu.local','facilities_test','10020','$2y$10$bWPZG.CKHw8AShc0uYV.fO9xC4MD.LI8m7FfK2We8neMgh7LY5/Hy','Facilities','Facilities',NULL,'2026-10-03 15:00:55'),
-(12,'Security Test Account','security.test@foundationu.local','security_test','10030','$2y$10$WdW62spkFCt0jlF5fOOaMOrOGqQ.65mq0epq6HWQSwf4k.7.W0Dy6','Security','Security',NULL,'2026-10-03 22:35:01'),
+(10,'Maisie Therese Tigmo','janitorial@fu-ubra.local','janitorial','10010','$2y$10$rAQLqR/Qcp6IoMLRQvliYOKpmcuYc778x5BycftPdllLIbaC9ewdu','Janitorial',NULL,'1789909237_3e7efa2c8eab9ec54d1f.jpg','2026-09-20 20:53:31'),
+(11,'Facilities Test Account','facilities.test@foundationu.local','facilities_test','10020','$2y$10$EkEeRdxyqdl.RtDk9WsuXupxkni2mrcO6imZ6j5OmoiDtXcSn/KqG','Facilities','Facilities',NULL,'2026-10-03 15:00:55'),
+(12,'Security Test Account','security.test@foundationu.local','security_test','10030','$2y$10$1G/y7Wj5Z1UzG35xmi/IPukVif5I.dBvrLGQUMVyxfqm9R50nhvCO','Security','Security',NULL,'2026-10-03 22:35:01'),
 (13,'Assets Test Account','assets.test@foundationu.local','assets_test','10040','$2y$10$DyXP2dO2KIxG1LdNKW2wnuVASr.dpGKGC4vRVpKbEaIFbNEBJI4gC','Assets','Asset Acquisition and Monitoring',NULL,'2026-10-04 01:10:16'),
 (14,'Sports Test Account','sports.test@foundationu.local','sports_test','10050','$2y$10$fOiVapffyFPdx9kt.NWSguiDDRgndabBwLtWbobYd04Iru9TzIcsm','Sports','Sports Equipment Monitoring',NULL,'2026-10-04 02:27:14'),
-(15,'Admin Test Account','admin.test@foundationu.local','admin_test','10099','$2y$10$64S3tTK3nb0GQ7fsG2jHUerL49HXLztIxlcEtd/T6zsLvCh6O8Vuu','Administrator','Operations Office',NULL,'2026-10-06 20:28:53');
+(15,'Admin Test Account','admin.test@foundationu.local','admin_test','10099','$2y$10$64S3tTK3nb0GQ7fsG2jHUerL49HXLztIxlcEtd/T6zsLvCh6O8Vuu','Administrator','Operations Office','1792737376_bab5e95b56455ea5502c.jpeg','2026-10-06 20:28:53'),
+(16,'Guard Test Account','guard_test@fu-ubra.local','guard_test','10060','$2y$10$KPbdNbX3l9oXLy0Vs4BEa.KGxfhQoNfvvInX5NC4aJEGPHMkyuMzO','Guard','Guard Post',NULL,'2026-10-24 17:34:06');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 DROP TABLE IF EXISTS `vehicle_inspection_checklists`;

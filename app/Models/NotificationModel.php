@@ -65,6 +65,7 @@ class NotificationModel extends Model
             // only its own inventory/borrow notifications.
             'tools'      => ['tools'],
             'janitorial' => ['janitorial', 'waste'],
+            'guard'      => ['guard'], // nothing is routed to the guard account yet
             default      => null,
         };
     }

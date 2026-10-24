@@ -50,14 +50,25 @@ $routes->get('janitorial-dashboard', 'JanitorialDashboardController::index');
 // Old /portals links keep working by sending people to the sign-in page.
 $routes->get('portals', static fn () => redirect()->to(base_url('login')));
 $routes->get('portals/(:segment)', static fn () => redirect()->to(base_url('login')));
+// Guard Station: the guard account's own desk (keys + gate), desktop version of the guard app
+$routes->get ('guard-station', 'GuardStationController::station');
+$routes->get ('guard-station/lookup/(:any)', 'GuardStationController::deskLookup/$1');
+$routes->get ('guard-station/barcodes', 'GuardStationController::deskBarcodes');
+$routes->get ('guard-station/scanner-test', 'GuardStationController::scannerTest');
+$routes->post('guard-station/borrow', 'GuardStationController::deskBorrow');
+$routes->post('guard-station/return', 'GuardStationController::deskReturn');
 $routes->get('security-dept', 'SecurityDeptController::overview');
 $routes->get('security-dept/status', 'SecurityDeptController::status');
 $routes->get('security-dept/plan-image', 'SecurityDeptController::planImage');
+$routes->get('security-dept/barcodes', 'SecurityDeptController::barcodes');
 $routes->get('security-dept/keys', 'SecurityDeptController::keyList');
 $routes->post('security-dept/keys', 'SecurityDeptController::storeKey');
 $routes->post('security-dept/keys/pdf', 'SecurityDeptController::keysPdf');
 $routes->post('security-dept/keys/(:num)/delete', 'SecurityDeptController::deleteKey/$1');
 $routes->get('security-dept/(:segment)', 'SecurityDeptController::index/$1');
+$routes->get('security-dept/guard/lookup/(:any)', 'SecurityDeptController::guardLookup/$1');
+$routes->post('security-dept/guard/borrow', 'SecurityDeptController::guardBorrow');
+$routes->post('security-dept/guard/return', 'SecurityDeptController::guardReturn');
 $routes->post('security-dept/markers', 'SecurityDeptController::storeMarker');
 $routes->post('security-dept/markers/(:num)/status', 'SecurityDeptController::markerStatus/$1');
 $routes->post('security-dept/markers/(:num)/delete', 'SecurityDeptController::deleteMarker/$1');

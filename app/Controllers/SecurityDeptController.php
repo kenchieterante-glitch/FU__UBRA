@@ -6,6 +6,7 @@ use App\Models\FacilityKeyModel;
 use App\Models\FireExtinguisherModel;
 use App\Models\FloorPlanMarkerModel;
 use App\Models\KeyBorrowLogModel;
+use App\Models\PersonnelModel;
 use App\Models\SafetyEquipmentModel;
 use App\Models\SafetyInspectionModel;
 use App\Models\TravelModel;
@@ -24,7 +25,7 @@ class SecurityDeptController extends BaseController
         return !empty($d) ? date('M d, Y', strtotime($d)) : '—';
     }
 
-    private function fmtDateTime($d): string
+    protected function fmtDateTime($d): string
     {
         return !empty($d) ? date('M d, Y g:i A', strtotime($d)) : '—';
     }
@@ -243,6 +244,119 @@ class SecurityDeptController extends BaseController
         ], $data));
     }
 
+    // The Safety & Security head and the dedicated guard account may lend / receive keys; the admin only monitors.
+    protected function canOperateKeys(): bool
+    {
+        return $this->isSecurityHead() || strtolower($this->userRole()) === 'guard';
+    }
+
+    // ---------------------------------------------------------------- Guard desk (desktop): lend / receive keys
+    // Works with a wired 2D barcode scanner (it just types the code and presses Enter) or by typing / picking by hand.
+
+    protected function guardJson(int $status, string $message, array $extra = [])
+    {
+        return $this->response->setStatusCode($status)->setJSON(['message' => $message] + $extra);
+    }
+
+    protected function guardSnapshot(): array
+    {
+        $fmt = fn($d) => !empty($d) ? date('M d, Y g:i A', strtotime($d)) : '—';
+        $active = array_values(array_filter((new KeyBorrowLogModel())->getAllWithTrip(), fn($l) => $l['status'] === 'Active'));
+
+        return [
+            'active' => array_map(fn($l) => ['id' => (int) $l['id'], 'log' => $l['log_number'], 'name' => $l['full_name'], 'dept' => $l['department'], 'key' => $l['key_item'], 'since' => $fmt($l['scan_in']), 'time' => $l['scan_in']], $active),
+            'keys'   => array_map(fn($k) => ['id' => (int) $k['id'], 'name' => $k['key_name'], 'place' => $k['location'], 'status' => $k['status'], 'uid' => $k['nfc_uid']], (new FacilityKeyModel())->orderBy('key_name', 'ASC')->findAll()),
+        ];
+    }
+
+    // Finds a key from what the guard scanned or typed: its tag, its name, or the one picked in the list.
+    protected function guardFindKey(): ?array
+    {
+        $model = new FacilityKeyModel();
+        $id = (int) $this->request->getPost('key_id');
+        if ($id > 0) return $model->find($id);
+
+        $code = trim((string) $this->request->getPost('key_code'));
+        if ($code === '') return null;
+
+        return $model->findByNfcUid($code)
+            ?? $model->where('LOWER(key_name)', mb_strtolower($code))->first();
+    }
+
+    public function guardLookup($empId = '')
+    {
+        if (!session()->get('isLoggedIn')) return $this->guardJson(403, 'Please sign in.');
+
+        $person = (new PersonnelModel())->getByEmpId(trim((string) urldecode($empId)));
+        if (!$person) return $this->guardJson(404, 'No staff or faculty record for that ID.');
+
+        return $this->response->setJSON(['full_name' => $person['full_name'], 'department' => $person['department_name'] ?? '']);
+    }
+
+    public function guardBorrow()
+    {
+        if (!session()->get('isLoggedIn')) return $this->guardJson(403, 'Please sign in.');
+        if (!$this->canOperateKeys()) return $this->guardJson(403, 'Only the guard account can lend keys. The admin account is for monitoring.');
+
+        $empId = trim((string) $this->request->getPost('borrower_id'));
+        if ($empId === '') return $this->guardJson(422, 'Scan or type the borrower\'s ID first.');
+
+        $person = (new PersonnelModel())->getByEmpId($empId);
+        if (!$person) return $this->guardJson(403, 'No staff or faculty record found for that ID. Only staff and faculty can borrow keys.');
+
+        $key = $this->guardFindKey();
+        if (!$key) return $this->guardJson(404, 'That key is not registered. Check the tag or pick the key from the list.');
+        if ($key['status'] === 'Borrowed') return $this->guardJson(409, "\"{$key['key_name']}\" is already out.");
+
+        $logs = new KeyBorrowLogModel();
+        $logs->insert([
+            'log_number'    => 'KL-' . str_pad((string) ($logs->countAllResults() + 1), 3, '0', STR_PAD_LEFT),
+            'borrower_id'   => $empId,
+            'full_name'     => $person['full_name'],
+            'department'    => $person['department_name'] ?? '',
+            'key_item'      => $key['key_name'],
+            'key_id'        => $key['id'],
+            'scan_in'       => date('Y-m-d H:i:s'),
+            'status'        => 'Active',
+            'guard_on_duty' => session()->get('full_name'),
+        ]);
+        (new FacilityKeyModel())->update($key['id'], ['status' => 'Borrowed']);
+        $this->logActivity('Safety', "Key \"{$key['key_name']}\" lent to {$person['full_name']}");
+
+        return $this->guardJson(200, "\"{$key['key_name']}\" lent to {$person['full_name']}.", ['ok' => true] + $this->guardSnapshot());
+    }
+
+    public function guardReturn()
+    {
+        if (!session()->get('isLoggedIn')) return $this->guardJson(403, 'Please sign in.');
+        if (!$this->canOperateKeys()) return $this->guardJson(403, 'Only the guard account can receive keys. The admin account is for monitoring.');
+
+        $key = $this->guardFindKey();
+        if (!$key) return $this->guardJson(404, 'That key is not registered. Check the tag or pick the key from the list.');
+
+        $logs = new KeyBorrowLogModel();
+        $log = $logs->where('key_id', $key['id'])->where('status', 'Active')->orderBy('id', 'DESC')->first();
+        if (!$log) return $this->guardJson(409, "\"{$key['key_name']}\" is not out right now.");
+
+        $logs->update($log['id'], ['scan_out' => date('Y-m-d H:i:s'), 'status' => 'Returned']);
+        (new FacilityKeyModel())->update($key['id'], ['status' => 'Available']);
+        $this->logActivity('Safety', "Key \"{$key['key_name']}\" returned by {$log['full_name']}");
+
+        return $this->guardJson(200, "\"{$key['key_name']}\" received back from {$log['full_name']}.", ['ok' => true] + $this->guardSnapshot());
+    }
+
+    // Printable barcode sheet (Code 128 + the same QR the keys already use): every key tag and a few staff IDs,
+    // so the guard desk can be tried with a plain barcode scanner.
+    public function barcodes()
+    {
+        if (!session()->get('isLoggedIn')) return redirect()->to('/login');
+
+        $keys = (new FacilityKeyModel())->orderBy('key_name', 'ASC')->findAll();
+        $staff = (new PersonnelModel())->where('is_archived', 0)->where('emp_id !=', '')->orderBy('full_name', 'ASC')->findAll(12);
+
+        return view('security_dept/barcodes', ['keys' => $keys, 'staff' => $staff]);
+    }
+
     // List of Keys: every key on record (registered keys + any key that has ever been borrowed), and where it is now.
     public function keyList()
     {
@@ -315,6 +429,7 @@ class SecurityDeptController extends BaseController
         ];
         $grids = [6 => [2, 3], 8 => [2, 4], 12 => [3, 4], 15 => [3, 5], 20 => [4, 5], 24 => [4, 6], 30 => [5, 6], 35 => [5, 7], 48 => [6, 8]];
         $per = (int) $this->request->getPost('per');
+        $kind = $this->request->getPost('kind') === 'barcode' ? 'barcode' : 'qr'; // QR codes and barcodes are printed on separate sheets
         if (!isset($papers[$paperKey]) || !isset($grids[$per])) return redirect()->to('/security-dept/keys')->with('error', 'Choose the bond paper and how many QR codes per sheet.');
         $paper = $papers[$paperKey];
         [$cols, $rows] = $grids[$per];
@@ -328,13 +443,16 @@ class SecurityDeptController extends BaseController
             if ($only !== '' && $k['nfc_uid'] !== $only) continue;
             $keys[] = ['name' => $k['key_name'], 'place' => trim(($k['location'] ?: '') . ($k['floor'] ? ', ' . $k['floor'] : ''), ', '), 'img' => $img];
         }
-        if (!$keys) return redirect()->to('/security-dept/keys')->with('error', 'No keys with a QR code to print.');
+        if (!$keys) return redirect()->to('/security-dept/keys')->with('error', 'No keys with a ' . ($kind === 'barcode' ? 'barcode' : 'QR code') . ' to print.');
 
         $margin = 10; // mm
         $headerH = 30; // mm reserved for the header on every sheet
         $cw = ($paper['w'] - $margin * 2) / $cols;
         $ch = ($paper['h'] - $margin * 2 - $headerH - 12) / $rows; // 12 mm safety so a sheet never spills onto a second page
         $qr = min($cw * 0.72, $ch * 0.58);
+        // a barcode is wide and short: use most of the cell's width instead of a square
+        $imgW = $kind === 'barcode' ? $cw * 0.86 : $qr;
+        $imgH = $kind === 'barcode' ? min($ch * 0.34, $cw * 0.28) : $qr;
         $nameFont = max(7, min(11, $qr / 2.6));
 
         $logoPath = FCPATH . 'images/UBRA LOGO (no background).png';
@@ -342,7 +460,7 @@ class SecurityDeptController extends BaseController
         $count = count($keys);
         $header = '<div class="doc-header">' . ($logo ? '<img src="' . $logo . '" class="doc-logo">' : '')
             . '<div class="doc-system-name">FOUNDATION UNIVERSITY — UBRA</div>'
-            . '<div class="doc-module-name">Key QR Codes</div>'
+            . '<div class="doc-module-name">' . ($kind === 'barcode' ? 'Key Barcodes' : 'Key QR Codes') . '</div>'
             . '<div class="meta">Generated: ' . esc(date('M j, Y g:i A')) . ' &middot; ' . $count . ' key(s)</div></div>';
 
         $pages = '';
@@ -372,7 +490,7 @@ class SecurityDeptController extends BaseController
             .meta { color: #666; font-size: 11px; margin-top: 4px; }
             table.grid { border-collapse: collapse; width: 100%; table-layout: fixed; }
             td.cell { width: ' . $cw . 'mm; height: ' . ($ch - 2) . 'mm; border: 0.2mm dashed #999; text-align: center; vertical-align: middle; padding: 1mm; overflow: hidden; }
-            img.qr { width: ' . $qr . 'mm; height: ' . $qr . 'mm; }
+            img.qr { width: ' . $imgW . 'mm; height: ' . $imgH . 'mm; }
             .n { font-weight: bold; font-size: ' . $nameFont . 'px; margin-top: 1mm; }
             .p { font-size: ' . max(5, $nameFont * 0.75) . 'px; color: #555; margin-top: 0.5mm; }
         </style></head><body>' . $pages . '</body></html>';
@@ -384,7 +502,7 @@ class SecurityDeptController extends BaseController
 
         return $this->response
             ->setHeader('Content-Type', 'application/pdf')
-            ->setHeader('Content-Disposition', 'inline; filename="fu-ubra-key-qr-codes-' . date('Y-m-d') . '.pdf"')
+            ->setHeader('Content-Disposition', 'attachment; filename="fu-ubra-key-' . ($kind === 'barcode' ? 'barcodes-' : 'qr-codes-') . date('Y-m-d') . '.pdf"')
             ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->setBody($dompdf->output());
     }
@@ -631,7 +749,7 @@ class SecurityDeptController extends BaseController
         ];
     }
 
-    private function guardData(): array
+    protected function guardData(): array
     {
         $logs = (new KeyBorrowLogModel())->getAllWithTrip();
         $active = array_values(array_filter($logs, fn($l) => $l['status'] === 'Active'));
@@ -690,6 +808,8 @@ class SecurityDeptController extends BaseController
             ],
             'key_logs'     => $logs,
             'active_keys'  => $active,
+            'guard_keys'   => (new FacilityKeyModel())->orderBy('key_name', 'ASC')->findAll(),
+            'can_operate'  => $this->canOperateKeys(), // only the guard's own account lends / receives keys; the admin just monitors
             'gate_trips'   => $gateTrips,
             'events'       => $events,
             'alerts_json'  => $this->jsonForScript($alerts),
