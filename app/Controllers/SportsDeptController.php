@@ -35,7 +35,10 @@ class SportsDeptController extends BaseController
 
     private function sportsTools(): array
     {
-        return (new ToolsModel())->where('category', self::CATEGORY)->where('is_archived', 0)->orderBy('asset_code', 'ASC')->findAll();
+        return (new ToolsModel())->where('category', self::CATEGORY)->where('is_archived', 0)
+            // Just-borrowed/returned items first, then the usual code order.
+            ->orderBy('(SELECT MAX(bra.last_activity_at) FROM borrow_records bra WHERE bra.tool_id = tools.id)', 'DESC', false)
+            ->orderBy('asset_code', 'ASC')->findAll();
     }
 
     // Storage places for the Location dropdown: the ones already in use plus the usual sports spots.
@@ -67,6 +70,8 @@ class SportsDeptController extends BaseController
     public function overview()
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
+
+        (new \App\Models\NotificationModel())->syncSportsOverdue();
 
         $e = $this->equipmentData();
         $b = $this->borrowingData();
@@ -122,6 +127,8 @@ class SportsDeptController extends BaseController
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('/login');
         if (!isset(self::SECTIONS[$section])) return redirect()->to('/sports-dept');
+
+        (new \App\Models\NotificationModel())->syncSportsOverdue();
 
         $data = $section === 'borrowing' ? $this->borrowingData() : $this->equipmentData();
         $stat = (string) $this->request->getGet('stat');

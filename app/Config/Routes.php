@@ -136,9 +136,11 @@ $routes->get ('tools/power-tools',      'ToolsController::powerTools');
 $routes->get ('tools/consumable',       'ToolsController::consumable');
 $routes->get ('tools/sports-equipment', 'ToolsController::sportsEquipment');
 $routes->get ('tools/borrowing',        'ToolsController::borrowing');
+$routes->get ('tools/borrowing/refresh','ToolsController::borrowingRefresh');
 // "Tools Equipment" was merged into Power Tools — redirect any old
 // bookmarks/links instead of leaving them as a dead 404.
 $routes->get ('tools/equipment', static fn () => redirect()->to(base_url('tools/power-tools')));
+$routes->post('tools/qr-pdf',          'ToolsController::qrPdf');
 $routes->post('tools/add',              'ToolsController::add');
 $routes->post('tools/edit/(:num)',      'ToolsController::edit/$1');
 $routes->post('tools/delete/(:num)',    'ToolsController::delete/$1');
@@ -215,6 +217,7 @@ $routes->post('travel/checkout/(:num)', 'TravelController::checkOut/$1');
 // GPS
 // ============================================================
 $routes->get ('gps',                     'GPSController::index');
+$routes->get ('gps/fleet',               'GPSController::fleet');
 $routes->get ('gps/getVehicle/(:num)',   'GPSController::getVehicle/$1');
 $routes->get ('gps/route/(:num)',        'GPSController::getRoute/$1');
 $routes->get ('gps/sync/(:num)',         'GPSController::sync/$1');
@@ -266,6 +269,7 @@ $routes->post('notifications/markRead/(:num)', 'NotificationController::markRead
 $routes->post('notifications/dismiss/(:num)',  'NotificationController::dismiss/$1');
 $routes->post('notifications/action/(:num)',   'NotificationController::action/$1');
 $routes->get ('notifications/unreadCount',     'NotificationController::unreadCount');
+$routes->get ('notifications/pulse',           'NotificationController::pulse');
 $routes->post('notifications/saveDraft',       'NotificationController::saveDraft');
 $routes->post('notifications/sendDraft/(:num)', 'NotificationController::sendDraft/$1');
 $routes->post('notifications/deleteDraft/(:num)', 'NotificationController::deleteDraft/$1');
@@ -331,6 +335,7 @@ $routes->group('api', function ($routes) {
     $routes->get('tools/history/(:any)', 'Api::toolHistory/$1');
     $routes->post('tools/scan-borrow', 'Api::toolsScanBorrow');
     $routes->post('tools/scan-return', 'Api::toolsScanReturn');
+    $routes->post('tools/extend', 'Api::toolsExtendBorrow');
 
     $routes->get('vehicles', 'Api::vehicles');
     $routes->get('vehicles/meta', 'Api::vehiclesMeta');
@@ -367,6 +372,9 @@ $routes->group('api', function ($routes) {
     $routes->get('guard/keys', 'Api::guardKeysList');
     $routes->post('guard/keys/register', 'Api::guardRegisterKey');
     $routes->get('guard/trip-tickets/today', 'Api::guardTripTicketsToday');
+    $routes->get('guard/drivers/(:num)', 'Api::guardDriver/$1');
+    $routes->post('guard/trip-tickets/(:num)/check-in', 'Api::guardTripCheckIn/$1');
+    $routes->post('guard/trip-tickets/(:num)/check-out', 'Api::guardTripCheckOut/$1');
 
     $routes->get('notifications', 'Api::notifications');
     $routes->get('notifications/unread-count', 'Api::notificationsUnreadCount');

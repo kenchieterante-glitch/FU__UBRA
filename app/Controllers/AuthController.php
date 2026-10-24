@@ -13,7 +13,7 @@ class AuthController extends BaseController
     // Which account roles may sign in through each department portal. Administrators may use any portal.
     private const PORTAL_ROLES = [
         'facilities' => ['facilities', 'janitorial'],
-        'safety'     => ['security'],
+        'safety'     => ['security', 'safety'],
         'asset'      => ['assets', 'tools'],
         'iysp'       => ['sports'],
     ];

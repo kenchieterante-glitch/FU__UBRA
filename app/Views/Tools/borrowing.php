@@ -16,29 +16,7 @@ $badgeClassFor = fn($status) => match ($status) {
     'Consumed'          => 'badge dept',
     default             => 'badge amber',
 };
-$borrowDetails = [];
-foreach ($recordList as $r) {
-    $status = $r['computed_status'] ?? $r['status'];
-    $borrowDetails[$r['id']] = [
-        'tool'       => $r['asset_name'] ?? 'Unknown tool',
-        'code'       => $r['asset_code'] ?? '—',
-        'borrower'   => $r['borrower'] ?? 'Not on record',
-        'department' => $r['department'] ?: '—',
-        'borrowed'   => !empty($r['borrowed_date']) ? date('M j, Y', strtotime($r['borrowed_date'])) : '—',
-        'due'        => !empty($r['expected_return']) ? date('M j, Y', strtotime($r['expected_return'])) : '—',
-        // A consumable can be returned across more than one "Mark Returned"
-        // click — quantity is the original amount borrowed, outstanding is
-        // what's still out right now (net of any earlier partial returns).
-        'quantity'      => (float) ($r['quantity'] ?? 1),
-        'outstanding'   => (float) ($r['outstanding_qty'] ?? $r['quantity'] ?? 1),
-        'stockTracked'  => $r['current_stock'] !== null,
-        'unit'          => $r['unit'] ?: 'pcs',
-        'toolId'        => $r['tool_id'],
-        'category'      => $r['category'] ?? null,
-        'status'     => $status,
-        'statusBadgeClass' => $badgeClassFor($status),
-    ];
-}
+$borrowDetails = tool_borrow_details($recordList, $badgeClassFor);
 ?>
 
 <div class="page-header">
@@ -113,44 +91,7 @@ foreach ($recordList as $r) {
       </tr>
     </thead>
     <tbody>
-      <?php if (!empty($recordList)): ?>
-        <?php foreach ($recordList as $r): ?>
-          <?php
-            $computedStatus = $r['computed_status'] ?? $r['status'];
-            $badgeClass = match ($computedStatus) {
-                'Borrowed'          => 'badge blue',
-                'Overdue'           => 'badge red',
-                'Pending approval'  => 'badge amber',
-                'Returned'          => 'badge green',
-                default             => 'badge amber',
-            };
-            $rowClass = $computedStatus === 'Overdue' ? 'row-overdue' : '';
-          ?>
-          <tr class="borrow-row <?= $rowClass ?>" data-id="<?= (int) $r['id'] ?>" data-status="<?= esc($computedStatus) ?>" data-borrowed="<?= esc((string) ($r['borrowed_date'] ?? '')) ?>" data-due="<?= esc((string) ($r['expected_return'] ?? '')) ?>" data-name="<?= esc($r['asset_name'] ?? '') ?>" data-category="<?= esc($r['category'] ?? '') ?>">
-            <td class="tool-name-cell"><?= esc($r['asset_name'] ?? 'Unknown tool') ?></td>
-            <td><?= esc($r['asset_code'] ?? '—') ?></td>
-            <td><?= esc($r['borrower'] ?? 'Not on record') ?></td>
-            <td><?= !empty($r['borrowed_date']) ? esc(date('M j, Y', strtotime($r['borrowed_date']))) : '—' ?></td>
-            <td><?= !empty($r['expected_return']) ? esc(date('M j, Y', strtotime($r['expected_return']))) : '—' ?></td>
-            <td><?= esc((string) (float) ($r['quantity'] ?? 1)) ?></td>
-            <td><span class="status-badge <?= $badgeClass ?>"><?= esc($computedStatus) ?></span></td>
-            <td>
-              <div class="action-buttons">
-                <button type="button" class="icon-btn" onclick="openBorrowDetail(<?= (int) $r['id'] ?>)" title="View Details" aria-label="View borrow details for <?= esc($r['asset_name'] ?? 'tool') ?>"><i class="bi bi-eye-fill"></i></button>
-                <?php if ($r['status'] === 'Borrowed' && ($r['category'] ?? null) !== 'Consumable'): ?>
-                  <form id="returnForm<?= $r['id'] ?>" method="post" action="<?= base_url('tools/returnTool/' . $r['tool_id']) ?>" style="display:contents;">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="quantity" id="returnQtyInput<?= $r['id'] ?>" value="<?= esc((string) (float) ($r['outstanding_qty'] ?? $r['quantity'] ?? 1)) ?>">
-                    <button type="button" class="icon-btn" onclick="confirmReturnTool(<?= (int) $r['id'] ?>, '<?= esc($r['asset_name'] ?? 'this tool', 'js') ?>')" title="Mark Returned" aria-label="Mark <?= esc($r['asset_name'] ?? 'tool') ?> as returned"><i class="bi bi-arrow-counterclockwise"></i></button>
-                  </form>
-                <?php endif; ?>
-              </div>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      <?php else: ?>
-        <tr><td colspan="8">No borrowing records yet.</td></tr>
-      <?php endif; ?>
+      <?= $this->include('Tools/_borrow_rows') ?>
     </tbody>
   </table>
   </div>
@@ -187,13 +128,15 @@ foreach ($recordList as $r) {
 </div>
 
 <script>
+window.FU_SELF_REFRESH = true; // this page refreshes its own data (layout live-refresh skips it)
+
 function esc(s) {
   const d = document.createElement('div');
   d.textContent = String(s ?? '');
   return d.innerHTML;
 }
 
-const borrowDetails = <?= json_encode($borrowDetails, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+let borrowDetails = <?= json_encode($borrowDetails, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
 function openBorrowDetail(id) {
   const r = borrowDetails[id];
@@ -296,6 +239,34 @@ function submitReturnTool() {
   }
   document.getElementById('returnForm' + pendingReturnId).submit();
 }
+// Picks up borrows and returns made elsewhere (the mobile app, another
+// browser) without a reload: swaps in fresh rows + the details popup data,
+// then re-applies whatever search / filter / sort is currently set. Skipped
+// while a popup or the filter menu is open so nothing in progress is lost.
+let borrowingRefreshing = false;
+async function refreshBorrowing() {
+  if (document.hidden || borrowingRefreshing) return;
+  if (Array.from(document.querySelectorAll('.modal')).some(m => m.style.display === 'flex')) return;
+  if (document.getElementById('borrowFilterPopup')?.classList.contains('visible')) return;
+
+  borrowingRefreshing = true;
+  try {
+    const res = await fetch('<?= base_url('tools/borrowing/refresh') ?>', { headers: csrfHeaders() });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    document.querySelector('#borrowingTable tbody').innerHTML = data.rows_html;
+    borrowDetails = data.details || borrowDetails;
+
+    filterBorrowingTable();
+    sortBorrowingRows();
+  } catch (e) {
+    // Silent - a missed refresh just tries again next interval.
+  } finally {
+    borrowingRefreshing = false;
+  }
+}
+setInterval(refreshBorrowing, 2000);
 </script>
 
 <?= $this->endSection() ?>

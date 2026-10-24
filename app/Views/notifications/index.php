@@ -91,7 +91,7 @@ $draft_count = $draft_count ?? 0;
                                     <option value="">All Categories</option>
                                     <?php
                                     $catAllowed = \App\Models\NotificationModel::allowedModulesForRole((string) session()->get('role'));
-                                    foreach (['Vehicle Inspection', 'Vehicle Expiry', 'Trip Ticket Request', 'Trip Ticket Assignment', 'Travel Reminder', 'Vehicle Service Due', 'Motor Pool Work Order', 'Equipment Needs Repair', 'Air-Con Cleaning', 'Janitorial Assignment', 'Inventory Low Stock', 'Tool Borrowed', 'Fire Extinguisher Installed', 'Fire Extinguisher Expiring Soon', 'Aircon Unit Registered', 'Aircon Needs Cleaning', 'Cleaning Scheduled', 'Urgent Cleaning Scheduled', 'Consumable Low Stock', 'Maintenance Scheduled', 'Sports Equipment Borrowed', 'Sports Equipment Overdue', 'Sports Equipment Needs Repair', 'Job Order Expiring Soon', 'Job Order Expired', 'Contract Expiring Soon', 'Contract Expired', 'Personnel Document Incomplete'] as $catName):
+                                    foreach (['Vehicle Inspection', 'Vehicle Expiry', 'Trip Ticket Request', 'Trip Ticket Assignment', 'Travel Reminder', 'Vehicle Service Due', 'Motor Pool Work Order', 'Equipment Needs Repair', 'Air-Con Cleaning', 'Janitorial Assignment', 'Inventory Low Stock', 'Tool Borrowed', 'Tool Due Soon', 'Tool Overdue', 'Sports Equipment Due Soon', 'Fire Extinguisher Installed', 'Fire Extinguisher Expiring Soon', 'Aircon Unit Registered', 'Aircon Needs Cleaning', 'Cleaning Scheduled', 'Urgent Cleaning Scheduled', 'Consumable Low Stock', 'Maintenance Scheduled', 'Sports Equipment Borrowed', 'Sports Equipment Overdue', 'Sports Equipment Needs Repair', 'Job Order Expiring Soon', 'Job Order Expired', 'Contract Expiring Soon', 'Contract Expired', 'Personnel Document Incomplete'] as $catName):
                                         $catModule = \App\Models\NotificationModel::CATEGORY_MODULE[$catName] ?? null;
                                         if ($catAllowed !== null && $catModule !== null && !in_array($catModule, $catAllowed, true)) continue;
                                     ?>
@@ -148,8 +148,8 @@ $draft_count = $draft_count ?? 0;
                                     'Air-Con Cleaning'      => 'bi-wind',
                                     'Janitorial Assignment' => 'bi-brush',
                                     'Inventory Low Stock'   => 'bi-box-seam',
-                                    'Tool Borrowed'         => 'bi-hand-index-thumb-fill',
-                                    'Sports Equipment Borrowed', 'Sports Equipment Overdue', 'Sports Equipment Needs Repair' => 'bi-trophy-fill',
+                                    'Tool Borrowed', 'Tool Due Soon', 'Tool Overdue' => 'bi-hand-index-thumb-fill',
+                                    'Sports Equipment Borrowed', 'Sports Equipment Overdue', 'Sports Equipment Due Soon', 'Sports Equipment Needs Repair' => 'bi-trophy-fill',
                                     'Job Order Expiring Soon', 'Job Order Expired', 'Contract Expiring Soon', 'Contract Expired', 'Personnel Document Incomplete' => 'bi-person-lines-fill',
                                     'Vehicle Expiry'        => 'bi-card-checklist',
                                     'Fire Extinguisher Installed' => 'bi-fire',
@@ -171,7 +171,7 @@ $draft_count = $draft_count ?? 0;
                                 $catRoute = match($n['category'] ?? '') {
                                     'Vehicle Inspection', 'Vehicle Expiry'                     => 'vehicles',
                                     'Inventory Low Stock'                                      => 'tools/consumable',
-                                    'Tool Borrowed'                                            => 'tools/borrowing',
+                                    'Tool Borrowed', 'Tool Due Soon', 'Tool Overdue'            => 'tools/borrowing',
                                     'Janitorial Assignment', 'Cleaning Scheduled',
                                     'Urgent Cleaning Scheduled'                                => 'janitorial',
                                     'Air-Con Cleaning', 'Fire Extinguisher Installed',
@@ -182,7 +182,7 @@ $draft_count = $draft_count ?? 0;
                                     'Equipment Needs Repair'                                   => 'assets-dept/vehicles',
                                     'Vehicle Service Due'                                      => 'assets-dept/vehicles',
                                     'Travel Reminder'                                          => 'travel',
-                                    'Sports Equipment Borrowed', 'Sports Equipment Overdue',
+                                    'Sports Equipment Borrowed', 'Sports Equipment Overdue', 'Sports Equipment Due Soon',
                                     'Sports Equipment Needs Repair'                            => 'tools/sports-equipment',
                                     'Consumable Low Stock'                                     => 'facilities/janitorial',
                                     'Job Order Expiring Soon', 'Job Order Expired',

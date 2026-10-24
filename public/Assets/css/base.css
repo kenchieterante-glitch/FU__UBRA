@@ -496,20 +496,24 @@ img {
   color: #ffffff;
   font-family: var(--heading-font);
   font-weight: 700;
-  font-size: 16px;
-  /* Wider than the app's usual heading letter-spacing — this is the brand
-     wordmark, always short and always at this exact size, so it's worth
-     spacing out further for readability (incl. far-sighted users) without
-     touching the shared heading-font default used everywhere else. */
-  letter-spacing: 2.5px;
+  /* Same size, typeface and letter-spacing as the "UBRA" title on the login
+     screen (32px / 4px), so the wordmark reads the same before and after
+     sign-in. Stays white — the login's maroon would be unreadable on the
+     sidebar's near-black background. */
+  font-size: 32px;
+  line-height: 1;
+  letter-spacing: 4px;
   display: block;
 }
 /* The one sanctioned exception in the whole system: the literal
    "FOUNDATION UNIVERSITY" wordmark text. */
 .sidebar-logo .txt small {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 9.5px;
-  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-top: 2px;
   font-family: "Times New Roman", Times, serif;
   font-weight: 400;
 }

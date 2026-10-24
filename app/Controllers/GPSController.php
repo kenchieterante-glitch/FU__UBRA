@@ -76,6 +76,49 @@ class GPSController extends BaseController
         return view('gps/index', $data);
     }
 
+    /**
+     * Live positions of the whole fleet, for the GPS Tracker page's map
+     * (polled every few seconds while the map is open). Syncs from Traccar
+     * first, then prefers the tracker's own latest fix over the last
+     * logged one, falling back to gps_logs for vehicles with no tracker.
+     */
+    public function fleet()
+    {
+        if (!$this->session->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $live = (new TraccarSync())->run();
+
+        $logs = [];
+        foreach ($this->gpsModel->getLatestPerVehicle() as $log) {
+            $logs[$log['vehicle_id']] = $log;
+        }
+
+        $out = [];
+        foreach ($this->vehicleModel->where('is_archived', 0)->findAll() as $v) {
+            $p   = $live[(int) $v['id']] ?? null;
+            $log = $logs[$v['id']] ?? null;
+
+            $lat = $p['latitude']  ?? ($log['latitude']  ?? null);
+            $lng = $p['longitude'] ?? ($log['longitude'] ?? null);
+
+            $out[] = [
+                'id'           => (int) $v['id'],
+                'plate'        => $v['plate_no'] ?? '—',
+                'name'         => $v['vehicle_name'] ?? '—',
+                'availability' => $v['availability'] ?? 'Available',
+                'online'       => ($v['gps_status'] ?? 'Offline') === 'Online',
+                'lat'          => $lat !== null ? (float) $lat : null,
+                'lng'          => $lng !== null ? (float) $lng : null,
+                'speed'        => $p['speed_kmh'] ?? 0,
+                'updated'      => $p['fix_time'] ?? ($log['logged_at'] ?? null),
+            ];
+        }
+
+        return $this->response->setJSON(['vehicles' => $out, 'server_time' => date('c')]);
+    }
+
     public function getVehicle($id)
     {
         if (!$this->session->get('isLoggedIn')) {
@@ -151,9 +194,27 @@ class GPSController extends BaseController
         // Prefer the tracker's full history from Traccar when the vehicle is
         // linked to one; gps_logs only holds the latest fix per sync.
         $traccarPoints = null;
+        $totalPoints   = 0;
         if (!empty($vehicle['gps_device_id'])) {
-            $traccarPoints = (new \App\Libraries\TraccarClient())
-                ->routeHistory($vehicle['gps_device_id'], strtotime($from), strtotime($to));
+            // A range that has fully passed never changes, so its (slow to
+            // fetch) result is cached; ranges reaching "now" are always live.
+            $cacheable = strtotime($to) < time() - 3600;
+            $cacheKey  = 'route_' . md5($vehicle['gps_device_id'] . '|' . $from . '|' . $to);
+            $cached    = $cacheable ? cache($cacheKey) : null;
+
+            if (is_array($cached)) {
+                [$traccarPoints, $totalPoints] = $cached;
+            } else {
+                $raw = (new \App\Libraries\TraccarClient())
+                    ->routeHistory($vehicle['gps_device_id'], strtotime($from), strtotime($to));
+                if ($raw !== null) {
+                    $totalPoints   = count($raw);
+                    $traccarPoints = $this->thinRoute($raw);
+                    if ($cacheable) {
+                        cache()->save($cacheKey, [$traccarPoints, $totalPoints], 86400);
+                    }
+                }
+            }
         }
 
         if ($traccarPoints !== null) {
@@ -164,6 +225,7 @@ class GPSController extends BaseController
                 'from'       => $from,
                 'to'         => $to,
                 'count'      => count($points),
+                'total'      => $totalPoints,
                 'points'     => $points,
             ]);
         }
@@ -195,6 +257,52 @@ class GPSController extends BaseController
             'points'     => $points,
             'note'       => $note,
         ]);
+    }
+
+    private const ROUTE_MIN_GAP_METERS = 40;
+    private const ROUTE_MAX_POINTS     = 250;
+
+    /**
+     * Thins a long position history for drawing: drops fixes within
+     * ROUTE_MIN_GAP_METERS of the last kept one (a parked vehicle pings the
+     * same spot over and over), then evenly samples down to
+     * ROUTE_MAX_POINTS. The first and last fix are always kept, so the
+     * path's start/end and shape are unchanged — only the redundant points go.
+     */
+    private function thinRoute(array $points): array
+    {
+        $n = count($points);
+        if ($n <= 2) return $points;
+
+        $kept = [$points[0]];
+        for ($i = 1; $i < $n - 1; $i++) {
+            $last = end($kept);
+            if ($this->metersBetween($last['lat'], $last['lng'], $points[$i]['lat'], $points[$i]['lng']) >= self::ROUTE_MIN_GAP_METERS) {
+                $kept[] = $points[$i];
+            }
+        }
+        $kept[] = $points[$n - 1];
+
+        $k = count($kept);
+        if ($k > self::ROUTE_MAX_POINTS) {
+            $sampled = [];
+            $step = ($k - 1) / (self::ROUTE_MAX_POINTS - 1);
+            for ($j = 0; $j < self::ROUTE_MAX_POINTS; $j++) {
+                $sampled[] = $kept[(int) round($j * $step)];
+            }
+            $kept = $sampled;
+        }
+
+        return $kept;
+    }
+
+    private function metersBetween(float $lat1, float $lng1, float $lat2, float $lng2): float
+    {
+        $r = 6371000;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLng = deg2rad($lng2 - $lng1);
+        $a = sin($dLat / 2) ** 2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLng / 2) ** 2;
+        return 2 * $r * asin(min(1, sqrt($a)));
     }
 
     public function sync($vehicleId)

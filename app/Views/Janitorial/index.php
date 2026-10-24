@@ -343,6 +343,8 @@
 
 <script src="<?= base_url('Assets/js/campus-map.js') ?>?v=<?= @filemtime(FCPATH . 'Assets/js/campus-map.js') ?>"></script>
 <script>
+window.FU_SELF_REFRESH = true; // this page refreshes its own data (layout live-refresh skips it)
+
 function esc(s) {
   const d = document.createElement('div');
   d.textContent = String(s ?? '');

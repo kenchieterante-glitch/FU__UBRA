@@ -186,6 +186,8 @@
 </div>
 
 <script>
+window.FU_SELF_REFRESH = true; // this page refreshes its own data (layout live-refresh skips it)
+
   let pendingTools = <?= $pending_tools_json ?>;
   let pendingWorkOrders = <?= $pending_workorders_json ?>;
 

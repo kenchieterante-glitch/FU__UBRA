@@ -16,7 +16,10 @@ helper('facilities');
     <h1><?= esc(tool_cat_label($title)) ?></h1>
     <p class="page-subtitle"><?= $showCategoryTabs ? 'Tools and equipment in the ' . esc(tool_cat_label($title)) . ' category.' : 'Manage all university operational assets, tools, equipment, and assigned resources.' ?></p>
   </div>
-  <button class="btn-add" onclick="document.getElementById('addModal').style.display='flex'">+ Add New Tool</button>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <button type="button" class="btn-add" style="background:#fff;color:#7b0f1a;border:1px solid #7b0f1a;" onclick="openToolQrModal()"><i class="bi bi-qr-code"></i> Print QR Codes</button>
+    <button class="btn-add" onclick="document.getElementById('addModal').style.display='flex'">+ Add New Tool</button>
+  </div>
 </div>
 
 <?php if (!$showCategoryTabs): ?>
@@ -257,6 +260,8 @@ helper('facilities');
 </div>
 
 <script>
+window.FU_SELF_REFRESH = true; // this page refreshes its own data (layout live-refresh skips it)
+
 let toolDetails = <?= $tool_details_json ?? '{}' ?>;
 const currentToolsCategory = <?= json_encode($isConsumablePage ? 'Consumable' : ($showCategoryTabs ? $title : '')) ?>;
 
@@ -484,9 +489,12 @@ if (toolsUrlFilter) filterToolsByStat(toolsUrlFilter);
 // Tools/_rows.php). Skipped entirely while any modal is open (Add/Edit/
 // Refill/View Details), so an in-progress form never gets swapped out
 // from under the user.
+let toolsRefreshing = false;
 async function refreshTools() {
+  if (document.hidden || toolsRefreshing) return; // don't poll in the background or overlap requests
   if (Array.from(document.querySelectorAll('.modal')).some(m => m.style.display === 'flex')) return;
 
+  toolsRefreshing = true;
   try {
     const params = currentToolsCategory ? `?category=${encodeURIComponent(currentToolsCategory)}` : '';
     const res = await fetch(`<?= base_url('tools/refresh') ?>${params}`, { headers: csrfHeaders() });
@@ -517,9 +525,77 @@ async function refreshTools() {
     applyToolsSort();
   } catch (e) {
     // Silent — a missed refresh just tries again next interval.
+  } finally {
+    toolsRefreshing = false;
   }
 }
-setInterval(refreshTools, 20000);
+setInterval(refreshTools, 2000);
+</script>
+
+<div id="toolQrModal" class="modal">
+  <div class="modal-box" style="max-width:420px;">
+    <h3>Print QR Codes</h3>
+    <div class="fg" style="margin-bottom:12px;"><label>Bond paper</label>
+      <select id="toolQrPaper">
+        <option value="letter">Short bond — 8.5 × 11 in</option>
+        <option value="a4">A4 — 210 × 297 mm</option>
+        <option value="long">Long bond — 8.5 × 13 in</option>
+      </select>
+    </div>
+    <div class="fg" style="margin-bottom:12px;"><label>QR codes on one sheet</label>
+      <select id="toolQrPer" onchange="updateToolQrInfo()">
+        <option value="6">6 (large)</option><option value="8">8</option><option value="12" selected>12</option><option value="15">15</option>
+        <option value="20">20</option><option value="24">24</option><option value="30">30</option><option value="35">35</option><option value="48">48 (small)</option>
+      </select>
+    </div>
+    <p id="toolQrInfo" class="text-muted" style="font-size:13px;margin:0 0 14px;"></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button type="button" class="btn-cancel" onclick="document.getElementById('toolQrModal').style.display='none'">Cancel</button>
+      <button type="button" class="btn-submit" onclick="makeToolQrPdf()"><i class="bi bi-file-earmark-pdf"></i> Create PDF</button>
+    </div>
+    <p class="text-muted" style="font-size:12px;margin:12px 0 0;">Each QR code holds the item's asset code — the same code the mobile app reads when borrowing or returning. The PDF opens in a new tab so you can check, save and print it, then stick each code on its item.</p>
+  </div>
+</div>
+
+<script src="<?= base_url('Assets/js/qrcode.min.js') ?>"></script>
+<script>
+const toolQrItems = <?= json_encode(array_values(array_map(fn($t) => ['code' => $t['asset_code'], 'name' => $t['asset_name']], array_filter($toolList, fn($t) => !empty($t['asset_code']))))) ?>;
+function toolQrDataUrl(text, size) {
+  const holder = document.createElement('div');
+  new QRCode(holder, { text, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
+  const canvas = holder.querySelector('canvas');
+  return canvas ? canvas.toDataURL('image/png') : holder.querySelector('img').src;
+}
+function updateToolQrInfo() {
+  const per = Number(document.getElementById('toolQrPer').value);
+  const n = toolQrItems.length;
+  const pages = Math.max(1, Math.ceil(n / per));
+  document.getElementById('toolQrInfo').textContent = n
+    ? n + ' item' + (n === 1 ? '' : 's') + (currentToolsCategory ? ' in this category' : '') + ' → ' + pages + ' sheet' + (pages === 1 ? '' : 's') + ' at ' + per + ' per sheet.'
+    : 'No items with an asset code on this page.';
+}
+function openToolQrModal() { updateToolQrInfo(); document.getElementById('toolQrModal').style.display = 'flex'; }
+// Builds the PDF on the server (university header + N QR codes to a sheet) and opens it in a new tab.
+function makeToolQrPdf() {
+  if (!toolQrItems.length) return;
+  const images = {};
+  toolQrItems.forEach(t => { images[t.code] = toolQrDataUrl(t.code, 300); });
+  const form = document.createElement('form');
+  form.method = 'post';
+  form.action = '<?= base_url('tools/qr-pdf') ?>';
+  form.target = '_blank';
+  const add = (name, value) => { const i = document.createElement('input'); i.type = 'hidden'; i.name = name; i.value = value; form.appendChild(i); };
+  add('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+  add('paper', document.getElementById('toolQrPaper').value);
+  add('per', document.getElementById('toolQrPer').value);
+  add('category', currentToolsCategory || '');
+  add('back', '<?= esc(current_url(), 'js') ?>');
+  add('images', JSON.stringify(images));
+  document.body.appendChild(form);
+  form.submit();
+  form.remove();
+  document.getElementById('toolQrModal').style.display = 'none';
+}
 </script>
 
 <datalist id="toolUnitOptions">
