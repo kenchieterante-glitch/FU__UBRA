@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\Code128;
+use App\Libraries\FloorPlanCatalog;
 use App\Models\FacilityKeyModel;
 use App\Models\FireExtinguisherModel;
 use App\Models\FloorPlanMarkerModel;
@@ -641,10 +642,11 @@ class SecurityDeptController extends BaseController
         'Law Building'                => 'College of Law Building',
         'Main Library'                => 'University Library',
         'Museum'                      => 'Museo de Vicente',
+        'Nursing'                     => 'College of Nursing',
         'SSS'                         => 'Sofia Soller Sinco Hall',
     ];
 
-    private const PLAN_FLOORS = ['Ground Floor' => 1, '2nd Floor' => 2, '3rd Floor' => 3, '4th Floor' => 4];
+    private const PLAN_FLOORS = ['Ground Floor' => 1, '2nd Floor' => 2, '3rd Floor' => 3, '4th Floor' => 4, '5th Floor' => 5, '6th Floor' => 6, '7th Floor' => 7];
 
     // Reads public/Files/Floor Plans and works out each image's building and floor from its file name.
     private function floorPlans(): array
@@ -654,11 +656,8 @@ class SecurityDeptController extends BaseController
         foreach (glob($dir . '*.{png,jpg,jpeg,PNG,JPG,JPEG}', GLOB_BRACE) ?: [] as $path) {
             $file = basename($path);
             $name = pathinfo($file, PATHINFO_FILENAME);
-            $label = trim(explode('_', $name, 2)[0]);
-            $lower = strtolower($name);
-            $floor = str_contains($lower, 'second') ? '2nd Floor'
-                : (str_contains($lower, 'third') ? '3rd Floor'
-                : (str_contains($lower, 'fourth') ? '4th Floor' : 'Ground Floor'));
+            $label = FloorPlanCatalog::labelFromName($name);
+            $floor = FloorPlanCatalog::floorFromName($name);
 
             $plans[] = [
                 'file'     => $file,

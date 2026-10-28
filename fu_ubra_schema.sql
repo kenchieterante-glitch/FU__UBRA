@@ -1,4 +1,9 @@
 /*M!999999\- enable the sandbox mode */ 
+-- MariaDB dump 10.19-11.4.13-MariaDB, for Win64 (AMD64)
+--
+-- Host: localhost    Database: fu_ubra
+-- ------------------------------------------------------
+-- Server version	11.4.13-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -10,6 +15,11 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
+
+--
+-- Table structure for table `activity_logs`
+--
+
 DROP TABLE IF EXISTS `activity_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -24,6 +34,10 @@ CREATE TABLE `activity_logs` (
   CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`department_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=105 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `activity_logs`
+--
 
 LOCK TABLES `activity_logs` WRITE;
 /*!40000 ALTER TABLE `activity_logs` DISABLE KEYS */;
@@ -132,6 +146,11 @@ INSERT INTO `activity_logs` VALUES
 (104,16,'Safety','Guard Test Account: Key \"Admin Filing Room Key\" lent to Sherina Banosong','2026-10-24 19:06:31');
 /*!40000 ALTER TABLE `activity_logs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `aircon_checklist_items`
+--
+
 DROP TABLE IF EXISTS `aircon_checklist_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -145,6 +164,10 @@ CREATE TABLE `aircon_checklist_items` (
   KEY `aircon_unit_id` (`aircon_unit_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=78 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `aircon_checklist_items`
+--
 
 LOCK TABLES `aircon_checklist_items` WRITE;
 /*!40000 ALTER TABLE `aircon_checklist_items` DISABLE KEYS */;
@@ -207,6 +230,11 @@ INSERT INTO `aircon_checklist_items` VALUES
 (70,10,'Record unit temperature output',0,NULL);
 /*!40000 ALTER TABLE `aircon_checklist_items` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `aircon_inspection_entries`
+--
+
 DROP TABLE IF EXISTS `aircon_inspection_entries`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -225,6 +253,10 @@ CREATE TABLE `aircon_inspection_entries` (
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `aircon_inspection_entries`
+--
+
 LOCK TABLES `aircon_inspection_entries` WRITE;
 /*!40000 ALTER TABLE `aircon_inspection_entries` DISABLE KEYS */;
 INSERT INTO `aircon_inspection_entries` VALUES
@@ -237,6 +269,11 @@ INSERT INTO `aircon_inspection_entries` VALUES
 (13,8,'2026-10-01','Business and Finance Office',1,'BFO-201','Split type','Not cooling — compressor checked, needs replacement.','For repair');
 /*!40000 ALTER TABLE `aircon_inspection_entries` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `aircon_inspection_logs`
+--
+
 DROP TABLE IF EXISTS `aircon_inspection_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -254,6 +291,10 @@ CREATE TABLE `aircon_inspection_logs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `aircon_inspection_logs`
+--
+
 LOCK TABLES `aircon_inspection_logs` WRITE;
 /*!40000 ALTER TABLE `aircon_inspection_logs` DISABLE KEYS */;
 INSERT INTO `aircon_inspection_logs` VALUES
@@ -262,6 +303,11 @@ INSERT INTO `aircon_inspection_logs` VALUES
 (8,'Remedios Mendoza','2026-10-01',NULL,NULL,NULL,0,'2026-10-07 03:10:03','2026-10-07 03:10:03');
 /*!40000 ALTER TABLE `aircon_inspection_logs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `aircon_units`
+--
+
 DROP TABLE IF EXISTS `aircon_units`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -281,6 +327,10 @@ CREATE TABLE `aircon_units` (
   KEY `location` (`location`)
 ) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `aircon_units`
+--
 
 LOCK TABLES `aircon_units` WRITE;
 /*!40000 ALTER TABLE `aircon_units` DISABLE KEYS */;
@@ -303,6 +353,11 @@ INSERT INTO `aircon_units` VALUES
 (18,'Registrar\'s Office','1st Floor','AC-REG-1F','2026-09-23','2026-10-08','Operational','Cardo Garcia','Fernando Reyes','2026-10-03 17:51:50',NULL);
 /*!40000 ALTER TABLE `aircon_units` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `borrow_records`
+--
+
 DROP TABLE IF EXISTS `borrow_records`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -328,6 +383,10 @@ CREATE TABLE `borrow_records` (
   CONSTRAINT `borrow_records_ibfk_1` FOREIGN KEY (`tool_id`) REFERENCES `tools` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=98 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `borrow_records`
+--
 
 LOCK TABLES `borrow_records` WRITE;
 /*!40000 ALTER TABLE `borrow_records` DISABLE KEYS */;
@@ -416,6 +475,11 @@ INSERT INTO `borrow_records` VALUES
 (96,82,1.00,'PE Instructor Cruz (sample)','Student Affairs','2026-10-03','2026-10-05','Borrowed','2026-10-04 02:27:14',0,NULL,'None',NULL,NULL,NULL,'2026-10-04 02:27:14');
 /*!40000 ALTER TABLE `borrow_records` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `consumable_inventory`
+--
+
 DROP TABLE IF EXISTS `consumable_inventory`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -436,6 +500,10 @@ CREATE TABLE `consumable_inventory` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `consumable_inventory`
+--
 
 LOCK TABLES `consumable_inventory` WRITE;
 /*!40000 ALTER TABLE `consumable_inventory` DISABLE KEYS */;
@@ -461,6 +529,11 @@ INSERT INTO `consumable_inventory` VALUES
 (19,'Hand Soap Refill','Disposable','Facilities','Liters','Bunk House','Ground Floor',NULL,0.00,4.00,'2026-10-03','2026-10-03 17:51:50',NULL);
 /*!40000 ALTER TABLE `consumable_inventory` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `consumable_stock_reports`
+--
+
 DROP TABLE IF EXISTS `consumable_stock_reports`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -478,10 +551,19 @@ CREATE TABLE `consumable_stock_reports` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `consumable_stock_reports`
+--
+
 LOCK TABLES `consumable_stock_reports` WRITE;
 /*!40000 ALTER TABLE `consumable_stock_reports` DISABLE KEYS */;
 /*!40000 ALTER TABLE `consumable_stock_reports` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `departments`
+--
+
 DROP TABLE IF EXISTS `departments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -493,6 +575,10 @@ CREATE TABLE `departments` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `departments`
+--
 
 LOCK TABLES `departments` WRITE;
 /*!40000 ALTER TABLE `departments` DISABLE KEYS */;
@@ -507,6 +593,11 @@ INSERT INTO `departments` VALUES
 (8,'Finance','2026-07-18 20:20:56');
 /*!40000 ALTER TABLE `departments` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `disposal_logs`
+--
+
 DROP TABLE IF EXISTS `disposal_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -524,6 +615,10 @@ CREATE TABLE `disposal_logs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `disposal_logs`
+--
+
 LOCK TABLES `disposal_logs` WRITE;
 /*!40000 ALTER TABLE `disposal_logs` DISABLE KEYS */;
 INSERT INTO `disposal_logs` VALUES
@@ -532,6 +627,11 @@ INSERT INTO `disposal_logs` VALUES
 (3,'borrow',69,2,'data:image/png;base64,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','2026-09-05','','2026-09-05 20:15:47');
 /*!40000 ALTER TABLE `disposal_logs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `document_requirement_types`
+--
+
 DROP TABLE IF EXISTS `document_requirement_types`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -546,10 +646,19 @@ CREATE TABLE `document_requirement_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `document_requirement_types`
+--
+
 LOCK TABLES `document_requirement_types` WRITE;
 /*!40000 ALTER TABLE `document_requirement_types` DISABLE KEYS */;
 /*!40000 ALTER TABLE `document_requirement_types` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `equipment_maintenance_entries`
+--
+
 DROP TABLE IF EXISTS `equipment_maintenance_entries`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -570,6 +679,10 @@ CREATE TABLE `equipment_maintenance_entries` (
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `equipment_maintenance_entries`
+--
+
 LOCK TABLES `equipment_maintenance_entries` WRITE;
 /*!40000 ALTER TABLE `equipment_maintenance_entries` DISABLE KEYS */;
 INSERT INTO `equipment_maintenance_entries` VALUES
@@ -581,6 +694,11 @@ INSERT INTO `equipment_maintenance_entries` VALUES
 (11,8,'2026-09-18','Server Rack UPS 3kVA','UPS-3310','Quarterly','Battery test, firmware updated.','Completed','2026-12-18','Pedro Penduko','Pedro Penduko');
 /*!40000 ALTER TABLE `equipment_maintenance_entries` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `equipment_maintenance_logs`
+--
+
 DROP TABLE IF EXISTS `equipment_maintenance_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -598,6 +716,10 @@ CREATE TABLE `equipment_maintenance_logs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `equipment_maintenance_logs`
+--
+
 LOCK TABLES `equipment_maintenance_logs` WRITE;
 /*!40000 ALTER TABLE `equipment_maintenance_logs` DISABLE KEYS */;
 INSERT INTO `equipment_maintenance_logs` VALUES
@@ -606,6 +728,11 @@ INSERT INTO `equipment_maintenance_logs` VALUES
 (8,'College of IT','2026-09-18',NULL,NULL,NULL,0,'2026-10-07 03:09:50','2026-10-07 03:09:50');
 /*!40000 ALTER TABLE `equipment_maintenance_logs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `facility_checklist_items`
+--
+
 DROP TABLE IF EXISTS `facility_checklist_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -621,6 +748,10 @@ CREATE TABLE `facility_checklist_items` (
   KEY `checklist_id` (`checklist_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=568 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `facility_checklist_items`
+--
 
 LOCK TABLES `facility_checklist_items` WRITE;
 /*!40000 ALTER TABLE `facility_checklist_items` DISABLE KEYS */;
@@ -732,6 +863,11 @@ INSERT INTO `facility_checklist_items` VALUES
 (567,27,'Electrical & Technology Safety','4.4','Outlets & Switches: Are all electrical outlets and switches in good condition with no exposed wiring?','C',NULL);
 /*!40000 ALTER TABLE `facility_checklist_items` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `facility_checklists`
+--
+
 DROP TABLE IF EXISTS `facility_checklists`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -754,6 +890,10 @@ CREATE TABLE `facility_checklists` (
 ) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `facility_checklists`
+--
+
 LOCK TABLES `facility_checklists` WRITE;
 /*!40000 ALTER TABLE `facility_checklists` DISABLE KEYS */;
 INSERT INTO `facility_checklists` VALUES
@@ -764,6 +904,11 @@ INSERT INTO `facility_checklists` VALUES
 (27,'Col. Arthur Miller','LG Sinco Computer Center Building','2026-10-03','Annual','Satisfactory','Building is in good order with a few minor items to follow up.','Repair flagged items and re-inspect within 14 days.','Sonia G. Ramirez','2026-10-03','Dr. Helen Peralta',0,'2026-10-07 03:09:02','2026-10-07 03:09:33');
 /*!40000 ALTER TABLE `facility_checklists` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `facility_keys`
+--
+
 DROP TABLE IF EXISTS `facility_keys`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -781,6 +926,10 @@ CREATE TABLE `facility_keys` (
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `facility_keys`
+--
+
 LOCK TABLES `facility_keys` WRITE;
 /*!40000 ALTER TABLE `facility_keys` DISABLE KEYS */;
 INSERT INTO `facility_keys` VALUES
@@ -792,6 +941,11 @@ INSERT INTO `facility_keys` VALUES
 (9,'Server Room Key',NULL,NULL,'KEY-9C5458C1','Available','2026-10-04 10:48:24','2026-10-24 18:58:03');
 /*!40000 ALTER TABLE `facility_keys` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `fire_extinguishers`
+--
+
 DROP TABLE IF EXISTS `fire_extinguishers`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -823,6 +977,10 @@ CREATE TABLE `fire_extinguishers` (
   CONSTRAINT `fire_extinguishers_department_id_foreign` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `fire_extinguishers`
+--
 
 LOCK TABLES `fire_extinguishers` WRITE;
 /*!40000 ALTER TABLE `fire_extinguishers` DISABLE KEYS */;
@@ -878,6 +1036,11 @@ INSERT INTO `fire_extinguishers` VALUES
 (77,'FE-FB1B7B','Wet Chemical','University Library','3rd Floor',NULL,6.0,'2026-08-15','2027-08-15','New',2026,'2026-09-19','2026-10-13','Jose Protacio Rizal Mercado y Realonzo Realonda',NULL,NULL,'2026-09-19 22:45:28','2026-10-04 00:59:50');
 /*!40000 ALTER TABLE `fire_extinguishers` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `floor_plan_markers`
+--
+
 DROP TABLE IF EXISTS `floor_plan_markers`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -896,6 +1059,10 @@ CREATE TABLE `floor_plan_markers` (
   KEY `plan_file` (`plan_file`)
 ) ENGINE=InnoDB AUTO_INCREMENT=150 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `floor_plan_markers`
+--
 
 LOCK TABLES `floor_plan_markers` WRITE;
 /*!40000 ALTER TABLE `floor_plan_markers` DISABLE KEYS */;
@@ -1034,6 +1201,11 @@ INSERT INTO `floor_plan_markers` VALUES
 (145,'Agriculture Building_ThirdFloorPlan.png','Fire Extinguisher',NULL,16.664,58.133,'Working',NULL,'Security Test Account','2026-10-04 00:47:48');
 /*!40000 ALTER TABLE `floor_plan_markers` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `fuel_logs`
+--
+
 DROP TABLE IF EXISTS `fuel_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1052,6 +1224,10 @@ CREATE TABLE `fuel_logs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `fuel_logs`
+--
+
 LOCK TABLES `fuel_logs` WRITE;
 /*!40000 ALTER TABLE `fuel_logs` DISABLE KEYS */;
 INSERT INTO `fuel_logs` VALUES
@@ -1059,6 +1235,11 @@ INSERT INTO `fuel_logs` VALUES
 (2,7,10.0,5.00,'2026-09-21','Kenchie Terante','','2026-09-20 16:06:37');
 /*!40000 ALTER TABLE `fuel_logs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `gps_logs`
+--
+
 DROP TABLE IF EXISTS `gps_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1076,6 +1257,10 @@ CREATE TABLE `gps_logs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `gps_logs`
+--
+
 LOCK TABLES `gps_logs` WRITE;
 /*!40000 ALTER TABLE `gps_logs` DISABLE KEYS */;
 INSERT INTO `gps_logs` VALUES
@@ -1084,6 +1269,11 @@ INSERT INTO `gps_logs` VALUES
 (3,5,'FU-GPS-204',9.3120000,123.3150000,'Medium (74%)','Online','2026-07-31 23:20:24');
 /*!40000 ALTER TABLE `gps_logs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `janitorial`
+--
+
 DROP TABLE IF EXISTS `janitorial`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1105,10 +1295,19 @@ CREATE TABLE `janitorial` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `janitorial`
+--
+
 LOCK TABLES `janitorial` WRITE;
 /*!40000 ALTER TABLE `janitorial` DISABLE KEYS */;
 /*!40000 ALTER TABLE `janitorial` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `janitorial_assignments`
+--
+
 DROP TABLE IF EXISTS `janitorial_assignments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1128,6 +1327,10 @@ CREATE TABLE `janitorial_assignments` (
   KEY `idx_zone` (`assigned_zone`)
 ) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `janitorial_assignments`
+--
 
 LOCK TABLES `janitorial_assignments` WRITE;
 /*!40000 ALTER TABLE `janitorial_assignments` DISABLE KEYS */;
@@ -1154,6 +1357,11 @@ INSERT INTO `janitorial_assignments` VALUES
 (21,'Bautista, J.','Clinic','2nd Floor','12:00:00','18:00:00','2026-10-03','Active','Routine','2026-10-03 18:30:23');
 /*!40000 ALTER TABLE `janitorial_assignments` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `janitorial_inspections`
+--
+
 DROP TABLE IF EXISTS `janitorial_inspections`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1171,6 +1379,10 @@ CREATE TABLE `janitorial_inspections` (
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `janitorial_inspections`
+--
+
 LOCK TABLES `janitorial_inspections` WRITE;
 /*!40000 ALTER TABLE `janitorial_inspections` DISABLE KEYS */;
 INSERT INTO `janitorial_inspections` VALUES
@@ -1185,6 +1397,11 @@ INSERT INTO `janitorial_inspections` VALUES
 (13,'Guest House',NULL,'2026-10','Passed','Facilities Test Account','Goods Nani','2026-10-03 20:57:34');
 /*!40000 ALTER TABLE `janitorial_inspections` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `janitorial_task_history`
+--
+
 DROP TABLE IF EXISTS `janitorial_task_history`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1201,6 +1418,10 @@ CREATE TABLE `janitorial_task_history` (
   KEY `assignment_id` (`assignment_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `janitorial_task_history`
+--
 
 LOCK TABLES `janitorial_task_history` WRITE;
 /*!40000 ALTER TABLE `janitorial_task_history` DISABLE KEYS */;
@@ -1254,6 +1475,11 @@ INSERT INTO `janitorial_task_history` VALUES
 (48,21,'Clinic','Mop floor','done','2026-10-03 18:30:23','Bautista, J.','2026-10-06 20:30:04');
 /*!40000 ALTER TABLE `janitorial_task_history` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `janitorial_tasks`
+--
+
 DROP TABLE IF EXISTS `janitorial_tasks`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1269,6 +1495,10 @@ CREATE TABLE `janitorial_tasks` (
   CONSTRAINT `fk_jan_task` FOREIGN KEY (`assignment_id`) REFERENCES `janitorial_assignments` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `janitorial_tasks`
+--
 
 LOCK TABLES `janitorial_tasks` WRITE;
 /*!40000 ALTER TABLE `janitorial_tasks` DISABLE KEYS */;
@@ -1355,6 +1585,11 @@ INSERT INTO `janitorial_tasks` VALUES
 (81,21,'Mop floor',0,NULL,'2026-10-03 18:30:23');
 /*!40000 ALTER TABLE `janitorial_tasks` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `job_orders`
+--
+
 DROP TABLE IF EXISTS `job_orders`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1382,6 +1617,10 @@ CREATE TABLE `job_orders` (
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `job_orders`
+--
+
 LOCK TABLES `job_orders` WRITE;
 /*!40000 ALTER TABLE `job_orders` DISABLE KEYS */;
 INSERT INTO `job_orders` VALUES
@@ -1392,6 +1631,11 @@ INSERT INTO `job_orders` VALUES
 (5,'JO-2026-005','New Gymnasium Construction Support','Gymnasium Expansion','Construction Foreman',1,'Gymnasium Site',5,'Remedios Ocampo','2026-10-01','2027-04-01','PENDING','Support labor for the new gymnasium construction project.',NULL,0,'2026-08-29 22:31:31',NULL);
 /*!40000 ALTER TABLE `job_orders` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `key_borrow_logs`
+--
+
 DROP TABLE IF EXISTS `key_borrow_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1420,6 +1664,10 @@ CREATE TABLE `key_borrow_logs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `key_borrow_logs`
+--
+
 LOCK TABLES `key_borrow_logs` WRITE;
 /*!40000 ALTER TABLE `key_borrow_logs` DISABLE KEYS */;
 INSERT INTO `key_borrow_logs` VALUES
@@ -1433,6 +1681,11 @@ INSERT INTO `key_borrow_logs` VALUES
 (21,'KL-008','20230407',NULL,'Sherina Banosong','Logistics','Admin Filing Room Key',4,'2026-10-24 19:06:31',NULL,'Active','Guard Test Account','2026-10-24 19:06:31');
 /*!40000 ALTER TABLE `key_borrow_logs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `mechanical_equipment`
+--
+
 DROP TABLE IF EXISTS `mechanical_equipment`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1452,6 +1705,10 @@ CREATE TABLE `mechanical_equipment` (
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `mechanical_equipment`
+--
+
 LOCK TABLES `mechanical_equipment` WRITE;
 /*!40000 ALTER TABLE `mechanical_equipment` DISABLE KEYS */;
 INSERT INTO `mechanical_equipment` VALUES
@@ -1465,6 +1722,11 @@ INSERT INTO `mechanical_equipment` VALUES
 (8,'ME-WLD-01','Welding Machine','Workshop Equipment','Carpentry Shop','Out of Service','2026-03-18',NULL,'Sample data - beyond repair','2026-10-04 01:15:24');
 /*!40000 ALTER TABLE `mechanical_equipment` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `migrations`
+--
+
 DROP TABLE IF EXISTS `migrations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1479,6 +1741,10 @@ CREATE TABLE `migrations` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `migrations`
+--
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
@@ -1510,6 +1776,11 @@ INSERT INTO `migrations` VALUES
 (39,'2026-09-14-000001','App\\Database\\Migrations\\CreateFacilityKeysTable','default','App',1789396190,5);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `motorpool_wo_history`
+--
+
 DROP TABLE IF EXISTS `motorpool_wo_history`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1524,6 +1795,10 @@ CREATE TABLE `motorpool_wo_history` (
   KEY `work_order_id` (`work_order_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `motorpool_wo_history`
+--
 
 LOCK TABLES `motorpool_wo_history` WRITE;
 /*!40000 ALTER TABLE `motorpool_wo_history` DISABLE KEYS */;
@@ -1547,6 +1822,11 @@ INSERT INTO `motorpool_wo_history` VALUES
 (24,1,'Completed','Assets Test Account','2026-10-04 13:19:19','Work finished');
 /*!40000 ALTER TABLE `motorpool_wo_history` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `motorpool_work_orders`
+--
+
 DROP TABLE IF EXISTS `motorpool_work_orders`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1570,6 +1850,10 @@ CREATE TABLE `motorpool_work_orders` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `motorpool_work_orders`
+--
+
 LOCK TABLES `motorpool_work_orders` WRITE;
 /*!40000 ALTER TABLE `motorpool_work_orders` DISABLE KEYS */;
 INSERT INTO `motorpool_work_orders` VALUES
@@ -1582,6 +1866,11 @@ INSERT INTO `motorpool_work_orders` VALUES
 (7,'MP-007','Vehicle Repair',5,NULL,'Request cancelled - vehicle sold','Routine','Cancelled','Sample Requester',NULL,'2026-09-14 01:15:24','2026-09-15 01:15:24',NULL);
 /*!40000 ALTER TABLE `motorpool_work_orders` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `notifications`
+--
+
 DROP TABLE IF EXISTS `notifications`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1600,8 +1889,12 @@ CREATE TABLE `notifications` (
   KEY `idx_is_read` (`is_read`),
   KEY `idx_priority` (`priority`),
   KEY `idx_created` (`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=205 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=208 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notifications`
+--
 
 LOCK TABLES `notifications` WRITE;
 /*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
@@ -1796,9 +2089,17 @@ INSERT INTO `notifications` VALUES
 (201,'Motor Pool Work Order','MP-001 is now In Progress.','Motor Pool','ROUTINE','Pending','system',0,NULL,'2026-10-04 13:19:14'),
 (202,'Motor Pool Work Order','MP-001 is now Completed.','Motor Pool','ROUTINE','Acknowledged','system',1,'2026-10-07 15:05:14','2026-10-04 13:19:20'),
 (203,'Hazardous Waste Alert','University Cafeteria, Bookstore, Sewing: 4.2 kg of hazardous waste weighed on Oct 22, 2026 — schedule a pick-up.','Facilities','CRITICAL','Notified','system',0,NULL,'2026-10-22 18:17:16'),
-(204,'Hazardous Waste Alert','Animation Lab / ROTC Office: 3.4 kg of hazardous waste weighed on Oct 22, 2026 — schedule a pick-up.','Facilities','CRITICAL','Notified','system',0,NULL,'2026-10-22 18:18:33');
+(204,'Hazardous Waste Alert','Animation Lab / ROTC Office: 3.4 kg of hazardous waste weighed on Oct 22, 2026 — schedule a pick-up.','Facilities','CRITICAL','Notified','system',0,NULL,'2026-10-22 18:18:33'),
+(205,'Sports Equipment Overdue','Basketball (Molten GG7) was due back on Oct 9, 2026 — borrowed by Coach Reyes (sample) (Athletics).','Sports Equipment Office','CRITICAL','Pending','system',0,NULL,'2026-10-24 19:38:03'),
+(206,'Sports Equipment Overdue','Badminton Racket Set (4pcs) was due back on Oct 1, 2026 — borrowed by Mina Santos (sample) (Athletics).','Sports Equipment Office','CRITICAL','Pending','system',0,NULL,'2026-10-24 19:38:03'),
+(207,'Sports Equipment Overdue','Gym Mats (Set of 5) was due back on Oct 5, 2026 — borrowed by PE Instructor Cruz (sample) (Student Affairs).','Sports Equipment Office','CRITICAL','Pending','system',0,NULL,'2026-10-24 19:38:03');
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `personnel`
+--
+
 DROP TABLE IF EXISTS `personnel`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1822,6 +2123,10 @@ CREATE TABLE `personnel` (
   CONSTRAINT `personnel_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=85 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `personnel`
+--
 
 LOCK TABLES `personnel` WRITE;
 /*!40000 ALTER TABLE `personnel` DISABLE KEYS */;
@@ -1906,6 +2211,11 @@ INSERT INTO `personnel` VALUES
 (84,'202101999','Eddie Murphy','eddie.murphy@gmail.com','09123456789',2,'Regular','Carpenter','PlyWood Shining','Active',0,NULL,'2026-09-21 14:11:36');
 /*!40000 ALTER TABLE `personnel` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `personnel_assignments`
+--
+
 DROP TABLE IF EXISTS `personnel_assignments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1929,6 +2239,10 @@ CREATE TABLE `personnel_assignments` (
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `personnel_assignments`
+--
+
 LOCK TABLES `personnel_assignments` WRITE;
 /*!40000 ALTER TABLE `personnel_assignments` DISABLE KEYS */;
 INSERT INTO `personnel_assignments` VALUES
@@ -1943,6 +2257,11 @@ INSERT INTO `personnel_assignments` VALUES
 (9,77,2,'Driver','ccs',NULL,'Corazon Castillo','2026-08-29','2026-08-31','ACTIVE',NULL,'2026-08-29 22:51:45','2026-08-29 22:51:45');
 /*!40000 ALTER TABLE `personnel_assignments` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `personnel_contracts`
+--
+
 DROP TABLE IF EXISTS `personnel_contracts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1964,6 +2283,10 @@ CREATE TABLE `personnel_contracts` (
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `personnel_contracts`
+--
+
 LOCK TABLES `personnel_contracts` WRITE;
 /*!40000 ALTER TABLE `personnel_contracts` DISABLE KEYS */;
 INSERT INTO `personnel_contracts` VALUES
@@ -1978,6 +2301,11 @@ INSERT INTO `personnel_contracts` VALUES
 (9,77,2,NULL,'2026-08-29','2026-08-31','ACTIVE',NULL,NULL,'2026-08-29 22:51:45','2026-08-29 22:51:45');
 /*!40000 ALTER TABLE `personnel_contracts` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `personnel_documents`
+--
+
 DROP TABLE IF EXISTS `personnel_documents`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -1999,10 +2327,19 @@ CREATE TABLE `personnel_documents` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `personnel_documents`
+--
+
 LOCK TABLES `personnel_documents` WRITE;
 /*!40000 ALTER TABLE `personnel_documents` DISABLE KEYS */;
 /*!40000 ALTER TABLE `personnel_documents` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `predictions`
+--
+
 DROP TABLE IF EXISTS `predictions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2016,6 +2353,10 @@ CREATE TABLE `predictions` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `predictions`
+--
+
 LOCK TABLES `predictions` WRITE;
 /*!40000 ALTER TABLE `predictions` DISABLE KEYS */;
 INSERT INTO `predictions` VALUES
@@ -2024,6 +2365,11 @@ INSERT INTO `predictions` VALUES
 (3,'Dashboard','Inventory of cleaning chemicals is running low.','Notify Personnel','2026-07-18 20:20:56');
 /*!40000 ALTER TABLE `predictions` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `refill_log`
+--
+
 DROP TABLE IF EXISTS `refill_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2041,6 +2387,10 @@ CREATE TABLE `refill_log` (
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `refill_log`
+--
+
 LOCK TABLES `refill_log` WRITE;
 /*!40000 ALTER TABLE `refill_log` DISABLE KEYS */;
 INSERT INTO `refill_log` VALUES
@@ -2052,6 +2402,11 @@ INSERT INTO `refill_log` VALUES
 (6,10,'Trash Bag',4.00,'Rolls','Kenchie Terante','2026-09-21 14:21:10');
 /*!40000 ALTER TABLE `refill_log` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `reports`
+--
+
 DROP TABLE IF EXISTS `reports`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2072,6 +2427,10 @@ CREATE TABLE `reports` (
 ) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `reports`
+--
+
 LOCK TABLES `reports` WRITE;
 /*!40000 ALTER TABLE `reports` DISABLE KEYS */;
 INSERT INTO `reports` VALUES
@@ -2090,6 +2449,11 @@ INSERT INTO `reports` VALUES
 (14,'Fire Extinguisher Replaced/Renewed — FE-ADM-021 (Administration building)',NULL,'Maintenance Compliance','Completed',NULL,0,NULL,'2026-09-05 11:22:19','2026-09-05 12:09:45','2026-09-05 11:22:19');
 /*!40000 ALTER TABLE `reports` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `restroom_checklist_entries`
+--
+
 DROP TABLE IF EXISTS `restroom_checklist_entries`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2111,6 +2475,10 @@ CREATE TABLE `restroom_checklist_entries` (
 ) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `restroom_checklist_entries`
+--
+
 LOCK TABLES `restroom_checklist_entries` WRITE;
 /*!40000 ALTER TABLE `restroom_checklist_entries` DISABLE KEYS */;
 INSERT INTO `restroom_checklist_entries` VALUES
@@ -2131,6 +2499,11 @@ INSERT INTO `restroom_checklist_entries` VALUES
 (27,12,'2026-10-01','07:30:00',1,1,1,1,1,1,'Juan Cruz','Juan Cruz');
 /*!40000 ALTER TABLE `restroom_checklist_entries` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `restroom_checklists`
+--
+
 DROP TABLE IF EXISTS `restroom_checklists`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2146,6 +2519,10 @@ CREATE TABLE `restroom_checklists` (
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `restroom_checklists`
+--
+
 LOCK TABLES `restroom_checklists` WRITE;
 /*!40000 ALTER TABLE `restroom_checklists` DISABLE KEYS */;
 INSERT INTO `restroom_checklists` VALUES
@@ -2157,6 +2534,11 @@ INSERT INTO `restroom_checklists` VALUES
 (12,'LG Sinco Computer Center — 2nd Floor',NULL,NULL,0,'2026-10-07 03:11:02','2026-10-07 03:11:02');
 /*!40000 ALTER TABLE `restroom_checklists` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `return_records`
+--
+
 DROP TABLE IF EXISTS `return_records`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2178,6 +2560,10 @@ CREATE TABLE `return_records` (
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `return_records`
+--
+
 LOCK TABLES `return_records` WRITE;
 /*!40000 ALTER TABLE `return_records` DISABLE KEYS */;
 INSERT INTO `return_records` VALUES
@@ -2187,6 +2573,11 @@ INSERT INTO `return_records` VALUES
 (5,93,2,1.00,'Rico Dela Cruz','2026-10-04','Excellent',NULL,'2026-10-04 02:47:47');
 /*!40000 ALTER TABLE `return_records` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `safety_equipment`
+--
+
 DROP TABLE IF EXISTS `safety_equipment`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2207,8 +2598,12 @@ CREATE TABLE `safety_equipment` (
   PRIMARY KEY (`id`),
   KEY `building` (`building`),
   KEY `equipment_type` (`equipment_type`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `safety_equipment`
+--
 
 LOCK TABLES `safety_equipment` WRITE;
 /*!40000 ALTER TABLE `safety_equipment` DISABLE KEYS */;
@@ -2226,9 +2621,27 @@ INSERT INTO `safety_equipment` VALUES
 (11,'Emergency Exit Sign','FE-ADM-01','Administration Building','Ground Floor','Rear door','Working','2026-09-11','2026-12-07','2026-10-03',NULL,NULL,'2026-10-03 22:30:52'),
 (12,'Emergency Exit Sign','FE-LAW-01','College of Law Building','2nd Floor','Side stairwell','Working','2026-08-29','2026-10-07','2026-10-03',NULL,NULL,'2026-10-03 22:30:52'),
 (13,'Emergency Exit Sign','FE-LIB-01','University Library','Ground Floor','Back door','Needs Repair','2026-07-20','2026-09-25','2026-10-03',NULL,'Door sticks, hard to open','2026-10-03 22:30:52'),
-(14,'Emergency Exit Sign','FE-EDU-01','College of Education Building','Ground Floor','North corridor','Working','2026-09-05','2026-12-04','2026-10-03',NULL,NULL,'2026-10-03 22:30:52');
+(14,'Emergency Exit Sign','FE-EDU-01','College of Education Building','Ground Floor','North corridor','Working','2026-09-05','2026-12-04','2026-10-03',NULL,NULL,'2026-10-03 22:30:52'),
+(16,'Smoke Detector','SD-NUR-01','College of Nursing','Ground Floor','Lobby','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46'),
+(17,'Smoke Detector','SD-NUR-02','College of Nursing','2nd Floor','Hallway','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46'),
+(18,'Smoke Detector','SD-NUR-03','College of Nursing','3rd Floor','Hallway','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46'),
+(19,'Smoke Detector','SD-NUR-04','College of Nursing','4th Floor','Hallway','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46'),
+(20,'Smoke Detector','SD-NUR-05','College of Nursing','5th Floor','Hallway','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46'),
+(21,'Smoke Detector','SD-NUR-06','College of Nursing','6th Floor','Hallway','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46'),
+(22,'Smoke Detector','SD-NUR-07','College of Nursing','7th Floor','Hallway','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46'),
+(23,'Emergency Exit Sign','ES-NUR-02','College of Nursing','Ground Floor','Main exit','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46'),
+(24,'Emergency Exit Sign','ES-NUR-03','College of Nursing','3rd Floor','East stairs','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46'),
+(25,'Emergency Exit Sign','ES-NUR-04','College of Nursing','4th Floor','East stairs','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46'),
+(26,'Emergency Exit Sign','ES-NUR-05','College of Nursing','5th Floor','East stairs','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46'),
+(27,'Emergency Exit Sign','ES-NUR-06','College of Nursing','6th Floor','East stairs','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46'),
+(28,'Emergency Exit Sign','ES-NUR-07','College of Nursing','7th Floor','East stairs','Working','2026-10-20','2026-11-20','2026-10-03','2027-10-03',NULL,'2026-10-28 10:58:46');
 /*!40000 ALTER TABLE `safety_equipment` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `safety_inspections`
+--
+
 DROP TABLE IF EXISTS `safety_inspections`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2245,6 +2658,10 @@ CREATE TABLE `safety_inspections` (
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `safety_inspections`
+--
+
 LOCK TABLES `safety_inspections` WRITE;
 /*!40000 ALTER TABLE `safety_inspections` DISABLE KEYS */;
 INSERT INTO `safety_inspections` VALUES
@@ -2259,6 +2676,11 @@ INSERT INTO `safety_inspections` VALUES
 (10,'College of Education Building','2026-10','Urgent',NULL,'Security Test Account','2026-10-04 03:46:39');
 /*!40000 ALTER TABLE `safety_inspections` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `safety_reports`
+--
+
 DROP TABLE IF EXISTS `safety_reports`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2276,10 +2698,19 @@ CREATE TABLE `safety_reports` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `safety_reports`
+--
+
 LOCK TABLES `safety_reports` WRITE;
 /*!40000 ALTER TABLE `safety_reports` DISABLE KEYS */;
 /*!40000 ALTER TABLE `safety_reports` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `safety_work_orders`
+--
+
 DROP TABLE IF EXISTS `safety_work_orders`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2304,6 +2735,10 @@ CREATE TABLE `safety_work_orders` (
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `safety_work_orders`
+--
+
 LOCK TABLES `safety_work_orders` WRITE;
 /*!40000 ALTER TABLE `safety_work_orders` DISABLE KEYS */;
 INSERT INTO `safety_work_orders` VALUES
@@ -2314,6 +2749,11 @@ INSERT INTO `safety_work_orders` VALUES
 (6,'WO-005','Clean Urgent','University library','John Doe','Maintenance Team','Medium','Issue Logged','2026-08-05',NULL,NULL,'2026-08-03 01:24:41',NULL);
 /*!40000 ALTER TABLE `safety_work_orders` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `system_settings`
+--
+
 DROP TABLE IF EXISTS `system_settings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2327,6 +2767,10 @@ CREATE TABLE `system_settings` (
   KEY `idx_key` (`setting_key`)
 ) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `system_settings`
+--
 
 LOCK TABLES `system_settings` WRITE;
 /*!40000 ALTER TABLE `system_settings` DISABLE KEYS */;
@@ -2349,6 +2793,11 @@ INSERT INTO `system_settings` VALUES
 (17,'ai_api_key','REDACTED_API_KEY','2026-10-24 18:06:57');
 /*!40000 ALTER TABLE `system_settings` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `tools`
+--
+
 DROP TABLE IF EXISTS `tools`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2373,6 +2822,10 @@ CREATE TABLE `tools` (
   UNIQUE KEY `asset_code` (`asset_code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=86 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tools`
+--
 
 LOCK TABLES `tools` WRITE;
 /*!40000 ALTER TABLE `tools` DISABLE KEYS */;
@@ -2454,6 +2907,11 @@ INSERT INTO `tools` VALUES
 (83,'Baseball Bat & Glove Set','AST-41010','Sports Equipment','Sports Complex',NULL,'Fair','Maintenance',NULL,NULL,'pcs',0,'2026-09-05 17:27:28',0,NULL,'2026-10-04 02:27:14');
 /*!40000 ALTER TABLE `tools` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `tools_refill_log`
+--
+
 DROP TABLE IF EXISTS `tools_refill_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2470,12 +2928,21 @@ CREATE TABLE `tools_refill_log` (
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `tools_refill_log`
+--
+
 LOCK TABLES `tools_refill_log` WRITE;
 /*!40000 ALTER TABLE `tools_refill_log` DISABLE KEYS */;
 INSERT INTO `tools_refill_log` VALUES
 (1,52,'Electrical Tape Roll',3.00,'Kenchie Terante','2026-08-30 03:28:19');
 /*!40000 ALTER TABLE `tools_refill_log` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `travel_requests`
+--
+
 DROP TABLE IF EXISTS `travel_requests`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2517,6 +2984,10 @@ CREATE TABLE `travel_requests` (
 ) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `travel_requests`
+--
+
 LOCK TABLES `travel_requests` WRITE;
 /*!40000 ALTER TABLE `travel_requests` DISABLE KEYS */;
 INSERT INTO `travel_requests` VALUES
@@ -2540,6 +3011,11 @@ INSERT INTO `travel_requests` VALUES
 (24,'TR-SAMPLE-0006',3,'Dauin Marine Park','Field trip (sample)','2026-10-02','06:30:00','18:00:00',NULL,5,2,'Reviewed',NULL,NULL,NULL,0,'None',NULL,NULL,NULL,NULL,'2026-10-03 17:23:59','2026-10-03 17:23:59','2026-10-03 17:23:59');
 /*!40000 ALTER TABLE `travel_requests` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `trip_status_log`
+--
+
 DROP TABLE IF EXISTS `trip_status_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2554,6 +3030,10 @@ CREATE TABLE `trip_status_log` (
   KEY `travel_request_id` (`travel_request_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `trip_status_log`
+--
 
 LOCK TABLES `trip_status_log` WRITE;
 /*!40000 ALTER TABLE `trip_status_log` DISABLE KEYS */;
@@ -2574,6 +3054,11 @@ INSERT INTO `trip_status_log` VALUES
 (15,17,'In Transit','Kenchie Terante','2026-10-09 10:17:25','Driver checked in at the gate for dispatch.');
 /*!40000 ALTER TABLE `trip_status_log` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `ubra_chat_logs`
+--
+
 DROP TABLE IF EXISTS `ubra_chat_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2587,6 +3072,10 @@ CREATE TABLE `ubra_chat_logs` (
   KEY `emp_id` (`emp_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=323 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ubra_chat_logs`
+--
 
 LOCK TABLES `ubra_chat_logs` WRITE;
 /*!40000 ALTER TABLE `ubra_chat_logs` DISABLE KEYS */;
@@ -2643,6 +3132,11 @@ INSERT INTO `ubra_chat_logs` VALUES
 (322,'20230251','assistant','**Para makakuha og PDF nga summary report, isulti lang kini nga command (gamit ang Bisaya nga mga pulong):**\n\n> **“generate a pdf report para sa kahimtang sa fleet karong semana.”**  \n\nPag‑type o i‑click ang command sa ubos, ug awtomatikong mag‑generate ang sistema og downloadable nga PDF file. \n\nKung gusto nimo laing detalye (sama sa tools, maintenance, o janitorial), ilisi ra ang **“fleet”** sa gustong module. \n\n**Pananglitan:**  \n- *“generate a pdf report para sa tools karong bulan.”*  \n- *“generate a pdf report para sa maintenance work orders karong quarter.”*  \n\nPahibalo lang kung unsa nga report ang imong gusto, ug andam ko motabang!','2026-10-07 17:24:21');
 /*!40000 ALTER TABLE `ubra_chat_logs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `users`
+--
+
 DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2663,6 +3157,10 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `users`
+--
+
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES
@@ -2679,6 +3177,11 @@ INSERT INTO `users` VALUES
 (16,'Guard Test Account','guard_test@fu-ubra.local','guard_test','10060','$2y$10$KPbdNbX3l9oXLy0Vs4BEa.KGxfhQoNfvvInX5NC4aJEGPHMkyuMzO','Guard','Guard Post',NULL,'2026-10-24 17:34:06');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `vehicle_inspection_checklists`
+--
+
 DROP TABLE IF EXISTS `vehicle_inspection_checklists`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2697,6 +3200,10 @@ CREATE TABLE `vehicle_inspection_checklists` (
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `vehicle_inspection_checklists`
+--
+
 LOCK TABLES `vehicle_inspection_checklists` WRITE;
 /*!40000 ALTER TABLE `vehicle_inspection_checklists` DISABLE KEYS */;
 INSERT INTO `vehicle_inspection_checklists` VALUES
@@ -2707,6 +3214,11 @@ INSERT INTO `vehicle_inspection_checklists` VALUES
 (12,'V2-4Wheels','230345','25,760 km','Cardo Garcia','2026-11-15','2026-10-04',0,'2026-10-07 03:10:18','2026-10-07 03:10:18');
 /*!40000 ALTER TABLE `vehicle_inspection_checklists` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `vehicle_inspection_items`
+--
+
 DROP TABLE IF EXISTS `vehicle_inspection_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2721,6 +3233,10 @@ CREATE TABLE `vehicle_inspection_items` (
   KEY `checklist_id` (`checklist_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=397 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `vehicle_inspection_items`
+--
 
 LOCK TABLES `vehicle_inspection_items` WRITE;
 /*!40000 ALTER TABLE `vehicle_inspection_items` DISABLE KEYS */;
@@ -2892,6 +3408,11 @@ INSERT INTO `vehicle_inspection_items` VALUES
 (396,12,'Accessories','Air conditioning, system check, freon level, drier.','Yes',NULL);
 /*!40000 ALTER TABLE `vehicle_inspection_items` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `vehicle_maintenance`
+--
+
 DROP TABLE IF EXISTS `vehicle_maintenance`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2910,6 +3431,10 @@ CREATE TABLE `vehicle_maintenance` (
   KEY `vehicle_id` (`vehicle_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `vehicle_maintenance`
+--
 
 LOCK TABLES `vehicle_maintenance` WRITE;
 /*!40000 ALTER TABLE `vehicle_maintenance` DISABLE KEYS */;
@@ -2931,6 +3456,11 @@ INSERT INTO `vehicle_maintenance` VALUES
 (15,7,'Brake Inspection','2026-06-06',47000.0,1800.00,'Casa Service Center','2026-12-02','Sample data','2026-10-04 01:15:24');
 /*!40000 ALTER TABLE `vehicle_maintenance` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `vehicles`
+--
+
 DROP TABLE IF EXISTS `vehicles`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2960,6 +3490,10 @@ CREATE TABLE `vehicles` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `vehicles`
+--
+
 LOCK TABLES `vehicles` WRITE;
 /*!40000 ALTER TABLE `vehicles` DISABLE KEYS */;
 INSERT INTO `vehicles` VALUES
@@ -2970,6 +3504,11 @@ INSERT INTO `vehicles` VALUES
 (7,'Zusuki','230345',NULL,'V2-4Wheels',6,2,'Online','Completed',NULL,'In Use',0,NULL,'2026-08-04 01:24:15','2026-09-05 14:10:46','2026-08-04 01:24:15');
 /*!40000 ALTER TABLE `vehicles` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `waste_logs`
+--
+
 DROP TABLE IF EXISTS `waste_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -2987,6 +3526,10 @@ CREATE TABLE `waste_logs` (
   UNIQUE KEY `station_day` (`station_id`,`log_date`)
 ) ENGINE=InnoDB AUTO_INCREMENT=738 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `waste_logs`
+--
 
 LOCK TABLES `waste_logs` WRITE;
 /*!40000 ALTER TABLE `waste_logs` DISABLE KEYS */;
@@ -3362,6 +3905,11 @@ INSERT INTO `waste_logs` VALUES
 (737,42,'2026-10-22',5.50,3.20,3.40,'Admin Test Account','Lab chemicals','2026-10-22 18:18:33');
 /*!40000 ALTER TABLE `waste_logs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `waste_stations`
+--
+
 DROP TABLE IF EXISTS `waste_stations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -3374,6 +3922,10 @@ CREATE TABLE `waste_stations` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `waste_stations`
+--
 
 LOCK TABLES `waste_stations` WRITE;
 /*!40000 ALTER TABLE `waste_stations` DISABLE KEYS */;
@@ -3401,6 +3953,11 @@ INSERT INTO `waste_stations` VALUES
 (42,'Animation Lab / ROTC Office','Back door',0,'2026-10-22 18:14:33');
 /*!40000 ALTER TABLE `waste_stations` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `work_orders`
+--
+
 DROP TABLE IF EXISTS `work_orders`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -3421,6 +3978,10 @@ CREATE TABLE `work_orders` (
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `work_orders`
+--
+
 LOCK TABLES `work_orders` WRITE;
 /*!40000 ALTER TABLE `work_orders` DISABLE KEYS */;
 INSERT INTO `work_orders` VALUES
@@ -3434,6 +3995,10 @@ INSERT INTO `work_orders` VALUES
 (9,'Broken window latch','HRM Kitchen','Ground Floor',NULL,'Routine','In Progress','Fernando Reyes','2026-10-03 17:51:50','2026-10-03 17:51:50',NULL);
 /*!40000 ALTER TABLE `work_orders` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Dumping routines for database 'fu_ubra'
+--
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -3444,3 +4009,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
+-- Dump completed on 2026-10-28 11:05:15

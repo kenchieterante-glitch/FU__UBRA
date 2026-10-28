@@ -710,7 +710,7 @@ function fbShowFloors(name) {
   if (!box) return;
   if (!name) { box.style.display = 'none'; return; }
   const items = fbItems(name);
-  const order = ['Ground Floor', '2nd Floor', '3rd Floor', '4th Floor'];
+  const order = ['Ground Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor', '6th Floor', '7th Floor'];
   const floors = [...new Set(fpPlans.filter(p => p.campus === name).map(p => p.floor).concat(items.map(i => i.floor)))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
   const badTotal = items.filter(i => i.bad).length;
   box.innerHTML = '<div class="floor-break-title"><i class="bi bi-layers"></i> ' + esc(name) + ' — by floor' +
