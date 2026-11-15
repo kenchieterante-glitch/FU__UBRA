@@ -52,9 +52,17 @@ class AuthController extends BaseController
             return redirect()->to($this->loginUrl($portal))->with('error', 'Employee ID and password are required.');
         }
 
+        // Login throttle: 5 wrong tries per ID + IP locks sign-in for 5 minutes (file cache, no DB change).
+        $throttleKey = 'login_' . md5(strtolower($employeeId) . '|' . $this->request->getIPAddress());
+        $tries = (int) (cache($throttleKey) ?? 0);
+        if ($tries >= 5) {
+            return redirect()->to($this->loginUrl($portal))->with('error', 'Too many failed attempts. Please wait 5 minutes and try again.');
+        }
+
         $user = $this->userModel->getByEmployeeId($employeeId);
 
         if (!$user) {
+            cache()->save($throttleKey, $tries + 1, 300);
             return redirect()->to($this->loginUrl($portal))->with('error', 'Invalid employee ID or password.');
         }
 
@@ -69,6 +77,7 @@ class AuthController extends BaseController
         }
 
         if ($isValid) {
+            cache()->delete($throttleKey);
             // The users table's real primary key is department_id (no 'id' column exists),
             // so that's the identifier that actually resolves for session['user_id'].
             $userId = $user['id'] ?? $user['user_id'] ?? $user['userid'] ?? $user['department_id'] ?? null;
@@ -99,6 +108,7 @@ class AuthController extends BaseController
             return redirect()->to($this->roleLandingUrl());
         }
 
+        cache()->save($throttleKey, $tries + 1, 300);
         return redirect()->to($this->loginUrl($portal))->with('error', 'Invalid employee ID or password.');
     }
 

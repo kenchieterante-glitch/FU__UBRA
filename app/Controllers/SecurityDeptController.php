@@ -287,18 +287,24 @@ class SecurityDeptController extends BaseController
 
     // An ID card can carry a QR code and a barcode, and the QR may hold more than the bare number
     // (a link, a name, several fields). Try the scan as it is; if that finds nobody, try each piece of it.
+    // Staff marked Inactive (resigned / ended) are not allowed to borrow keys. "On Leave" is still allowed.
+    protected function guardActive(array $p): ?array
+    {
+        return strcasecmp((string) ($p['status'] ?? 'Active'), 'Inactive') === 0 ? null : $p;
+    }
+
     protected function guardFindPerson(string $raw): ?array
     {
         $model = new PersonnelModel();
         $raw = trim($raw);
         if ($raw === '') return null;
-        if ($p = $model->getByEmpId($raw)) return $p;
+        if ($p = $model->getByEmpId($raw)) return $this->guardActive($p);
 
         $pieces = preg_split('/[\s|,;:\/=&?#"\'<>{}\[\]()]+/', $raw) ?: [];
         preg_match_all('/[A-Za-z0-9][A-Za-z0-9-]{3,}/', $raw, $m);
         foreach (array_unique(array_merge($pieces, $m[0] ?? [])) as $piece) {
             $piece = trim((string) $piece, " -\t\r\n");
-            if (strlen($piece) >= 4 && ($p = $model->getByEmpId($piece))) return $p;
+            if (strlen($piece) >= 4 && ($p = $model->getByEmpId($piece))) return $this->guardActive($p);
         }
 
         return null;
@@ -309,7 +315,7 @@ class SecurityDeptController extends BaseController
         if (!session()->get('isLoggedIn')) return $this->guardJson(403, 'Please sign in.');
 
         $person = $this->guardFindPerson((string) ($this->request->getGet('code') ?? urldecode($empId)));
-        if (!$person) return $this->guardJson(404, 'No staff or faculty record for that ID.');
+        if (!$person) return $this->guardJson(404, 'No active staff or faculty record for that ID.');
 
         return $this->response->setJSON(['full_name' => $person['full_name'], 'department' => $person['department_name'] ?? '', 'emp_id' => $person['emp_id']]);
     }
@@ -323,7 +329,7 @@ class SecurityDeptController extends BaseController
         if ($empId === '') return $this->guardJson(422, 'Scan or type the borrower\'s ID first.');
 
         $person = $this->guardFindPerson($empId);
-        if (!$person) return $this->guardJson(403, 'No staff or faculty record found for that ID. Only staff and faculty can borrow keys.');
+        if (!$person) return $this->guardJson(403, 'No active staff or faculty record found for that ID. Only active staff and faculty can borrow keys.');
 
         $key = $this->guardFindKey();
         if (!$key) return $this->guardJson(404, 'That key is not registered. Check the tag or pick the key from the list.');

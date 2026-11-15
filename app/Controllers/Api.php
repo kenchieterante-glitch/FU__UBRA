@@ -1449,6 +1449,9 @@ class Api extends BaseController
         // accept either so a scanned badge resolves to the right person.
         $personnelModel = new PersonnelModel();
         $person = $personnelModel->getByEmpId($empId);
+        if ($person && strcasecmp((string) ($person['status'] ?? 'Active'), 'Inactive') === 0) {
+            return $this->response->setStatusCode(403)->setJSON(['message' => "ID \"{$empId}\" is marked Inactive — only active staff and faculty can borrow keys."]);
+        }
         if (!$person) {
             $account = (new UserModel())->getByEmployeeId($empId);
             if ($account) {

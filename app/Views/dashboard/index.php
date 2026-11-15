@@ -52,7 +52,7 @@
        different pages and a single click can't route to both. -->
   <section class="panel-card pending-panel" id="pendingPanel" style="display:none" aria-label="Pending requests detail">
     <div class="panel-head">
-      <h2>Pending Requests</h2>
+      <h2>Open Items</h2>
       <p>Everything currently waiting on approval or resolution.</p>
     </div>
     <div class="pending-columns">

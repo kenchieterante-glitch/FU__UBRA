@@ -14,6 +14,8 @@ class AuthFilter implements FilterInterface
     // blocked outside their own scope. Every other role (Administrator,
     // and any legacy role) is unrestricted, same as before these roles
     // existed — this map only ever narrows access, never widens it.
+    private const UNRESTRICTED_ROLES = ['administrator', 'janitorial'];
+
     private const ROLE_LANDING = [
         'security'   => 'security-dept',
         'assets'     => 'assets-dept',
@@ -102,6 +104,15 @@ class AuthFilter implements FilterInterface
             if (!$isAllowed) {
                 return redirect()->to('/' . $landing);
             }
+        }
+
+        // Deny by default: a role that is not Administrator, not Janitorial and not in the map above
+        // (a new or misspelled role) only gets the shared basics instead of the whole system.
+        elseif (!in_array($roleKey, self::UNRESTRICTED_ROLES, true)) {
+            foreach (['profile', 'notifications', 'ubra', 'logout'] as $prefix) {
+                if ($currentPath === $prefix || str_starts_with($currentPath, $prefix . '/')) return;
+            }
+            return redirect()->to('/profile');
         }
 
         return;
