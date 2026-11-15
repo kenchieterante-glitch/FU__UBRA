@@ -415,8 +415,8 @@ class SafetyController extends BaseController
         if (!session()->get('isLoggedIn')) return $this->response->setStatusCode(403);
 
         $person = $this->personnelModel->getByEmpId($empId);
-        if (!$person) {
-            return $this->response->setStatusCode(404)->setJSON(['message' => 'No personnel found for that ID.']);
+        if (!$person || strcasecmp((string) ($person['status'] ?? 'Active'), 'Inactive') === 0) {
+            return $this->response->setStatusCode(404)->setJSON(['message' => 'No active personnel found for that ID.']);
         }
 
         return $this->response->setJSON([

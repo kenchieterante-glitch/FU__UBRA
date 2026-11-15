@@ -1,1 +1,0 @@
-mysqldump.exe: Got error: 1049: "Unknown database 'fuubra_db'" when selecting the database

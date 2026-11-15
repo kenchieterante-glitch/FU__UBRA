@@ -268,6 +268,10 @@ class Dashboard extends BaseController
         $keysOut  = (new KeyBorrowLogModel())->where('status', 'Active')->countAllResults();
         $gpsOnline = $vehicleModel->where('is_archived', 0)->where('gps_status', 'Online')->countAllResults();
         $tripsOpen = $travelModel->whereIn('status', ['Pending', 'Reviewed', 'Approved', 'In Transit'])->countAllResults();
+        $scansToday  = (new KeyBorrowLogModel())->where('scan_in >=', $today . ' 00:00:00')->countAllResults();
+        $inspThisMo  = (new \App\Models\SafetyInspectionModel())->where('inspection_month', $month)->countAllResults();
+        $pers        = new \App\Models\PersonnelModel();
+        $pCount      = fn() => $pers->where('is_archived', 0)->where('status !=', 'Inactive')->countAllResults();
         $deptSections = [
             ['title' => 'Facilities', 'icon' => 'bi-building-gear', 'url' => 'facilities/status', 'links' => [
                 // Repair Requests hidden for now: ['label' => 'Repair Requests', 'url' => 'facilities/work-orders', 'count' => $facOpen . ' open'],
@@ -277,8 +281,8 @@ class Dashboard extends BaseController
             ]],
             ['title' => 'Safety and Security', 'icon' => 'bi-shield-fill-check', 'url' => 'safety', 'links' => [
                 ['label' => 'Fire Safety', 'url' => 'safety', 'icon' => 'bi-fire', 'count' => $overdueFe . ' overdue'],
-                ['label' => 'Safety Inspection', 'url' => 'security-dept/inspection', 'icon' => 'bi-clipboard2-check', 'count' => ''],
-                ['label' => 'Guard Monitoring', 'url' => 'safety/guard-dashboard', 'icon' => 'bi-shield-check', 'count' => ''],
+                ['label' => 'Safety Inspection', 'url' => 'security-dept/inspection', 'icon' => 'bi-clipboard2-check', 'count' => $inspThisMo . ' this month'],
+                ['label' => 'Guard Monitoring', 'url' => 'safety/guard-dashboard', 'icon' => 'bi-shield-check', 'count' => $keysOut . ' out · ' . $scansToday . ' scans today'],
                 ['label' => 'List of Keys', 'url' => 'security-dept/keys', 'icon' => 'bi-list-ul', 'count' => $keysOut . ' out'],
             ]],
             ['title' => 'Vehicle Management', 'icon' => 'bi-truck', 'url' => 'vehicles/dashboard', 'links' => [
@@ -287,7 +291,7 @@ class Dashboard extends BaseController
                 ['label' => 'Trip Ticket', 'url' => 'travel', 'icon' => 'bi-ticket-perforated', 'count' => $tripsOpen . ' open'],
             ]],
             ['title' => 'Personnel Management', 'icon' => 'bi-people', 'url' => 'personnel', 'links' => [
-                ['label' => 'All Personnel', 'url' => 'personnel', 'icon' => 'bi-people-fill', 'count' => ''],
+                ['label' => 'All Personnel', 'url' => 'personnel', 'icon' => 'bi-people-fill', 'count' => $pCount() . ' active'],
                 ['label' => 'Drivers', 'url' => 'personnel/drivers', 'icon' => 'bi-person-vcard-fill', 'count' => ''],
                 ['label' => 'Janitors', 'url' => 'personnel/janitors', 'icon' => 'bi-brush', 'count' => ''],
                 ['label' => 'Carpentries Shop', 'url' => 'personnel/carpentries', 'icon' => 'bi-hammer', 'count' => ''],
@@ -313,10 +317,10 @@ class Dashboard extends BaseController
             'last_updated' => date('g:i A'),
             'kpis' => [
                 [
-                    'label' => 'Pending Requests',
+                    'label' => 'Open Items',
                     'value' => (string) $pendingRequests,
                     'meta' => "{$borrowedTools} tools · {$openWorkOrders} work orders",
-                    'sub' => 'Waiting on approval',
+                    'sub' => 'Borrowed tools + open work orders',
                     'tone' => 'tone-gold',
                     'icon' => 'bi-clipboard2-check',
                     'expand' => 'pending',
