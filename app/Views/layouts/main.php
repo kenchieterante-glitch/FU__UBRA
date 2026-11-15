@@ -809,7 +809,13 @@ document.querySelectorAll('.flash-toast').forEach(toast => {
   let last = null;
   let busyFetch = false;
 
+  // A page that reloads right after you clicked a tab or button feels broken, so
+  // hold off for a while after any click or keypress.
+  let lastTouch = 0;
+  ['click', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { lastTouch = Date.now(); }, true));
+
   function userIsBusy() {
+    if (Date.now() - lastTouch < 15000) return true;
     const visible = el => el.offsetParent !== null || getComputedStyle(el).position === 'fixed';
     if (Array.from(document.querySelectorAll('.modal, .sj-modal-overlay')).some(m => m.style.display === 'flex')) return true;
     if (document.querySelector('.filter-popup.visible')) return true;
@@ -835,6 +841,14 @@ document.querySelectorAll('.flash-toast').forEach(toast => {
       if (v === last) return;
       if (userIsBusy()) return; // keep the old marker; try again on the next tick
       last = v;
+      try {
+        // Remember which sub-tab is open on each tab bar so the page comes back on it.
+        const open = Array.from(document.querySelectorAll('.sub-tabs')).map(bar => {
+          const tabs = Array.from(bar.querySelectorAll('.sub-tab'));
+          return tabs.findIndex(t => t.classList.contains('active'));
+        });
+        sessionStorage.setItem('fuSubTabs', JSON.stringify({ path: location.pathname, at: Date.now(), open }));
+      } catch (e) { /* sessionStorage unavailable - the page just opens on its first tab */ }
       location.reload();
     } catch (e) {
       // Silent - the next tick retries.
@@ -844,6 +858,20 @@ document.querySelectorAll('.flash-toast').forEach(toast => {
   }
   setInterval(pulse, PULSE_MS);
   pulse();
+
+  // Coming back from an auto-refresh: re-open the sub-tabs that were open.
+  try {
+    const saved = JSON.parse(sessionStorage.getItem('fuSubTabs') || 'null');
+    sessionStorage.removeItem('fuSubTabs');
+    if (saved && saved.path === location.pathname && Date.now() - saved.at < 20000) {
+      const restore = () => document.querySelectorAll('.sub-tabs').forEach((bar, i) => {
+        const tabs = Array.from(bar.querySelectorAll('.sub-tab'));
+        const idx = saved.open[i];
+        if (idx > 0 && tabs[idx] && !tabs[idx].classList.contains('active')) tabs[idx].click();
+      });
+      document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', () => setTimeout(restore, 0)) : setTimeout(restore, 0);
+    }
+  } catch (e) { /* ignore */ }
 })();
 <?php endif; ?>
 

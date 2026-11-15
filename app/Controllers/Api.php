@@ -160,7 +160,8 @@ class Api extends BaseController
         }
 
         $token      = trim(substr($header, 7));
-        $employeeId = $token !== '' ? cache()->get('api_token_' . $token) : null;
+        // Tokens are 48 hex characters; anything else can't be valid (and isn't a legal cache key).
+        $employeeId = preg_match('/^[a-f0-9]{48}$/', $token) ? cache()->get('api_token_' . $token) : null;
         if (empty($employeeId)) {
             return null;
         }
@@ -1750,6 +1751,151 @@ class Api extends BaseController
 
     public function guardTripCheckIn($id = null)  { return $this->guardTripAction((int) $id, 'in'); }
     public function guardTripCheckOut($id = null) { return $this->guardTripAction((int) $id, 'out'); }
+
+    // ---------- WASTE WATCH ----------
+    // Same data and rules as the web system's Facilities > Waste Watch page
+    // (WasteController): each station is weighed once a day (non-biodegradable,
+    // biodegradable, hazardous), and a hazardous weigh-in at or above the limit
+    // raises a Hazardous Waste Alert.
+
+    public function wasteWatch()
+    {
+        $db = db_connect();
+        $today     = date('Y-m-d');
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+        $weekFrom  = date('Y-m-d', strtotime('-6 days'));
+        $monthFrom = date('Y-m-d', strtotime('-29 days'));
+        $limit     = \App\Controllers\WasteController::HAZARD_LIMIT_KG;
+
+        $stations = $db->table('waste_stations')->where('is_archived', 0)->orderBy('building', 'ASC')->get()->getResultArray();
+        $logs = $db->table('waste_logs')->where('log_date >=', $monthFrom)->orderBy('log_date', 'DESC')->orderBy('id', 'DESC')->get()->getResultArray();
+
+        $byStation = [];
+        foreach ($logs as $l) $byStation[$l['station_id']][] = $l;
+        $names = [];
+        foreach ($stations as $st) $names[$st['id']] = $st['building'];
+
+        $latestDate = $logs ? $logs[0]['log_date'] : null;
+
+        $rows = [];
+        $totals = ['logged' => 0, 'pending' => 0, 'overdue' => 0, 'today_kg' => 0.0, 'haz_today' => 0.0];
+        $summary = ['latest' => [], 'week' => [], 'month' => []];
+        foreach ($stations as $st) {
+            $list = $byStation[$st['id']] ?? [];
+            $todayLog = null;
+            $last = null;
+            $wk = ['nb' => 0.0, 'b' => 0.0, 'h' => 0.0];
+            $mo = ['nb' => 0.0, 'b' => 0.0, 'h' => 0.0];
+            $lt = ['nb' => 0.0, 'b' => 0.0, 'h' => 0.0];
+            foreach ($list as $l) {
+                if ($l['log_date'] === $today) $todayLog = $l;
+                if ($last === null) $last = $l;
+                $mo['nb'] += (float) $l['non_bio_kg']; $mo['b'] += (float) $l['bio_kg']; $mo['h'] += (float) $l['hazardous_kg'];
+                if ($l['log_date'] >= $weekFrom) { $wk['nb'] += (float) $l['non_bio_kg']; $wk['b'] += (float) $l['bio_kg']; $wk['h'] += (float) $l['hazardous_kg']; }
+                if ($latestDate !== null && $l['log_date'] === $latestDate) { $lt['nb'] += (float) $l['non_bio_kg']; $lt['b'] += (float) $l['bio_kg']; $lt['h'] += (float) $l['hazardous_kg']; }
+            }
+
+            if ($todayLog) {
+                $status = 'Logged';
+                $totals['logged']++;
+                $totals['today_kg'] += (float) $todayLog['non_bio_kg'] + (float) $todayLog['bio_kg'] + (float) $todayLog['hazardous_kg'];
+                $totals['haz_today'] += (float) $todayLog['hazardous_kg'];
+            } elseif ($last === null || $last['log_date'] < $yesterday) {
+                $status = 'Overdue';
+                $totals['overdue']++;
+            } else {
+                $status = 'Pending';
+                $totals['pending']++;
+            }
+
+            $rows[] = [
+                'id'       => (int) $st['id'],
+                'building' => $st['building'],
+                'location' => $st['location'] ?: null,
+                'status'   => $status, // Logged | Pending | Overdue (shown as Done / To do / Missed)
+                'high_haz' => $todayLog && (float) $todayLog['hazardous_kg'] >= $limit,
+                'today'    => $todayLog ? [
+                    'nb' => (float) $todayLog['non_bio_kg'], 'b' => (float) $todayLog['bio_kg'], 'h' => (float) $todayLog['hazardous_kg'],
+                    'by' => $todayLog['checked_by'], 'notes' => $todayLog['notes'],
+                ] : null,
+                'last'     => $last ? $last['log_date'] : null,
+                'week'     => $wk,
+                'month'    => $mo,
+            ];
+            $summary['latest'][] = ['building' => $st['building']] + $lt;
+            $summary['week'][]   = ['building' => $st['building']] + $wk;
+            $summary['month'][]  = ['building' => $st['building']] + $mo;
+        }
+
+        return $this->response->setJSON([
+            'today'       => $today,
+            'limit'       => $limit,
+            'latest_date' => $latestDate,
+            'totals'      => $totals,
+            'stations'    => $rows,
+            'summary'     => $summary,
+            'logs'        => array_map(fn($l) => [
+                'date'     => $l['log_date'],
+                'building' => $names[$l['station_id']] ?? '—',
+                'nb'       => (float) $l['non_bio_kg'],
+                'b'        => (float) $l['bio_kg'],
+                'h'        => (float) $l['hazardous_kg'],
+                'by'       => $l['checked_by'] ?: null,
+                'notes'    => $l['notes'] ?: null,
+            ], $logs),
+        ]);
+    }
+
+    // Saves (or corrects) one station's end-of-day weigh-in. Allowed for the
+    // roles that can open Waste Watch on the web: Facilities and Administrator,
+    // plus the Janitorial supervisor account who does the weighing.
+    public function wasteLog()
+    {
+        $me = $this->currentApiUser();
+        if (!$me || !in_array(strtolower((string) $me['role']), ['facilities', 'janitorial', 'administrator'], true)) {
+            return $this->response->setStatusCode(403)->setJSON(['message' => 'Only Facilities, Janitorial or an administrator can log waste weigh-ins.']);
+        }
+
+        $body = $this->request->getJSON(true) ?? [];
+        $db = db_connect();
+        $stationId = (int) ($body['station_id'] ?? 0);
+        $date = (string) ($body['log_date'] ?? '') ?: date('Y-m-d');
+        $station = $db->table('waste_stations')->where('id', $stationId)->get()->getRowArray();
+
+        if (!$station || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || $date > date('Y-m-d')) {
+            return $this->response->setStatusCode(422)->setJSON(['message' => 'Pick a station and a date that is today or earlier.']);
+        }
+
+        $num = fn($k) => max(0, round((float) ($body[$k] ?? 0), 2));
+        $nb = $num('non_bio_kg'); $b = $num('bio_kg'); $h = $num('hazardous_kg');
+        $data = [
+            'non_bio_kg' => $nb, 'bio_kg' => $b, 'hazardous_kg' => $h,
+            'checked_by' => $me['name'],
+            'notes'      => trim((string) ($body['notes'] ?? '')) ?: null,
+        ];
+
+        $existing = $db->table('waste_logs')->where('station_id', $stationId)->where('log_date', $date)->get()->getRowArray();
+        if ($existing) {
+            $db->table('waste_logs')->where('id', $existing['id'])->update($data);
+        } else {
+            $db->table('waste_logs')->insert($data + ['station_id' => $stationId, 'log_date' => $date, 'created_at' => date('Y-m-d H:i:s')]);
+        }
+
+        if ($h >= \App\Controllers\WasteController::HAZARD_LIMIT_KG) {
+            (new NotificationModel())->insert([
+                'category'    => 'Hazardous Waste Alert',
+                'description' => "{$station['building']}: {$h} kg of hazardous waste weighed on " . date('M d, Y', strtotime($date)) . ' — schedule a pick-up.',
+                'recipient'   => 'Facilities',
+                'priority'    => 'CRITICAL',
+                'status'      => 'Notified',
+                'channel'     => 'system',
+                'is_read'     => 0,
+                'created_at'  => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        return $this->response->setJSON(['message' => "Weigh-in saved for {$station['building']}."]);
+    }
 
     // ---------- NOTIFICATIONS ----------
 

@@ -389,6 +389,8 @@ $routes->group('api', function ($routes) {
     $routes->get('guard/keys', 'Api::guardKeysList');
     $routes->post('guard/keys/register', 'Api::guardRegisterKey');
     $routes->get('guard/trip-tickets/today', 'Api::guardTripTicketsToday');
+    $routes->get('waste', 'Api::wasteWatch');
+    $routes->post('waste/log', 'Api::wasteLog');
     $routes->get('guard/drivers/(:num)', 'Api::guardDriver/$1');
     $routes->post('guard/trip-tickets/(:num)/check-in', 'Api::guardTripCheckIn/$1');
     $routes->post('guard/trip-tickets/(:num)/check-out', 'Api::guardTripCheckOut/$1');
