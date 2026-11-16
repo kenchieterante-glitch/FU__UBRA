@@ -656,34 +656,7 @@ document.querySelectorAll('[onsubmit*="confirm("], [onclick*="confirm("]').forEa
   }
 });
 
-// Every map / floor plan panel gets an X in its top-right corner that closes it
-// (it presses the panel's own Map / Floor Plans button, so the button's state stays right).
-(function () {
-  const panels = [
-    ['acMapPanel', () => document.getElementById('acMapBtn')?.click()],
-    ['cleanMapPanel', () => document.getElementById('janMapBtn')?.click()],
-    ['janMapPanel', () => document.getElementById('bldMapBtn')?.click()],
-    ['fsMapPanel', () => document.getElementById('fsMapBtn')?.click()],
-    ['inMapPanel', () => document.getElementById('inMapBtn')?.click()],
-    ['wasteMapPanel', () => document.getElementById('wasteMapBtn')?.click()],
-    ['fpPanel', () => document.getElementById('fpBtn')?.click()],
-    ['mapPanel', () => (typeof toggleMapView === 'function' ? toggleMapView() : null)],
-  ];
-  const add = () => panels.forEach(([id, close]) => {
-    const panel = document.getElementById(id);
-    if (!panel || panel.querySelector(':scope > .panel-close-x')) return;
-    if (getComputedStyle(panel).position === 'static') panel.style.position = 'relative';
-    const x = document.createElement('button');
-    x.type = 'button';
-    x.className = 'panel-close-x';
-    x.title = 'Close';
-    x.setAttribute('aria-label', 'Close');
-    x.innerHTML = '<i class="bi bi-x-lg"></i>';
-    x.addEventListener('click', close);
-    panel.appendChild(x);
-  });
-  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', add) : add();
-})();
+// Maps and floor plans have no close X: the List | Map | Floors switch shows and hides them.
 
 // Flash message toasts (redirect-based "Personnel updated successfully"
 // style messages) fade in, then auto-dismiss on their own after a few
@@ -918,6 +891,53 @@ document.querySelectorAll('.flash-toast').forEach(toast => {
   } catch (e) { /* ignore */ }
 })();
 <?php endif; ?>
+
+// List / Map / Floors view switch (Google Drive style). Each .view-switch says which elements are the map, the list and
+// (optionally) the floor plans; only one view shows at a time and the choice is remembered per page on this device.
+(function () {
+  const switches = document.querySelectorAll('.view-switch');
+  if (!switches.length) return;
+  const key = 'fu_view_' + location.pathname;
+  let view = null, busy = false;
+  const hasFloors = Array.from(switches).some(sw => sw.dataset.floors);
+  let saved = switches[0].dataset.default || 'list'; // a page can open on the map by default (data-default="grid")
+  try { saved = localStorage.getItem(key) || saved; } catch (e) {}
+  if (saved === 'floors' && !hasFloors) saved = 'list';
+
+  function apply(v) {
+    if (busy || v === view) return;
+    busy = true;
+    view = v;
+    switches.forEach(sw => {
+      sw.querySelectorAll('button[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+      document.querySelectorAll(sw.dataset.map).forEach(el => {
+        if (v === 'grid') el.style.display = '';
+        el.classList.toggle('fu-view-hidden', v !== 'grid');
+      });
+      document.querySelectorAll(sw.dataset.list).forEach(el => el.classList.toggle('fu-view-hidden', v !== 'list'));
+      if (sw.dataset.floors) {
+        document.querySelectorAll(sw.dataset.floors).forEach(el => {
+          if (v === 'floors') el.style.display = '';
+          el.classList.toggle('fu-view-hidden', v !== 'floors');
+        });
+      }
+    });
+    // The page's own floor-plan code builds its building / floor pickers the first time the panel opens.
+    if (v === 'floors' && typeof toggleFloorPlans === 'function') toggleFloorPlans(true);
+    try { localStorage.setItem(key, v); } catch (e) {}
+    window.dispatchEvent(new Event('resize')); // lets maps size themselves once they are visible
+    busy = false;
+  }
+  window.fuSetView = apply; // lets page code (for example "open this building's floor plan") move the switch
+  switches.forEach(sw => sw.addEventListener('click', e => {
+    const b = e.target.closest('button[data-view]');
+    if (b) apply(b.dataset.view);
+  }));
+  // The page may already have opened its floor plans (for example "open this building's floor plan" from another page).
+  const fpEl = Array.from(switches).map(sw => sw.dataset.floors && document.querySelector(sw.dataset.floors)).find(Boolean);
+  if (fpEl && fpEl.style.display === '') saved = 'floors';
+  apply(saved);
+})();
 
 // Site-wide safety net: whenever any .modal popup is open, the page behind
 // it shouldn't also be scrollable — that's what shows up as a second,

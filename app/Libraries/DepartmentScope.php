@@ -19,6 +19,7 @@ class DepartmentScope
         'Sports'     => 'sports',
         'Security'   => 'security',
         'Facilities' => 'facilities',
+        'Waste Watch' => 'waste-watch',
     ];
 
     public static function modulesForRole(string $role): ?array
@@ -28,7 +29,7 @@ class DepartmentScope
             'assets'     => ['Vehicle', 'Motor Pool'],
             'sports'     => ['Sports'],
             'security'   => ['Security'],
-            'facilities' => ['Facilities', 'Janitorial'],
+            'facilities' => ['Facilities', 'Janitorial', 'Waste Watch'],
             default      => null,
         };
     }

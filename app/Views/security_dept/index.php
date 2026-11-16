@@ -74,8 +74,9 @@ $zoomSelect = function (string $svgId) use ($buildings) {
     </div>
     <div class="fe-toolbar-actions">
       <?= $alertBtns('fs', 'Urgent equipment', 'Checks due soon') ?>
-      <button type="button" class="filter-btn" id="fsMapBtn" onclick="toggleSecMap('fs')" title="Map" aria-label="Map"><i class="bi bi-map"></i></button>
-      <button type="button" class="filter-btn" id="fpBtn" onclick="toggleFloorPlans()" title="Floor Plans" aria-label="Floor Plans"><i class="bi bi-layers"></i></button>
+      <div class="view-switch" data-map="#fsMapPanel" data-list="#fsTabs, .fs-pane" data-floors="#fpPanel" role="group" aria-label="Choose view"><button type="button" data-view="list" title="List view" aria-label="List view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-list-ul"></i></button><button type="button" data-view="grid" title="Map view" aria-label="Map view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-map"></i></button><button type="button" data-view="floors" title="Floors view" aria-label="Floors view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-layers"></i></button></div>
+      <button type="button" class="filter-btn" id="fsMapBtn" onclick="toggleSecMap('fs')" title="Map" aria-label="Map" style="display:none"><i class="bi bi-map"></i></button>
+      <button type="button" class="filter-btn" id="fpBtn" style="display:none" onclick="toggleFloorPlans()" title="Floor Plans" aria-label="Floor Plans"><i class="bi bi-layers"></i></button>
       <div class="filter-menu-wrapper">
         <button type="button" class="filter-btn" onclick="toggleFacFilter(this)" aria-label="Open filters"><i class="bi bi-funnel"></i></button>
         <div class="filter-popup">
@@ -432,7 +433,8 @@ $zoomSelect = function (string $svgId) use ($buildings) {
     </div>
     <div class="fe-toolbar-actions">
       <?= $alertBtns('in', 'Urgent buildings', 'Buildings not inspected yet') ?>
-      <button type="button" class="filter-btn" id="inMapBtn" onclick="toggleSecMap('in')" title="Map" aria-label="Map"><i class="bi bi-map"></i></button>
+      <div class="view-switch" data-map="#inMapPanel" data-list="#inTabs, .in-pane" role="group" aria-label="Choose view"><button type="button" data-view="list" title="List view" aria-label="List view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-list-ul"></i></button><button type="button" data-view="grid" title="Map view" aria-label="Map view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-map"></i></button></div>
+      <button type="button" class="filter-btn" id="inMapBtn" onclick="toggleSecMap('in')" title="Map" aria-label="Map" style="display:none"><i class="bi bi-map"></i></button>
       <div class="filter-menu-wrapper">
         <button type="button" class="filter-btn" onclick="toggleFacFilter(this)" aria-label="Open filters"><i class="bi bi-funnel"></i></button>
         <div class="filter-popup">
@@ -648,6 +650,7 @@ function toggleFloorPlans(forceOpen) {
   const show = forceOpen === true ? true : el.style.display === 'none';
   el.style.display = show ? '' : 'none';
   if (show && !fpBuilding) fpInit();
+  if (show && window.fuSetView) window.fuSetView('floors'); // keep the List | Map | Floors switch in step
 }
 function fpInit() {
   const names = fpBuildingNames();

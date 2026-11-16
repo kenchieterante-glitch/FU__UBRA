@@ -38,7 +38,8 @@
     <div class="map-bar">
       <div class="map-bar-label"><i class="bi bi-geo-alt"></i> Campus map</div>
       <div class="map-tool-icons">
-        <button type="button" class="map-tool-btn active" id="janToggleBtn" onclick="toggleJanMap()" title="Show / hide the campus map" aria-label="Show or hide the campus map"><i class="bi bi-map"></i></button>
+        <div class="view-switch" data-default="grid" data-map="#janMapSection" data-list="#janZoneListCard" role="group" aria-label="Choose view"><button type="button" data-view="list" title="List view" aria-label="List view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-list-ul"></i></button><button type="button" data-view="grid" title="Map view" aria-label="Map view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-map"></i></button></div>
+        <button type="button" class="map-tool-btn active" id="janToggleBtn" onclick="toggleJanMap()" title="Show / hide the campus map" aria-label="Show or hide the campus map" style="display:none"><i class="bi bi-map"></i></button>
       </div>
     </div>
     <div id="janMapSection">
@@ -57,7 +58,6 @@
           <button type="button" class="map-legend-btn" id="janMapLegendBtn" onclick="toggleJanMapLegend()" aria-label="Toggle legend">
             <i class="bi bi-funnel"></i> Legend
           </button>
-            <button type="button" class="map-close-side map-close-icon" onclick="toggleJanMap()" title="Close the map" aria-label="Close the map"><i class="bi bi-x-lg"></i></button>
           </div>
           <div class="map-legend-popup" id="janMapLegendPopup">
             <div class="map-legend">
@@ -98,7 +98,7 @@
     </div>
 
     <!-- ── TABULATED LIST: under the map, stays visible when the map is closed ── -->
-    <div class="guard-card" style="padding:18px;margin-top:16px;">
+    <div class="guard-card" id="janZoneListCard" style="padding:18px;margin-top:16px;">
       <div class="dp-section-title"><i class="bi bi-list-ul"></i> Janitorial Zone List</div>
       <div class="table-wrap" id="janZoneListWrap">
         <table class="sj-table" id="janZoneTable">

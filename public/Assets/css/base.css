@@ -3084,3 +3084,25 @@ table.gps-table tbody td .vehicle-cell {
    they wrap onto the next row and sit centred, like the Janitorial, Tools and Records pages. */
 .stat-carousel .carousel-nav-btn { display: none !important; }
 .stat-carousel-track { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; overflow: visible; scroll-snap-type: none; padding: 6px 0 10px; }
+
+/* ── List / Map view switch (Google Drive style pill) ─────────────────── */
+.fu-view-hidden { display: none !important; }
+.view-switch {
+  display: inline-flex; align-items: center; border: 1px solid var(--line, #d9d9e0); border-radius: 999px;
+  background: var(--card, #fff); overflow: hidden; height: 34px; vertical-align: middle;
+}
+.view-switch button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 44px; height: 100%;
+  padding: 0 12px; border: 0; background: transparent; color: #111; font-size: 16px; cursor: pointer;
+}
+.view-switch button + button { border-left: 1px solid var(--line, #d9d9e0); }
+.view-switch button:hover { background: var(--bg-subtle, #f1f1f4); }
+.view-switch button.active { background: #f3dcdc; }
+.view-switch .vs-check { display: none; font-size: 15px; }
+.view-switch button.active .vs-check { display: inline; }
+:root[data-theme="dark"] .view-switch button { color: #e8e8ee; }
+:root[data-theme="dark"] .view-switch button.active { background: #4a2a2a; }
+.view-switch a.vs-link { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 100%; padding: 0 12px; border-left: 1px solid var(--line, #d9d9e0); color: #111; font-size: 16px; text-decoration: none; }
+.view-switch a.vs-link:hover { background: var(--bg-subtle, #f1f1f4); }
+:root[data-theme="dark"] .view-switch a.vs-link { color: #e8e8ee; }
+

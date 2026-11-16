@@ -158,6 +158,28 @@ class RecordsController extends BaseController
         return $out;
     }
 
+    // Waste Watch: every daily weigh-in (non-biodegradable, biodegradable, hazardous) per building.
+    private function wasteActivities(): array
+    {
+        $out = [];
+        $rows = \Config\Database::connect()->table('waste_logs l')
+            ->select('l.*, s.building')
+            ->join('waste_stations s', 's.id = l.station_id', 'left')
+            ->orderBy('l.log_date', 'DESC')->orderBy('l.id', 'DESC')
+            ->get()->getResultArray();
+        foreach ($rows as $l) {
+            $haz = (float) $l['hazardous_kg'];
+            $out[] = $this->rec(
+                'waste', $l['id'], $l['log_date'], 'Waste Watch',
+                'Waste weigh-in - ' . ($l['building'] ?? 'Station'),
+                'Non-bio ' . (float) $l['non_bio_kg'] . ' kg | Bio ' . (float) $l['bio_kg'] . ' kg | Hazardous ' . $haz . ' kg',
+                'Daily weigh-in', $l['checked_by'] ?? '',
+                $haz >= \App\Controllers\WasteController::HAZARD_LIMIT_KG ? 'High hazardous' : 'Logged'
+            );
+        }
+        return $out;
+    }
+
     // Sports Equipment Monitoring: the sports equipment itself and every borrow / return of it.
     private function sportsActivities(): array
     {
@@ -406,7 +428,7 @@ class RecordsController extends BaseController
             ];
         }
 
-        $activities = array_merge($activities, $this->assetActivities(), $this->sportsActivities(), $this->securityActivities(), $this->facilitiesActivities());
+        $activities = array_merge($activities, $this->assetActivities(), $this->sportsActivities(), $this->securityActivities(), $this->facilitiesActivities(), $this->wasteActivities());
 
         usort($activities, function ($a, $b) {
             return (strtotime($b['date'] ?? '') ?: 0) <=> (strtotime($a['date'] ?? '') ?: 0);

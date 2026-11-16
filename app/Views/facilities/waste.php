@@ -56,7 +56,33 @@ usort($rows, fn($x, $y) => ($order[$x['status']] <=> $order[$y['status']]) ?: st
       <?php if ($totals['pending'] > 0): ?>
         <button type="button" class="fac-alert-icon fac-alert-btn alert-yellow" onclick="pickStat('pending')" title="Still to weigh today" aria-label="To do today"><i class="bi bi-exclamation-triangle-fill"></i> <strong><?= (int) $totals['pending'] ?></strong></button>
       <?php endif; ?>
-      <button type="button" class="filter-btn active" id="wasteMapBtn" onclick="toggleWasteMap()" title="Show / hide the campus map" aria-label="Show or hide the campus map"><i class="bi bi-map"></i></button>
+      <div class="view-switch" data-map="#wasteMapPanel" data-list=".waste-pane" role="group" aria-label="Choose view"><button type="button" data-view="list" title="List view" aria-label="List view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-list-ul"></i></button><button type="button" data-view="grid" title="Map view" aria-label="Map view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-map"></i></button></div>
+      <button type="button" class="filter-btn active" id="wasteMapBtn" onclick="toggleWasteMap()" title="Show / hide the campus map" aria-label="Show or hide the campus map" style="display:none"><i class="bi bi-map"></i></button>
+      <div class="filter-menu-wrapper">
+        <button type="button" class="filter-btn" onclick="toggleWasteFilter(this)" title="Filter" aria-label="Open filters">
+          <i class="bi bi-funnel"></i>
+        </button>
+        <div class="filter-popup" onclick="event.stopPropagation()">
+          <div class="filter-popup-title">Filter</div>
+          <div class="filter-row">
+            <label for="wasteStatusFilter">Status</label>
+            <select id="wasteStatusFilter" onchange="setWasteStatus(this.value)">
+              <option value="">All stations</option>
+              <option value="logged">Logged</option>
+              <option value="pending">To do today</option>
+              <option value="overdue">Missed</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <label for="wasteSort">Sort by</label>
+            <select id="wasteSort" onchange="sortWasteRows()">
+              <option value="az">Building A to Z</option>
+              <option value="za">Building Z to A</option>
+              <option value="heavy">Most hazardous waste</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -340,8 +366,33 @@ function switchWasteTab(key) {
   document.querySelectorAll('.waste-pane').forEach(p => p.style.display = p.id === 'waste-' + key ? '' : 'none');
 }
 let wasteStatus = '';
+function toggleWasteFilter(button) {
+  const popup = button.parentElement.querySelector('.filter-popup');
+  const open = !popup.classList.contains('visible');
+  document.querySelectorAll('.filter-popup.visible').forEach(p => p.classList.remove('visible'));
+  popup.classList.toggle('visible', open);
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.filter-menu-wrapper')) document.querySelectorAll('.fe-toolbar-row .filter-popup.visible').forEach(p => p.classList.remove('visible'));
+});
+// Status chosen in the filter popup = same as pressing that status box.
+function setWasteStatus(v) {
+  wasteStatus = v;
+  document.querySelectorAll('.stat-card.status-pick').forEach(b => b.classList.toggle('active', !!wasteStatus && b.dataset.key === wasteStatus));
+  applyWasteFilters();
+}
+function sortWasteRows() {
+  const mode = document.getElementById('wasteSort').value;
+  const body = document.querySelector('#wasteTodayTable tbody');
+  const rows = Array.from(body.querySelectorAll('tr.waste-row'));
+  const name = r => (r.cells[0].textContent || '').trim().toLowerCase();
+  const haz = r => parseFloat((r.cells[4].textContent || '').replace(/[^0-9.]/g, '')) || 0;
+  rows.sort((a, b) => mode === 'za' ? name(b).localeCompare(name(a)) : mode === 'heavy' ? haz(b) - haz(a) || name(a).localeCompare(name(b)) : name(a).localeCompare(name(b)));
+  rows.forEach(r => body.appendChild(r));
+}
 function pickStat(key) {
   wasteStatus = (key === 'all' || key === wasteStatus) ? '' : key;
+  const sel = document.getElementById('wasteStatusFilter'); if (sel) sel.value = wasteStatus;
   document.querySelectorAll('.stat-card.status-pick').forEach(b => b.classList.toggle('active', !!wasteStatus && b.dataset.key === wasteStatus));
   switchWasteTab('today');
   applyWasteFilters();

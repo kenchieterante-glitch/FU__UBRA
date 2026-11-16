@@ -10,7 +10,7 @@ class UbraScope
 {
     // Words that clearly belong to one department. Used to refuse questions that wander into another department's area.
     private const KEYWORDS = [
-        'facilities' => ['aircon', 'air-con', 'air con', 'janitor', 'cleaning', 'repair request', 'building check', 'supplies', 'consumable', 'detergent'],
+        'facilities' => ['waste watch', 'waste', 'garbage', 'trash', 'segregation', 'aircon', 'air-con', 'air con', 'janitor', 'cleaning', 'repair request', 'building check', 'supplies', 'consumable', 'detergent'],
         'security'   => ['fire extinguisher', 'fire safety', 'smoke detector', 'fire alarm', 'exit sign', 'guard', 'key log', 'keys', 'floor plan', 'inspection'],
         'assets'     => ['vehicle', 'vehicles', 'driver', 'drivers', 'trip ticket', 'motor pool', 'gps', 'fleet', 'mechanical equipment', 'generator'],
         'sports'     => ['sports', 'basketball', 'volleyball', 'badminton', 'racket', 'soccer', 'table tennis'],
@@ -21,11 +21,12 @@ class UbraScope
     private const DEPARTMENTS = [
         'facilities' => [
             'name'   => 'Facilities Administration and General Services',
-            'scope'  => 'repair requests, aircon units and cleaning schedules, cleaning checks and zones, supplies, and the monthly building checks',
+            'scope'  => 'repair requests, aircon units and cleaning schedules, cleaning checks and zones, Waste Watch (daily bin weigh-ins and waste totals), supplies, and the monthly building checks',
             'quick'  => [
                 ['bi-clipboard2-check', 'Open repair requests', 'What repair requests are still open or urgent?'],
                 ['bi-snow2', 'Aircon due', 'Which aircon units are overdue or due for cleaning soon?'],
                 ['bi-brush', 'Cleaning progress', 'How far along are today\'s cleaning checks?'],
+                ['bi-recycle', 'Waste Watch', 'How is Waste Watch today and this month?'],
                 ['bi-box-seam', 'Supplies', 'Which supplies are out of stock?'],
             ],
         ],

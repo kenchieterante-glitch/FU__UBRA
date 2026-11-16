@@ -75,6 +75,7 @@ class UbraController extends BaseController
         // & Reports and the Calendar's "Generate Weekly Summary" already use,
         // so Mr. UBRA hands back a real, working download link.
         $reportRequest = $this->detectReportRequest($userMessage);
+        $reportRequest = $this->carryOverReport($reportRequest, (string) $userMessage, (array) $history);
         if ($reportRequest !== null) {
             return $this->replyWithReport($reportRequest, $userMessage);
         }
@@ -355,6 +356,82 @@ class UbraController extends BaseController
         return $this->chat();
     }
 
+    // Follow-ups on a report the assistant just made: "no, past 30 days", "make it excel", "last month instead".
+    // The previous report's module and format are kept, and only what the user changed is replaced.
+    private function carryOverReport(?array $req, string $message, array $history): ?array
+    {
+        $prev = null;
+        for ($i = count($history) - 1; $i >= 0; $i--) {
+            $t = $history[$i] ?? [];
+            if (($t['role'] ?? '') === 'assistant') { $prev = (string) ($t['content'] ?? ''); break; }
+        }
+        if ($prev === null || !preg_match("/Here's your (PDF|Excel|CSV) report/", $prev, $f)) return $req;
+        $prevFormat = strtolower($f[1]);
+        $prevModule = '';
+        if (preg_match('/\*\*Covers:\*\*\s*([^\n*]+)/', $prev, $c) && stripos($c[1], 'all modules') === false) {
+            $prevModule = strtolower(str_replace(' ', '-', trim($c[1])));
+        }
+
+        $m = strtolower($message);
+        if ($req !== null) {
+            // A new report request that names no module keeps the previous report's module.
+            if ($req['module'] === '') $req['module'] = $prevModule;
+            // "excel please" names no period, so keep the dates of the report it is changing.
+            [, , $named] = $this->parseDateRange($m);
+            if (!$named && preg_match('/\*\*Date range:\*\*\s*(.+?) to (.+?)(?:
+|$)/', $prev, $d) && strtotime($d[1]) && strtotime($d[2])) {
+                $req['date_from'] = date('Y-m-d', strtotime($d[1]));
+                $req['date_to']   = date('Y-m-d', strtotime($d[2]));
+            }
+            return $req;
+        }
+        // No format word: only a short message that names a period counts as "change the dates of that report".
+        [$from, $to, $explicit] = $this->parseDateRange($m);
+        $isQuestion = (bool) preg_match('/\b(how|what|which|who|when|where|why|is|are|any|show|list|tell|give)\b/', $m);
+        $hasCue     = (bool) preg_match('/\b(no|nope|instead|change|actually|make it|how about|what about|i meant|i mean|rather|please)\b/', $m);
+        if ($explicit && !$isQuestion && ($hasCue || str_word_count($m) <= 6) && str_word_count($m) <= 14) {
+            return ['format' => $prevFormat, 'module' => $prevModule, 'date_from' => $from->format('Y-m-d'), 'date_to' => $to->format('Y-m-d')];
+        }
+        return null;
+    }
+
+    // Works out the date range a message asks for. Returns [from, to, explicit]; explicit is false when the message
+    // named no period at all (a default of the last 7 days is used then).
+    private function parseDateRange(string $m): array
+    {
+        $today = new \DateTime('today');
+        $words = ['a' => 1, 'an' => 1, 'one' => 1, 'two' => 2, 'three' => 3, 'four' => 4, 'five' => 5, 'six' => 6, 'seven' => 7, 'eight' => 8,
+                  'nine' => 9, 'ten' => 10, 'twelve' => 12, 'fourteen' => 14, 'fifteen' => 15, 'twenty' => 20, 'thirty' => 30, 'sixty' => 60, 'ninety' => 90];
+        $months = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+
+        // "past 30 days", "last 2 weeks", "previous three months", "30 days"
+        if (preg_match('/\b(?:past|last|previous|within|over the last|for the last)?\s*(\d{1,3}|' . implode('|', array_keys($words)) . ')\s*(day|days|week|weeks|month|months|year|years)\b/', $m, $r)
+            && (preg_match('/\b(past|last|previous|within)\b/', $m) || ctype_digit($r[1]))) {
+            $n = ctype_digit($r[1]) ? (int) $r[1] : $words[$r[1]];
+            $unit = rtrim($r[2], 's');
+            $from = (clone $today)->modify('-' . ($unit === 'day' ? $n : ($unit === 'week' ? $n * 7 : ($unit === 'month' ? $n * 30 : $n * 365))) . ' days');
+            return [$from, clone $today, true];
+        }
+        foreach ($months as $idx => $name) {
+            if (preg_match('/\b' . $name . '\b/', $m)) {
+                $year = preg_match('/\b(20\d{2})\b/', $m, $ym) ? (int) $ym[1] : (int) date('Y');
+                $from = new \DateTime(sprintf('%04d-%02d-01', $year, $idx + 1));
+                return [$from, (clone $from)->modify('last day of this month'), true];
+            }
+        }
+        if (preg_match('/\byesterday\b/', $m)) { $d = (clone $today)->modify('-1 day'); return [$d, clone $d, true]; }
+        if (preg_match('/\btoday\b/', $m)) return [clone $today, clone $today, true];
+        if (preg_match('/\blast\s+month\b/', $m)) return [(clone $today)->modify('first day of last month'), (clone $today)->modify('last day of last month'), true];
+        if (preg_match('/\b(this\s+month|monthly|month to date)\b/', $m)) return [(clone $today)->modify('first day of this month'), clone $today, true];
+        if (preg_match('/\blast\s+year\b/', $m)) { $y = (int) date('Y') - 1; return [new \DateTime("$y-01-01"), new \DateTime("$y-12-31"), true]; }
+        if (preg_match('/\b(this\s+year|year to date|yearly|annual)\b/', $m)) return [new \DateTime(date('Y') . '-01-01'), clone $today, true];
+        if (preg_match('/\bthis\s+week\b/', $m)) return [(clone $today)->modify('monday this week'), clone $today, true];
+        if (preg_match('/\blast\s+week\b/', $m)) return [(clone $today)->modify('monday last week'), (clone $today)->modify('sunday last week'), true];
+        if (preg_match('/\b(past\s+week|weekly|week)\b/', $m)) return [(clone $today)->modify('-6 days'), clone $today, true];
+
+        return [(clone $today)->modify('-6 days'), clone $today, false];
+    }
+
     // Recognizes a request for a report/summary/export file — plain
     // keyword matching on purpose, no AI call involved, so it's instant,
     // free, and always correct rather than depending on a model to know
@@ -389,6 +466,7 @@ class UbraController extends BaseController
 
         // Same five modules Records, Archiving & Reports exports support.
         $moduleMap = [
+            'waste-watch' => ['waste watch', 'wastewatch', 'waste', 'garbage', 'trash', 'segregation', 'hazardous'],
             'vehicle'    => ['vehicle', 'vehicles', 'fleet', 'driver', 'drivers', 'trip ticket'],
             'tools'      => ['tool', 'tools', 'equipment', 'borrow', 'borrowing'],
             'safety'     => ['safety', 'maintenance', 'fire extinguisher', 'aircon', 'work order'],
@@ -406,41 +484,7 @@ class UbraController extends BaseController
             }
         }
 
-        $today = new \DateTime();
-        $months = ['january','february','march','april','may','june','july','august','september','october','november','december'];
-        $namedMonth = null;
-        foreach ($months as $idx => $monthName) {
-            if (preg_match('/\b' . $monthName . '\b/', $m)) {
-                $namedMonth = $idx + 1;
-                break;
-            }
-        }
-
-        if ($namedMonth !== null) {
-            // "the month of august" / "august 2025" — a year in the message
-            // wins; otherwise assume the current year, whether that month
-            // has already passed or not, since naming a month at all is a
-            // more specific signal than any relative default.
-            $year = (int) date('Y');
-            if (preg_match('/\b(20\d{2})\b/', $m, $ym)) {
-                $year = (int) $ym[1];
-            }
-            $from = new \DateTime(sprintf('%04d-%02d-01', $year, $namedMonth));
-            $to   = (clone $from)->modify('last day of this month');
-        } elseif (preg_match('/\btoday\b/', $m)) {
-            $from = $to = clone $today;
-        } elseif (preg_match('/\b(this|last)\s+month\b/', $m)) {
-            $from = (clone $today)->modify('first day of this month');
-            $to   = clone $today;
-        } elseif (preg_match('/\blast\s+week\b/', $m)) {
-            $from = (clone $today)->modify('-13 days');
-            $to   = (clone $today)->modify('-7 days');
-        } else {
-            // Default span when no timeframe is mentioned — matches the
-            // Calendar's "Generate Weekly Summary" default.
-            $from = (clone $today)->modify('-6 days');
-            $to   = clone $today;
-        }
+        [$from, $to] = $this->parseDateRange($m);
 
         return [
             'format'    => $format,
@@ -471,7 +515,7 @@ class UbraController extends BaseController
             'date_to'   => $req['date_to'],
         ]);
 
-        $moduleLabel = $req['module'] !== '' ? ucfirst($req['module']) : 'All modules';
+        $moduleLabel = $req['module'] !== '' ? ucwords(str_replace('-', ' ', $req['module'])) : 'All modules';
         $formatLabel = ['pdf' => 'PDF', 'excel' => 'Excel', 'csv' => 'CSV'][$req['format']];
         $niceFrom    = date('M j, Y', strtotime($req['date_from']));
         $niceTo      = date('M j, Y', strtotime($req['date_to']));
@@ -491,6 +535,30 @@ class UbraController extends BaseController
             'role'     => 'assistant',
             'download' => ['url' => $url, 'label' => "Download {$formatLabel} report"],
         ]);
+    }
+
+    // Live Waste Watch numbers, as short lines the assistant can quote.
+    private function wasteLines(): array
+    {
+        $db = \Config\Database::connect();
+        $today = date('Y-m-d');
+        $monthStart = date('Y-m-01');
+        $limit = \App\Controllers\WasteController::HAZARD_LIMIT_KG;
+        $stations = (int) $db->table('waste_stations')->where('is_archived', 0)->countAllResults();
+        $doneToday = (int) $db->query("SELECT COUNT(DISTINCT station_id) n FROM waste_logs WHERE log_date = ?", [$today])->getRow()->n;
+        $t = $db->query("SELECT COALESCE(SUM(non_bio_kg),0) nb, COALESCE(SUM(bio_kg),0) b, COALESCE(SUM(hazardous_kg),0) h FROM waste_logs WHERE log_date = ?", [$today])->getRow();
+        $m = $db->query("SELECT COALESCE(SUM(non_bio_kg),0) nb, COALESCE(SUM(bio_kg),0) b, COALESCE(SUM(hazardous_kg),0) h, COUNT(*) n FROM waste_logs WHERE log_date >= ?", [$monthStart])->getRow();
+        $top = $db->query("SELECT s.building, SUM(l.non_bio_kg + l.bio_kg + l.hazardous_kg) kg FROM waste_logs l JOIN waste_stations s ON s.id = l.station_id WHERE l.log_date >= ? GROUP BY s.building ORDER BY kg DESC LIMIT 3", [$monthStart])->getResultArray();
+        $high = (int) $db->query("SELECT COUNT(*) n FROM waste_logs WHERE log_date >= ? AND hazardous_kg >= ?", [$monthStart, $limit])->getRow()->n;
+        $lines = [
+            "Waste Watch (Facilities): {$stations} waste stations (one per building). Each day the supervisor weighs 3 bins per building: non-biodegradable, biodegradable and hazardous. Today {$doneToday}/{$stations} stations are weighed (" . ($stations - $doneToday) . " still to do).",
+            "Waste today: non-biodegradable " . round((float) $t->nb, 1) . " kg | biodegradable " . round((float) $t->b, 1) . " kg | hazardous " . round((float) $t->h, 1) . " kg.",
+            "Waste this month so far (" . date('F Y') . "): {$m->n} weigh-ins | non-biodegradable " . round((float) $m->nb, 1) . " kg | biodegradable " . round((float) $m->b, 1) . " kg | hazardous " . round((float) $m->h, 1) . " kg. Days with hazardous waste at or above {$limit} kg at one station: {$high}.",
+        ];
+        if ($top) {
+            $lines[] = 'Buildings with the most waste this month: ' . implode(', ', array_map(fn($r) => $r['building'] . ' (' . round((float) $r['kg'], 1) . ' kg)', $top)) . '.';
+        }
+        return $lines;
     }
 
     // System-wide numbers — only for the unrestricted (administrator) assistant.
@@ -517,6 +585,26 @@ class UbraController extends BaseController
         } catch (\Exception $e) {
             $ctx['error'] = 'Some context unavailable';
         }
+        // More live numbers so the assistant can answer about every module, not only the first six.
+        $ctx['extra_lines'] = [];
+        try {
+            $today = date('Y-m-d');
+            $db = \Config\Database::connect();
+            $ctx['extra_lines'] = $this->wasteLines();
+            $ctx['extra_lines'][] = 'Keys (Guard Monitoring): ' . (new \App\Models\FacilityKeyModel())->countAllResults() . ' registered keys | ' . (new \App\Models\KeyBorrowLogModel())->where('status', 'Active')->countAllResults() . ' borrowed right now | ' . (new \App\Models\KeyBorrowLogModel())->where('scan_in >=', $today . ' 00:00:00')->countAllResults() . ' key scans today. Only active staff in Personnel can borrow keys.';
+            $ctx['extra_lines'][] = 'Aircon Care (Facilities): ' . (new \App\Models\AirconUnitModel())->countAllResults() . ' units | ' . (new \App\Models\AirconUnitModel())->where('next_schedule <=', date('Y-m-d', strtotime('+7 days')))->countAllResults() . ' due or overdue within 7 days.';
+            $ctx['extra_lines'][] = 'Building Check (Facilities, ' . date('F Y') . '): ' . (int) $db->table('janitorial_inspections')->select('COUNT(DISTINCT building) AS n')->where('inspection_month', date('Y-m'))->get()->getRow()->n . ' buildings checked | ' . (new \App\Models\JanitorialInspectionModel())->where('inspection_month', date('Y-m'))->where('result', 'Urgent')->countAllResults() . ' marked Urgent.';
+            $ctx['extra_lines'][] = 'Safety Inspection (Security, ' . date('F Y') . '): ' . (new \App\Models\SafetyInspectionModel())->where('inspection_month', date('Y-m'))->countAllResults() . ' inspections recorded this month.';
+            $tm = new ToolsModel();
+            $ctx['extra_lines'][] = 'Supplies and Materials (consumable stock): ' . $tm->where('category', 'Consumable')->where('is_archived', 0)->countAllResults() . ' items | ' . (new ToolsModel())->where('category', 'Consumable')->where('is_archived', 0)->where('current_stock <= reorder_threshold', null, false)->countAllResults() . ' low or out of stock. Each supply has a stock type such as liter, box, roll, pack, bottle or cartridge.';
+            $ctx['extra_lines'][] = 'Sports equipment: ' . (new ToolsModel())->where('category', 'Sports Equipment')->where('is_archived', 0)->countAllResults() . ' items | ' . (new ToolsModel())->where('category', 'Sports Equipment')->where('availability', 'Borrowed')->countAllResults() . ' borrowed.';
+            $v = new VehicleModel();
+            $ctx['extra_lines'][] = 'Vehicles on GPS: ' . $v->where('is_archived', 0)->where('gps_status', 'Online')->countAllResults() . ' online. Trips today: ' . (new \App\Models\TravelModel())->where('travel_date', $today)->where('is_archived', 0)->countAllResults() . ' | in transit: ' . (new \App\Models\TravelModel())->where('status', 'In Transit')->countAllResults() . '.';
+            $ctx['extra_lines'][] = 'Personnel status: ' . (new PersonnelModel())->where('status', 'Active')->countAllResults() . ' active | ' . (new PersonnelModel())->where('status', 'On Leave')->countAllResults() . ' on leave | ' . (new PersonnelModel())->where('status', 'Inactive')->countAllResults() . ' inactive.';
+            $ctx['extra_lines'][] = 'Notifications: ' . (new \App\Models\NotificationModel())->where('is_read', 0)->where('priority', 'CRITICAL')->countAllResults() . ' unread critical alerts.';
+        } catch (\Throwable $e) {
+            $ctx['extra_lines'][] = '(some numbers are unavailable right now)';
+        }
         $ctx['current_date'] = date('l, F j, Y');
         $ctx['current_time'] = date('h:i A');
         $ctx['role']         = (string) ($this->session->get('role') ?? '');
@@ -540,6 +628,7 @@ class UbraController extends BaseController
                 $tasks = new \App\Models\JanitorialTaskModel();
                 $ctx['lines'][] = 'Cleaning tasks done: ' . (new \App\Models\JanitorialTaskModel())->where('is_done', 1)->countAllResults() . ' / ' . $tasks->countAllResults();
                 $ctx['lines'][] = 'Facilities supplies out of stock: ' . (new \App\Models\ConsumableInventoryModel())->where('department', 'Facilities')->where('current_stock <= 0', null, false)->countAllResults();
+                foreach ($this->wasteLines() as $wl) $ctx['lines'][] = $wl;
                 $ctx['lines'][] = 'Buildings checked this month: ' . (int) \Config\Database::connect()->table('janitorial_inspections')->select('COUNT(DISTINCT building) AS n')->where('inspection_month', $month)->get()->getRow()->n;
             } elseif ($dept === 'security') {
                 $fe = new \App\Models\FireExtinguisherModel();
@@ -607,8 +696,13 @@ class UbraController extends BaseController
             . "- Tools & Equipment: " . ($ctx['total_assets'] ?? 0) . " total | " . ($ctx['borrowed_tools'] ?? 0) . " currently borrowed\n"
             . "- Safety: " . ($ctx['overdue_fire_extinguishers'] ?? 0) . " overdue fire extinguisher inspections | " . ($ctx['open_work_orders'] ?? 0) . " open maintenance work orders\n"
             . "- Janitorial: " . ($ctx['janitorial_zones_cleaned'] ?? 0) . "/" . ($ctx['janitorial_zones_total'] ?? 0) . " zones cleaned today\n"
-            . "- Travel: " . ($ctx['pending_trip_tickets'] ?? 0) . " trip tickets awaiting dispatch/approval\n\n"
+            . "- Travel: " . ($ctx['pending_trip_tickets'] ?? 0) . " trip tickets awaiting dispatch/approval\n"
+            . (!empty($ctx['extra_lines']) ? "- " . implode("\n- ", $ctx['extra_lines']) . "\n" : '') . "\n"
             . "MODULES IN THIS SYSTEM (so you can point users to the right place):\n"
+            . "- Facilities (sidebar group) — Aircon Care, Waste Watch (daily weighing of 3 bins per building: non-biodegradable, biodegradable, hazardous; supervisors weigh and log at the end of the day), Building Check (monthly result per building), Janitorial/cleaning.\n"
+            . "- Safety and Security (sidebar group) — Fire Safety (extinguishers, smoke detectors, alarms, exit signs), Safety Inspection, Guard Monitoring (the guard lends and receives keys by scanning staff ID and key tag) and List of Keys with QR codes.\n"
+            . "- Sports Equipment and Assets (vehicles, motor pool, trip tickets, GPS) department portals.\n"
+            . "- SMS Outbox (Notifications) — every text made for staff; Simulated until an SMS gateway is connected. Voice reminders read urgent alerts aloud on the Notifications page.\n"
             . "- Dashboard — campus-wide KPI overview (pending requests, active borrowings, vehicles in use, maintenance due, cleaning completion).\n"
             . "- Personnel Management — staff records, by category (Drivers, Janitors, Carpentries Shop, Maintenance, Construction Workers), Job Order personnel, contracts.\n"
             . "- Vehicle Management — fleet records, fuel logs, fuel-need predictions; GPS Tracker (live status) and Trip Ticket (travel requests/dispatch) live under the same section.\n"

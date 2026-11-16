@@ -204,7 +204,8 @@
     <div class="fe-toolbar-actions">
     <button type="button" class="fac-alert-icon fac-alert-btn alert-red fac-blink" id="acAlertRed" onclick="toggleAlertList('ac','red')" title="Overdue aircon units" aria-label="Overdue aircon units" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="acAlertRedCount"></strong></button>
       <button type="button" class="fac-alert-icon fac-alert-btn alert-red fac-blink" id="acAlertCircle" onclick="toggleAlertList('ac','circle')" title="Aircon units overdue in 7 days" aria-label="Aircon units expiring soon" style="display:none"><i class="bi bi-exclamation-circle-fill"></i> <strong id="acAlertCircleCount"></strong></button>
-    <button type="button" class="filter-btn active" id="acMapBtn" style="" onclick="toggleAirconMap()" title="Show map" aria-label="Show map">
+    <div class="view-switch" data-map="#acMapPanel" data-list="#acListArea" role="group" aria-label="Choose view"><button type="button" data-view="list" title="List view" aria-label="List view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-list-ul"></i></button><button type="button" data-view="grid" title="Map view" aria-label="Map view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-map"></i></button></div>
+      <button type="button" class="filter-btn active" id="acMapBtn" style="display:none;" onclick="toggleAirconMap()" title="Show map" aria-label="Show map">
       <i class="bi bi-map"></i>
     </button>
     <div class="filter-menu-wrapper">
@@ -273,7 +274,7 @@
   </div>
 
   <div id="acDetail" class="guard-card" style="margin-bottom:16px;display:none;"></div>
-  <div class="table-wrap">
+  <div class="table-wrap" id="acListArea">
     <table class="sj-table">
       <thead><tr><th>Building</th><th>Floor</th><th>Unit</th><th>Condition</th><th>Last Cleaning</th><th>Next Schedule</th><th>Schedule Status</th><th>Assigned Tech</th></tr></thead>
       <tbody id="acBody">
@@ -317,7 +318,8 @@
     <div class="fe-toolbar-actions">
       <button type="button" class="fac-alert-icon fac-alert-btn alert-red fac-blink" id="cleanAlertRed" onclick="toggleAlertList('clean','red')" title="Overdue zones" aria-label="Overdue zones" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="cleanAlertRedCount"></strong></button>
       <button type="button" class="fac-alert-icon fac-alert-btn alert-yellow" id="cleanAlertYellow" onclick="toggleAlertList('clean','yellow')" title="Zones that need cleaning" aria-label="Zones that need cleaning" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="cleanAlertYellowCount"></strong></button>
-    <button type="button" class="filter-btn active" id="janMapBtn" onclick="toggleCleaningMap()" title="Show map" aria-label="Show map">
+    <div class="view-switch" data-map="#cleanMapPanel" data-list=".jan-pane" role="group" aria-label="Choose view"><button type="button" data-view="list" title="List view" aria-label="List view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-list-ul"></i></button><button type="button" data-view="grid" title="Map view" aria-label="Map view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-map"></i></button></div>
+      <button type="button" class="filter-btn active" id="janMapBtn" onclick="toggleCleaningMap()" title="Show map" aria-label="Show map" style="display:none">
       <i class="bi bi-map"></i>
     </button>
     <div class="filter-menu-wrapper">
@@ -528,7 +530,8 @@
     <div class="fe-toolbar-actions">
       <button type="button" class="fac-alert-icon fac-alert-btn alert-red fac-blink" id="bldAlertRed" onclick="toggleAlertList('bld','red')" title="Urgent buildings" aria-label="Urgent buildings" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="bldAlertRedCount"></strong></button>
       <button type="button" class="fac-alert-icon fac-alert-btn alert-yellow" id="bldAlertYellow" onclick="toggleAlertList('bld','yellow')" title="Buildings to be inspected" aria-label="Buildings to be inspected" style="display:none"><i class="bi bi-exclamation-triangle-fill"></i> <strong id="bldAlertYellowCount"></strong></button>
-      <button type="button" class="filter-btn active" id="bldMapBtn" onclick="toggleBuildingMap()" title="Show map" aria-label="Show map">
+      <div class="view-switch" data-map="#janMapPanel" data-list=".bld-monthly" role="group" aria-label="Choose view"><button type="button" data-view="list" title="List view" aria-label="List view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-list-ul"></i></button><button type="button" data-view="grid" title="Map view" aria-label="Map view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-map"></i></button></div>
+      <button type="button" class="filter-btn active" id="bldMapBtn" onclick="toggleBuildingMap()" title="Show map" aria-label="Show map" style="display:none">
         <i class="bi bi-map"></i>
       </button>
       <div class="filter-menu-wrapper">

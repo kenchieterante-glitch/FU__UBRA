@@ -122,8 +122,9 @@ $departments = $departments ?? [];
   <div class="map-bar">
     <div class="map-bar-label"><i class="bi bi-geo-alt"></i> Campus map and floor plans</div>
     <div class="map-tool-icons">
-      <button type="button" class="map-tool-btn active" id="mapToggleBtn" onclick="toggleCampusMap()" title="Show / hide the campus map" aria-label="Show or hide the campus map"><i class="bi bi-map"></i></button>
-      <a class="map-tool-btn" href="<?= base_url('safety/floor-plans') ?>" title="Floors — open the floor plans" aria-label="Open the floor plans"><i class="bi bi-layers"></i></a>
+      <div class="view-switch" data-map="#mapSection" data-list="#feListCard" role="group" aria-label="Choose view"><button type="button" data-view="list" title="List view" aria-label="List view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-list-ul"></i></button><button type="button" data-view="grid" title="Map view" aria-label="Map view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-map"></i></button><a class="vs-link" href="<?= base_url('safety/floor-plans') ?>" title="Floors - open the floor plans" aria-label="Open the floor plans"><i class="bi bi-layers"></i></a></div>
+      <button type="button" class="map-tool-btn active" id="mapToggleBtn" onclick="toggleCampusMap()" title="Show / hide the campus map" aria-label="Show or hide the campus map" style="display:none"><i class="bi bi-map"></i></button>
+      <a class="map-tool-btn" style="display:none" href="<?= base_url('safety/floor-plans') ?>" title="Floors — open the floor plans" aria-label="Open the floor plans"><i class="bi bi-layers"></i></a>
     </div>
   </div>
   <!-- ── OPTIONAL MAP: opened with the Map icon above the equipment list ── -->
@@ -151,7 +152,6 @@ $departments = $departments ?? [];
           <button type="button" class="map-legend-btn" id="mapLegendBtn" onclick="toggleMapLegend()" aria-label="Toggle legend">
             <i class="bi bi-funnel"></i> Legend
           </button>
-            <button type="button" class="map-close-side map-close-icon" onclick="toggleCampusMap()" title="Close the map" aria-label="Close the map"><i class="bi bi-x-lg"></i></button>
           </div>
           <div class="map-legend-popup" id="mapLegendPopup">
             <div class="map-legend" id="legendFe">
@@ -217,7 +217,7 @@ $departments = $departments ?? [];
 
   <!-- ── EQUIPMENT LISTS: fire extinguishers, smoke detectors, fire exits ──── -->
   <?php helper('facilities'); $registerTabs = $register_tabs ?? []; ?>
-  <div class="guard-card" style="padding:18px;margin-bottom:16px;">
+  <div class="guard-card" id="feListCard" style="padding:18px;margin-bottom:16px;">
     <div class="reg-head">
       <div class="dp-section-title" style="margin:0;"><i class="bi bi-list-ul"></i> Fire Safety Equipment List</div>
     </div>
