@@ -30,6 +30,19 @@
     white-space: nowrap;
 }
 
+/* Stock column: number right-aligned, unit left-aligned, badge in its own
+   column, so the numbers, units and badges each line up in a straight
+   vertical line whatever the unit is. */
+.stock-cell {
+    display: grid;
+    grid-template-columns: 34px 92px;
+    align-items: center;
+    column-gap: .4rem;
+}
+.stock-cell .stock-num { text-align: right; font-weight: 700; }
+.stock-cell .stock-unit { text-align: left; font-weight: 600; white-space: nowrap; }
+.stock-cell .inv-badge { margin-left: 0; justify-self: start; text-align: center; min-width: 84px; }
+
 .inv-ok {
     background: #dcfce7;
     color: #166534;
@@ -474,3 +487,6 @@
     .modal-box-wide { max-width: 94vw; }
     .form-grid2 { grid-template-columns: 1fr; }
 }
+
+/* Stock column shows just the status badge; quantity and unit are in the details pop-up. */
+.inv-badge.stock-only { margin-left: 0; min-width: 92px; text-align: center; }

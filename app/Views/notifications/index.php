@@ -21,6 +21,11 @@
                     <i class="bi bi-check2-all"></i> Mark All Read
                 </button>
             </form>
+            <?php if (strtolower((string) session()->get('role')) === 'administrator'): ?>
+            <a href="<?= base_url('notifications/sms-outbox') ?>" class="btn-outline">
+                <i class="bi bi-chat-text"></i> SMS Outbox
+            </a>
+            <?php endif; ?>
             <a href="<?= base_url('notifications/export') ?>" class="btn-outline">
                 <i class="bi bi-download"></i> Export Log
             </a>
@@ -372,6 +377,13 @@ $draft_count = $draft_count ?? 0;
             <?php endforeach; ?>
           </optgroup>
         <?php endif; ?>
+        <?php if (!empty($otherStaff)): ?>
+          <optgroup label="Other Staff">
+            <?php foreach ($otherStaff as $o): ?>
+              <option value="<?= esc($o['name'], 'attr') ?>"><?= esc($recipientLabel($o)) ?></option>
+            <?php endforeach; ?>
+          </optgroup>
+        <?php endif; ?>
         <?php if (!empty($fireInspectors)): ?>
           <optgroup label="Fire Extinguisher Inspectors">
             <?php foreach ($fireInspectors as $f): ?>
@@ -386,6 +398,10 @@ $draft_count = $draft_count ?? 0;
         <option value="MODERATE">Moderate</option>
         <option value="CRITICAL">Critical</option>
       </select>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:500;cursor:pointer;">
+        <input type="checkbox" id="cmText" style="width:auto;margin:0;"> Also text this person when the message is sent
+      </label>
+      <div style="font-size:12px;color:#111;margin:4px 0 0 26px;">Works when you pick a person (not a group). Saved in the SMS Outbox; really sent once an SMS gateway is connected.</div>
       <div class="modal-actions">
         <button type="button" class="btn-secondary" onclick="closeComposeModal()">Cancel</button>
         <button type="submit" class="btn-approve"><i class="bi bi-save2"></i> Save Draft</button>
@@ -456,6 +472,33 @@ function filterNotifByStat(kind) {
     if (kind === 'draft')    statDraftOnly = true;
 
     filterTable();
+    speakStatSummary(kind);
+}
+
+// Clicking a status box reads the group aloud (only when Voice Reminders is on in Settings).
+// A click is a user gesture, so the browser always allows the sound here.
+function speakStatSummary(kind) {
+    let on = false;
+    try { on = localStorage.getItem('fu_voice') === '1'; } catch (e) {}
+    if (!on || !('speechSynthesis' in window)) return;
+    const rows = Array.from(document.querySelectorAll('#notifTable tbody .notif-row:not(.filtered-out)'));
+    const names = { unread: 'Unread', today: 'Today', upcoming: 'Upcoming', draft: 'Drafts' };
+    const critical = rows.filter(r => r.dataset.pri === 'CRITICAL');
+    let text = (names[kind] || 'Notifications') + ': ' + rows.length + ' notification' + (rows.length === 1 ? '' : 's') + '.';
+    if (critical.length) {
+        text += ' ' + critical.length + ' critical. ';
+        text += critical.slice(0, 3).map(r => {
+            const cat = (r.querySelector('td:nth-child(2)') || {}).textContent || '';
+            const desc = (r.querySelector('.desc-cell') || {}).textContent || '';
+            return (cat.trim() ? cat.trim() + '. ' : '') + desc.trim();
+        }).join('. Next. ');
+    }
+    try {
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(String(text).replace(/\bU\.?B\.?R\.?A\.?\b/gi, 'Oobrah'));
+        u.lang = 'en-US'; u.rate = 0.95;
+        speechSynthesis.speak(u);
+    } catch (e) {}
 }
 
 document.querySelectorAll('.stat-card-clickable').forEach(card => {
@@ -661,6 +704,7 @@ document.getElementById('composeForm').addEventListener('submit', function (e) {
     fd.append('description', description);
     fd.append('recipient', document.getElementById('cmRecipient').value.trim());
     fd.append('priority', document.getElementById('cmPriority').value);
+    fd.append('text_sms', document.getElementById('cmText').checked ? '1' : '0');
 
     fetch(SAVE_DRAFT_URL, { method: 'POST', headers: csrfHeaders(), body: fd })
         .then(r => r.json())
@@ -680,8 +724,8 @@ async function sendDraftMsg(id, btn) {
         .then(r => r.json())
         .then(res => {
             if (!res.success) throw new Error(res.message || 'Could not send that message.');
-            showToast('Message sent.');
-            setTimeout(() => window.location.reload(), 500);
+            showToast(res.sms ? 'Message sent. ' + res.sms : 'Message sent.');
+            setTimeout(() => window.location.reload(), res.sms ? 2500 : 500);
         })
         .catch(err => {
             btn.disabled = false;

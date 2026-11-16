@@ -397,4 +397,53 @@ class PersonnelController extends BaseController
 
         return redirect()->to('/personnel')->with('success', 'Personnel archived.');
     }
+
+    // POST /personnel/test-sms/{id} - sends one short test text to that person's saved number through the Android SMS gateway.
+    public function testSms($id)
+    {
+        if (!session()->get('isLoggedIn')) return $this->response->setStatusCode(401)->setJSON(['ok' => false, 'message' => 'Please sign in.']);
+        if (strtolower((string) session()->get('role')) !== 'administrator') {
+            return $this->response->setStatusCode(403)->setJSON(['ok' => false, 'message' => 'Only the administrator can send test texts.']);
+        }
+        $person = $this->personnelModel->find($id);
+        if (!$person) return $this->response->setStatusCode(404)->setJSON(['ok' => false, 'message' => 'Person not found.']);
+        $result = (new \App\Libraries\SmsGateway())->deliver((int) $person['id'], $person['full_name'], $person['contact_number'] ?? '', 'FU-UBRA test message for ' . $person['full_name'] . '. The SMS alert is working. You can ignore this.', 'Test');
+        $this->logActivity('Personnel', 'Test SMS (' . $result['mode'] . ') for ' . $person['full_name']);
+        return $this->response->setJSON($result);
+    }
+
+    // POST /personnel/test-telegram/{id} - links any new "/start <employee id>" chats, then sends a test Telegram message.
+    public function testTelegram($id)
+    {
+        if (!session()->get('isLoggedIn')) return $this->response->setStatusCode(401)->setJSON(['ok' => false, 'message' => 'Please sign in.']);
+        if (strtolower((string) session()->get('role')) !== 'administrator') {
+            return $this->response->setStatusCode(403)->setJSON(['ok' => false, 'message' => 'Only the administrator can send test messages.']);
+        }
+        $person = $this->personnelModel->find($id);
+        if (!$person) return $this->response->setStatusCode(404)->setJSON(['ok' => false, 'message' => 'Person not found.']);
+
+        $bot = new \App\Libraries\TelegramBot();
+        if (!$bot->isConfigured()) return $this->response->setJSON(['ok' => false, 'message' => 'Telegram is not set up yet. Add telegram.botToken to the .env file.']);
+
+        // Pick up everyone who has sent "/start <employee id>" to the bot since last time.
+        $sync = $bot->collectLinks();
+        if ($sync['ok']) {
+            foreach ($sync['links'] as $empId => $chatId) {
+                $p = $this->personnelModel->where('emp_id', $empId)->first();
+                if ($p && ($p['telegram_chat_id'] ?? '') !== $chatId) {
+                    $this->personnelModel->update($p['id'], ['telegram_chat_id' => $chatId]);
+                    if ((int) $p['id'] === (int) $id) $person['telegram_chat_id'] = $chatId;
+                }
+            }
+        }
+
+        if (trim((string) ($person['telegram_chat_id'] ?? '')) === '') {
+            $botName = $bot->username();
+            return $this->response->setJSON(['ok' => false, 'message' => $person['full_name'] . ' has not linked Telegram yet. Ask them to open ' . ($botName !== '' ? 't.me/' . $botName : 'the FU-UBRA bot') . ' in Telegram, press Start, and send:  /start ' . $person['emp_id'] . '   Then press this button again.']);
+        }
+
+        $result = $bot->send($person['telegram_chat_id'], 'FU-UBRA test message for ' . $person['full_name'] . ". Telegram alerts are working. You can ignore this.");
+        $this->logActivity('Personnel', ($result['ok'] ? 'Test Telegram sent to ' : 'Test Telegram failed for ') . $person['full_name']);
+        return $this->response->setJSON($result);
+    }
 }

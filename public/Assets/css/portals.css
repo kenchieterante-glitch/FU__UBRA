@@ -342,7 +342,7 @@ body.portal-lobby .portal-card h2 {
 }
 
 body.portal-lobby .portal-desc {
-    color: #8a8a94;
+    color: #111;
 }
 
 body.portal-lobby .portal-covers {
@@ -608,7 +608,7 @@ body.portal-lobby .portal-card h2 {
     text-shadow: none;
 }
 body.portal-lobby .portal-desc {
-    color: #6b6b75;
+    color: #111;
     text-shadow: none;
 }
 body.portal-lobby .portal-covers {

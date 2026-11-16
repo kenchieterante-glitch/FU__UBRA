@@ -741,8 +741,10 @@
           </select>
         </div>
         <div class="fg">
-          <label>Unit</label>
-          <input type="text" name="unit" placeholder="Liters / Pieces / Rolls">
+          <label>Unit / Type of Stock</label>
+          <select name="unit">
+            <?php foreach (['Liters','Gallons','Bottles','Boxes','Packs','Rolls','Pieces','Sets','Cans','Kilograms'] as $u): ?><option><?= $u ?></option><?php endforeach; ?>
+          </select>
         </div>
         <div class="fg">
           <label>Current Stock</label>

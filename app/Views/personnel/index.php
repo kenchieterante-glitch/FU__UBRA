@@ -238,6 +238,12 @@ $personnelStatCards = [
                     <div class="edit-field">
                       <label>Contact Number</label>
                       <input type="tel" name="contact_number" value="<?= esc($p['contact_number'] ?? '') ?>" placeholder="e.g. 0917 123 4567">
+                      <?php if (strtolower((string) session()->get('role')) === 'administrator'): ?>
+                      <button type="button" class="btn-secondary" style="margin-top:6px;" onclick="sendTestSms(<?= (int) $p['id'] ?>, this)"><i class="bi bi-chat-dots"></i> Send test SMS (save the number first)</button>
+                      <?php endif; ?>
+                      <?php if (strtolower((string) session()->get('role')) === 'administrator'): ?>
+                      <button type="button" class="btn-secondary" style="margin-top:6px;" onclick="sendTestTelegram(<?= (int) $p['id'] ?>, this)"><i class="bi bi-telegram"></i> Send test Telegram <?= !empty($p['telegram_chat_id']) ? '(linked)' : '(not linked yet)' ?></button>
+                      <?php endif; ?>
                     </div>
                     <div class="edit-field">
                       <label>Department</label>
@@ -637,6 +643,37 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 });
+
+// Sends one test text to the person's saved number (administrator only) through the Android SMS gateway.
+async function sendTestSms(id, btn) {
+  const original = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = 'Sending...';
+  try {
+    const res = await fetch('<?= base_url('personnel/test-sms') ?>/' + id, { method: 'POST', headers: csrfHeaders() });
+    const data = await res.json();
+    alert(data.message || 'Done.');
+  } catch (e) {
+    alert('Could not send. Check your connection and try again.');
+  } finally {
+    btn.disabled = false; btn.innerHTML = original;
+  }
+}
+
+// Sends one test Telegram message (administrator only). Links any new "/start <employee id>" chats first.
+async function sendTestTelegram(id, btn) {
+  const original = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = 'Sending...';
+  try {
+    const res = await fetch('<?= base_url('personnel/test-telegram') ?>/' + id, { method: 'POST', headers: csrfHeaders() });
+    const data = await res.json();
+    alert(data.message || 'Done.');
+    if (data.ok) location.reload();
+  } catch (e) {
+    alert('Could not send. Check your internet connection and try again.');
+  } finally {
+    btn.disabled = false; btn.innerHTML = original;
+  }
+}
 </script>
 
 <!-- ADD MODAL -->

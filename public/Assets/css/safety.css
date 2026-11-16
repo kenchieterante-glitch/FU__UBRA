@@ -715,7 +715,7 @@
 }
 
 .leg-dot.jan-prog {
-    background: var(--muted);
+    background: #8a8a94;
 }
 
 .leg-dot.jan-pend {
@@ -1049,7 +1049,7 @@
 
 .dp-status-box {
     border: 1px solid var(--bdr);
-    border-left: 4px solid var(--muted);
+    border-left: 4px solid #8a8a94;
     border-radius: 10px;
     padding: .7rem .8rem;
     margin-bottom: .8rem;
@@ -1489,7 +1489,7 @@
 }
 
 .btn-scan-out {
-    background: var(--muted);
+    background: #8a8a94;
 }
 
 .btn-scan:hover {
@@ -2641,7 +2641,7 @@
 
 .fac-map-legend .map-pass { background: var(--green); }
 .fac-map-legend .map-fail { background: var(--red); }
-.fac-map-legend .map-none { background: var(--muted); }
+.fac-map-legend .map-none { background: #8a8a94; }
 
 .fe-toolbar-actions {
     display: flex;
@@ -2888,16 +2888,16 @@ tr.row-blink td {
 }
 .fp-btn:hover { background: #5e0b14; }
 .fp-btn.secondary { background: #fff; color: #7b0f1a; border: 1px solid #7b0f1a; }
-.fp-hint { color: #777; font-size: 13px; }
+.fp-hint { color: #111; font-size: 13px; }
 .fp-edit { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
-.fp-field label { display:block; font-size:12px; color:#777; margin-bottom:4px; }
+.fp-field label { display:block; font-size:12px; color:#111; margin-bottom:4px; }
 .fp-field select { width:100%; height:38px; padding:0 12px; border:1px solid #d0d0d0; border-radius:8px; background:#fff; font-size:14px; font-family:inherit; }
 .fp-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
 .fp-dialog-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:100000; }
 .fp-dialog { background:#fff; border-radius:14px; padding:26px 28px 22px; width:min(380px,90vw); text-align:center; box-shadow:0 12px 40px rgba(0,0,0,.3); }
 .fp-dialog-icon { width:52px; height:52px; margin:0 auto 12px; border-radius:50%; background:#fdeaea; color:#c62828; display:flex; align-items:center; justify-content:center; font-size:24px; }
 .fp-dialog h4 { margin:0 0 6px; font-size:18px; color:#222; }
-.fp-dialog p { margin:0 0 20px; color:#666; font-size:14px; }
+.fp-dialog p { margin:0 0 20px; color:#111; font-size:14px; }
 .fp-dialog-actions { display:flex; gap:10px; justify-content:center; }
 .fp-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#2e7d32; color:#fff; padding:10px 20px; border-radius:8px; font-size:14px; font-weight:600; z-index:100001; box-shadow:0 4px 14px rgba(0,0,0,.25); }
 .fp-toast.bad { background:#c62828; }
@@ -2913,9 +2913,9 @@ tr.row-blink td {
 .tt-modal { background:#fff; border-radius:14px; width:min(560px,100%); max-height:85vh; overflow:auto; box-shadow:0 12px 40px rgba(0,0,0,.3); }
 .tt-modal-head { display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-bottom:1px solid #eee; }
 .tt-modal-head h3 { margin:0; font-size:17px; color:#7b0f1a; }
-.tt-modal-x { border:0; background:none; font-size:26px; line-height:1; color:#888; cursor:pointer; }
+.tt-modal-x { border:0; background:none; font-size:26px; line-height:1; color:#111; cursor:pointer; }
 .tt-modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px 22px; padding:20px 22px 24px; }
-.tt-k { font-size:12px; color:#777; margin-bottom:3px; }
+.tt-k { font-size:12px; color:#111; margin-bottom:3px; }
 .tt-v { font-size:14px; font-weight:600; color:#222; word-break:break-word; }
 @media (max-width:520px) { .tt-modal-grid { grid-template-columns:1fr; } }
 .fp-controls #fpPlaceBtn { margin-left:auto; }
@@ -2954,7 +2954,7 @@ table.sup-table td, table.sup-table th { overflow-wrap: anywhere; }
 .fb-ok { background: #e6f4ea; color: #1e7e34; }
 .fb-warn { background: #fff4cc; color: #8a6100; }
 .fb-bad { background: #fde7e7; color: #c62828; }
-.fb-none { color: #aaa; }
+.fb-none { color: #111; }
 
 /* Map / Floors icon buttons beside the building dropdown on the Maintenance page */
 .map-tool-icons { display: inline-flex; gap: 8px; margin-left: 10px; vertical-align: middle; }
@@ -3012,7 +3012,7 @@ table.sup-table td, table.sup-table th { overflow-wrap: anywhere; }
 .fd-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
 .fd-title { font-weight: 800; color: #7b0f1a; font-size: 16px; }
 .fd-sub { font-size: 12px; color: #111; margin-top: 2px; }
-.fd-x { border: 0; background: #eee; border-radius: 8px; width: 30px; height: 28px; cursor: pointer; color: #555; }
+.fd-x { border: 0; background: #eee; border-radius: 8px; width: 30px; height: 28px; cursor: pointer; color: #111; }
 .fd-banner { margin: 12px 0; padding: 10px 12px; border-radius: 8px; font-size: 12.5px; color: #111; border-left: 3px solid #bbb; background: #f6f6f8; }
 .fd-banner strong { display: block; color: #7b0f1a; margin-bottom: 2px; }
 .fd-ok { background: #e6f4ea; border-left-color: #1e7e34; }

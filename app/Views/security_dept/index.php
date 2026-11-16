@@ -778,7 +778,7 @@ function fpDraw() {
   const legend = document.createElement('div');
   legend.style.cssText = 'position:absolute;left:1px;right:1px;top:1px;padding:.6em .8em;background:#fff;pointer-events:none;white-space:nowrap;overflow:hidden;line-height:1.3;font-family:Arial,sans-serif;color:#111;font-weight:600;';
   legend.innerHTML = [dot('#2e7d32') + 'Working', dot('#f9a825') + 'Due soon', dot('#d32f2f') + 'Needs repair / missing / expired']
-    .concat(fpTypes.map(t => '<b>' + fpLetter[t] + '</b> = ' + esc(t))).join('<span style="margin:0 .7em;color:#bbb;">|</span>');
+    .concat(fpTypes.map(t => '<b>' + fpLetter[t] + '</b> = ' + esc(t))).join('<span style="margin:0 .7em;color:#111;">|</span>');
   layer.appendChild(legend);
   // Shrink the text until the whole line fits the frame width (never cropped).
   const fit = () => {

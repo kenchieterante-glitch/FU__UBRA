@@ -64,6 +64,16 @@
                             <span class="slider"></span>
                         </label>
                     </div>
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-label"><i class="bi bi-volume-up-fill"></i> Voice Reminders</div>
+                            <div class="toggle-sub">Reads urgent (critical) alerts aloud and repeats every 30 minutes until they are dealt with. Works on the Notifications page only. Saved on this device only.</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="voiceSetting">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                 </div>
 
                 <form method="post" action="<?= base_url('settings/saveGeneral') ?>">
@@ -506,6 +516,19 @@
 </div>
 
 <script>
+// Voice reminders switch (read by the Notifications page)
+(function () {
+    const box = document.getElementById('voiceSetting');
+    if (!box) return;
+    try { box.checked = localStorage.getItem('fu_voice') === '1'; } catch (e) {}
+    box.addEventListener('change', () => {
+        try { localStorage.setItem('fu_voice', box.checked ? '1' : '0'); } catch (e) {}
+        if ('speechSynthesis' in window) {
+            speechSynthesis.cancel();
+            if (box.checked) speechSynthesis.speak(new SpeechSynthesisUtterance('Voice reminders are on.'));
+        }
+    });
+})();
 // ── Tab switching ──────────────────────────────────────────────
 function switchTab(id) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));

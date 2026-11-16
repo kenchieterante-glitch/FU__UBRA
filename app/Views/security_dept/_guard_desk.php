@@ -20,7 +20,7 @@
       .gd-link:hover { text-decoration: underline; }
       .gd-ready { font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
       .gd-ready i { font-size: 9px; }
-      .gd-ready.wait { color: #6b7280; }   /* nothing scanned yet */
+      .gd-ready.wait { color: #111; }   /* nothing scanned yet */
       .gd-ready.click { color: #b45309; }  /* the scan box is not selected */
       .gd-ready.ok { color: #1e7e34; }     /* a real scanner has been detected */
       @media (max-width: 800px) { .gd-grid { grid-template-columns: 1fr; } }

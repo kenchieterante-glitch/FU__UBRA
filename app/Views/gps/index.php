@@ -953,7 +953,7 @@ function initFleetMap() {
 
 function fleetPopupHtml(v) {
     return '<strong>' + esc(v.plate) + '</strong> — ' + esc(v.name) + '<br>'
-        + (v.online ? '<span style="color:#15803d">● Online</span>' : '<span style="color:#6b7280">● Offline (last known position)</span>') + '<br>'
+        + (v.online ? '<span style="color:#15803d">● Online</span>' : '<span style="color:#111">● Offline (last known position)</span>') + '<br>'
         + 'Speed: ' + esc(String(v.speed || 0)) + ' km/h<br>'
         + 'Status: ' + esc(v.availability) + '<br>'
         + (v.updated ? 'Updated ' + esc(timeAgoJS(v.updated)) + '<br>' : '')

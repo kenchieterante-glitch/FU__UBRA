@@ -199,8 +199,12 @@ helper('facilities');
             </div>
             <?php if ($t['category'] === 'Consumable'): ?>
               <div class="fg">
-                <label>Unit</label>
-                <input type="text" name="unit" list="toolUnitOptions" value="<?= esc($t['unit'] ?? 'pcs') ?>" placeholder="e.g. rolls, bottles, pcs">
+                <label>Unit / Type of Stock</label>
+                <?php $curUnit = (string) ($t['unit'] ?? 'pcs'); $unitOpts = ['pcs'=>'Pieces (pcs)','liter'=>'Liter','gallon'=>'Gallon','bottle'=>'Bottle','box'=>'Box','pack'=>'Pack','roll'=>'Roll','set'=>'Set','pair'=>'Pair','can'=>'Can','kg'=>'Kilogram (kg)','ream'=>'Ream','cartridge'=>'Cartridge']; ?>
+                <select name="unit">
+                  <?php if (!isset($unitOpts[$curUnit])): ?><option value="<?= esc($curUnit) ?>" selected><?= esc($curUnit) ?></option><?php endif; ?>
+                  <?php foreach ($unitOpts as $uv => $ul): ?><option value="<?= $uv ?>" <?= $curUnit === $uv ? 'selected' : '' ?>><?= $ul ?></option><?php endforeach; ?>
+                </select>
               </div>
             <?php endif; ?>
             <div class="fg">
@@ -296,7 +300,8 @@ function openToolDetail(id) {
         <div class="detail-row"><span>Custodian</span><strong>${esc(t.custodian)}</strong></div>
         <div class="detail-row"><span>Condition</span><strong>${esc(t.condition)}</strong></div>
         <div class="detail-row"><span>Availability</span><strong>${esc(t.availability)}</strong></div>
-        ${t.unit ? `<div class="detail-row"><span>Stock</span><strong>${esc(t.unit)}</strong></div>` : ''}
+        ${t.unitType ? `<div class="detail-row"><span>Type of Stock</span><strong>${esc(t.unitType)}</strong></div>
+        <div class="detail-row"><span>Stock Left</span><strong>${esc(t.stockQty)} ${esc(t.unitType)}</strong></div>` : ''}
       </div>
     </div>
 
@@ -637,8 +642,10 @@ function makeToolQrPdf() {
           </select>
         </div>
         <div class="fg" id="addUnitField" style="display:none">
-          <label>Unit</label>
-          <input type="text" name="unit" list="toolUnitOptions" placeholder="e.g. rolls, bottles, pcs">
+          <label>Unit / Type of Stock</label>
+          <select name="unit">
+            <?php foreach (['pcs'=>'Pieces (pcs)','liter'=>'Liter','gallon'=>'Gallon','bottle'=>'Bottle','box'=>'Box','pack'=>'Pack','roll'=>'Roll','set'=>'Set','pair'=>'Pair','can'=>'Can','kg'=>'Kilogram (kg)','ream'=>'Ream','cartridge'=>'Cartridge'] as $uv => $ul): ?><option value="<?= $uv ?>"><?= $ul ?></option><?php endforeach; ?>
+          </select>
         </div>
         <div class="fg">
           <label>Location</label>

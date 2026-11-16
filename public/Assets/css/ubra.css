@@ -487,3 +487,16 @@
         max-width: 90%;
     }
 }
+
+/* Voice: mic button, listening pulse, hint line, header toggle */
+.ubra-mic-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 42px; border: 1px solid var(--ubra-accent); border-radius: 10px;
+    background: #fff; color: var(--ubra-accent); font-size: 17px; cursor: pointer;
+}
+.ubra-mic-btn:hover { background: #f6eaea; }
+.ubra-mic-btn.listening { background: #b3261e; border-color: #b3261e; color: #fff; animation: ubraMicPulse 1.1s infinite; }
+@keyframes ubraMicPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(179,38,30,.45); } 50% { box-shadow: 0 0 0 8px rgba(179,38,30,0); } }
+.ubra-voice-hint { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 11.5px; color: #111; margin-top: 6px; }
+#speakToggle.active { background: var(--ubra-accent); color: #fff; }
+

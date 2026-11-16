@@ -24,8 +24,7 @@
           $stockBadge = $stockQty <= 0 ? ['inv-out', 'Out of Stock'] : ($stockQty <= $reorderLevel ? ['inv-low', 'Low Stock'] : ['inv-ok', 'Full Stock']);
         ?>
         <td>
-          <strong><?= esc((string) $stockQty) ?> <?= esc($unitLabel) ?></strong>
-          <span class="inv-badge <?= $stockBadge[0] ?>"><?= $stockBadge[1] ?></span>
+          <span class="inv-badge stock-only <?= $stockBadge[0] ?>"><?= $stockBadge[1] ?></span>
         </td>
       <?php endif; ?>
       <td>

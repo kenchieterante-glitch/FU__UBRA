@@ -400,7 +400,7 @@
 .act-completed { color: var(--success); }
 .act-cancelled { color: var(--danger); }
 .act-generated { color: #7c3aed; }
-.act-archived { color: #6b7280; }
+.act-archived { color: #111; }
 .act-disposed { color: #4b5563; }
 
 /* Status pill */
@@ -419,7 +419,7 @@
 .stat-completed { background: #dcfce7; color: #166534; }
 .stat-cancelled { background: #fee2e2; color: #991b1b; }
 .stat-generated { background: #ede9fe; color: #6b21a8; }
-.stat-archived { background: #f3f4f6; color: #6b7280; }
+.stat-archived { background: #f3f4f6; color: #111; }
 .stat-disposed { background: #e5e7eb; color: #374151; }
 
 .rec-view-btn {

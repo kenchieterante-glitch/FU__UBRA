@@ -34,6 +34,21 @@ class NotificationController extends BaseController
         $rows = array_merge($all, $drafts);
         usort($rows, fn($a, $b) => strcmp($b['created_at'] ?? '', $a['created_at'] ?? ''));
 
+        $supervisorList = $this->getCoSupervisors();
+        $driverList     = $this->getPersonnelByPosition('Driver');
+        $maintList      = $this->getPersonnelByPosition('Maintenance');
+        $janitorList    = $this->getPersonnelByPosition(['Janitor', 'Cleaning']);
+        // Everyone else on the active list (office staff, guards, ...) so any person can be picked as a recipient.
+        $listed = array_flip(array_map('strtolower', array_merge(
+            array_column($supervisorList, 'name'), array_column($driverList, 'name'),
+            array_column($maintList, 'name'), array_column($janitorList, 'name')
+        )));
+        $otherStaff = array_values(array_filter(
+            array_map(fn($p) => ['name' => $p['full_name'], 'position' => $p['position'], 'contactNumber' => $p['contact_number'] ?? ''],
+                (new PersonnelModel())->where('is_archived', 0)->where('status !=', 'Inactive')->orderBy('full_name', 'ASC')->findAll()),
+            fn($p) => !isset($listed[strtolower($p['name'])])
+        ));
+
         $data = [
             'title'          => 'Notification Center',
             'notifications'  => $rows,
@@ -42,11 +57,12 @@ class NotificationController extends BaseController
             'today_done_count' => count(array_filter($todaysAlerts, fn($n) => ($n['status'] ?? 'Pending') !== 'Pending')),
             'upcoming_count' => count(array_filter($all, fn($n) => strtolower($n['priority'] ?? '') === 'routine')),
             'draft_count'    => count($drafts),
-            'supervisors'    => $this->getCoSupervisors(),
+            'supervisors'    => $supervisorList,
+            'otherStaff'     => $otherStaff,
             'fireInspectors' => $this->getFireExtinguisherInspectors(),
-            'drivers'        => $this->getPersonnelByPosition('Driver'),
-            'maintenanceStaff' => $this->getPersonnelByPosition('Maintenance'),
-            'janitors'       => $this->getPersonnelByPosition(['Janitor', 'Cleaning']),
+            'drivers'        => $driverList,
+            'maintenanceStaff' => $maintList,
+            'janitors'       => $janitorList,
         ];
 
         return view('notifications/index', $data);
@@ -172,7 +188,7 @@ class NotificationController extends BaseController
             'recipient'   => trim((string) $this->request->getPost('recipient')) ?: 'Operations Team',
             'priority'    => $priority,
             'status'      => 'Draft',
-            'channel'     => 'system',
+            'channel'     => $this->request->getPost('text_sms') === '1' ? 'sms' : 'system', // 'sms' = also text the person on send
             'is_read'     => 1,
             'created_at'  => date('Y-m-d H:i:s'),
         ]);
@@ -195,7 +211,26 @@ class NotificationController extends BaseController
             'created_at' => date('Y-m-d H:i:s'),
         ]);
         $this->logActivity('Notifications', 'Sent message to ' . ($row['recipient'] ?? 'recipient'));
-        return $this->response->setJSON(['success' => true]);
+
+        // "Also text this person": only when a single person was picked (a group such as Operations Team has no phone).
+        $smsNote = null;
+        if (($row['channel'] ?? '') === 'sms') {
+            $person = (new PersonnelModel())->where('full_name', $row['recipient'])->where('is_archived', 0)->first();
+            if ($person) {
+                $text = 'FU-UBRA' . (($row['category'] ?? '') !== '' ? ' - ' . $row['category'] : '') . ': ' . $row['description'];
+                $r = (new \App\Libraries\SmsGateway())->deliver((int) $person['id'], $person['full_name'], $person['contact_number'] ?? '', $text, 'Notification message');
+                $smsNote = $r['message'];
+                // Real delivery: Telegram, when the bot is set up and the person has linked it.
+                $bot = new \App\Libraries\TelegramBot();
+                if ($bot->isConfigured()) {
+                    $t = $bot->notifyPerson($person, $text);
+                    $smsNote .= ' Telegram: ' . $t['message'];
+                }
+            } else {
+                $smsNote = 'No text made: "' . $row['recipient'] . '" is a group, not one person.';
+            }
+        }
+        return $this->response->setJSON(['success' => true, 'sms' => $smsNote]);
     }
 
     public function deleteDraft($id)
@@ -271,9 +306,24 @@ class NotificationController extends BaseController
         // Newest-first, capped small — the frontend only needs enough to pop
         // a toast per notification it hasn't shown yet, not the full list.
         $latest = array_slice(array_values($unread), 0, 10);
+        // Missed = CRITICAL and still not acted on (Pending / Notified). Opening or reading one does NOT silence the
+        // voice alarm; only an action (Verify, Approve, Assign, Dismiss...) does. Capped, newest first.
+        $critical = array_slice(array_values(array_filter(
+            NotificationModel::scopeToRole($this->notifModel->getAllSorted(), $role),
+            fn($n) => strtoupper($n['priority'] ?? '') === 'CRITICAL'
+                && in_array(strtolower((string) ($n['status'] ?? '')), ['pending', 'notified', ''], true)
+        )), 0, 20);
+        $shape = fn($n) => [
+            'id'          => (int) $n['id'],
+            'category'    => $n['category'] ?? 'Notification',
+            'description' => $n['description'] ?? '',
+            'priority'    => strtoupper($n['priority'] ?? 'ROUTINE'),
+            'created_at'  => $n['created_at'] ?? null,
+        ];
 
         return $this->response->setJSON([
             'count'  => count($unread),
+            'critical' => array_map($shape, $critical),
             'latest' => array_map(fn($n) => [
                 'id'          => (int) $n['id'],
                 'category'    => $n['category'] ?? 'Notification',
@@ -298,5 +348,21 @@ class NotificationController extends BaseController
         }
         fclose($out);
         exit;
+    }
+
+    // GET /notifications/sms-outbox - every text the system sent or would send (administrator only).
+    public function smsOutbox()
+    {
+        if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
+        if (strtolower((string) $this->session->get('role')) !== 'administrator') return redirect()->to('/notifications');
+
+        $rows = db_connect()->table('sms_outbox')->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')->limit(200)->get()->getResultArray();
+        return view('notifications/sms_outbox', [
+            'title'      => 'SMS Outbox',
+            'pageCss'    => 'notifications.css',
+            'showTopbar' => true,
+            'rows'       => $rows,
+            'live'       => (new \App\Libraries\SmsGateway())->isConfigured(),
+        ]);
     }
 }

@@ -102,7 +102,7 @@
         .auth-card p {
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             font-weight: 500;
-            color: #666;
+            color: #111;
         }
 
         .auth-card label {

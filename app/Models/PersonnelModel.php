@@ -9,7 +9,7 @@ class PersonnelModel extends Model
     protected $useTimestamps = false;
     protected $allowedFields = [
         'emp_id','user_id','full_name','email','contact_number','department_id','employment_type',
-        'position','assigned_task','status','is_archived','archived_at','created_at'
+        'telegram_chat_id','position','assigned_task','status','is_archived','archived_at','created_at'
     ];
 
     // Active personnel whose position matches one or more keywords (e.g.

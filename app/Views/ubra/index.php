@@ -15,6 +15,7 @@
         <p class="ubra-subtext"><span class="pulse-dot"></span> Operations assistant &middot; online</p>
       </div>
       <div class="ubra-header-actions">
+        <button type="button" class="ubra-clear-btn" id="speakToggle" onclick="toggleSpeakReplies()" title="Read Mr. UBRA's answers aloud" aria-pressed="false"><i class="bi bi-volume-mute" id="speakIcon"></i> Voice replies</button>
         <button type="button" class="ubra-clear-btn" onclick="openChatHistory()">History</button>
         <button type="button" class="ubra-clear-btn" onclick="clearChat()">Clear</button>
       </div>
@@ -64,11 +65,13 @@
           onkeydown="handleKey(event)"
           oninput="clearInputError()"
         >
+        <button type="button" class="ubra-mic-btn" id="micBtn" onclick="toggleMic()" title="Speak your question" aria-label="Speak your question" style="display:none"><i class="bi bi-mic-fill"></i></button>
         <button type="button" class="ubra-send-btn" id="sendBtn" onclick="sendMessage()">
           Send <i class="bi bi-arrow-right"></i>
         </button>
       </div>
       <div class="ubra-input-error" id="inputError">Type a message before sending.</div>
+      <div class="ubra-voice-hint" id="voiceHint" style="display:none"></div>
     </div>
 
   </div>
@@ -96,6 +99,85 @@ const HISTORY_URL       = '<?= base_url('ubra/history') ?>';
 const CLEAR_HISTORY_URL = '<?= base_url('ubra/clearHistory') ?>';
 const CURRENT_USER_INITIAL = '<?= strtoupper(substr(session()->get("full_name") ?? "U", 0, 1)) ?>';
 
+// ── Voice: speak your question (mic) and hear the answer (Voice replies) ─────────
+// Typing keeps working exactly as before; the mic is an extra choice. Uses the
+// browser's built-in speech features (Chrome / Edge), so no extra service is needed.
+let speakReplies = false, askedByVoice = false, lastVoiceText = '', recognizer = null, listening = false;
+try { speakReplies = localStorage.getItem('ubra_speak') === '1'; } catch (e) {}
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function paintSpeakToggle() {
+    const b = document.getElementById('speakToggle'); if (!b) return;
+    b.setAttribute('aria-pressed', speakReplies ? 'true' : 'false');
+    document.getElementById('speakIcon').className = 'bi ' + (speakReplies ? 'bi-volume-up-fill' : 'bi-volume-mute');
+    b.title = speakReplies ? 'Voice replies ON - click to turn off' : 'Voice replies OFF - click to turn on';
+    b.classList.toggle('active', speakReplies);
+}
+function toggleSpeakReplies() {
+    speakReplies = !speakReplies;
+    try { localStorage.setItem('ubra_speak', speakReplies ? '1' : '0'); } catch (e) {}
+    paintSpeakToggle();
+    if (speakReplies) speakText('Voice replies are on.'); else stopSpeaking();
+}
+// Say "UBRA" as a word (oo-bra), not letter by letter.
+function sayable(t) { return String(t).replace(/\bU\.?B\.?R\.?A\.?\b/gi, 'Oobrah').replace(/\bFU[- ]?Oobrah\b/g, 'F U Oobrah'); }
+function stopSpeaking() { try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {} }
+function speakText(text) {
+    if (!('speechSynthesis' in window)) return;
+    const plain = String(text)
+        .replace(/```[\s\S]*?```/g, ' ')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/[*_#>`|]/g, ' ')
+        .replace(/\s+/g, ' ').trim()
+        .slice(0, 600); // keep spoken answers short
+    if (!plain) return;
+    try {
+        stopSpeaking();
+        const u = new SpeechSynthesisUtterance(sayable(plain));
+        u.lang = 'en-US'; u.rate = 0.97;
+        speechSynthesis.speak(u);
+    } catch (e) {}
+}
+function voiceHint(msg) {
+    const h = document.getElementById('voiceHint'); if (!h) return;
+    h.textContent = msg || ''; h.style.display = msg ? 'block' : 'none';
+}
+function toggleMic() {
+    if (!SpeechRec || isLoading) return;
+    if (listening) { try { recognizer.stop(); } catch (e) {} return; }
+    stopSpeaking();
+    recognizer = new SpeechRec();
+    recognizer.lang = 'en-US';
+    recognizer.interimResults = true;
+    recognizer.maxAlternatives = 1;
+    let finalText = '';
+    const input = document.getElementById('chatInput');
+    recognizer.onstart = () => { listening = true; document.getElementById('micBtn').classList.add('listening'); voiceHint('Listening... speak your question.'); };
+    recognizer.onresult = (e) => {
+        let interim = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+            const t = e.results[i][0].transcript;
+            if (e.results[i].isFinal) finalText += t; else interim += t;
+        }
+        input.value = (finalText + interim).trim();
+    };
+    recognizer.onerror = (e) => {
+        const msgs = { 'not-allowed': 'Microphone is blocked. Allow it in the browser address bar, or just type.', 'service-not-allowed': 'Microphone is blocked. Allow it in the browser address bar, or just type.', 'no-speech': 'I did not hear anything. Try again or type.', 'audio-capture': 'No microphone found. You can still type.', 'network': 'Voice needs an internet connection. You can still type.' };
+        voiceHint(msgs[e.error] || 'Voice did not work. You can still type.');
+    };
+    recognizer.onend = () => {
+        listening = false; document.getElementById('micBtn').classList.remove('listening');
+        const said = (finalText || input.value).trim();
+        if (said) { voiceHint(''); lastVoiceText = said; sendMessage(said); }
+    };
+    try { recognizer.start(); } catch (e) { voiceHint('Voice did not start. You can still type.'); }
+}
+(function initVoice() {
+    paintSpeakToggle();
+    if (!SpeechRec) { voiceHint('Voice input needs Chrome or Edge. You can still type.'); return; }
+    document.getElementById('micBtn').style.display = '';
+})();
+
 // ── Send message ───────────────────────────────────────────────
 async function sendMessage(overrideText = null) {
     const input   = document.getElementById('chatInput');
@@ -108,6 +190,8 @@ async function sendMessage(overrideText = null) {
     if (isLoading) return;
 
     clearInputError();
+    stopSpeaking();
+    askedByVoice = !!overrideText && overrideText === lastVoiceText; // a spoken question gets a spoken answer
     appendMessage('user', message);
     chatHistory.push({ role: 'user', content: message });
     input.value = '';
@@ -125,6 +209,7 @@ async function sendMessage(overrideText = null) {
 
         appendMessage('assistant', reply, data.download || null);
         chatHistory.push({ role: 'assistant', content: reply });
+        if (speakReplies || askedByVoice) speakText(reply);
 
     } catch (err) {
         appendMessage('assistant', 'Connection error. Please check your network and try again.');

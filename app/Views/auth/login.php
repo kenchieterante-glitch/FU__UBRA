@@ -82,7 +82,7 @@
 .auth-input-wrap i.auth-input-icon {
     position: absolute;
     left: 14px;
-    color: #999;
+    color: #111;
     font-size: 15px;
     pointer-events: none;
 }
@@ -114,7 +114,7 @@
     right: 12px;
     background: none;
     border: none;
-    color: #999;
+    color: #111;
     cursor: pointer;
     font-size: 15px;
     padding: 4px;
@@ -193,7 +193,7 @@
     text-align: center;
     margin-top: 24px;
     font-size: 12.5px;
-    color: #999;
+    color: #111;
 }
 </style>
 

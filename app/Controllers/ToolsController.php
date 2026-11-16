@@ -218,6 +218,8 @@ class ToolsController extends BaseController
                 'unit'        => $t['category'] === 'Consumable'
                     ? ((float) ($t['current_stock'] ?? 0) . ' ' . ($t['unit'] ?: 'pcs') . ' in stock')
                     : null,
+                'unitType'    => $t['category'] === 'Consumable' ? ucfirst((string) ($t['unit'] ?: 'pcs')) : null,
+                'stockQty'    => $t['category'] === 'Consumable' ? (string) ((float) ($t['current_stock'] ?? 0) + 0) : null,
                 'timesBorrowed' => count($history),
                 'history' => array_map(function ($h) use ($t, $returnModel) {
                     // A borrow can be returned across more than one "Mark

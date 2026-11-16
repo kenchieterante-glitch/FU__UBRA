@@ -830,7 +830,7 @@ input:checked+.slider::before {
 
 .code-label {
     font-size: .7rem;
-    color: #9ca3af;
+    color: #111;
     margin-bottom: .3rem;
     text-transform: uppercase;
 }

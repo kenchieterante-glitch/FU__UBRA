@@ -265,6 +265,18 @@ class TravelController extends BaseController
                 'created_at'  => date('Y-m-d H:i:s'),
             ]);
 
+            // Text the driver too (real SMS when a gateway is connected, otherwise saved in the SMS Outbox as Simulated).
+            (new \App\Libraries\SmsGateway())->deliver(
+                (int) $driver['id'], $driver['full_name'], $driver['contact_number'] ?? '',
+                "FU-UBRA: Trip {$trip['trip_id']} to {$trip['destination']} on " . date('M j', strtotime($trip['travel_date'])) . ' is assigned to you. Report to the gate for dispatch.',
+                'Trip assignment'
+            );
+
+            $bot = new \App\Libraries\TelegramBot();
+            if ($bot->isConfigured()) {
+                $bot->notifyPerson($driver, "FU-UBRA: Trip {$trip['trip_id']} to {$trip['destination']} on " . date('M j', strtotime($trip['travel_date'])) . ' is assigned to you. Report to the gate for dispatch.');
+            }
+
             $redirect = $redirect->with('ticket_sent', [
                 'trip_id'     => $trip['trip_id'],
                 'driver'      => $driver['full_name'],

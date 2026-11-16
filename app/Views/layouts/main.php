@@ -704,7 +704,7 @@ document.querySelectorAll('.flash-toast').forEach(toast => {
 // very first poll on a fresh browser only primes the seen-list rather than
 // dumping every existing unread notification as toasts at once.
 (function () {
-  const POLL_MS   = 25000;
+  const POLL_MS   = 3000;
   const SEEN_KEY  = 'ubra_notif_seen_ids';
   const stack     = document.getElementById('notifToastStack');
   const bellBadge = document.getElementById('topbarBellBadge');
@@ -766,6 +766,49 @@ document.querySelectorAll('.flash-toast').forEach(toast => {
     return d.innerHTML;
   }
 
+  // ---- Voice reminders: only on the Notifications hub page (the toggle exists only there), only for CRITICAL unread alerts, repeated every 30 minutes until dealt with.
+  const VOICE_REPEAT_MS = 30 * 60 * 1000;
+  // Only the Notifications hub speaks; the on/off switch lives in Settings (saved on this device).
+  const onNotifHub = /\/notifications\/?$/.test(location.pathname);
+  const voiceRole = <?= json_encode(!in_array(strtolower((string) session()->get('role')), ['guard', 'janitorial'], true)) ?>;
+  const canSpeak = onNotifHub && voiceRole && 'speechSynthesis' in window;
+  let queuedSpeech = null;
+  function voiceOn() { try { return localStorage.getItem('fu_voice') === '1'; } catch (e) { return false; } }
+  function sayable(t) { return String(t).replace(/\bU\.?B\.?R\.?A\.?\b/gi, 'Oobrah').replace(/\bFU[- ]?Oobrah\b/g, 'F U Oobrah'); }
+  function speak(text) {
+    if (!canSpeak) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(sayable(text));
+      u.lang = 'en-US'; u.rate = 0.95;
+      u.onerror = (e) => { if (e.error === 'not-allowed') queuedSpeech = text; }; // browser wants a click first
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  if (canSpeak) {
+    // After a page reload the browser blocks sound until the user touches the page; speak the waiting reminder then.
+    ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => {
+      if (queuedSpeech && voiceOn()) { const t = queuedSpeech; queuedSpeech = null; speak(t); }
+    }, true));
+  }
+  function voiceRemind(latest) {
+    if (!canSpeak || !voiceOn()) return;
+    let spoken = {};
+    try { spoken = JSON.parse(localStorage.getItem('fu_voice_spoken') || '{}'); } catch (e) {}
+    const now = Date.now();
+    const urgent = latest.filter(n => n.priority === 'CRITICAL');
+    const due = urgent.filter(n => !spoken[n.id] || now - spoken[n.id] >= VOICE_REPEAT_MS);
+    // Forget notifications that are no longer unread, so the list stays small.
+    Object.keys(spoken).forEach(id => { if (!urgent.some(n => String(n.id) === id)) delete spoken[id]; });
+    if (due.length) {
+      const first = due.slice(0, 2).map(n => (n.category || 'Notification') + '. ' + (n.description || '')).join('. Next. ');
+      const more = due.length > 2 ? ' And ' + (due.length - 2) + ' more urgent item' + (due.length - 2 === 1 ? '' : 's') + '.' : '';
+      speak('Reminder. ' + due.length + ' urgent item' + (due.length === 1 ? '' : 's') + ' need' + (due.length === 1 ? 's' : '') + ' action. ' + first + '.' + more);
+      due.forEach(n => { spoken[n.id] = now; });
+    }
+    try { localStorage.setItem('fu_voice_spoken', JSON.stringify(spoken)); } catch (e) {}
+  }
+
   async function poll() {
     try {
       const res = await fetch('<?= base_url('notifications/unreadCount') ?>', { headers: csrfHeaders() });
@@ -776,6 +819,7 @@ document.querySelectorAll('.flash-toast').forEach(toast => {
 
       const seen = getSeen();
       const latest = Array.isArray(data.latest) ? data.latest : [];
+      voiceRemind(Array.isArray(data.critical) ? data.critical : latest);
       if (!primed) {
         // First run on a fresh browser: just remember what's already unread,
         // don't pop a wall of toasts for notifications that predate this tab.
