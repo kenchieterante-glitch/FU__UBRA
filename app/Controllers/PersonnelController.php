@@ -6,6 +6,7 @@ use App\Models\PersonnelModel;
 use App\Models\DepartmentModel;
 use App\Models\JobOrderModel;
 use App\Libraries\JobOrderAssignmentService;
+use App\Libraries\PersonnelScope;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -85,6 +86,27 @@ class PersonnelController extends BaseController
             'title'       => 'Carpentries Shop',
             'pageCss'     => 'personnel.css',
             'personnel'   => $this->personnelModel->getByPositionKeyword('Carpenter') ?: [],
+            'departments' => $this->departmentModel->findAll(),
+        ], $this->getStatCounts());
+
+        return view('personnel/index', $data);
+    }
+
+    public function security()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $data = array_merge([
+            'title'       => 'Security',
+            'pageCss'     => 'personnel.css',
+            'personnel'   => $this->personnelModel->where('is_archived', 0)
+                                                  ->groupStart()
+                                                      ->like('position', 'Security')
+                                                      ->orLike('position', 'Guard')
+                                                  ->groupEnd()
+                                                  ->findAll() ?: [],
             'departments' => $this->departmentModel->findAll(),
         ], $this->getStatCounts());
 
@@ -174,8 +196,8 @@ class PersonnelController extends BaseController
         }
 
         $person = $this->personnelModel->getWithDetails((int) $id);
-        if (!$person) {
-            return redirect()->to('/personnel')->with('error', 'Personnel record not found.');
+        if (!$person || !PersonnelScope::allowsPosition((string) session()->get('role'), $person['position'] ?? null)) {
+            return $this->personnelReturn()->with('error', 'Personnel record not found.');
         }
 
         $assignmentModel = new \App\Models\PersonnelAssignmentModel();
@@ -302,7 +324,7 @@ class PersonnelController extends BaseController
         }
 
         $person = $this->personnelModel->getWithDetails((int) $id);
-        if (!$person) {
+        if (!$person || !PersonnelScope::allowsPosition((string) session()->get('role'), $person['position'] ?? null)) {
             return $this->response->setStatusCode(404)->setJSON(['error' => 'Not found']);
         }
 
@@ -348,6 +370,14 @@ class PersonnelController extends BaseController
         ]);
     }
 
+    /** After add/edit/archive: the full list for unscoped roles, the page they came from for category-scoped ones. */
+    private function personnelReturn()
+    {
+        return PersonnelScope::categoriesFor((string) session()->get('role')) === null
+            ? redirect()->to('/personnel')
+            : redirect()->back();
+    }
+
     private function getStatCounts(): array
     {
         return [
@@ -367,6 +397,12 @@ class PersonnelController extends BaseController
                                                               ->groupEnd()
                                                               ->countAllResults(),
             'construction_count'    => $this->personnelModel->where('is_archived', 0)->like('position', 'Construction')->countAllResults(),
+            'security_count'        => $this->personnelModel->where('is_archived', 0)
+                                                              ->groupStart()
+                                                                  ->like('position', 'Security')
+                                                                  ->orLike('position', 'Guard')
+                                                              ->groupEnd()
+                                                              ->countAllResults(),
             'job_order_count'       => $this->personnelModel->where('is_archived', 0)->where('employment_type', 'JobOrder')->countAllResults(),
             'active_count'          => $this->personnelModel->where('is_archived', 0)->where('status', 'Active')->countAllResults(),
             'on_leave_count'        => $this->personnelModel->where('is_archived', 0)->where('status', 'On Leave')->countAllResults(),
@@ -376,7 +412,7 @@ class PersonnelController extends BaseController
 
     public function add()
     {
-        if ($resp = $this->requirePersonnelManager()) return $resp;
+        if ($resp = $this->requirePersonnelManager($this->request->getPost('position'))) return $resp;
 
         $empId = trim((string) $this->request->getPost('emp_id'));
 
@@ -401,12 +437,13 @@ class PersonnelController extends BaseController
         }
         $this->logActivity('Personnel', "Added personnel {$name} ({$empId})");
 
-        return redirect()->to('/personnel')->with('success', 'Personnel added successfully.');
+        return $this->personnelReturn()->with('success', 'Personnel added successfully.');
     }
 
     public function edit($id)
     {
-        if ($resp = $this->requirePersonnelManager()) return $resp;
+        $existing = $this->personnelModel->find($id);
+        if ($resp = $this->requirePersonnelManager($existing['position'] ?? null, $this->request->getPost('position'))) return $resp;
 
         $empId = trim((string) $this->request->getPost('emp_id'));
 
@@ -431,19 +468,20 @@ class PersonnelController extends BaseController
         }
         $this->logActivity('Personnel', "Updated personnel {$name} (#{$id})");
 
-        return redirect()->to('/personnel')->with('success', 'Personnel updated successfully.');
+        return $this->personnelReturn()->with('success', 'Personnel updated successfully.');
     }
 
     public function delete($id)
     {
-        if ($resp = $this->requirePersonnelManager()) return $resp;
+        $existing = $this->personnelModel->find($id);
+        if ($resp = $this->requirePersonnelManager($existing['position'] ?? null)) return $resp;
 
         $this->personnelModel->update($id, [
             'is_archived' => 1,
             'archived_at' => date('Y-m-d H:i:s'),
         ]);
 
-        return redirect()->to('/personnel')->with('success', 'Personnel archived.');
+        return $this->personnelReturn()->with('success', 'Personnel archived.');
     }
 
     // POST /personnel/test-sms/{id} - sends one short test text to that person's saved number through the Android SMS gateway.

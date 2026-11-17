@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\QrSheetPdf;
+use App\Libraries\ToolsScope;
 use App\Models\ToolsModel;
 use App\Models\BorrowModel;
 use App\Models\NotificationModel;
@@ -57,6 +58,9 @@ class ToolsController extends BaseController
         }
 
         $category = $this->request->getGet('category') ?: null;
+        if (!ToolsScope::allowsCategory($this->userRole(), $category)) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Not allowed']);
+        }
         $data = $this->buildToolsData($category);
         $data['rows_html'] = view('Tools/_rows', [
             'toolList' => $data['tools'],
@@ -185,6 +189,18 @@ class ToolsController extends BaseController
         ]);
     }
 
+    /** Redirect when the role is limited to some tool categories (ToolsScope) and any of these is outside them. */
+    private function denyOutsideToolScope(?string ...$categories)
+    {
+        foreach ($categories as $category) {
+            if (!ToolsScope::allowsCategory($this->userRole(), $category)) {
+                return redirect()->back()->withInput()->with('error', 'You can only manage tools in your own categories.');
+            }
+        }
+
+        return null;
+    }
+
     private function categoryView(string $category)
     {
         if (!session()->get('isLoggedIn')) {
@@ -265,6 +281,7 @@ class ToolsController extends BaseController
 
         $images   = json_decode((string) $this->request->getPost('images'), true) ?: [];
         $category = trim((string) $this->request->getPost('category'));
+        if ($resp = $this->denyOutsideToolScope($category)) return $resp;
         $only     = trim((string) $this->request->getPost('only'));
 
         $builder = $this->toolsModel->where('is_archived', 0)->where('asset_code IS NOT NULL')->where("asset_code <> ''");
@@ -306,6 +323,7 @@ class ToolsController extends BaseController
 
     public function add()
     {
+        if ($resp = $this->denyOutsideToolScope($this->request->getPost('category'))) return $resp;
         $custodianName = $this->request->getPost('custodian_id') ?? $this->request->getPost('custodian');
         $name = $this->request->getPost('asset_name');
 
@@ -327,6 +345,7 @@ class ToolsController extends BaseController
 
     public function edit($id)
     {
+        if ($resp = $this->denyOutsideToolScope($this->toolsModel->find($id)['category'] ?? null, $this->request->getPost('category'))) return $resp;
         $custodianName = $this->request->getPost('custodian_id') ?? $this->request->getPost('custodian');
         $name = $this->request->getPost('asset_name');
 
@@ -392,6 +411,7 @@ class ToolsController extends BaseController
         // Server-side double-booking guard — a tool that's already borrowed
         // can't be borrowed again by someone else, regardless of what the UI shows.
         $tool = $this->toolsModel->find($toolId);
+        if ($resp = $this->denyOutsideToolScope($tool['category'] ?? null)) return $resp;
         if (!$tool || $tool['availability'] !== 'Available') {
             return redirect()->to('/tools')->with('error', 'That tool is not available to borrow right now.');
         }
@@ -444,6 +464,7 @@ class ToolsController extends BaseController
     public function returnTool($toolId)
     {
         $tool = $this->toolsModel->find($toolId);
+        if ($resp = $this->denyOutsideToolScope($tool['category'] ?? null)) return $resp;
         if (!$tool) {
             return redirect()->to('/tools')->with('error', 'Tool not found.');
         }

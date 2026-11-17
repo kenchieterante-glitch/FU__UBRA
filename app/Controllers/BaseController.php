@@ -102,10 +102,10 @@ abstract class BaseController extends Controller
             'sports'     => '/sports-dept',
             'tools'      => '/tools-dashboard',
             'facilities' => '/facilities',
-            'janitorial' => '/janitorial-dashboard',
+            'janitorial' => '/facilities/waste',
             'safety'     => '/safety',
             'guard'      => '/guard-station',
-            'personnel & tools' => '/personnel',
+            'personnel & tools' => '/tools/power-tools',
             default      => '/dashboard',
         };
     }
@@ -124,11 +124,25 @@ abstract class BaseController extends Controller
         return null;
     }
 
-    /** Like requireAdmin(), but the Personnel & Tools role may also add, edit and delete personnel. */
-    protected function requirePersonnelManager()
+    /**
+     * Like requireAdmin(), but roles limited to some Personnel categories
+     * (PersonnelScope) may also add, edit and archive personnel in those
+     * categories. Pass the position(s) involved: the existing record's and,
+     * for add/edit, the submitted one.
+     */
+    protected function requirePersonnelManager(?string ...$positions)
     {
-        if (!$this->isAdmin() && strtolower($this->userRole()) !== 'personnel & tools') {
+        $role = $this->userRole();
+        if ($this->isAdmin()) {
+            return null;
+        }
+        if (\App\Libraries\PersonnelScope::categoriesFor($role) === null) {
             return redirect()->back()->with('error', 'You do not have permission to perform this action.');
+        }
+        foreach ($positions as $position) {
+            if (!\App\Libraries\PersonnelScope::allowsPosition($role, $position)) {
+                return redirect()->back()->withInput()->with('error', 'You can only manage personnel in your own categories.');
+            }
         }
 
         return null;

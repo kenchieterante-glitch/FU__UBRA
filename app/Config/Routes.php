@@ -116,6 +116,7 @@ $routes->get ('personnel/janitors',  'PersonnelController::janitors');
 $routes->get ('personnel/carpentries','PersonnelController::carpentries');
 $routes->get ('personnel/maintenance','PersonnelController::maintenance');
 $routes->get ('personnel/construction-workers','PersonnelController::constructionWorkers');
+$routes->get ('personnel/security',  'PersonnelController::security');
 $routes->post('personnel/add',       'PersonnelController::add');
 $routes->post('personnel/add/',      'PersonnelController::add');
 $routes->post('personnel/edit/(:num)','PersonnelController::edit/$1');

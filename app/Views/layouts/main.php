@@ -148,8 +148,11 @@
       $isGuardDesk           = $userRole === 'guard';
       $isPersonnelToolsHead  = $userRole === 'personnel & tools';
       $isFullAccess          = !$isGuardDesk && !$isSecurityHead && !$isToolsHead && !$isFacilitiesSupervisor && !$isJanitorialSupervisor && !$isAssetsHead && !$isSportsHead && !$isPersonnelToolsHead;
+      // Personnel tabs this role may use (null = all of them) — App\Libraries\PersonnelScope.
+      $personnelCategories   = \App\Libraries\PersonnelScope::categoriesFor($userRole);
+      $showPersonnelMenu     = $isFullAccess || $isFacilitiesSupervisor || $personnelCategories !== null;
       $dashboardUrl          = $isGuardDesk ? 'guard-station'
-        : ($isPersonnelToolsHead ? 'personnel'
+        : ($isPersonnelToolsHead ? 'tools-dashboard'
         : ($isSecurityHead ? 'security-dept'
         : ($isSportsHead ? 'sports-dept'
         : ($isAssetsHead ? 'assets-dept'
@@ -160,6 +163,7 @@
     <nav class="sidebar-nav">
       <?php if ($isGuardDesk): ?>
       <a href="<?= base_url('guard-station') ?>" class="active" data-tooltip="Guard Station"><i class="bi bi-shield-check"></i> <span class="nav-label">Guard Station</span></a>
+      <?php elseif ($isJanitorialSupervisor || $isPersonnelToolsHead): /* land on a module tab; no dashboard of their own */ ?>
       <?php else: ?>
       <a href="<?= base_url($dashboardUrl) ?>" class="<?= navActive($dashboardUrl) ?>" data-tooltip="Dashboard"><i class="bi bi-grid-1x2"></i> <span class="nav-label">Dashboard</span></a>
       <?php endif; ?>
@@ -231,21 +235,26 @@
         </div>
       </div>
       <?php endif; ?>
-      <?php if ($isFullAccess || $isFacilitiesSupervisor || $isPersonnelToolsHead): ?>
-      <?php $isPersonnelSection = $currentUri === 'personnel' || strpos($currentUri, 'personnel/') === 0; ?>
+      <?php if ($showPersonnelMenu): ?>
+      <?php
+        $isPersonnelSection = $currentUri === 'personnel' || strpos($currentUri, 'personnel/') === 0;
+        $canSeePersonnelTab = fn(string $category) => $personnelCategories === null || in_array($category, $personnelCategories, true);
+        $personnelHomeUrl   = $personnelCategories === null ? 'personnel' : \App\Libraries\PersonnelScope::CATEGORY_ROUTES[$personnelCategories[0]];
+      ?>
       <div class="nav-parent-group <?= $isPersonnelSection ? 'open' : '' ?>">
-        <a href="<?= base_url('personnel') ?>" class="nav-parent-link <?= $isPersonnelSection ? 'active open' : '' ?>" data-personnel-toggle data-tooltip="Personnel Management">
+        <a href="<?= base_url($personnelHomeUrl) ?>" class="nav-parent-link <?= $isPersonnelSection ? 'active open' : '' ?>" data-personnel-toggle data-tooltip="Personnel Management">
           <i class="bi bi-people"></i>
           <span class="nav-label">Personnel Management</span>
           <i class="bi bi-chevron-down nav-parent-caret"></i>
         </a>
         <div class="nav-submenu" id="personnel-submenu">
-          <a href="<?= base_url('personnel') ?>" class="<?= navActive('personnel') ?>"><i class="bi bi-people-fill"></i> <span class="nav-label">All Personnel</span></a>
-          <a href="<?= base_url('personnel/drivers') ?>" class="<?= navActive('personnel/drivers') ?>"><i class="bi bi-person-vcard-fill"></i> <span class="nav-label">Drivers</span></a>
-          <a href="<?= base_url('personnel/janitors') ?>" class="<?= navActive('personnel/janitors') ?>"><i class="bi bi-brush"></i> <span class="nav-label">Janitors</span></a>
-          <a href="<?= base_url('personnel/carpentries') ?>" class="<?= navActive('personnel/carpentries') ?>"><i class="bi bi-hammer"></i> <span class="nav-label">Carpentries Shop</span></a>
-          <a href="<?= base_url('personnel/maintenance') ?>" class="<?= navActive('personnel/maintenance') ?>"><i class="bi bi-wrench"></i> <span class="nav-label">Maintenance</span></a>
-          <a href="<?= base_url('personnel/construction-workers') ?>" class="<?= navActive('personnel/construction-workers') ?>"><i class="bi bi-cone-striped"></i> <span class="nav-label">Construction Workers</span></a>
+          <?php if ($personnelCategories === null): ?><a href="<?= base_url('personnel') ?>" class="<?= navActive('personnel') ?>"><i class="bi bi-people-fill"></i> <span class="nav-label">All Personnel</span></a><?php endif; ?>
+          <?php if ($canSeePersonnelTab('drivers')): ?><a href="<?= base_url('personnel/drivers') ?>" class="<?= navActive('personnel/drivers') ?>"><i class="bi bi-person-vcard-fill"></i> <span class="nav-label">Drivers</span></a><?php endif; ?>
+          <?php if ($canSeePersonnelTab('janitors')): ?><a href="<?= base_url('personnel/janitors') ?>" class="<?= navActive('personnel/janitors') ?>"><i class="bi bi-brush"></i> <span class="nav-label">Janitors</span></a><?php endif; ?>
+          <?php if ($canSeePersonnelTab('carpentries')): ?><a href="<?= base_url('personnel/carpentries') ?>" class="<?= navActive('personnel/carpentries') ?>"><i class="bi bi-hammer"></i> <span class="nav-label">Carpentries Shop</span></a><?php endif; ?>
+          <?php if ($canSeePersonnelTab('maintenance')): ?><a href="<?= base_url('personnel/maintenance') ?>" class="<?= navActive('personnel/maintenance') ?>"><i class="bi bi-wrench"></i> <span class="nav-label">Maintenance</span></a><?php endif; ?>
+          <?php if ($canSeePersonnelTab('construction')): ?><a href="<?= base_url('personnel/construction-workers') ?>" class="<?= navActive('personnel/construction-workers') ?>"><i class="bi bi-cone-striped"></i> <span class="nav-label">Construction Workers</span></a><?php endif; ?>
+          <?php if ($canSeePersonnelTab('security')): ?><a href="<?= base_url('personnel/security') ?>" class="<?= navActive('personnel/security') ?>"><i class="bi bi-shield-check"></i> <span class="nav-label">Security</span></a><?php endif; ?>
         </div>
       </div>
       <?php endif; ?>
@@ -266,19 +275,23 @@
       <?php endif; ?>
 
       <?php if ($isFullAccess || $isToolsHead || $isFacilitiesSupervisor || $isPersonnelToolsHead): ?>
-      <?php $isToolsSection = $currentUri === 'tools' || strpos($currentUri, 'tools/') === 0; ?>
+      <?php
+        $isToolsSection   = $currentUri === 'tools' || strpos($currentUri, 'tools/') === 0;
+        $toolCategories   = \App\Libraries\ToolsScope::categoriesFor($userRole); // null = every Tools tab
+        $canSeeToolsTab   = fn(?string $category) => $toolCategories === null || ($category !== null && in_array($category, $toolCategories, true));
+      ?>
       <div class="nav-parent-group <?= $isToolsSection ? 'open' : '' ?>">
-        <a href="<?= base_url('tools') ?>" class="nav-parent-link <?= $isToolsSection ? 'active open' : '' ?>" data-tools-toggle data-tooltip="Tools Management">
+        <a href="<?= base_url(\App\Libraries\ToolsScope::homeFor($userRole)) ?>" class="nav-parent-link <?= $isToolsSection ? 'active open' : '' ?>" data-tools-toggle data-tooltip="Tools Management">
           <i class="bi bi-tools"></i>
           <span class="nav-label">Tools Management</span>
           <i class="bi bi-chevron-down nav-parent-caret"></i>
         </a>
         <div class="nav-submenu" id="tools-submenu">
-          <a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="bi bi-boxes"></i> <span class="nav-label">All Tools</span></a>
-          <a href="<?= base_url('tools/power-tools') ?>" class="<?= navActive('tools/power-tools') ?>"><i class="bi bi-lightning-fill"></i> <span class="nav-label">Power Tools</span></a>
-          <a href="<?= base_url('tools/consumable') ?>" class="<?= navActive('tools/consumable') ?>"><i class="bi bi-box-seam-fill"></i> <span class="nav-label">Supplies &amp; Materials</span></a>
-          <a href="<?= base_url('tools/sports-equipment') ?>" class="<?= navActive('tools/sports-equipment') ?>"><i class="bi bi-trophy-fill"></i> <span class="nav-label">Sports Equipment</span></a>
-          <a href="<?= base_url('tools/borrowing') ?>" class="<?= navActive('tools/borrowing') ?>"><i class="bi bi-hand-index-thumb-fill"></i> <span class="nav-label">Borrowing</span></a>
+          <?php if ($canSeeToolsTab(null)): ?><a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="bi bi-boxes"></i> <span class="nav-label">All Tools</span></a><?php endif; ?>
+          <?php if ($canSeeToolsTab('Power Tools')): ?><a href="<?= base_url('tools/power-tools') ?>" class="<?= navActive('tools/power-tools') ?>"><i class="bi bi-lightning-fill"></i> <span class="nav-label">Power Tools</span></a><?php endif; ?>
+          <?php if ($canSeeToolsTab('Consumable')): ?><a href="<?= base_url('tools/consumable') ?>" class="<?= navActive('tools/consumable') ?>"><i class="bi bi-box-seam-fill"></i> <span class="nav-label">Supplies &amp; Materials</span></a><?php endif; ?>
+          <?php if ($canSeeToolsTab('Sports Equipment')): ?><a href="<?= base_url('tools/sports-equipment') ?>" class="<?= navActive('tools/sports-equipment') ?>"><i class="bi bi-trophy-fill"></i> <span class="nav-label">Sports Equipment</span></a><?php endif; ?>
+          <?php if ($canSeeToolsTab(null)): ?><a href="<?= base_url('tools/borrowing') ?>" class="<?= navActive('tools/borrowing') ?>"><i class="bi bi-hand-index-thumb-fill"></i> <span class="nav-label">Borrowing</span></a><?php endif; ?>
         </div>
       </div>
       <?php endif; ?>
@@ -304,7 +317,7 @@
       <a href="<?= base_url('facilities/waste') ?>" class="<?= navActive('facilities/waste') ?>" data-tooltip="Waste Watch"><i class="bi bi-recycle"></i> <span class="nav-label">Waste Watch</span></a>
       <?php endif; ?>
 
-      <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor || $isJanitorialSupervisor || $isAssetsHead || $isSportsHead || $isPersonnelToolsHead): ?>
+      <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor || $isAssetsHead || $isSportsHead): ?>
       <a href="<?= base_url('calendar') ?>" class="<?= navActive('calendar') ?>" data-tooltip="Calendar"><i class="bi bi-calendar3"></i> <span class="nav-label">Calendar</span></a>
       <?php endif; ?>
 
@@ -331,7 +344,7 @@
           <?php if ($isFullAccess || $isAssetsHead): ?>
           <a href="<?= base_url('maintenance-forms/vehicle-checklist') ?>" class="<?= navActive('maintenance-forms/vehicle-checklist') ?>"><i class="bi bi-truck"></i> <span class="nav-label">Vehicle Checklist</span></a>
           <?php endif; ?>
-          <?php if ($isFullAccess || $isFacilitiesSupervisor || $isJanitorialSupervisor): ?>
+          <?php if ($isFullAccess || $isFacilitiesSupervisor): ?>
           <a href="<?= base_url('maintenance-forms/restroom') ?>" class="<?= navActive('maintenance-forms/restroom') ?>"><i class="bi bi-brush"></i> <span class="nav-label">Restroom Checklist</span></a>
           <?php endif; ?>
         </div>

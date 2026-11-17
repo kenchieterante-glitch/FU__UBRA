@@ -2,6 +2,8 @@
 
 namespace App\Filters;
 
+use App\Libraries\PersonnelScope;
+use App\Libraries\ToolsScope;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -24,8 +26,8 @@ class AuthFilter implements FilterInterface
         'facilities' => 'facilities',
         'safety'     => 'safety',
         'guard'      => 'guard-station',
-        'janitorial' => 'janitorial-dashboard',
-        'personnel & tools' => 'personnel',
+        'janitorial' => 'facilities/waste',
+        'personnel & tools' => 'tools/power-tools',
     ];
 
     private const ROLE_ALLOWED_PREFIXES = [
@@ -38,10 +40,10 @@ class AuthFilter implements FilterInterface
         'safety'     => ['safety', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
         // The guard account: only its own desk, the gate check-in / check-out buttons, and its profile.
         'guard'      => ['guard-station', 'travel/checkin', 'travel/checkout', 'profile'],
-        // Janitorial Supervisor: only the janitorial pages its sidebar shows.
-        'janitorial' => ['janitorial-dashboard', 'janitorial', 'facilities/waste', 'maintenance-forms/restroom', 'reports', 'records', 'notifications', 'ubra', 'profile', 'calendar'],
-        // Personnel Management + Tools Management, nothing else.
-        'personnel & tools' => ['personnel', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile', 'calendar'],
+        // Janitorial: Waste Watch only (plus its Personnel categories from PersonnelScope).
+        'janitorial' => ['facilities/waste', 'reports', 'records', 'notifications', 'ubra', 'profile'],
+        // Its Tools tabs (ToolsScope) and Personnel categories (PersonnelScope) are added below.
+        'personnel & tools' => ['reports', 'records', 'notifications', 'ubra', 'profile'],
     ];
 
     private function roleLanding(string $role): string
@@ -101,7 +103,8 @@ class AuthFilter implements FilterInterface
         $roleKey = strtolower($role);
         if (isset(self::ROLE_ALLOWED_PREFIXES[$roleKey])) {
             $isAllowed = false;
-            foreach (self::ROLE_ALLOWED_PREFIXES[$roleKey] as $prefix) {
+            $prefixes = array_merge(self::ROLE_ALLOWED_PREFIXES[$roleKey], PersonnelScope::routePrefixesFor($roleKey), ToolsScope::routePrefixesFor($roleKey));
+            foreach ($prefixes as $prefix) {
                 if ($currentPath === $prefix || str_starts_with($currentPath, $prefix . '/')) {
                     $isAllowed = true;
                     break;

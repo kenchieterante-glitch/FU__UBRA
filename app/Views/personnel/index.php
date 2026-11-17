@@ -15,7 +15,7 @@ if (!empty($personnel)) {
   }
 }
 $positionOptions = array_values(array_unique(array_filter($positionOptions)));
-$showStatusTabs = in_array($title, ['Drivers', 'Janitors', 'Carpentries Shop', 'Maintenance', 'Construction Workers', 'Job Order Personnel'], true);
+$showStatusTabs = in_array($title, ['Drivers', 'Janitors', 'Carpentries Shop', 'Maintenance', 'Construction Workers', 'Security', 'Job Order Personnel'], true);
 $jobOrders = $jobOrders ?? [];
 // Only Drivers actually have a vehicle — every other category (Janitors,
 // Carpentries Shop, Maintenance, Construction Workers, Job Order Personnel)
@@ -41,6 +41,7 @@ $personnelStatCards = [
   ['tone' => 'tone-gold',    'icon' => 'bi-hammer',           'label' => 'Carpentries Shop',   'value' => (int) ($carpentries_count ?? 0),     'onclick' => "filterPersonnelByStat('carpentries')"],
   ['tone' => 'tone-neutral', 'icon' => 'bi-wrench',           'label' => 'Maintenance',        'value' => (int) ($maintenance_count ?? 0),     'onclick' => "filterPersonnelByStat('maintenance')"],
   ['tone' => 'tone-gold',    'icon' => 'bi-cone-striped',     'label' => 'Construction Workers', 'value' => (int) ($construction_count ?? 0),  'onclick' => "filterPersonnelByStat('construction')"],
+  ['tone' => 'tone-maroon',  'icon' => 'bi-shield-check',     'label' => 'Security',           'value' => (int) ($security_count ?? 0),        'onclick' => "filterPersonnelByStat('security')"],
   ['tone' => 'tone-neutral', 'icon' => 'bi-file-earmark-text','label' => 'Job Order Personnel', 'value' => (int) ($job_order_count ?? 0),      'onclick' => "filterPersonnelByStat('joborder')"],
   ['tone' => 'tone-green',   'icon' => 'bi-check-circle-fill','label' => 'Active',             'value' => (int) ($active_count ?? 0),          'onclick' => "filterPersonnelByStat('Active')"],
   ['tone' => 'tone-gold',    'icon' => 'bi-calendar-day',     'label' => 'On Leave',           'value' => (int) ($on_leave_count ?? 0),        'onclick' => "filterPersonnelByStat('On Leave')"],
@@ -180,6 +181,8 @@ $personnelStatCards = [
             $category = 'maintenance';
           } elseif (str_contains($positionLower, 'construction')) {
             $category = 'construction';
+          } elseif (str_contains($positionLower, 'security') || str_contains($positionLower, 'guard')) {
+            $category = 'security';
           }
         ?>
         <tr class="personnel-row" onclick="openPersonnelDetail(<?= (int) $p['id'] ?>)"
@@ -550,7 +553,7 @@ function filterPersonnelByStat(kind) {
       row.style.display = row.dataset.joborder === '1' ? '' : 'none';
     });
   } else {
-    // drivers / janitors / carpentries / maintenance / construction
+    // drivers / janitors / carpentries / maintenance / construction / security
     document.querySelectorAll('#personnelTable tbody tr[data-search]').forEach(row => {
       row.style.display = row.dataset.category === kind ? '' : 'none';
     });
