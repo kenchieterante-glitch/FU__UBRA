@@ -370,3 +370,8 @@
     #addModal .modal-box-wide { max-width: 94vw; }
     #addModal .form-grid2 { grid-template-columns: 1fr; }
 }
+
+/* FU MIS lookup note under the Add Personnel employee ID field */
+.mis-lookup-hint { display: block; margin-top: 4px; font-size: 12px; color: #6b7280; min-height: 1em; }
+.mis-lookup-hint.is-ok { color: #15803d; }
+.mis-lookup-hint.is-error { color: #b91c1c; }

@@ -146,14 +146,16 @@
       $isAssetsHead          = $userRole === 'assets';
       $isSportsHead          = $userRole === 'sports';
       $isGuardDesk           = $userRole === 'guard';
-      $isFullAccess          = !$isGuardDesk && !$isSecurityHead && !$isToolsHead && !$isFacilitiesSupervisor && !$isJanitorialSupervisor && !$isAssetsHead && !$isSportsHead;
+      $isPersonnelToolsHead  = $userRole === 'personnel & tools';
+      $isFullAccess          = !$isGuardDesk && !$isSecurityHead && !$isToolsHead && !$isFacilitiesSupervisor && !$isJanitorialSupervisor && !$isAssetsHead && !$isSportsHead && !$isPersonnelToolsHead;
       $dashboardUrl          = $isGuardDesk ? 'guard-station'
+        : ($isPersonnelToolsHead ? 'personnel'
         : ($isSecurityHead ? 'security-dept'
         : ($isSportsHead ? 'sports-dept'
         : ($isAssetsHead ? 'assets-dept'
         : ($isToolsHead ? 'tools-dashboard'
         : ($isFacilitiesSupervisor ? 'facilities'
-        : ($isJanitorialSupervisor ? 'janitorial-dashboard' : 'dashboard'))))));
+        : ($isJanitorialSupervisor ? 'janitorial-dashboard' : 'dashboard')))))));
     ?>
     <nav class="sidebar-nav">
       <?php if ($isGuardDesk): ?>
@@ -229,7 +231,7 @@
         </div>
       </div>
       <?php endif; ?>
-      <?php if ($isFullAccess || $isFacilitiesSupervisor): ?>
+      <?php if ($isFullAccess || $isFacilitiesSupervisor || $isPersonnelToolsHead): ?>
       <?php $isPersonnelSection = $currentUri === 'personnel' || strpos($currentUri, 'personnel/') === 0; ?>
       <div class="nav-parent-group <?= $isPersonnelSection ? 'open' : '' ?>">
         <a href="<?= base_url('personnel') ?>" class="nav-parent-link <?= $isPersonnelSection ? 'active open' : '' ?>" data-personnel-toggle data-tooltip="Personnel Management">
@@ -247,7 +249,7 @@
         </div>
       </div>
       <?php endif; ?>
-      <?php if ($isFullAccess): ?>
+      <?php if ($isFullAccess || $isSecurityHead): /* Security can open vehicles, GPS and trip tickets (AuthFilter) */ ?>
       <?php $isVehicleSection = $currentUri === 'vehicles' || $currentUri === 'vehicles/dashboard' || $currentUri === 'gps' || $currentUri === 'travel'; ?>
       <div class="nav-parent-group <?= $isVehicleSection ? 'open' : '' ?>">
         <a href="<?= base_url('vehicles/dashboard') ?>" class="nav-parent-link <?= $isVehicleSection ? 'active open' : '' ?>" data-vehicle-toggle data-tooltip="Vehicle Management">
@@ -263,7 +265,7 @@
       </div>
       <?php endif; ?>
 
-      <?php if ($isFullAccess || $isToolsHead || $isFacilitiesSupervisor): ?>
+      <?php if ($isFullAccess || $isToolsHead || $isFacilitiesSupervisor || $isPersonnelToolsHead): ?>
       <?php $isToolsSection = $currentUri === 'tools' || strpos($currentUri, 'tools/') === 0; ?>
       <div class="nav-parent-group <?= $isToolsSection ? 'open' : '' ?>">
         <a href="<?= base_url('tools') ?>" class="nav-parent-link <?= $isToolsSection ? 'active open' : '' ?>" data-tools-toggle data-tooltip="Tools Management">
@@ -302,7 +304,7 @@
       <a href="<?= base_url('facilities/waste') ?>" class="<?= navActive('facilities/waste') ?>" data-tooltip="Waste Watch"><i class="bi bi-recycle"></i> <span class="nav-label">Waste Watch</span></a>
       <?php endif; ?>
 
-      <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor || $isJanitorialSupervisor || $isAssetsHead || $isSportsHead): ?>
+      <?php if ($isFullAccess || $isSecurityHead || $isFacilitiesSupervisor || $isJanitorialSupervisor || $isAssetsHead || $isSportsHead || $isPersonnelToolsHead): ?>
       <a href="<?= base_url('calendar') ?>" class="<?= navActive('calendar') ?>" data-tooltip="Calendar"><i class="bi bi-calendar3"></i> <span class="nav-label">Calendar</span></a>
       <?php endif; ?>
 

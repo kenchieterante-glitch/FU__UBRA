@@ -247,6 +247,54 @@ class PersonnelController extends BaseController
     // Personnel Management table — same underlying data as view(), just
     // the fields that fit a quick popup instead of the full profile page,
     // and fetched on demand instead of loaded for every row up front.
+    /**
+     * Looks up employees in the FU MIS with UBRA's own API token.
+     * /personnel/mis-lookup?employee_id=… returns one employee (404 if the
+     * MIS has none); ?search=…&department=…&page=… returns a page of them,
+     * and ?all=1 (with optional search/department) returns every match.
+     */
+    public function misLookup()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $mis = new \App\Libraries\FuMisClient();
+        if (!$mis->isConfigured()) {
+            return $this->response->setStatusCode(503)->setJSON(['error' => 'FU MIS is not configured on this server.']);
+        }
+
+        $employeeId = trim((string) $this->request->getGet('employee_id'));
+        if ($employeeId !== '') {
+            $res = $mis->findEmployee($employeeId);
+            if (!$res['ok']) {
+                return $this->response->setStatusCode(502)->setJSON(['error' => $res['error']]);
+            }
+            if ($res['employee'] === null) {
+                return $this->response->setStatusCode(404)->setJSON(['error' => 'No FU employee with ID ' . $employeeId . ' was found in the FU MIS.']);
+            }
+
+            return $this->response->setJSON(['employee' => $res['employee']]);
+        }
+
+        $filters = [
+            'search'     => $this->request->getGet('search'),
+            'department' => $this->request->getGet('department'),
+        ];
+        // ?all=1 returns every matching employee across all pages; otherwise one page.
+        $res = $this->request->getGet('all')
+            ? $mis->allEmployees($filters)
+            : $mis->searchEmployees($filters + [
+                'limit' => $this->request->getGet('limit') ?: 25,
+                'page'  => $this->request->getGet('page') ?: 1,
+            ]);
+        if (!$res['ok']) {
+            return $this->response->setStatusCode(502)->setJSON(['error' => $res['error']]);
+        }
+
+        return $this->response->setJSON($res);
+    }
+
     public function detailJson($id)
     {
         if (!session()->get('isLoggedIn')) {
@@ -328,7 +376,7 @@ class PersonnelController extends BaseController
 
     public function add()
     {
-        if ($resp = $this->requireAdmin()) return $resp;
+        if ($resp = $this->requirePersonnelManager()) return $resp;
 
         $empId = trim((string) $this->request->getPost('emp_id'));
 
@@ -358,7 +406,7 @@ class PersonnelController extends BaseController
 
     public function edit($id)
     {
-        if ($resp = $this->requireAdmin()) return $resp;
+        if ($resp = $this->requirePersonnelManager()) return $resp;
 
         $empId = trim((string) $this->request->getPost('emp_id'));
 
@@ -388,7 +436,7 @@ class PersonnelController extends BaseController
 
     public function delete($id)
     {
-        if ($resp = $this->requireAdmin()) return $resp;
+        if ($resp = $this->requirePersonnelManager()) return $resp;
 
         $this->personnelModel->update($id, [
             'is_archived' => 1,

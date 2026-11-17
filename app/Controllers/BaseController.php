@@ -105,6 +105,7 @@ abstract class BaseController extends Controller
             'janitorial' => '/janitorial-dashboard',
             'safety'     => '/safety',
             'guard'      => '/guard-station',
+            'personnel & tools' => '/personnel',
             default      => '/dashboard',
         };
     }
@@ -117,6 +118,16 @@ abstract class BaseController extends Controller
     protected function requireAdmin()
     {
         if (!$this->isAdmin()) {
+            return redirect()->back()->with('error', 'You do not have permission to perform this action.');
+        }
+
+        return null;
+    }
+
+    /** Like requireAdmin(), but the Personnel & Tools role may also add, edit and delete personnel. */
+    protected function requirePersonnelManager()
+    {
+        if (!$this->isAdmin() && strtolower($this->userRole()) !== 'personnel & tools') {
             return redirect()->back()->with('error', 'You do not have permission to perform this action.');
         }
 

@@ -125,6 +125,7 @@ $routes->post('personnel/test-sms/(:num)','PersonnelController::testSms/$1');
 $routes->post('personnel/test-telegram/(:num)','PersonnelController::testTelegram/$1');
 $routes->get ('personnel/view/(:num)', 'PersonnelController::view/$1');
 $routes->get ('personnel/detail/(:num)', 'PersonnelController::detailJson/$1');
+$routes->get ('personnel/mis-lookup', 'PersonnelController::misLookup');
 $routes->get ('personnel/on-job-order', 'PersonnelController::jobOrder');
 $routes->post('personnel/assign-job-order/(:num)', 'PersonnelController::assignJobOrder/$1');
 

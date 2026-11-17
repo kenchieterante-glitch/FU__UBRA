@@ -12,6 +12,7 @@ class ToolsDashboardController extends BaseController
             return redirect()->to('/login');
         }
 
+        helper('facilities'); // tool_cat_label() in the view
         $toolsModel = new ToolsModel();
 
         $maintenanceTools = $toolsModel->where('availability', 'Maintenance')->where('is_archived', 0)->countAllResults();

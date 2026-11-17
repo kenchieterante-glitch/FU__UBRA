@@ -14,7 +14,7 @@ class AuthFilter implements FilterInterface
     // blocked outside their own scope. Every other role (Administrator,
     // and any legacy role) is unrestricted, same as before these roles
     // existed — this map only ever narrows access, never widens it.
-    private const UNRESTRICTED_ROLES = ['administrator', 'janitorial'];
+    private const UNRESTRICTED_ROLES = ['administrator'];
 
     private const ROLE_LANDING = [
         'security'   => 'security-dept',
@@ -24,6 +24,8 @@ class AuthFilter implements FilterInterface
         'facilities' => 'facilities',
         'safety'     => 'safety',
         'guard'      => 'guard-station',
+        'janitorial' => 'janitorial-dashboard',
+        'personnel & tools' => 'personnel',
     ];
 
     private const ROLE_ALLOWED_PREFIXES = [
@@ -36,6 +38,10 @@ class AuthFilter implements FilterInterface
         'safety'     => ['safety', 'reports', 'records', 'notifications', 'ubra', 'profile', 'settings', 'calendar'],
         // The guard account: only its own desk, the gate check-in / check-out buttons, and its profile.
         'guard'      => ['guard-station', 'travel/checkin', 'travel/checkout', 'profile'],
+        // Janitorial Supervisor: only the janitorial pages its sidebar shows.
+        'janitorial' => ['janitorial-dashboard', 'janitorial', 'facilities/waste', 'maintenance-forms/restroom', 'reports', 'records', 'notifications', 'ubra', 'profile', 'calendar'],
+        // Personnel Management + Tools Management, nothing else.
+        'personnel & tools' => ['personnel', 'tools', 'reports', 'records', 'notifications', 'ubra', 'profile', 'calendar'],
     ];
 
     private function roleLanding(string $role): string
@@ -106,7 +112,7 @@ class AuthFilter implements FilterInterface
             }
         }
 
-        // Deny by default: a role that is not Administrator, not Janitorial and not in the map above
+        // Deny by default: a role that is not Administrator and not in the map above
         // (a new or misspelled role) only gets the shared basics instead of the whole system.
         elseif (!in_array($roleKey, self::UNRESTRICTED_ROLES, true)) {
             foreach (['profile', 'notifications', 'ubra', 'logout'] as $prefix) {

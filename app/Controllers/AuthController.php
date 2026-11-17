@@ -1,6 +1,7 @@
 <?php
 namespace App\Controllers;
 
+use App\Libraries\FuMisClient;
 use App\Models\UserModel;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -59,20 +60,29 @@ class AuthController extends BaseController
             return redirect()->to($this->loginUrl($portal))->with('error', 'Too many failed attempts. Please wait 5 minutes and try again.');
         }
 
+        // FU MIS verifies real university employees with their FU password and hands back an
+        // access token for the employee lookups. Local passwords still work (test accounts,
+        // or when the MIS can't be reached).
+        $mis = new FuMisClient();
+        $misLogin = $mis->isConfigured() ? $mis->login($employeeId, $password) : ['ok' => false];
+
         $user = $this->userModel->getByEmployeeId($employeeId);
 
         if (!$user) {
+            if ($misLogin['ok']) {
+                return redirect()->to($this->loginUrl($portal))->with('error', 'Your FU account was verified, but it has no UBRA access yet. Please ask the UBRA administrator to create your account.');
+            }
             cache()->save($throttleKey, $tries + 1, 300);
             return redirect()->to($this->loginUrl($portal))->with('error', 'Invalid employee ID or password.');
         }
 
         $storedHash = $user['password_hash'] ?? null;
         $legacyPassword = $user['password'] ?? null;
-        $isValid = false;
+        $isValid = $misLogin['ok'];
 
-        if (!empty($storedHash)) {
+        if (!$isValid && !empty($storedHash)) {
             $isValid = password_verify($password, $storedHash);
-        } elseif (!empty($legacyPassword)) {
+        } elseif (!$isValid && !empty($legacyPassword)) {
             $isValid = password_verify($password, $legacyPassword);
         }
 
@@ -101,6 +111,9 @@ class AuthController extends BaseController
                 'department_id' => $departmentId,
                 'photo'         => $user['photo'] ?? null,
                 'isLoggedIn'    => true,
+                // Only set when the FU MIS verified this login; used for employee lookups.
+                'mis_access_token' => $misLogin['ok'] ? $misLogin['access_token'] : null,
+                'mis_expires_at'   => $misLogin['ok'] ? $misLogin['expires_at'] : null,
             ]);
 
             $this->setNoStoreHeaders();

@@ -70,6 +70,7 @@ class NotificationModel extends Model
             'janitorial' => ['janitorial', 'waste'],
             'safety'     => ['safety', 'firesafety', 'aircon'],
             'guard'      => ['guard'], // nothing is routed to the guard account yet
+            'personnel & tools' => ['personnel', 'tools'],
             default      => null,
         };
     }

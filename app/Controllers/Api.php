@@ -1871,9 +1871,21 @@ class Api extends BaseController
 
         $num = fn($k) => max(0, round((float) ($body[$k] ?? 0), 2));
         $nb = $num('non_bio_kg'); $b = $num('bio_kg'); $h = $num('hazardous_kg');
+
+        // A scanned student/staff ID is recorded as the person who brought the waste.
+        $scannedId = trim((string) ($body['scanned_id'] ?? ''));
+        $checkedBy = $me['name'];
+        if ($scannedId !== '') {
+            if (!preg_match('/^\d{6,10}$/', $scannedId)) {
+                return $this->response->setStatusCode(422)->setJSON(['message' => 'That does not look like a valid ID number.']);
+            }
+            $who = (new \App\Models\UserModel())->getByEmployeeId($scannedId);
+            $checkedBy = ($who['full_name'] ?? null) ? "{$who['full_name']} (ID {$scannedId})" : "ID {$scannedId}";
+        }
+
         $data = [
             'non_bio_kg' => $nb, 'bio_kg' => $b, 'hazardous_kg' => $h,
-            'checked_by' => $me['name'],
+            'checked_by' => $checkedBy,
             'notes'      => trim((string) ($body['notes'] ?? '')) ?: null,
         ];
 

@@ -640,9 +640,50 @@ document.addEventListener('DOMContentLoaded', function () {
     if (match) {
       fullNameInput.value = match.full_name || '';
       emailInput.value = match.email || '';
+      return;
     }
+
+    fillFromFuMis(addForm, this.value.trim());
   });
 });
+
+// Not in UBRA yet: look the ID up in the FU MIS and fill in the name, plus the
+// position and department when UBRA has a matching option.
+async function fillFromFuMis(form, employeeId) {
+  const hint = document.getElementById('misLookupHint');
+  const selectByText = function (select, text) {
+    const wanted = String(text || '').trim().toLowerCase();
+    const option = Array.from(select.options).find(o => o.text.trim().toLowerCase() === wanted);
+    if (option) select.value = option.value;
+    return Boolean(option);
+  };
+
+  hint.className = 'mis-lookup-hint';
+  hint.textContent = 'Checking FU MIS...';
+  try {
+    const res = await fetch('<?= base_url('personnel/mis-lookup') ?>?employee_id=' + encodeURIComponent(employeeId));
+    const data = await res.json();
+    if (!res.ok) {
+      hint.className = 'mis-lookup-hint is-error';
+      hint.textContent = data.error || 'FU MIS lookup failed.';
+      return;
+    }
+
+    const emp = data.employee;
+    form.querySelector('input[name="full_name"]').value = emp.full_name;
+    const positionSet = selectByText(form.querySelector('select[name="position"]'), emp.position);
+    const departmentSet = selectByText(form.querySelector('select[name="department_id"]'), emp.department_name);
+
+    const notes = [];
+    if (emp.position && !positionSet) notes.push('position "' + emp.position + '"');
+    if (emp.department_name && !departmentSet) notes.push('department "' + emp.department_name + '"');
+    hint.className = 'mis-lookup-hint is-ok';
+    hint.textContent = 'Filled from FU MIS.' + (notes.length ? ' Not in UBRA\'s lists, please pick manually: ' + notes.join(', ') + '.' : '');
+  } catch (e) {
+    hint.className = 'mis-lookup-hint is-error';
+    hint.textContent = 'Could not reach FU MIS. Fill in the details manually.';
+  }
+}
 
 // Sends one test text to the person's saved number (administrator only) through the Android SMS gateway.
 async function sendTestSms(id, btn) {
@@ -687,6 +728,7 @@ async function sendTestTelegram(id, btn) {
         <div class="fg">
           <label>Employee ID <span class="required-mark">*</span></label>
           <input type="text" name="emp_id" placeholder="e.g. EMP-2026-001" required>
+          <small id="misLookupHint" class="mis-lookup-hint" aria-live="polite"></small>
         </div>
         <div class="fg">
           <label>Full Name <span class="required-mark">*</span></label>
