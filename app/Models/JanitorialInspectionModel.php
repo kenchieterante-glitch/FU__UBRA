@@ -7,6 +7,8 @@ use CodeIgniter\Model;
 class JanitorialInspectionModel extends Model
 {
     protected $table         = 'janitorial_inspections';
+    use \App\Models\Concerns\HidesArchived;
+    protected string $archiveType = 'buildingcheck';
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [

@@ -16,7 +16,7 @@
       if ($seg === 'safety/guard-dashboard') {
           return $uri === 'safety/guard-dashboard' ? 'active' : '';
       }
-      // "All Personnel" / "All Tools" are the base/index link sitting
+      // "All Personnel" / "All Equipment" are the base/index link sitting
       // alongside their own sub-routes (personnel/drivers, tools/consumable,
       // etc.) in the same submenu — prefix-matching here made the base link
       // stay highlighted even when a specific sub-route was selected, so
@@ -178,6 +178,7 @@
         </a>
         <div class="nav-submenu" id="secdept-submenu">
           <a href="<?= base_url('security-dept/fire-safety') ?>" class="<?= navActive('security-dept/fire-safety') ?>"><i class="bi bi-fire"></i> <span class="nav-label">Fire Safety</span></a>
+          <a href="<?= base_url('security-dept/buildings') ?>" class="<?= navActive('security-dept/buildings') ?>"><i class="bi bi-buildings"></i> <span class="nav-label">Building Information</span></a>
           <a href="<?= base_url('security-dept/inspection') ?>" class="<?= navActive('security-dept/inspection') ?>"><i class="bi bi-clipboard2-check"></i> <span class="nav-label">Safety Inspection</span></a>
           <a href="<?= base_url('security-dept/guard') ?>" class="<?= navActive('security-dept/guard') ?>"><i class="bi bi-shield-check"></i> <span class="nav-label">Guard Monitoring</span></a>
           <a href="<?= base_url('security-dept/keys') ?>" class="<?= navActive('security-dept/keys') ?>"><i class="bi bi-list-ul"></i> <span class="nav-label">List of Keys</span></a>
@@ -220,9 +221,9 @@
       <?php if ($isFacilitiesSupervisor || $isFullAccess): ?>
       <?php $isFacilitiesSection = strpos($currentUri, 'facilities/') === 0; ?>
       <div class="nav-parent-group <?= $isFacilitiesSection ? 'open' : '' ?>">
-        <a href="<?= base_url('facilities/status') ?>" class="nav-parent-link <?= $isFacilitiesSection ? 'open' : '' ?>" data-facilities-toggle data-tooltip="Facilities">
+        <a href="<?= base_url('facilities/status') ?>" class="nav-parent-link <?= $isFacilitiesSection ? 'open' : '' ?>" data-facilities-toggle data-tooltip="Facilities Monitoring">
           <i class="bi bi-building-gear"></i>
-          <span class="nav-label">Facilities</span>
+          <span class="nav-label">Facilities Monitoring</span>
           <i class="bi bi-chevron-down nav-parent-caret"></i>
         </a>
         <div class="nav-submenu" id="facilities-submenu">
@@ -281,13 +282,13 @@
         $canSeeToolsTab   = fn(?string $category) => $toolCategories === null || ($category !== null && in_array($category, $toolCategories, true));
       ?>
       <div class="nav-parent-group <?= $isToolsSection ? 'open' : '' ?>">
-        <a href="<?= base_url(\App\Libraries\ToolsScope::homeFor($userRole)) ?>" class="nav-parent-link <?= $isToolsSection ? 'active open' : '' ?>" data-tools-toggle data-tooltip="Tools Management">
+        <a href="<?= base_url(\App\Libraries\ToolsScope::homeFor($userRole)) ?>" class="nav-parent-link <?= $isToolsSection ? 'active open' : '' ?>" data-tools-toggle data-tooltip="Equipment Management">
           <i class="bi bi-tools"></i>
-          <span class="nav-label">Tools Management</span>
+          <span class="nav-label">Equipment Management</span>
           <i class="bi bi-chevron-down nav-parent-caret"></i>
         </a>
         <div class="nav-submenu" id="tools-submenu">
-          <?php if ($canSeeToolsTab(null)): ?><a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="bi bi-boxes"></i> <span class="nav-label">All Tools</span></a><?php endif; ?>
+          <?php if ($canSeeToolsTab(null)): ?><a href="<?= base_url('tools') ?>" class="<?= navActive('tools') ?>"><i class="bi bi-boxes"></i> <span class="nav-label">All Equipment</span></a><?php endif; ?>
           <?php if ($canSeeToolsTab('Power Tools')): ?><a href="<?= base_url('tools/power-tools') ?>" class="<?= navActive('tools/power-tools') ?>"><i class="bi bi-lightning-fill"></i> <span class="nav-label">Power Tools</span></a><?php endif; ?>
           <?php if ($canSeeToolsTab('Consumable')): ?><a href="<?= base_url('tools/consumable') ?>" class="<?= navActive('tools/consumable') ?>"><i class="bi bi-box-seam-fill"></i> <span class="nav-label">Supplies &amp; Materials</span></a><?php endif; ?>
           <?php if ($canSeeToolsTab('Sports Equipment')): ?><a href="<?= base_url('tools/sports-equipment') ?>" class="<?= navActive('tools/sports-equipment') ?>"><i class="bi bi-trophy-fill"></i> <span class="nav-label">Sports Equipment</span></a><?php endif; ?>
@@ -297,7 +298,7 @@
       <?php endif; ?>
 
       <?php if ($isFullAccess): ?>
-      <?php $isAdminSecSection = $currentUri === 'safety' || strpos($currentUri, 'safety/') === 0 || in_array($currentUri, ['security-dept/inspection', 'security-dept/guard', 'security-dept/keys', 'safety/guard-dashboard'], true); ?>
+      <?php $isAdminSecSection = $currentUri === 'safety' || strpos($currentUri, 'safety/') === 0 || in_array($currentUri, ['security-dept/inspection', 'security-dept/buildings', 'security-dept/guard', 'security-dept/keys', 'safety/guard-dashboard'], true); ?>
       <div class="nav-parent-group <?= $isAdminSecSection ? 'open' : '' ?>">
         <a href="<?= base_url('safety') ?>" class="nav-parent-link <?= $isAdminSecSection ? 'open' : '' ?>" data-secdept-toggle data-tooltip="Safety & Security">
           <i class="bi bi-shield-fill-check"></i>
@@ -306,6 +307,7 @@
         </a>
         <div class="nav-submenu" id="secdept-submenu">
           <a href="<?= base_url('safety') ?>" class="<?= $currentUri === 'safety/floor-plans' ? 'active' : navActive('safety') ?>"><i class="bi bi-fire"></i> <span class="nav-label">Fire Safety</span></a>
+          <a href="<?= base_url('security-dept/buildings') ?>" class="<?= navActive('security-dept/buildings') ?>"><i class="bi bi-buildings"></i> <span class="nav-label">Building Information</span></a>
           <a href="<?= base_url('security-dept/inspection') ?>" class="<?= navActive('security-dept/inspection') ?>"><i class="bi bi-clipboard2-check"></i> <span class="nav-label">Safety Inspection</span></a>
           <a href="<?= base_url('safety/guard-dashboard') ?>" class="<?= navActive('safety/guard-dashboard') ?>"><i class="bi bi-shield-check"></i> <span class="nav-label">Guard Monitoring</span></a>
           <a href="<?= base_url('security-dept/keys') ?>" class="<?= navActive('security-dept/keys') ?>"><i class="bi bi-list-ul"></i> <span class="nav-label">List of Keys</span></a>
@@ -325,13 +327,24 @@
       <a href="<?= base_url('notifications') ?>" class="<?= navActive('notifications') ?>" data-tooltip="Notifications"><i class="bi bi-bell"></i> <span class="nav-label">Notifications</span><span class="nav-count" id="navBellCount" <?= $topbarUnreadCount > 0 ? '' : 'style="display:none"' ?>><?= $topbarUnreadCount > 99 ? '99+' : (int) $topbarUnreadCount ?></span></a>
       <?php $isInfoHubSection = $currentUri === 'reports' || strpos($currentUri, 'maintenance-forms/') === 0; ?>
       <div class="nav-parent-group <?= $isInfoHubSection ? 'open' : '' ?>">
-        <a href="<?= base_url('reports') ?>" class="nav-parent-link <?= $isInfoHubSection ? 'active open' : '' ?>" data-infohub-toggle data-tooltip="Information Hub">
+        <a href="<?= base_url('reports') ?>" class="nav-parent-link <?= $isInfoHubSection ? 'active open' : '' ?>" data-infohub-toggle data-tooltip="Reports">
           <i class="bi bi-folder2"></i>
-          <span class="nav-label">Information Hub</span>
+          <span class="nav-label">Reports</span>
           <i class="bi bi-chevron-down nav-parent-caret"></i>
         </a>
         <div class="nav-submenu" id="infohub-submenu">
-          <a href="<?= base_url('reports') ?>" class="<?= navActive('reports') ?>"><i class="bi bi-list-task"></i> <span class="nav-label">All Records</span></a>
+          <?php
+            $repView    = service('request')->getGet('view');
+            $onDisposal = $currentUri === 'reports' && $repView === 'disposal';
+            $onArchived = $currentUri === 'reports' && $repView === 'archived';
+          ?>
+          <a href="<?= base_url('reports') ?>" class="<?= ($currentUri === 'reports' && !$onDisposal && !$onArchived) ? 'active' : '' ?>"><i class="bi bi-list-task"></i> <span class="nav-label">All Records</span></a>
+          <?php if ($isFullAccess || $isFacilitiesSupervisor || $isSecurityHead || $isAssetsHead || $isSportsHead || $isToolsHead): ?>
+          <a href="<?= base_url('reports?view=archived') ?>" class="<?= $onArchived ? 'active' : '' ?>"><i class="bi bi-archive"></i> <span class="nav-label">Archived</span></a>
+          <?php endif; ?>
+          <?php if ($isFullAccess || $isFacilitiesSupervisor): ?>
+          <a href="<?= base_url('reports?view=disposal') ?>" class="<?= $onDisposal ? 'active' : '' ?>"><i class="bi bi-trash3"></i> <span class="nav-label">Disposal</span></a>
+          <?php endif; ?>
           <?php if ($isFullAccess || $isFacilitiesSupervisor): ?>
           <a href="<?= base_url('maintenance-forms/facility') ?>" class="<?= navActive('maintenance-forms/facility') ?>"><i class="bi bi-clipboard2-check"></i> <span class="nav-label">Facility Checklist</span></a>
           <?php endif; ?>
@@ -1376,3 +1389,8 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 </script>
 <?php endif; ?>
+
+<script>window.CAN_ARCHIVE = <?= \App\Controllers\RecordsController::canArchiveAny() ? "true" : "false" ?>; window.BULK_URL = <?= json_encode(base_url("records/bulk")) ?>;</script>
+<?= view("layouts/_bulk_select") ?>
+<?= view("layouts/_table_paging") ?>
+<?= view("layouts/_table_align") ?>

@@ -194,10 +194,17 @@ class VehicleController extends BaseController
 
     public function add()
     {
-        $name = $this->request->getPost('vehicle_name');
+        $name  = trim((string) $this->request->getPost('vehicle_name'));
+        $plate = trim((string) $this->request->getPost('plate_no'));
+        if ($name === '' || $plate === '') {
+            return redirect()->back()->withInput()->with('error', 'Vehicle name and plate number are required.');
+        }
+        if ($this->vehicleModel->where('plate_no', $plate)->countAllResults() > 0) {
+            return redirect()->back()->withInput()->with('error', "Plate number {$plate} is already registered.");
+        }
         $this->vehicleModel->insert([
             'vehicle_name'      => $name,
-            'plate_no'          => $this->request->getPost('plate_no'),
+            'plate_no'          => $plate,
             'type'              => $this->request->getPost('type'),
             'driver_id'         => $this->request->getPost('driver_id') ?: null,
             'department_id'     => $this->request->getPost('department_id') ?: null,
@@ -212,10 +219,17 @@ class VehicleController extends BaseController
 
     public function edit($id)
     {
-        $name = $this->request->getPost('vehicle_name');
+        $name  = trim((string) $this->request->getPost('vehicle_name'));
+        $plate = trim((string) $this->request->getPost('plate_no'));
+        if ($name === '' || $plate === '') {
+            return redirect()->back()->withInput()->with('error', 'Vehicle name and plate number are required.');
+        }
+        if ($this->vehicleModel->where('plate_no', $plate)->where('id !=', $id)->countAllResults() > 0) {
+            return redirect()->back()->withInput()->with('error', "Plate number {$plate} is already registered.");
+        }
         $this->vehicleModel->update($id, [
             'vehicle_name'      => $name,
-            'plate_no'          => $this->request->getPost('plate_no'),
+            'plate_no'          => $plate,
             'type'              => $this->request->getPost('type'),
             'driver_id'         => $this->request->getPost('driver_id') ?: null,
             'department_id'     => $this->request->getPost('department_id') ?: null,

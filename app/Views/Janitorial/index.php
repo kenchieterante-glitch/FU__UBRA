@@ -322,7 +322,7 @@
   </div>
 </div>
 
-<!-- Restock modal — same look as Tools Management's Restock modal, for consistency -->
+<!-- Restock modal — same look as Equipment Management's Restock modal, for consistency -->
 <div class="modal" id="restockModal">
   <div class="modal-box">
     <div class="refill-header">

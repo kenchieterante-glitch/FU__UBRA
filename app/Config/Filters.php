@@ -113,7 +113,7 @@ class Filters extends BaseFilters
     public array $filters = [
         'auth' => [
             'before' => ['*'],
-            'except' => ['logout', 'auth/*', 'api/*'],
+            'except' => ['logout', 'auth/*', 'api/*', 'evacuation-map'],
         ],
     ];
 }

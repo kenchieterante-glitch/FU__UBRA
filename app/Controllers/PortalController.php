@@ -20,8 +20,8 @@ class PortalController extends BaseController
             'icon'        => 'bi-building-gear',
             'name'        => 'Facilities Administration and General Services',
             'short'       => 'Facilities Administration and General Services',
-            'description' => 'Janitorial coverage, consumable supplies, and campus aircon condition.',
-            'covers'      => 'Janitorial, Consumables, Aircon',
+            'description' => 'Janitorial coverage, consumable supplies, campus aircon condition, and sports equipment.',
+            'covers'      => 'Janitorial, Consumables, Aircon, Sports',
         ],
         'safety' => [
             'box'         => '02',
@@ -36,16 +36,8 @@ class PortalController extends BaseController
             'icon'        => 'bi-tools',
             'name'        => 'Asset Acquisition and Monitoring Department',
             'short'       => 'Asset Acquisition and Monitoring Department',
-            'description' => 'Tools and equipment inventory, vehicle fleet status, and consumable stock levels.',
+            'description' => 'Equipment inventory, vehicle fleet status, and consumable stock levels.',
             'covers'      => 'Tools, Vehicles, Stock',
-        ],
-        'iysp' => [
-            'box'         => '04',
-            'icon'        => 'bi-dribbble',
-            'name'        => 'Sports Equipment Monitoring',
-            'short'       => 'Sports Equipment Monitoring',
-            'description' => 'Sports equipment inventory, borrowing, and condition monitoring.',
-            'covers'      => 'Equipment, Borrowing, Condition',
         ],
     ];
 
@@ -114,16 +106,12 @@ class PortalController extends BaseController
             ];
         }
 
-        if ($key === 'iysp') {
-            return [];
-        }
-
         $tools = new ToolsModel();
         $vehicles = new VehicleModel();
         $consumables = new ConsumableInventoryModel();
 
         return [
-            ['label' => 'Total Tools & Equipment', 'value' => $tools->where('is_archived', 0)->countAllResults(), 'icon' => 'bi-tools', 'tone' => 'maroon'],
+            ['label' => 'Total Equipment', 'value' => $tools->where('is_archived', 0)->countAllResults(), 'icon' => 'bi-tools', 'tone' => 'maroon'],
             ['label' => 'Currently Borrowed', 'value' => $tools->where('availability', 'Borrowed')->where('is_archived', 0)->countAllResults(), 'icon' => 'bi-hand-index-thumb-fill', 'tone' => 'amber'],
             ['label' => 'Vehicles in Fleet', 'value' => $vehicles->countAllResults(), 'icon' => 'bi-truck-front-fill', 'tone' => 'blue'],
             ['label' => 'Consumables Low or Out', 'value' => $consumables->where('current_stock <= reorder_threshold', null, false)->countAllResults(), 'icon' => 'bi-box-seam-fill', 'tone' => 'red'],
@@ -143,9 +131,8 @@ class PortalController extends BaseController
                 ['label' => 'Guard Dashboard', 'url' => 'safety/guard-dashboard', 'icon' => 'bi-shield-check'],
                 ['label' => 'Trip Ticket', 'url' => 'travel', 'icon' => 'bi-ticket-perforated'],
             ],
-            'iysp' => [],
             default => [
-                ['label' => 'Tools Management', 'url' => 'tools', 'icon' => 'bi-boxes'],
+                ['label' => 'Equipment Management', 'url' => 'tools', 'icon' => 'bi-boxes'],
                 ['label' => 'Vehicle Management', 'url' => 'vehicles', 'icon' => 'bi-truck'],
                 ['label' => 'GPS Tracker', 'url' => 'gps', 'icon' => 'bi-geo-alt-fill'],
             ],

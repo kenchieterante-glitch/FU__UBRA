@@ -7,6 +7,8 @@ use CodeIgniter\Model;
 class WorkOrderModel extends Model
 {
     protected $table         = 'work_orders';
+    use \App\Models\Concerns\HidesArchived;
+    protected string $archiveType = 'facwo';
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [

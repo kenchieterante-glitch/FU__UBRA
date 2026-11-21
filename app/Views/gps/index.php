@@ -1024,7 +1024,7 @@ function toggleGpsFilterMenu() {
 }
 
 // Stat cards act as quick filters into the fleet table below — same as
-// Vehicle Management / Tools Management: the cards stay right where they
+// Vehicle Management / Equipment Management: the cards stay right where they
 // are, the table just filters in place.
 function filterGpsByStat(kind) {
     document.getElementById('statusFilter').value = '';

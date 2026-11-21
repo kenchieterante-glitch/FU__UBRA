@@ -5,6 +5,8 @@ use CodeIgniter\Model;
 class KeyBorrowLogModel extends Model
 {
     protected $table         = 'key_borrow_logs';
+    use \App\Models\Concerns\HidesArchived;
+    protected string $archiveType = 'keylog';
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [

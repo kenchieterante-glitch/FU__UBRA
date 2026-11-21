@@ -26,7 +26,7 @@ helper('facilities');
 <div class="stat-cards" id="toolsStatCards">
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('')" role="button" tabindex="0">
     <span class="stat-icon tone-maroon"><i class="bi bi-tools"></i></span>
-    <h3>Total Tools</h3>
+    <h3>Total Equipment</h3>
     <div class="value" id="statTotalTools"><?= esc((string) ((int) ($total_tools ?? 0))) ?></div>
   </div>
   <div class="stat-card stat-card-clickable" onclick="filterToolsByStat('available')" role="button" tabindex="0">

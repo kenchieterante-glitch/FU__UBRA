@@ -69,7 +69,7 @@ class FacilitiesController extends BaseController
         $cards = $this->statusCards();
 
         return view('facilities/status', [
-            'title'   => 'Facilities Status',
+            'title'   => 'Facilities Monitoring',
             'pageCss' => 'safety.css',
             'cards'   => $cards,
         ]);
@@ -281,6 +281,7 @@ class FacilitiesController extends BaseController
         foreach ($consumables as $c) {
             $stock = (float) $c['current_stock'];
             $consumableGroups[$c['category']][] = [
+                'id'       => (int) $c['id'],
                 'name'     => $c['item_name'],
                 'unit'     => $c['unit'],
                 'stock'    => $stock,
@@ -492,6 +493,80 @@ class FacilitiesController extends BaseController
         (new AirconChecklistItemModel())->seedDefaultTasks((int) $id);
 
         return redirect()->to('/facilities/aircon')->with('success', "Aircon unit {$unit} added.");
+    }
+
+    // Several damaged units reported at once: marks each Not Working and files one repair work order listing them.
+    public function reportDamagedAircon()
+    {
+        if (!session()->get('isLoggedIn')) return redirect()->to('/login');
+
+        $ids = array_values(array_filter(array_map('intval', (array) $this->request->getPost('unit_ids'))));
+        if (!$ids) {
+            return redirect()->to('/facilities/aircon')->with('error', 'Select at least one aircon unit.');
+        }
+
+        $model = new AirconUnitModel();
+        $units = $model->whereIn('id', $ids)->findAll();
+        if (!$units) {
+            return redirect()->to('/facilities/aircon')->with('error', 'The selected units were not found.');
+        }
+
+        $lines = [];
+        foreach ($units as $u) {
+            $model->update($u['id'], ['condition_status' => 'Not Working']);
+            $lines[] = "{$u['unit_name']} ({$u['location']}, {$u['floor']})";
+        }
+
+        $buildings = array_values(array_unique(array_column($units, 'location')));
+        (new WorkOrderModel())->insert([
+            'title'        => 'Repair ' . count($units) . ' damaged aircon unit' . (count($units) === 1 ? '' : 's'),
+            'building'     => count($buildings) === 1 ? $buildings[0] : 'Multiple buildings',
+            'details'      => implode('; ', $lines),
+            'priority'     => 'Urgent',
+            'status'       => 'Pending',
+            'requested_by' => (string) (session()->get('full_name') ?? 'Unknown'),
+            'created_at'   => date('Y-m-d H:i:s'),
+        ]);
+
+        return redirect()->to('/facilities/aircon')->with('success', count($units) . ' aircon unit(s) reported as damaged and a repair work order was filed.');
+    }
+
+    // Facilities disposal on the web: units already marked Not Working are removed from the register
+    // and written to the disposal log (the same log the Information Hub shows).
+    public function disposeAircon()
+    {
+        if (!session()->get('isLoggedIn')) return redirect()->to('/login');
+        if (!in_array(strtolower((string) session()->get('role')), ['administrator', 'facilities'], true)) {
+            return redirect()->to('/facilities/aircon')->with('error', 'You do not have permission to dispose equipment.');
+        }
+
+        $ids = array_values(array_filter(array_map('intval', (array) $this->request->getPost('unit_ids'))));
+        $model = new AirconUnitModel();
+        $units = $ids ? $model->whereIn('id', $ids)->where('condition_status', 'Not Working')->findAll() : [];
+        if (!$units) {
+            return redirect()->to('/facilities/aircon')->with('error', 'Select units that are marked Not Working to dispose of them.');
+        }
+
+        $log = new \App\Models\DisposalLogModel();
+        $done = 0;
+        foreach ($units as $u) {
+            try {
+                $log->insert([
+                    'record_type'      => 'aircon',
+                    'record_id'        => $u['id'],
+                    'authorized_by_id' => null,
+                    'disposal_date'    => date('Y-m-d'),
+                    'remarks'          => "{$u['unit_name']} ({$u['location']}, {$u['floor']}) disposed by " . (string) session()->get('full_name'),
+                ]);
+                $model->delete($u['id']);
+                $done++;
+            } catch (\Throwable $e) {
+                log_message('error', 'Aircon disposal failed for unit ' . $u['id'] . ': ' . $e->getMessage());
+            }
+        }
+        $this->logActivity('Facilities', "Disposed {$done} aircon unit(s)");
+
+        return redirect()->to('/facilities/aircon')->with($done ? 'success' : 'error', $done ? "{$done} unit(s) disposed and logged." : 'The units could not be disposed.');
     }
 
     public function storeSupply()

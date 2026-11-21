@@ -51,6 +51,42 @@ class NotificationModel extends Model
         'Personnel Document Incomplete'    => 'personnel',
     ];
 
+    // Notification category -> [main category, type]; same three-category grouping as the Reports Hub and the dashboard.
+    public const CATEGORY_GROUP = [
+        'Air-Con Cleaning'                => ['Facilities', 'Repairs & Aircon'],
+        'Aircon Unit Registered'          => ['Facilities', 'Repairs & Aircon'],
+        'Aircon Needs Cleaning'           => ['Facilities', 'Repairs & Aircon'],
+        'Maintenance Scheduled'           => ['Facilities', 'Repairs & Aircon'],
+        'Janitorial Assignment'           => ['Facilities', 'Janitorial'],
+        'Cleaning Scheduled'              => ['Facilities', 'Janitorial'],
+        'Urgent Cleaning Scheduled'       => ['Facilities', 'Janitorial'],
+        'Consumable Low Stock'            => ['Facilities', 'Janitorial'],
+        'Hazardous Waste Alert'           => ['Facilities', 'Waste Watch'],
+        'Sports Equipment Borrowed'       => ['Facilities', 'Sports'],
+        'Sports Equipment Overdue'        => ['Facilities', 'Sports'],
+        'Sports Equipment Due Soon'       => ['Facilities', 'Sports'],
+        'Sports Equipment Needs Repair'   => ['Facilities', 'Sports'],
+        'Job Order Expiring Soon'         => ['Facilities', 'Personnel'],
+        'Job Order Expired'               => ['Facilities', 'Personnel'],
+        'Contract Expiring Soon'          => ['Facilities', 'Personnel'],
+        'Contract Expired'                => ['Facilities', 'Personnel'],
+        'Personnel Document Incomplete'   => ['Facilities', 'Personnel'],
+        'Inventory Low Stock'             => ['Equipment', 'Tools'],
+        'Tool Borrowed'                   => ['Equipment', 'Tools'],
+        'Tool Due Soon'                   => ['Equipment', 'Tools'],
+        'Tool Overdue'                    => ['Equipment', 'Tools'],
+        'Vehicle Inspection'              => ['Equipment', 'Vehicle'],
+        'Vehicle Expiry'                  => ['Equipment', 'Vehicle'],
+        'Trip Ticket Request'             => ['Equipment', 'Vehicle'],
+        'Trip Ticket Assignment'          => ['Equipment', 'Vehicle'],
+        'Travel Reminder'                 => ['Equipment', 'Vehicle'],
+        'Vehicle Service Due'             => ['Equipment', 'Motor Pool'],
+        'Motor Pool Work Order'           => ['Equipment', 'Motor Pool'],
+        'Equipment Needs Repair'          => ['Equipment', 'Motor Pool'],
+        'Fire Extinguisher Installed'     => ['Safety and Security', 'Fire Safety'],
+        'Fire Extinguisher Expiring Soon' => ['Safety and Security', 'Fire Safety'],
+    ];
+
     // Only roles with a restricted sidebar are scoped here — everyone else
     // (Administrator — the only "general", unfiltered view of the log — and
     // any other existing role) keeps seeing everything, unchanged.
@@ -58,13 +94,13 @@ class NotificationModel extends Model
     {
         return match (strtolower($role)) {
             'facilities' => ['tools', 'personnel', 'aircon', 'safety', 'waste'],
-            // Safety & Security: fire safety only (vehicles belong to Asset Acquisition now).
-            'security'   => ['firesafety'],
+            // Safety & Security also covers Vehicle Management (vehicle list, GPS, trip tickets), so vehicle and trip notifications come here too.
+            'security'   => ['firesafety', 'vehicles'],
             // Asset Acquisition and Monitoring: vehicles, trips and the motor pool.
             'assets'     => ['vehicles', 'motorpool'],
             // Sports Equipment Monitoring: only sports equipment notifications.
             'sports'     => ['sports'],
-            // Tools Head = the Tools & Equipment / "Maintenance" office —
+            // Tools Head = the Equipment / "Maintenance" office —
             // only its own inventory/borrow notifications.
             'tools'      => ['tools'],
             'janitorial' => ['janitorial', 'waste'],
@@ -210,7 +246,7 @@ class NotificationModel extends Model
             $text      = $over
                 ? "{$r['asset_name']} was due back on {$due} - borrowed by {$who}."
                 : "{$r['asset_name']} is due back on {$due} - borrowed by {$who}.";
-            $recipient = $isSports ? 'Sports Equipment Office' : 'Tools & Equipment Office';
+            $recipient = $isSports ? 'Sports Equipment Office' : 'Equipment Office';
 
             $this->notifyOnce($category, $text, $recipient, $over ? 'CRITICAL' : 'MODERATE');
         }

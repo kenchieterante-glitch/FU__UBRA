@@ -50,6 +50,8 @@ class SettingsController extends BaseController
             'flash_error'   => $this->session->getFlashdata('error'),
         ];
 
+        $data += (new \App\Controllers\RecordsController())->retentionPanelData();
+
         return view('settings/index', $data);
     }
 
@@ -131,6 +133,18 @@ class SettingsController extends BaseController
 
         if (empty($fullName) || empty($employeeId) || empty($email) || empty($password)) {
             $this->session->setFlashdata('error', 'Full name, employee ID, email, and password are required.');
+            return redirect()->to('/settings');
+        }
+
+        if (strlen((string) $password) < 8) {
+            $this->session->setFlashdata('error', 'The password must be at least 8 characters.');
+            return redirect()->to('/settings');
+        }
+        $taken = $this->db->table('users')->groupStart()
+            ->where('emp_id', $employeeId)->orWhere('username', $employeeId)->orWhere('email', $email)
+            ->groupEnd()->countAllResults();
+        if ($taken > 0) {
+            $this->session->setFlashdata('error', 'That employee ID or email is already used by another account.');
             return redirect()->to('/settings');
         }
 

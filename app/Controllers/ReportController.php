@@ -22,6 +22,38 @@ class ReportController extends BaseController
         $this->session     = \Config\Services::session();
     }
 
+    private function statusUpdate(): array
+    {
+        $status = (string) $this->request->getPost('status');
+
+        return in_array($status, ['Pending', 'Completed'], true) ? ['status' => $status, 'last_activity_at' => date('Y-m-d H:i:s')] : [];
+    }
+
+    // Any signed-in user can file a report from the web; it starts as Pending and is tracked in the Information Hub.
+    public function submit()
+    {
+        if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
+
+        $name     = trim((string) $this->request->getPost('report_name'));
+        $category = trim((string) $this->request->getPost('category'));
+        $details  = trim((string) $this->request->getPost('details'));
+        if ($name === '' || $category === '' || $details === '') {
+            return redirect()->to('/records')->with('error', 'Title, category and details are required.');
+        }
+
+        $this->reportModel->insert([
+            'report_name'      => $name,
+            'type_module'      => $category,
+            'details'          => $details,
+            'submitted_by'     => (string) $this->session->get('full_name'),
+            'status'           => 'Pending',
+            'last_activity_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->logActivity('Report', "Submitted report {$name} ({$category})");
+
+        return redirect()->to('/records')->with('success', 'Your report was submitted. You can track its status in the Information Hub.');
+    }
+
     public function update()
     {
         if (!$this->session->get('isLoggedIn')) return redirect()->to('/login');
@@ -35,8 +67,7 @@ class ReportController extends BaseController
         try {
             $this->reportModel->update($id, [
                 'report_name'  => $name,
-                'generated_by' => $this->request->getPost('generated_by'),
-            ]);
+            ] + $this->statusUpdate());
         } catch (\Exception $e) {
             log_message('error', 'ReportController::update failed for id ' . $id . ': ' . $e->getMessage());
             return redirect()->to('/reports')->withInput()->with('error', 'Could not save report changes.');

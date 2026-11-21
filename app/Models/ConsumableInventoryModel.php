@@ -5,6 +5,8 @@ use CodeIgniter\Model;
 class ConsumableInventoryModel extends Model
 {
     protected $table         = 'consumable_inventory';
+    use \App\Models\Concerns\HidesArchived;
+    protected string $archiveType = 'supply';
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [

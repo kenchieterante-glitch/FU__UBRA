@@ -2984,10 +2984,8 @@ body.sidebar-collapsed .sidebar-footer .nav-label {
 .ui-confirm-box.is-danger .ui-confirm-ok { background: var(--red); }
 .ui-confirm-box.is-danger .ui-confirm-ok:hover { filter: brightness(0.9); }
 
-/* Column titles centered on every main list table (Personnel, Tools,
-   Vehicles, Trip Tickets, GPS, Records, Notifications, Janitorial, …).
-   Data cells keep their own alignment. Element+class selectors so this
-   wins over page CSS that sets a plain `.xyz-table th { text-align:left }`. */
+/* Column titles line up with their values: left for text columns; columns that only hold buttons/icons are
+   centered (header and cells) by layouts/_table_align.php, which adds .col-center. */
 table.data-table thead th,
 table.sj-table thead th,
 table.travel-table thead th,
@@ -2995,10 +2993,15 @@ table.rec-table thead th,
 table.notif-table thead th,
 table.gps-table thead th,
 table.stg-table thead th {
-  text-align: center;
+  text-align: left;
 }
 
-/* Data cells left-aligned; column titles stay centered above them. */
+table thead th.col-center,
+table tbody td.col-center {
+  text-align: center !important;
+}
+
+/* Data cells left-aligned. */
 table.data-table tbody td,
 table.sj-table tbody td,
 table.travel-table tbody td,

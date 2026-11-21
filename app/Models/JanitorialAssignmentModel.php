@@ -5,6 +5,8 @@ use CodeIgniter\Model;
 class JanitorialAssignmentModel extends Model
 {
     protected $table         = 'janitorial_assignments';
+    use \App\Models\Concerns\HidesArchived;
+    protected string $archiveType = 'cleaning';
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [

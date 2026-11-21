@@ -16,7 +16,7 @@ $recordList = $recordList ?? ($records ?? []);
             };
             $rowClass = $computedStatus === 'Overdue' ? 'row-overdue' : '';
           ?>
-          <tr class="borrow-row <?= $rowClass ?>" data-id="<?= (int) $r['id'] ?>" data-status="<?= esc($computedStatus) ?>" data-borrowed="<?= esc((string) ($r['borrowed_date'] ?? '')) ?>" data-due="<?= esc((string) ($r['expected_return'] ?? '')) ?>" data-name="<?= esc($r['asset_name'] ?? '') ?>" data-category="<?= esc($r['category'] ?? '') ?>">
+          <tr class="borrow-row <?= $rowClass ?>" data-id="<?= (int) $r['id'] ?>"<?= $computedStatus === 'Returned' ? ' data-bulk-key="borrow:' . (int) $r['id'] . '"' : '' ?> data-status="<?= esc($computedStatus) ?>" data-borrowed="<?= esc((string) ($r['borrowed_date'] ?? '')) ?>" data-due="<?= esc((string) ($r['expected_return'] ?? '')) ?>" data-name="<?= esc($r['asset_name'] ?? '') ?>" data-category="<?= esc($r['category'] ?? '') ?>">
             <td class="tool-name-cell"><?= esc($r['asset_name'] ?? 'Unknown tool') ?></td>
             <td><?= esc($r['asset_code'] ?? '—') ?></td>
             <td><?= esc($r['borrower'] ?? 'Not on record') ?></td>

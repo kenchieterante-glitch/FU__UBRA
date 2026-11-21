@@ -17,7 +17,10 @@
     </div>
 </div>
 
-<div class="role-dash-panel">
+<style>
+.role-dash-panel.compact-panel{padding:10px 14px}.role-dash-panel.compact-panel .role-dash-panel-title{font-size:13px;margin-bottom:6px}.role-dash-panel.compact-panel .stat-cards{gap:8px}.role-dash-panel.compact-panel .stat-card{padding:8px 10px;min-height:0}.role-dash-panel.compact-panel .stat-card h3{font-size:11px;margin:2px 0}.role-dash-panel.compact-panel .stat-card .value{font-size:18px}.role-dash-panel.compact-panel .stat-icon{width:26px;height:26px;font-size:13px}
+</style>
+<div class="role-dash-panel compact-panel">
     <div class="role-dash-panel-title"><i class="bi bi-fire"></i> Fire Safety &amp; Maintenance</div>
     <div class="stat-cards">
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Fire Extinguishers" data-url="<?= base_url('safety') ?>">

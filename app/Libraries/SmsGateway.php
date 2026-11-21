@@ -104,7 +104,7 @@ class SmsGateway
             curl_close($ch);
 
             if ($resp === false) { $last = 'Could not reach the SMS gateway (' . $err . '). Check your internet connection and the gateway URL in .env.'; break; }
-            if ($code >= 200 && $code < 300) return ['ok' => true, 'message' => "Sent to {$to}. The gateway accepted it and the phone will send it shortly; check the recipient's phone."];
+            if ($code >= 200 && $code < 300) return ['ok' => true, 'message' => "Sent to {$to}. The gateway accepted it; check the recipient's phone."];
             if ($code === 401 || $code === 403) { $last = 'The gateway refused the username or password.'; break; }
             $last = "The gateway answered with error {$code}.";
         }

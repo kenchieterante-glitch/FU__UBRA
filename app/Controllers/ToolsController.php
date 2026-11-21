@@ -48,7 +48,7 @@ class ToolsController extends BaseController
      * (rows_html) — Tools/_rows.php is the one place that draws a row
      * (condition/availability/stock badges), shared by both the normal
      * page load and this endpoint. category is one of 'Power Tools',
-     * 'Consumable', or omitted for the main All Tools
+     * 'Consumable', or omitted for the main All Equipment
      * view — matches whichever tab the polling script is currently on.
      */
     public function refreshData()
@@ -299,7 +299,7 @@ class ToolsController extends BaseController
             return redirect()->to($back)->with('error', 'No tools with a QR code to print.');
         }
 
-        $label = $category !== '' ? tool_cat_label($category) . ' QR Codes' : 'Tools & Equipment QR Codes';
+        $label = $category !== '' ? tool_cat_label($category) . ' QR Codes' : 'Equipment QR Codes';
         $pdf   = QrSheetPdf::render($items, $paperKey, $per, $label, 'item(s)');
 
         return $this->response
@@ -325,11 +325,18 @@ class ToolsController extends BaseController
     {
         if ($resp = $this->denyOutsideToolScope($this->request->getPost('category'))) return $resp;
         $custodianName = $this->request->getPost('custodian_id') ?? $this->request->getPost('custodian');
-        $name = $this->request->getPost('asset_name');
+        $name = trim((string) $this->request->getPost('asset_name'));
+        $code = trim((string) $this->request->getPost('asset_code'));
+        if ($name === '') {
+            return redirect()->back()->withInput()->with('error', 'Asset name is required.');
+        }
+        if ($code !== '' && $this->toolsModel->where('asset_code', $code)->countAllResults() > 0) {
+            return redirect()->back()->withInput()->with('error', "Asset code {$code} is already used by another tool.");
+        }
 
         $this->toolsModel->insert([
             'asset_name'       => $name,
-            'asset_code'       => $this->request->getPost('asset_code'),
+            'asset_code'       => $code !== '' ? $code : null,
             'category'         => $this->request->getPost('category'),
             'location'         => $this->request->getPost('location'),
             'custodian'        => $custodianName,
@@ -347,11 +354,18 @@ class ToolsController extends BaseController
     {
         if ($resp = $this->denyOutsideToolScope($this->toolsModel->find($id)['category'] ?? null, $this->request->getPost('category'))) return $resp;
         $custodianName = $this->request->getPost('custodian_id') ?? $this->request->getPost('custodian');
-        $name = $this->request->getPost('asset_name');
+        $name = trim((string) $this->request->getPost('asset_name'));
+        $code = trim((string) $this->request->getPost('asset_code'));
+        if ($name === '') {
+            return redirect()->back()->withInput()->with('error', 'Asset name is required.');
+        }
+        if ($code !== '' && $this->toolsModel->where('asset_code', $code)->where('id !=', $id)->countAllResults() > 0) {
+            return redirect()->back()->withInput()->with('error', "Asset code {$code} is already used by another tool.");
+        }
 
         $this->toolsModel->update($id, [
             'asset_name'       => $name,
-            'asset_code'       => $this->request->getPost('asset_code'),
+            'asset_code'       => $code !== '' ? $code : null,
             'category'         => $this->request->getPost('category'),
             'location'         => $this->request->getPost('location'),
             'custodian'        => $custodianName,
@@ -420,22 +434,31 @@ class ToolsController extends BaseController
         $department     = $this->request->getPost('department');
         $expectedReturn = $this->request->getPost('expected_return');
 
-        $this->borrowModel->insert([
-            'tool_id'           => $toolId,
-            'borrower'         => $borrowerName,
-            'department'       => $department,
-            'borrowed_date'    => date('Y-m-d'),
-            'expected_return'   => $expectedReturn,
-            'condition_on_borrow' => $this->request->getPost('condition_on_borrow') ?? 'Excellent',
-            'status'           => 'Borrowed',
-            'created_at'       => date('Y-m-d H:i:s'),
-            'last_activity_at' => date('Y-m-d H:i:s'),
-        ]);
-
-        $this->toolsModel->update($toolId, [
-            'availability' => 'Borrowed',
-            'last_activity_at' => date('Y-m-d H:i:s'),
-        ]);
+        // One transaction: lock the tool, make sure nobody took it a moment ago, then save the record and the new status together.
+        $saved = $this->atomic(function () use ($toolId, $borrowerName, $department, $expectedReturn) {
+            $locked = $this->lockRow('tools', (int) $toolId);
+            if (!$locked || $locked['availability'] !== 'Available') {
+                throw new \RuntimeException('That tool was just taken by someone else. Refresh the list.');
+            }
+            $this->borrowModel->insert([
+                'tool_id'           => $toolId,
+                'borrower'         => $borrowerName,
+                'department'       => $department,
+                'borrowed_date'    => date('Y-m-d'),
+                'expected_return'   => $expectedReturn,
+                'condition_on_borrow' => $this->request->getPost('condition_on_borrow') ?? 'Excellent',
+                'status'           => 'Borrowed',
+                'created_at'       => date('Y-m-d H:i:s'),
+                'last_activity_at' => date('Y-m-d H:i:s'),
+            ]);
+            $this->toolsModel->update($toolId, [
+                'availability' => 'Borrowed',
+                'last_activity_at' => date('Y-m-d H:i:s'),
+            ]);
+        });
+        if (!$saved['ok']) {
+            return redirect()->to('/tools')->with('error', $saved['error']);
+        }
 
         $dueText = !empty($expectedReturn) ? date('M j, Y', strtotime($expectedReturn)) : 'no due date set';
         if (($tool['category'] ?? '') === 'Sports Equipment') {
@@ -450,7 +473,7 @@ class ToolsController extends BaseController
             'category'    => 'Tool Borrowed',
             'description' => "{$tool['asset_name']} borrowed by " . ($borrowerName ?: 'an unrecorded borrower')
                 . ($department ? " ({$department})" : '') . " — due back on {$dueText}.",
-            'recipient'   => 'Tools & Equipment Office',
+            'recipient'   => 'Equipment Office',
             'priority'    => 'MODERATE',
             'status'      => 'Pending',
             'is_read'     => 0,
@@ -510,27 +533,36 @@ class ToolsController extends BaseController
         $remarks   = $this->request->getPost('remarks');
         $isFullReturn = $returnedQty >= $outstanding;
 
-        $this->borrowModel->update($borrowRecord['id'], [
-            'status'            => $isFullReturn ? 'Returned' : 'Borrowed',
-            'last_activity_at'  => date('Y-m-d H:i:s'),
-        ]);
-
-        $returnModel->insert([
-            'borrow_id'         => $borrowRecord['id'],
-            'tool_id'           => $toolId,
-            'quantity_returned' => $returnedQty,
-            'returned_by'       => $borrowRecord['borrower'],
-            'return_date'       => date('Y-m-d'),
-            'condition_status'  => $condition,
-            'remarks'           => $remarks,
-        ]);
-
-        $this->toolsModel->update($toolId, [
-            'availability'      => 'Available',
-            'condition_status'  => $condition,
-            'current_stock'     => $stockTracked ? (float) $tool['current_stock'] + $returnedQty : $tool['current_stock'],
-            'last_activity_at'  => date('Y-m-d H:i:s'),
-        ]);
+        // One transaction: lock the borrow record and the tool, make sure nobody returned it a moment ago, then save all three changes together.
+        $saved = $this->atomic(function () use ($borrowRecord, $toolId, $returnModel, $returnedQty, $isFullReturn, $condition, $remarks, $stockTracked) {
+            $lockedBorrow = $this->lockRow('borrow_records', (int) $borrowRecord['id']);
+            if (!$lockedBorrow || $lockedBorrow['status'] !== 'Borrowed') {
+                throw new \RuntimeException('This tool was just returned by someone else. Refresh the list.');
+            }
+            $lockedTool = $this->lockRow('tools', (int) $toolId);
+            $this->borrowModel->update($borrowRecord['id'], [
+                'status'            => $isFullReturn ? 'Returned' : 'Borrowed',
+                'last_activity_at'  => date('Y-m-d H:i:s'),
+            ]);
+            $returnModel->insert([
+                'borrow_id'         => $borrowRecord['id'],
+                'tool_id'           => $toolId,
+                'quantity_returned' => $returnedQty,
+                'returned_by'       => $borrowRecord['borrower'],
+                'return_date'       => date('Y-m-d'),
+                'condition_status'  => $condition,
+                'remarks'           => $remarks,
+            ]);
+            $this->toolsModel->update($toolId, [
+                'availability'      => 'Available',
+                'condition_status'  => $condition,
+                'current_stock'     => $stockTracked ? (float) $lockedTool['current_stock'] + $returnedQty : $lockedTool['current_stock'],
+                'last_activity_at'  => date('Y-m-d H:i:s'),
+            ]);
+        });
+        if (!$saved['ok']) {
+            return redirect()->to('/tools')->with('error', $saved['error']);
+        }
 
         if (($tool['category'] ?? '') === 'Sports Equipment' && $condition === 'Poor') {
             (new NotificationModel())->notifySports('Sports Equipment Needs Repair', "{$tool['asset_name']} was returned in Poor condition.", 'MODERATE');

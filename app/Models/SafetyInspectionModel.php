@@ -7,6 +7,8 @@ use CodeIgniter\Model;
 class SafetyInspectionModel extends Model
 {
     protected $table         = 'safety_inspections';
+    use \App\Models\Concerns\HidesArchived;
+    protected string $archiveType = 'inspection';
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [

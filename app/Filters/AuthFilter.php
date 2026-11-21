@@ -81,6 +81,7 @@ class AuthFilter implements FilterInterface
             'auth/logout',
             'auth/register',
             'auth/forgot-password',
+            'evacuation-map',
         ];
 
         $isPublicPath = false;

@@ -73,6 +73,7 @@ class SecurityDeptController extends BaseController
                 : ($e['status'] === 'Refillable' ? 'Needs Refill' : 'Working');
             [$status, $due] = $this->expiryAdjust($status, $this->dueState($e['next_due']), $e['expires_on'] ?? null);
             $rows[] = [
+                'bulk'     => 'fire:' . $e['id'],
                 'type'     => 'Fire Extinguisher',
                 'code'     => $e['unit_id'],
                 'building' => $e['location'],
@@ -90,6 +91,7 @@ class SecurityDeptController extends BaseController
         foreach ((new SafetyEquipmentModel())->orderBy('building', 'ASC')->findAll() as $e) {
             [$status, $due] = $this->expiryAdjust($e['status'], $this->dueState($e['next_check']), $e['expires_on'] ?? null);
             $rows[] = [
+                'bulk'     => 'safetyeq:' . $e['id'],
                 'type'     => $e['equipment_type'],
                 'code'     => $e['code'],
                 'building' => $e['building'],
@@ -178,6 +180,9 @@ class SecurityDeptController extends BaseController
                 ['label' => 'Fire Safety', 'url' => 'security-dept/fire-safety', 'icon' => 'bi-fire', 'desc' => 'Fire extinguishers, fire alarms, smoke detectors, and exit signs.'],
                 ['label' => 'Guard & Security Monitoring', 'url' => 'security-dept/guard', 'icon' => 'bi-shield-check', 'desc' => 'Key borrowing with QR scanning, guard records, and vehicle entry and exit.'],
                 ['label' => 'Safety Inspection', 'url' => 'security-dept/inspection', 'icon' => 'bi-clipboard2-check', 'desc' => 'Monthly inspection form, building safety status, and history.'],
+                ['label' => 'Vehicle List', 'url' => 'vehicles', 'icon' => 'bi-truck', 'desc' => 'Vehicle records, availability, inspection status and fuel-need prediction.'],
+                ['label' => 'GPS Tracker', 'url' => 'gps', 'icon' => 'bi-geo-alt-fill', 'desc' => 'Live vehicle location and route history.'],
+                ['label' => 'Trip Ticket', 'url' => 'travel', 'icon' => 'bi-ticket-perforated', 'desc' => 'Trip requests, approval, dispatch and trip status.'],
             ],
         ]);
     }
@@ -220,6 +225,42 @@ class SecurityDeptController extends BaseController
             'inspected_by'  => $latest[$b]['inspected_by'] ?? null,
             'inspected_at'  => $latest[$b]['inspected_at'] ?? null,
         ], FireExtinguisherModel::BUILDINGS);
+    }
+
+    // Building Information: every campus building with its floors and the fire extinguishers registered for it.
+    public function buildings()
+    {
+        if (!session()->get('isLoggedIn')) return redirect()->to('/login');
+
+        $today = date('Y-m-d');
+        $soon  = date('Y-m-d', strtotime('+30 days'));
+        $units = [];
+        foreach ((new FireExtinguisherModel())->orderBy('floor', 'ASC')->orderBy('unit_id', 'ASC')->findAll() as $e) {
+            $units[$e['location']][] = $e;
+        }
+
+        $rows = [];
+        foreach (FireExtinguisherModel::BUILDINGS as $name) {
+            $list   = $units[$name] ?? [];
+            $floors = FireExtinguisherModel::BUILDING_FLOORS[$name] ?? FireExtinguisherModel::DEFAULT_FLOORS;
+            $attention = 0;
+            $nextDue = null;
+            foreach ($list as $e) {
+                $bad = in_array($e['status'], ['Defective', 'Missing', 'Refillable'], true)
+                    || (!empty($e['next_due']) && $e['next_due'] < $today)
+                    || (!empty($e['expires_on']) && $e['expires_on'] < $soon);
+                if ($bad) $attention++;
+                if (!empty($e['next_due']) && ($nextDue === null || $e['next_due'] < $nextDue)) $nextDue = $e['next_due'];
+            }
+            $rows[] = ['name' => $name, 'floors' => $floors, 'units' => $list, 'attention' => $attention, 'next_due' => $nextDue];
+        }
+
+        return view('security_dept/buildings', [
+            'title'   => 'Building Information',
+            'pageCss' => 'safety.css',
+            'rows'    => $rows,
+            'today'   => $today,
+        ]);
     }
 
     public function index(string $section = 'fire-safety')
@@ -290,6 +331,7 @@ class SecurityDeptController extends BaseController
     // Staff marked Inactive (resigned / ended) are not allowed to borrow keys. "On Leave" is still allowed.
     protected function guardActive(array $p): ?array
     {
+        if (!empty($p['is_archived'])) return null;   // archived staff are no longer active
         return strcasecmp((string) ($p['status'] ?? 'Active'), 'Inactive') === 0 ? null : $p;
     }
 
@@ -336,18 +378,26 @@ class SecurityDeptController extends BaseController
         if ($key['status'] === 'Borrowed') return $this->guardJson(409, "\"{$key['key_name']}\" is already out.");
 
         $logs = new KeyBorrowLogModel();
-        $logs->insert([
-            'log_number'    => 'KL-' . str_pad((string) ($logs->countAllResults() + 1), 3, '0', STR_PAD_LEFT),
-            'borrower_id'   => $person['emp_id'],
-            'full_name'     => $person['full_name'],
-            'department'    => $person['department_name'] ?? '',
-            'key_item'      => $key['key_name'],
-            'key_id'        => $key['id'],
-            'scan_in'       => date('Y-m-d H:i:s'),
-            'status'        => 'Active',
-            'guard_on_duty' => session()->get('full_name'),
-        ]);
-        (new FacilityKeyModel())->update($key['id'], ['status' => 'Borrowed']);
+        // One transaction: lock the key, make sure nobody took it a moment ago, then save the log and the key status together.
+        $saved = $this->atomic(function () use ($logs, $person, $key) {
+            $locked = $this->lockRow('facility_keys', (int) $key['id']);
+            if (!$locked || $locked['status'] === 'Borrowed') {
+                throw new \RuntimeException("\"{$key['key_name']}\" was just taken by someone else.");
+            }
+            $logs->insert([
+                'log_number'    => 'KL-' . str_pad((string) ($logs->countAllResults() + 1), 3, '0', STR_PAD_LEFT),
+                'borrower_id'   => $person['emp_id'],
+                'full_name'     => $person['full_name'],
+                'department'    => $person['department_name'] ?? '',
+                'key_item'      => $key['key_name'],
+                'key_id'        => $key['id'],
+                'scan_in'       => date('Y-m-d H:i:s'),
+                'status'        => 'Active',
+                'guard_on_duty' => session()->get('full_name'),
+            ]);
+            (new FacilityKeyModel())->update($key['id'], ['status' => 'Borrowed']);
+        });
+        if (!$saved['ok']) return $this->guardJson($saved['conflict'] ? 409 : 500, $saved['error']);
         $this->logActivity('Safety', "Key \"{$key['key_name']}\" lent to {$person['full_name']}");
 
         return $this->guardJson(200, "\"{$key['key_name']}\" lent to {$person['full_name']}.", ['ok' => true] + $this->guardSnapshot());
@@ -365,8 +415,16 @@ class SecurityDeptController extends BaseController
         $log = $logs->where('key_id', $key['id'])->where('status', 'Active')->orderBy('id', 'DESC')->first();
         if (!$log) return $this->guardJson(409, "\"{$key['key_name']}\" is not out right now.");
 
-        $logs->update($log['id'], ['scan_out' => date('Y-m-d H:i:s'), 'status' => 'Returned']);
-        (new FacilityKeyModel())->update($key['id'], ['status' => 'Available']);
+        $saved = $this->atomic(function () use ($logs, $log, $key) {
+            $lockedKey = $this->lockRow('facility_keys', (int) $key['id']);
+            $stillOut = $logs->where('id', $log['id'])->where('status', 'Active')->first();
+            if (!$lockedKey || !$stillOut) {
+                throw new \RuntimeException("\"{$key['key_name']}\" was just received by someone else.");
+            }
+            $logs->update($log['id'], ['scan_out' => date('Y-m-d H:i:s'), 'status' => 'Returned']);
+            (new FacilityKeyModel())->update($key['id'], ['status' => 'Available']);
+        });
+        if (!$saved['ok']) return $this->guardJson($saved['conflict'] ? 409 : 500, $saved['error']);
         $this->logActivity('Safety', "Key \"{$key['key_name']}\" returned by {$log['full_name']}");
 
         return $this->guardJson(200, "\"{$key['key_name']}\" received back from {$log['full_name']}.", ['ok' => true] + $this->guardSnapshot());

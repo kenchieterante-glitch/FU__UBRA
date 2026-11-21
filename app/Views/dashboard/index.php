@@ -59,7 +59,7 @@
       <div class="pending-column">
         <h3><i class="bi bi-hand-index-thumb-fill"></i> Borrowed Tools</h3>
         <div id="pendingToolsList" class="pending-list"></div>
-        <a class="overview-link" href="<?= esc(site_url('tools?filter=borrowed')) ?>">View in Tools Management →</a>
+        <a class="overview-link" href="<?= esc(site_url('tools?filter=borrowed')) ?>">View in Equipment Management →</a>
       </div>
       <div class="pending-column">
         <h3><i class="bi bi-wrench-adjustable"></i> Open Work Orders</h3>
@@ -88,7 +88,10 @@
     <?php foreach ($dept_sections as $d): ?>
       <div class="panel-card dept-card">
         <a class="dept-card-head" href="<?= esc(site_url($d['url'])) ?>"><i class="bi <?= esc($d['icon'], 'attr') ?>"></i> <?= esc($d['title']) ?></a>
-        <?php foreach ($d['links'] as $l): ?>
+        <?php $lastGroup = null; foreach ($d['links'] as $l): ?>
+          <?php if (!empty($l['group']) && $l['group'] !== $lastGroup): $lastGroup = $l['group']; ?>
+            <div class="dept-group"><?= esc($lastGroup) ?></div>
+          <?php endif; ?>
           <a class="dept-link" href="<?= esc(site_url($l['url'])) ?>">
             <span><i class="bi <?= esc($l['icon'], 'attr') ?>"></i> <?= esc($l['label']) ?></span>
             <?php if ($l['count'] !== ''): ?><small><?= esc($l['count']) ?></small><?php endif; ?>

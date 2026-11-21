@@ -118,13 +118,13 @@
 
   <div class="wo-pane" id="wo-pending">
     <div class="table-wrap">
-      <table class="sj-table">
+      <table class="sj-table" data-bulk-endpoint="<?= base_url('records/bulk') ?>" data-bulk-actions="archive">
         <thead><tr><th>No.</th><th>Request</th><th>Building</th><th>Priority</th><th>Requested By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
         <tbody>
           <?php if (empty($pending)): ?>
             <tr><td colspan="8" class="empty-row">No pending work orders.</td></tr>
           <?php else: foreach ($pending as $w): ?>
-            <tr class="wo-row" data-id="<?= (int) $w['id'] ?>" data-created="<?= esc($w['created_at']) ?>" style="cursor:pointer" onclick="showWorkOrder(<?= (int) $w['id'] ?>)">
+            <tr class="wo-row" data-bulk-key="facwo:<?= (int) $w['id'] ?>" data-id="<?= (int) $w['id'] ?>" data-created="<?= esc($w['created_at']) ?>" style="cursor:pointer" onclick="showWorkOrder(<?= (int) $w['id'] ?>)">
               <td><strong>WO-<?= str_pad((string) $w['id'], 4, '0', STR_PAD_LEFT) ?></strong></td>
               <td><?= esc($w['title']) ?><?php if (!empty($w['details'])): ?><br><small class="text-muted"><?= esc($w['details']) ?></small><?php endif; ?></td>
               <td><?= esc($w['building']) ?><?= !empty($w['floor']) ? ', ' . esc($w['floor']) : '' ?></td>
@@ -153,13 +153,13 @@
 
   <div class="wo-pane" id="wo-history" style="display:none">
     <div class="table-wrap">
-      <table class="sj-table">
+      <table class="sj-table" data-bulk-endpoint="<?= base_url('records/bulk') ?>" data-bulk-actions="archive">
         <thead><tr><th>No.</th><th>Request</th><th>Building</th><th>Priority</th><th>Requested By</th><th>Submitted</th><th>Completed</th></tr></thead>
         <tbody>
           <?php if (empty($history)): ?>
             <tr><td colspan="7" class="empty-row">No completed work orders yet.</td></tr>
           <?php else: foreach ($history as $w): ?>
-            <tr class="wo-row" data-id="<?= (int) $w['id'] ?>" data-created="<?= esc($w['created_at']) ?>" style="cursor:pointer" onclick="showWorkOrder(<?= (int) $w['id'] ?>)">
+            <tr class="wo-row" data-bulk-key="facwo:<?= (int) $w['id'] ?>" data-id="<?= (int) $w['id'] ?>" data-created="<?= esc($w['created_at']) ?>" style="cursor:pointer" onclick="showWorkOrder(<?= (int) $w['id'] ?>)">
               <td><strong>WO-<?= str_pad((string) $w['id'], 4, '0', STR_PAD_LEFT) ?></strong></td>
               <td><?= esc($w['title']) ?></td>
               <td><?= esc($w['building']) ?></td>
@@ -274,14 +274,26 @@
   </div>
 
   <div id="acDetail" class="guard-card" style="margin-bottom:16px;display:none;"></div>
+  <form method="post" action="<?= base_url('facilities/aircon-units/report-damaged') ?>" id="acDamagedForm" onsubmit="return acConfirmDamaged()" style="display:none;margin-bottom:10px;align-items:center;gap:10px;">
+    <?= csrf_field() ?>
+    <span id="acSelectedCount" style="font-weight:600;"></span>
+    <span id="acSelectedIds"></span>
+    <button type="submit" class="btn-add" style="background:#c62828;"><i class="bi bi-exclamation-triangle-fill"></i> Report selected as damaged</button>
+    <button type="button" class="btn-add" style="background:#555;" onclick="acBulk('archive')"><i class="bi bi-archive-fill"></i> Archive selected</button>
+    <button type="button" class="btn-add" style="background:#2b2b33;" onclick="acBulk('delete')"><i class="bi bi-trash3-fill"></i> Delete selected</button>
+    <?php if (in_array(strtolower((string) session()->get('role')), ['administrator', 'facilities'], true)): ?>
+    <button type="submit" class="btn-add" style="background:#555;" formaction="<?= base_url('facilities/aircon-units/dispose') ?>" onclick="return acConfirmDispose()"><i class="bi bi-trash3-fill"></i> Dispose selected</button>
+    <?php endif; ?>
+  </form>
   <div class="table-wrap" id="acListArea">
     <table class="sj-table">
-      <thead><tr><th>Building</th><th>Floor</th><th>Unit</th><th>Condition</th><th>Last Cleaning</th><th>Next Schedule</th><th>Schedule Status</th><th>Assigned Tech</th></tr></thead>
+      <thead><tr><th style="width:34px;"><input type="checkbox" id="acSelectAll" title="Select all shown" aria-label="Select all shown" onclick="event.stopPropagation(); acToggleAll(this.checked)"></th><th>Building</th><th>Floor</th><th>Unit</th><th>Condition</th><th>Last Cleaning</th><th>Next Schedule</th><th>Schedule Status</th><th>Assigned Tech</th></tr></thead>
       <tbody id="acBody">
         <?php if (empty($aircon)): ?>
-          <tr><td colspan="8" class="empty-row">No aircon units registered yet.</td></tr>
+          <tr><td colspan="9" class="empty-row">No aircon units registered yet.</td></tr>
         <?php else: foreach ($aircon as $u): ?>
           <tr class="ac-row" data-id="<?= (int) $u['id'] ?>" data-last="<?= esc($u['last_cleaning'] ?? '') ?>" data-building="<?= esc($u['building']) ?>" data-schedule="<?= esc($u['schedule']) ?>" onclick="showAirconDetail(<?= (int) $u['id'] ?>)" style="cursor:pointer;">
+            <td onclick="event.stopPropagation()"><input type="checkbox" class="ac-check" value="<?= (int) $u['id'] ?>" aria-label="Select <?= esc($u['unit'], 'attr') ?>" onchange="acSelectionChanged()"></td>
             <td><strong><?= esc($u['building']) ?></strong></td>
             <td><?= esc($u['floor']) ?></td>
             <td><?= esc($u['unit']) ?></td>
@@ -416,13 +428,13 @@
     <div class="guard-card" style="padding:18px;margin-bottom:16px;">
       <div class="gc-title"><i class="bi bi-sunrise"></i> Morning Checklist</div>
       <div class="table-wrap">
-        <table class="sj-table">
+        <table class="sj-table" data-bulk-endpoint="<?= base_url('records/bulk') ?>" data-bulk-actions="archive">
           <thead><tr><th>Zone</th><th>Floor</th><th>Staff</th><th>Shift</th><th>Tasks</th><th>Progress</th></tr></thead>
           <tbody>
             <?php if (empty($morning_zones)): ?>
               <tr><td colspan="6" class="empty-row">No morning shifts assigned.</td></tr>
             <?php else: foreach ($morning_zones as $z): ?>
-              <tr data-id="<?= (int) $z['id'] ?>" data-last="<?= esc($z['last'] ?? '') ?>" style="cursor:pointer;" onclick="showZoneDetail(<?= (int) $z['id'] ?>)">
+              <tr data-bulk-key="cleaning:<?= (int) $z['id'] ?>" data-id="<?= (int) $z['id'] ?>" data-last="<?= esc($z['last'] ?? '') ?>" style="cursor:pointer;" onclick="showZoneDetail(<?= (int) $z['id'] ?>)">
                 <td><strong><?= esc($z['zone']) ?></strong></td>
                 <td><?= esc($z['floor']) ?></td>
                 <td><?= esc($z['staff']) ?></td>
@@ -439,13 +451,13 @@
     <div class="guard-card" style="padding:18px;">
       <div class="gc-title"><i class="bi bi-sunset"></i> Afternoon Checklist</div>
       <div class="table-wrap">
-        <table class="sj-table">
+        <table class="sj-table" data-bulk-endpoint="<?= base_url('records/bulk') ?>" data-bulk-actions="archive">
           <thead><tr><th>Zone</th><th>Floor</th><th>Staff</th><th>Shift</th><th>Tasks</th><th>Progress</th></tr></thead>
           <tbody>
             <?php if (empty($afternoon_zones)): ?>
               <tr><td colspan="6" class="empty-row">No afternoon shifts assigned.</td></tr>
             <?php else: foreach ($afternoon_zones as $z): ?>
-              <tr data-id="<?= (int) $z['id'] ?>" data-last="<?= esc($z['last'] ?? '') ?>" style="cursor:pointer;" onclick="showZoneDetail(<?= (int) $z['id'] ?>)">
+              <tr data-bulk-key="cleaning:<?= (int) $z['id'] ?>" data-id="<?= (int) $z['id'] ?>" data-last="<?= esc($z['last'] ?? '') ?>" style="cursor:pointer;" onclick="showZoneDetail(<?= (int) $z['id'] ?>)">
                 <td><strong><?= esc($z['zone']) ?></strong></td>
                 <td><?= esc($z['floor']) ?></td>
                 <td><?= esc($z['staff']) ?></td>
@@ -463,13 +475,13 @@
 
   <div class="jan-pane" id="jan-monitor" style="display:none">
     <div class="table-wrap">
-      <table class="sj-table">
+      <table class="sj-table" data-bulk-endpoint="<?= base_url('records/bulk') ?>" data-bulk-actions="archive">
         <thead><tr><th>Zone</th><th>Floor</th><th>Staff</th><th>Shift</th><th>Priority</th><th>Assigned Status</th><th>Tasks</th><th>Progress</th></tr></thead>
         <tbody>
           <?php if (empty($zones)): ?>
             <tr><td colspan="8" class="empty-row">No janitorial assignments yet.</td></tr>
           <?php else: foreach ($zones as $z): ?>
-            <tr data-id="<?= (int) $z['id'] ?>" data-last="<?= esc($z['last'] ?? '') ?>" style="cursor:pointer;" onclick="showZoneDetail(<?= (int) $z['id'] ?>)">
+            <tr data-bulk-key="cleaning:<?= (int) $z['id'] ?>" data-id="<?= (int) $z['id'] ?>" data-last="<?= esc($z['last'] ?? '') ?>" style="cursor:pointer;" onclick="showZoneDetail(<?= (int) $z['id'] ?>)">
               <td><strong><?= esc($z['zone']) ?></strong></td>
               <td><?= esc($z['floor']) ?></td>
               <td><?= esc($z['staff']) ?></td>
@@ -492,12 +504,12 @@
       <div class="guard-card" style="padding:18px;margin-bottom:16px;">
         <div class="gc-title"><i class="bi bi-box-seam"></i> <?= esc($category) ?></div>
         <div class="table-wrap">
-          <table class="sj-table sup-table">
+          <table class="sj-table sup-table" data-bulk-endpoint="<?= base_url('records/bulk') ?>" data-bulk-actions="archive">
             <colgroup><col style="width:30%"><col style="width:34%"><col style="width:18%"><col style="width:18%"></colgroup>
             <thead><tr><th>Item</th><th>Location</th><th>Stock</th><th>Status</th></tr></thead>
             <tbody>
               <?php foreach ($items as $it): ?>
-                <tr class="sup-row" data-cat="<?= esc($category) ?>" data-name="<?= esc($it['name']) ?>" data-stock="<?= esc((string) $it['stock']) ?>" data-status="<?= esc($it['status']) ?>">
+                <tr class="sup-row" data-bulk-key="supply:<?= (int) ($it['id'] ?? 0) ?>" data-cat="<?= esc($category) ?>" data-name="<?= esc($it['name']) ?>" data-stock="<?= esc((string) $it['stock']) ?>" data-status="<?= esc($it['status']) ?>">
                   <td><strong><?= esc($it['name']) ?></strong></td>
                   <td><?= esc($it['building'] ?? '—') ?><?= !empty($it['floor']) ? ', ' . esc($it['floor']) : '' ?><?= !empty($it['place']) ? '<br><small class="text-muted">' . esc($it['place']) . '</small>' : '' ?></td>
                   <td><?= esc((string) $it['stock']) ?> <?= esc($it['unit']) ?></td>
@@ -1227,6 +1239,41 @@ if (document.getElementById('acMapSVG')) {
     legend: 'aircon',
     onSelect: name => showAirconBuildingDetail(name),
   });
+}
+
+function acToggleAll(on) {
+  document.querySelectorAll('#acBody .ac-row').forEach(r => {
+    if (r.style.display === 'none') return;
+    const c = r.querySelector('.ac-check'); if (c) c.checked = on;
+  });
+  acSelectionChanged();
+}
+function acSelectionChanged() {
+  const checked = Array.from(document.querySelectorAll('#acBody .ac-check:checked'));
+  const form = document.getElementById('acDamagedForm');
+  form.style.display = checked.length ? 'flex' : 'none';
+  document.getElementById('acSelectedCount').textContent = checked.length + ' unit' + (checked.length === 1 ? '' : 's') + ' selected';
+  document.getElementById('acSelectedIds').innerHTML = checked.map(c => '<input type="hidden" name="unit_ids[]" value="' + c.value + '">').join('');
+}
+function acBulk(kind) {
+  const ids = Array.from(document.querySelectorAll('#acBody .ac-check:checked')).map(c => c.value);
+  if (!ids.length) return;
+  const word = kind === 'archive' ? 'archive' : 'permanently delete';
+  if (!confirm('Are you sure you want to ' + word + ' ' + ids.length + ' aircon unit' + (ids.length === 1 ? '' : 's') + '?' + (kind === 'delete' ? ' Only archived units can be deleted.' : ''))) return;
+  const body = new URLSearchParams();
+  body.append('action', kind);
+  ids.forEach(id => body.append('keys[]', 'aircon:' + id));
+  fetch('<?= base_url('records/bulk') ?>', { method: 'POST', headers: csrfHeaders({ 'X-Requested-With': 'XMLHttpRequest' }), body })
+    .then(r => r.json()).then(j => { try { sessionStorage.setItem('bulkMsg', j.message || 'Done.'); } catch (e) {} location.reload(); })
+    .catch(() => uiToast('Something went wrong. Please try again.', true));
+}
+function acConfirmDispose() {
+  const n = document.querySelectorAll('#acBody .ac-check:checked').length;
+  return n > 0 && confirm('Permanently dispose ' + n + ' selected unit' + (n === 1 ? '' : 's') + '? Only units marked Not Working can be disposed. This is recorded in the disposal log.');
+}
+function acConfirmDamaged() {
+  const n = document.querySelectorAll('#acBody .ac-check:checked').length;
+  return n > 0 && confirm('Report ' + n + ' selected aircon unit' + (n === 1 ? '' : 's') + ' as damaged? A repair work order will be created.');
 }
 
 function sortAirconRows() {

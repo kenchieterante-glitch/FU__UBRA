@@ -416,11 +416,14 @@ class PersonnelController extends BaseController
 
         $empId = trim((string) $this->request->getPost('emp_id'));
 
+        if (trim((string) $this->request->getPost('full_name')) === '') {
+            return redirect()->back()->withInput()->with('error', 'Full name is required.');
+        }
         if ($empId !== '' && $this->personnelModel->isEmpIdTaken($empId)) {
             return redirect()->back()->withInput()->with('error', 'Employee ID already exists.');
         }
 
-        $name = $this->request->getPost('full_name');
+        $name = trim((string) $this->request->getPost('full_name'));
         try {
             $this->personnelModel->insert([
                 'emp_id'        => $empId,
@@ -451,7 +454,10 @@ class PersonnelController extends BaseController
             return redirect()->back()->withInput()->with('error', 'Employee ID already exists.');
         }
 
-        $name = $this->request->getPost('full_name');
+        if (trim((string) $this->request->getPost('full_name')) === '') {
+            return redirect()->back()->withInput()->with('error', 'Full name is required.');
+        }
+        $name = trim((string) $this->request->getPost('full_name'));
         try {
             $this->personnelModel->update($id, [
                 'emp_id'        => $empId,

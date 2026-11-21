@@ -77,7 +77,7 @@ $borrowDetails = tool_borrow_details($recordList, $badgeClassFor);
   </div>
 
   <div class="tools-table-scroll">
-  <table id="borrowingTable" class="data-table">
+  <table id="borrowingTable" class="data-table" data-bulk-endpoint="<?= base_url('records/bulk') ?>" data-bulk-actions="archive">
     <thead>
       <tr>
         <th>Tool</th>

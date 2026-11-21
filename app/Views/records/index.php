@@ -2,11 +2,11 @@
 <?= $this->section('content') ?>
 
 <?php
-$stats = $stats ?? ['total_records' => 0, 'archived_records' => 0, 'reports_generated' => 0, 'today_activities' => 0];
+$stats = $stats ?? ['total_records' => 0, 'archived_records' => 0, 'reports_generated' => 0, 'reports_pending' => 0, 'reports_completed' => 0, 'today_activities' => 0];
 $activities = $activities ?? [];
 $scopedToJanitorial = $scopedToJanitorial ?? false;
 $scopeModules = $scopeModules ?? null;
-$modButtons = ['Tools' => ['tools', 'bi-wrench-adjustable'], 'Vehicle' => ['vehicle', 'bi-truck'], 'Motor Pool' => ['motor-pool', 'bi-gear-wide-connected'], 'Sports' => ['sports', 'bi-trophy-fill'], 'Security' => ['security', 'bi-shield-fill-check'], 'Facilities' => ['facilities', 'bi-building-gear'], 'Safety' => ['safety', 'bi-shield-check'], 'Janitorial' => ['janitorial', 'bi-brush'], 'Personnel' => ['personnel', 'bi-people-fill']];
+$modButtons = ['Tools' => ['tools', 'bi-wrench-adjustable'], 'Vehicle' => ['vehicle', 'bi-truck'], 'Motor Pool' => ['motor-pool', 'bi-gear-wide-connected'], 'Sports' => ['sports', 'bi-trophy-fill'], 'Security' => ['security', 'bi-shield-fill-check'], 'Facilities' => ['facilities', 'bi-building-gear'], 'Safety' => ['safety', 'bi-shield-check'], 'Janitorial' => ['janitorial', 'bi-brush'], 'Waste Watch' => ['waste-watch', 'bi-recycle'], 'Personnel' => ['personnel', 'bi-people-fill']];
 $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
 ?>
 
@@ -15,8 +15,8 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
     <!-- ── PAGE HEADER ──────────────────────────────────────────── -->
     <div class="page-header">
         <div>
-            <h1>Information Hub</h1>
-            <p class="page-subtitle"><?= $scopedToJanitorial ? 'Janitorial records and activity only.' : ($scopeModules ? implode(' and ', $scopeModules) . ' records and activity only.' : 'View, manage and generate reports for all modules in one place.') ?></p>
+            <h1>Reports</h1>
+            <p class="page-subtitle"><?= $scopedToJanitorial ? 'Janitorial records and activity only.' : ($scopeModules ? implode(' and ', $scopeModules) . ' records and activity only.' : 'View, manage and generate reports for all categories in one place.') ?></p>
         </div>
     </div>
 
@@ -27,7 +27,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
             <h3>Total Records</h3>
             <div class="value"><?= (int) $stats['total_records'] ?></div>
         </div>
-        <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('archived')" role="button" tabindex="0">
+        <div class="stat-card stat-card-clickable" onclick="<?= !empty($canArchive) ? "switchRecView('archived')" : "filterRecordsByStat('archived')" ?>" role="button" tabindex="0">
             <span class="stat-icon tone-neutral"><i class="bi bi-archive-fill"></i></span>
             <h3>Archived Records</h3>
             <div class="value"><?= (int) $stats['archived_records'] ?></div>
@@ -37,6 +37,16 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
             <h3>Reports Generated</h3>
             <div class="value"><?= (int) $stats['reports_generated'] ?></div>
         </div>
+        <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('pending')" role="button" tabindex="0" title="Reports waiting to be completed">
+            <span class="stat-icon tone-gold"><i class="bi bi-hourglass-split"></i></span>
+            <h3>Pending Reports</h3>
+            <div class="value"><?= (int) ($stats['reports_pending'] ?? 0) ?></div>
+        </div>
+        <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('completed')" role="button" tabindex="0" title="Reports that are done">
+            <span class="stat-icon tone-green"><i class="bi bi-check2-circle"></i></span>
+            <h3>Completed Reports</h3>
+            <div class="value"><?= (int) ($stats['reports_completed'] ?? 0) ?></div>
+        </div>
         <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('today')" role="button" tabindex="0">
             <span class="stat-icon tone-green"><i class="bi bi-calendar-day"></i></span>
             <h3>Today's Activities</h3>
@@ -44,25 +54,43 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
         </div>
     </div>
 
+    <?php $startView = $startView ?? 'records'; $disposalRows = $disposalRows ?? []; $archivedRows = $archivedRows ?? []; $canArchive = $canArchive ?? false; ?>
+    <style>
+      .rec-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:rgba(128,0,0,.07);margin-bottom:16px}
+      .rec-tab{border:0;background:transparent;padding:8px 18px;border-radius:9px;font-weight:600;font-size:14px;color:#555;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+      .rec-tab.active{background:#800000;color:#fff;box-shadow:0 2px 6px rgba(128,0,0,.25)}
+      .rec-tab .tab-count{font-size:11px;padding:1px 8px;border-radius:999px;background:rgba(0,0,0,.12)}
+      .rec-tab.active .tab-count{background:rgba(255,255,255,.25)}
+      .dsp-empty{padding:34px 12px;text-align:center;color:#888}
+      .dsp-empty i{font-size:30px;display:block;margin-bottom:8px;color:#c9a9a9}
+    </style>
+    <?php if (!empty($canArchive)): ?>
+    <div class="rec-tabs" role="tablist">
+        <button type="button" class="rec-tab<?= $startView === 'records' ? ' active' : '' ?>" id="tabRecords" role="tab" onclick="switchRecView('records')"><i class="bi bi-list-task"></i> Records</button>
+        <button type="button" class="rec-tab<?= $startView === 'archived' ? ' active' : '' ?>" id="tabArchived" role="tab" onclick="switchRecView('archived')"><i class="bi bi-archive"></i> Archived <span class="tab-count"><?= count($archivedRows) ?></span></button>
+        <?php if (!empty($canManageArchive)): ?>
+        <button type="button" class="rec-tab<?= $startView === 'disposal' ? ' active' : '' ?>" id="tabDisposal" role="tab" onclick="switchRecView('disposal')"><i class="bi bi-trash3"></i> Disposal <span class="tab-count"><?= count($disposalRows) ?></span></button>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
+    <div id="viewRecords"<?= $startView !== 'records' ? ' style="display:none"' : '' ?>>
     <!-- ── FILTER BAR ───────────────────────────────────────────── -->
     <div class="rec-filter-bar">
         <div class="rec-filter-fields">
-            <?php if ($scopeModules && count($scopeModules) > 1): ?>
+            <?php
+            $shownCats = $scopeModules
+                ? array_values(array_unique(array_map(fn($m) => \App\Libraries\DepartmentScope::categoryFor($m), $scopeModules)))
+                : array_keys(\App\Libraries\DepartmentScope::CATEGORIES);
+            if (count($shownCats) > 1): ?>
             <div class="rec-icon-filter" id="moduleFilterGroup" data-target="module">
-                <button type="button" class="rec-icon-btn active" data-value="" title="All"><i class="bi bi-grid-fill"></i></button>
-                <?php foreach ($scopeModules as $m): [$mv, $mi] = $modButtons[$m]; ?>
-                <button type="button" class="rec-icon-btn" data-value="<?= esc($mv) ?>" title="<?= esc($m) ?>"><i class="bi <?= $mi ?>"></i></button>
+                <button type="button" class="rec-icon-btn active" data-value="" title="All Categories"><i class="bi bi-grid-fill"></i></button>
+                <?php foreach ($shownCats as $cn): $cc = \App\Libraries\DepartmentScope::CATEGORIES[$cn]; ?>
+                <button type="button" class="rec-icon-btn" data-value="<?= esc($cc['slug']) ?>" title="<?= esc($cn) ?>"><i class="bi <?= esc($cc['icon']) ?>"></i></button>
                 <?php endforeach; ?>
             </div>
-            <?php elseif (!$scopeModules): ?>
-            <div class="rec-icon-filter" id="moduleFilterGroup" data-target="module">
-                <button type="button" class="rec-icon-btn active" data-value="" title="All Modules"><i class="bi bi-grid-fill"></i></button>
-                <button type="button" class="rec-icon-btn" data-value="tools" title="Tools"><i class="bi bi-wrench-adjustable"></i></button>
-                <button type="button" class="rec-icon-btn" data-value="vehicle" title="Vehicle"><i class="bi bi-truck"></i></button>
-                <button type="button" class="rec-icon-btn" data-value="safety" title="Safety"><i class="bi bi-shield-check"></i></button>
-                <button type="button" class="rec-icon-btn" data-value="janitorial" title="Janitorial"><i class="bi bi-brush"></i></button>
-                <button type="button" class="rec-icon-btn" data-value="personnel" title="Personnel"><i class="bi bi-people-fill"></i></button>
-            </div>
+            <?php else: ?>
+            <div class="rec-icon-filter" id="moduleFilterGroup" data-target="module" style="display:none"><button type="button" class="rec-icon-btn active" data-value=""></button></div>
             <?php endif; ?>
             <div class="rec-icon-filter" id="kindFilterGroup" data-target="kind">
                 <button type="button" class="rec-icon-btn active" data-value="" title="All Types"><i class="bi bi-collection"></i></button>
@@ -88,7 +116,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                 <option value="submitted">Submitted</option>
                 <option value="operational">Operational</option>
                 <option value="needs-repair">Needs Repair</option>
-                <option value="generated">Generated</option>
+                <option value="draft">Draft</option>
                 <option value="archived">Archived</option>
                 <option value="disposed">Disposed</option>
             </select>
@@ -110,19 +138,19 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
         <div class="rec-table-head">
             <div class="rec-table-title"><i class="bi bi-list-ul"></i> Recent Activity History</div>
             <div class="rec-table-actions">
+                <button type="button" class="rec-btn-dark" onclick="document.getElementById('submitReportModal').style.display='flex'"><i class="bi bi-send-fill"></i> Submit Report</button>
                 <button type="button" class="rec-btn-outline" onclick="openExportModal('excel')"><i class="bi bi-file-earmark-excel"></i> Export Excel</button>
                 <button type="button" class="rec-btn-outline" onclick="openExportModal('pdf')"><i class="bi bi-file-earmark-pdf"></i> Export PDF</button>
-                <button type="button" class="rec-btn-dark" onclick="filterArchivedOnly()"><i class="bi bi-archive-fill"></i> Archive</button>
+                <button type="button" class="rec-btn-dark" onclick="switchRecView('archived')"><i class="bi bi-archive-fill"></i> Archived</button>
             </div>
         </div>
 
         <div class="table-scroll">
-            <table class="rec-table" id="activityTable">
+            <table class="rec-table" id="activityTable" <?= !empty($canArchive) ? 'data-bulk-endpoint="' . base_url('records/bulk') . '" data-bulk-actions="archive,dispose"' : '' ?>>
                 <thead>
                     <tr>
                         <th>Date &amp; Time</th>
-                        <th>Module</th>
-                        <th>Type</th>
+                        <th>Category</th>
                         <th>Record</th>
                         <th>Action</th>
                         <th>Performed By</th>
@@ -132,17 +160,18 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                 </thead>
                 <tbody>
                     <?php if (empty($activities)): ?>
-                        <tr><td colspan="8" class="empty-row">No activity recorded yet.</td></tr>
+                        <tr><td colspan="7" class="empty-row">No activity recorded yet.</td></tr>
                     <?php else: ?>
                         <?php foreach ($activities as $act):
-                            $modSlug    = $slug($act['module']);
+                            $modSlug    = $slug($act['category'] ?? $act['module']);
                             $kindSlug   = $slug($act['kind']);
                             $actionSlug = $slug($act['action']);
                             $statusSlug = $slug($act['status']);
                             $dateVal    = $act['date'] ?? null;
                             $dateKey    = $dateVal ? date('Y-m-d', strtotime($dateVal)) : '';
                             $searchBlob = strtolower($act['module'] . ' ' . $act['record'] . ' ' . $act['record_sub'] . ' ' . $act['performed_by'] . ' ' . $act['action'] . ' ' . $act['status']);
-                            $modIcon = match ($act['module']) {
+                            $modIcon = \App\Libraries\DepartmentScope::CATEGORIES[$act['category'] ?? '']['icon'] ?? 'bi-folder-fill';
+                            $modIconUnused = match ($act['module']) {
                                 'Tools'      => 'bi-wrench-adjustable',
                                 'Vehicle'    => 'bi-truck',
                                 'Motor Pool' => 'bi-gear-wide-connected',
@@ -161,8 +190,10 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                             };
                         ?>
                         <tr
+                            <?php if (in_array($act['type'], \App\Controllers\RecordsController::archivableTypes(), true)): ?>data-bulk-key="<?= esc($act['type'] . ':' . $act['id']) ?>"<?php endif; ?>
                             data-type="<?= esc($act['type']) ?>"
                             data-module="<?= esc($modSlug) ?>"
+                            data-subtype="<?= esc($slug($act['module'])) ?>"
                             data-kind="<?= esc($kindSlug) ?>"
                             data-status="<?= esc($statusSlug) ?>"
                             data-date="<?= esc($dateKey) ?>"
@@ -175,10 +206,8 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                                 </div>
                             </td>
                             <td>
-                                <span class="mod-pill mod-<?= esc($modSlug) ?>"><i class="bi <?= $modIcon ?>"></i> <?= esc($act['module']) ?></span>
-                            </td>
-                            <td>
-                                <span class="kind-pill kind-<?= esc($kindSlug) ?>"><i class="bi <?= $kindIcon ?>"></i> <?= esc($act['kind']) ?></span>
+                                <span class="mod-pill mod-<?= esc($slug($act['module'])) ?>"><i class="bi <?= $modIcon ?>"></i> <?= esc($act['category'] ?? $act['module']) ?></span>
+                                <div class="rec-record-sub"><?= esc($act['type_label'] ?? '') ?></div>
                             </td>
                             <td>
                                 <div class="rec-record-name"><?= esc($act['record']) ?></div>
@@ -194,7 +223,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                                         data-report_name="<?= esc($act['record']) ?>"
                                         data-generated_by="<?= esc($act['performed_by']) ?>"
                                         data-type_module="<?= esc($act['record_sub']) ?>"
-                                        data-date_range="Last 30 Days">
+                                        data-details="<?= esc($act['details'] ?? '') ?>">
                                         <i class="bi bi-eye-fill"></i>
                                     </button>
                                 <?php else: ?>
@@ -202,7 +231,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                                         data-type="<?= esc($act['type']) ?>"
                                         data-id="<?= esc($act['id']) ?>"
                                         data-date="<?= $dateVal ? esc(date('M j, Y', strtotime($dateVal))) : '—' ?>"
-                                        data-module="<?= esc($act['module']) ?>"
+                                        data-module="<?= esc(($act['category'] ?? $act['module']) . ' — ' . ($act['type_label'] ?? '')) ?>"
                                         data-kind="<?= esc($act['kind']) ?>"
                                         data-record="<?= esc($act['record']) ?>"
                                         data-record_sub="<?= esc($act['record_sub']) ?>"
@@ -227,6 +256,95 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
             <div class="rec-pagination" id="paginationButtons"></div>
         </div>
     </div>
+    </div><!-- /viewRecords -->
+
+    <?php if (!empty($canArchive)): ?>
+    <div id="viewArchived"<?= $startView === 'archived' ? '' : ' style="display:none"' ?>>
+        <?php
+        $arcCats  = array_keys(\App\Libraries\DepartmentScope::CATEGORIES);
+        $arcCount = array_fill_keys($arcCats, 0);
+        foreach ($archivedRows as $r) { $arcCount[$r['category']] = ($arcCount[$r['category']] ?? 0) + 1; }
+        ?>
+        <div class="rec-table-card">
+            <div class="rec-table-head">
+                <div class="rec-table-title"><i class="bi bi-archive-fill"></i> Archived Records <span style="font-weight:400;font-size:13px;color:#888;">· all modules</span></div>
+            </div>
+            <div style="padding:0 1.2rem 10px;">
+                <div class="rec-tabs" style="margin:6px 0 4px;" role="tablist" id="arcCatTabs">
+                    <button type="button" class="rec-tab active" data-cat="" onclick="filterArchived('')">All <span class="tab-count"><?= count($archivedRows) ?></span></button>
+                    <?php foreach ($arcCats as $cn): if (!isset($retentionByDept[$cn])) continue; ?>
+                    <button type="button" class="rec-tab" data-cat="<?= esc($cn) ?>" onclick="filterArchived(this.dataset.cat)"><i class="bi <?= esc(\App\Libraries\DepartmentScope::CATEGORIES[$cn]['icon']) ?>"></i> <?= esc($cn) ?> <span class="tab-count"><?= (int) $arcCount[$cn] ?></span></button>
+                    <?php endforeach; ?>
+                </div>
+                <p style="margin:6px 0 0;font-size:12px;color:#8a6d6f;">Tick records to <strong>Restore</strong> them to their module or <strong>Delete permanently</strong>. Records past their department's retention (<?= esc(implode(' · ', array_map(fn($d, $m) => "$d $m mo", array_keys($retentionByDept), $retentionByDept))) ?>) can also be cleared in Settings → Archive &amp; Retention.</p>
+            </div>
+            <div class="table-scroll">
+                <table class="rec-table" id="archivedTable" data-bulk-endpoint="<?= base_url('records/bulk') ?>" data-bulk-actions="restore,delete">
+                    <thead><tr><th>Archived on</th><th>Category</th><th>Type</th><th>Record</th><th>Details</th></tr></thead>
+                    <tbody>
+                    <?php if (empty($archivedRows)): ?>
+                        <tr><td colspan="5"><div class="dsp-empty"><i class="bi bi-archive"></i>Nothing is archived yet.</div></td></tr>
+                    <?php else: foreach ($archivedRows as $r): ?>
+                        <tr data-bulk-key="<?= esc($r['key']) ?>" data-cat="<?= esc($r['category']) ?>">
+                            <td><?= $r['archived_at'] ? date('M j, Y', strtotime($r['archived_at'])) : '—' ?></td>
+                            <td><i class="bi <?= esc(\App\Libraries\DepartmentScope::CATEGORIES[$r['category']]['icon'] ?? 'bi-folder') ?>"></i> <?= esc($r['category']) ?></td>
+                            <td><?= esc($r['type']) ?></td>
+                            <td><strong><?= esc($r['title'] !== '' ? $r['title'] : '—') ?></strong></td>
+                            <td><?= esc($r['sub'] !== '' ? $r['sub'] : '—') ?></td>
+                        </tr>
+                    <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if (!empty($canManageArchive)): ?>
+    <div id="viewDisposal"<?= $startView === 'disposal' ? '' : ' style="display:none"' ?>>
+        <?php
+        $dspCats  = array_keys(\App\Libraries\DepartmentScope::CATEGORIES);
+        $dspCount = array_fill_keys($dspCats, 0);
+        foreach ($disposalRows as $r) { $dspCount[$r['category']] = ($dspCount[$r['category']] ?? 0) + 1; }
+        ?>
+        <div class="rec-table-card">
+            <div class="rec-table-head">
+                <div class="rec-table-title"><i class="bi bi-trash3"></i> Disposal Log <span style="font-weight:400;font-size:13px;color:#888;">· all modules</span></div>
+                <div class="rec-table-actions">
+                    <a class="rec-btn-outline" href="<?= base_url('facilities/aircon') ?>" style="text-decoration:none;"><i class="bi bi-snow2"></i> Dispose aircon units</a>
+                </div>
+            </div>
+            <div style="padding:0 1.2rem 10px;">
+                <div class="rec-tabs" style="margin:6px 0 4px;" role="tablist" id="dspCatTabs">
+                    <button type="button" class="rec-tab active" data-cat="" onclick="filterDisposal('')">All <span class="tab-count"><?= count($disposalRows) ?></span></button>
+                    <?php foreach ($dspCats as $cn): ?>
+                    <button type="button" class="rec-tab" data-cat="<?= esc($cn) ?>" onclick="filterDisposal(this.dataset.cat)"><i class="bi <?= esc(\App\Libraries\DepartmentScope::CATEGORIES[$cn]['icon']) ?>"></i> <?= esc($cn) ?> <span class="tab-count"><?= (int) $dspCount[$cn] ?></span></button>
+                    <?php endforeach; ?>
+                </div>
+                <p style="margin:6px 0 0;font-size:12px;color:#8a6d6f;">To dispose of equipment from any module, select it in the <strong>Records</strong> tab and choose <strong>Dispose selected</strong>. It is logged here under its category.</p>
+            </div>
+            <div class="table-scroll">
+                <table class="rec-table" id="disposalTable">
+                    <thead><tr><th>Date</th><th>Category</th><th>Type</th><th>Record</th><th>Handled By</th><th>Remarks</th></tr></thead>
+                    <tbody>
+                    <?php if (empty($disposalRows)): ?>
+                        <tr><td colspan="6"><div class="dsp-empty"><i class="bi bi-trash3"></i>Nothing has been disposed of yet.</div></td></tr>
+                    <?php else: foreach ($disposalRows as $r): ?>
+                        <tr data-cat="<?= esc($r['category']) ?>">
+                            <td><?= $r['date'] ? date('M j, Y', strtotime($r['date'])) : '—' ?></td>
+                            <td><i class="bi <?= esc(\App\Libraries\DepartmentScope::CATEGORIES[$r['category']]['icon'] ?? 'bi-folder') ?>"></i> <?= esc($r['category']) ?></td>
+                            <td><?= esc($r['type']) ?></td>
+                            <td><?= esc($r['record']) ?></td>
+                            <td><?= esc($r['by']) ?></td>
+                            <td><?= esc($r['remarks']) ?></td>
+                        </tr>
+                    <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -286,6 +404,36 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
     </div>
 </div>
 
+
+<div id="submitReportModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-md">
+        <div class="modal-header">
+            <h3><i class="bi bi-send-fill"></i> Submit Report</h3>
+            <button class="modal-close" type="button" onclick="document.getElementById('submitReportModal').style.display='none'"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <form method="post" action="<?= base_url('reports/submit') ?>">
+            <?= csrf_field() ?>
+            <div class="modal-body">
+                <div class="form-group"><label>Title</label><input type="text" name="report_name" maxlength="255" required></div>
+                <div class="form-group"><label>Category</label>
+                    <select id="subCategory" required onchange="fillSubTypes()">
+                        <?php foreach ($shownCats as $cn): ?><option><?= esc($cn) ?></option><?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group"><label>Type</label>
+                    <select name="category" id="subType" required></select>
+                </div>
+                <div class="form-group"><label>Details</label><textarea name="details" rows="5" required></textarea></div>
+                <p style="font-size:12px;color:#666;margin:0;">Submitted reports start as Pending and can be tracked here until they are marked Completed.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="document.getElementById('submitReportModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn-submit">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="exportModal" class="modal-overlay" style="display:none;">
     <div class="modal-box modal-sm">
         <div class="modal-header">
@@ -294,23 +442,12 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label>Which module do you want to export?</label>
+                <label>Which category do you want to export?</label>
                 <select id="exportModuleSelect">
-                    <?php if ($scopeModules): ?>
-                        <?php if (count($scopeModules) > 1): ?><option value="">All my modules</option><?php endif; ?>
-                        <?php foreach ($scopeModules as $m): ?><option value="<?= esc($modButtons[$m][0]) ?>"><?= esc($m) ?></option><?php endforeach; ?>
-                    <?php else: ?>
-                        <option value="">All Modules</option>
-                        <option value="tools">Tools</option>
-                        <option value="vehicle">Vehicle</option>
-                        <option value="safety">Safety</option>
-                        <option value="janitorial">Janitorial</option>
-                        <option value="personnel">Personnel</option>
-                        <option value="motor-pool">Motor Pool</option>
-                        <option value="sports">Sports</option>
-                        <option value="security">Security</option>
-                        <option value="facilities">Facilities</option>
-                    <?php endif; ?>
+                    <option value=""><?= $scopeModules ? 'All my categories' : 'All Categories' ?></option>
+                    <?php foreach ($shownCats as $cn): $cc = \App\Libraries\DepartmentScope::CATEGORIES[$cn]; ?>
+                        <option value="<?= esc($cc['slug']) ?>"><?= esc($cn) ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
         </div>
@@ -343,23 +480,19 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                     <input type="text" name="generated_by" id="editorGeneratedBy" required>
                 </div>
                 <div class="form-group">
-                    <label>Type / Module</label>
-                    <select name="type_module" id="editorTypeModule" required>
-                        <option>Facilities Management</option>
-                        <option>Asset Inventory</option>
-                        <option>Vehicle Fleet</option>
-                        <option>Personnel</option>
-                        <option>Maintenance Compliance</option>
-                        <option>Janitorial Performance</option>
-                    </select>
+                    <label>Category</label>
+                    <input type="text" id="editorTypeModule" readonly>
                 </div>
                 <div class="form-group">
-                    <label>Date Range</label>
-                    <select name="date_range" id="editorDateRange" required>
-                        <option>Last 30 Days</option>
-                        <option>Last 90 Days</option>
-                        <option>Last 6 Months</option>
-                        <option>This Year</option>
+                    <label>Details</label>
+                    <textarea id="editorDetails" rows="4" readonly></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" id="editorStatus">
+                        <option value="">Keep current</option>
+                        <option>Pending</option>
+                        <option>Completed</option>
                     </select>
                 </div>
             </div>
@@ -373,6 +506,19 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
 
 <script>
 const BASE_URL = '<?= base_url() ?>';
+
+const CAT_TYPES = <?= json_encode(array_map(fn($c) => $c['types'], \App\Libraries\DepartmentScope::CATEGORIES), JSON_HEX_TAG) ?>;
+const ALLOWED_TYPES = <?= json_encode($scopeModules ?: null) ?>;
+function fillSubTypes() {
+    const cat = document.getElementById('subCategory').value;
+    const sel = document.getElementById('subType');
+    sel.innerHTML = '';
+    Object.entries(CAT_TYPES[cat] || {}).forEach(([value, label]) => {
+        if (value === 'Personnel' || (ALLOWED_TYPES && !ALLOWED_TYPES.includes(value))) return;
+        const o = document.createElement('option'); o.value = value; o.textContent = label; sel.appendChild(o);
+    });
+}
+fillSubTypes();
 
 // ── Filtering ────────────────────────────────────────────────────
 let currentPage = 1;
@@ -463,8 +609,29 @@ function filterArchivedOnly() {
 }
 
 // Stat cards act as quick filters into the table below — same as Vehicle
-// Management / Tools Management / Notification Center: the cards stay
+// Management / Equipment Management / Notification Center: the cards stay
 // right where they are, the table just filters in place.
+function switchRecView(which) {
+    const views = { records: 'viewRecords', archived: 'viewArchived', disposal: 'viewDisposal' };
+    const tabs  = { records: 'tabRecords', archived: 'tabArchived', disposal: 'tabDisposal' };
+    Object.keys(views).forEach(k => {
+        const v = document.getElementById(views[k]), tb = document.getElementById(tabs[k]);
+        if (v) v.style.display = k === which ? '' : 'none';
+        if (tb) tb.classList.toggle('active', k === which);
+    });
+    history.replaceState(null, '', which === 'records' ? location.pathname : '?view=' + which);
+}
+
+function filterArchived(cat) {
+    document.querySelectorAll('#arcCatTabs .rec-tab').forEach(b => b.classList.toggle('active', (b.dataset.cat || '') === cat));
+    document.querySelectorAll('#archivedTable tbody tr[data-cat]').forEach(r => { r.style.display = (!cat || r.dataset.cat === cat) ? '' : 'none'; });
+}
+
+function filterDisposal(cat) {
+    document.querySelectorAll('#dspCatTabs .rec-tab').forEach(b => b.classList.toggle('active', (b.dataset.cat || '') === cat));
+    document.querySelectorAll('#disposalTable tbody tr[data-cat]').forEach(r => { r.style.display = (!cat || r.dataset.cat === cat) ? '' : 'none'; });
+}
+
 function filterRecordsByStat(kind) {
     setIconFilterValue('moduleFilterGroup', '');
     setIconFilterValue('kindFilterGroup', '');
@@ -474,6 +641,10 @@ function filterRecordsByStat(kind) {
 
     if (kind === 'archived') setIconFilterValue('kindFilterGroup', 'archive');
     if (kind === 'reports')  setIconFilterValue('kindFilterGroup', 'report');
+    if (kind === 'pending' || kind === 'completed') {
+        setIconFilterValue('kindFilterGroup', 'report');
+        document.getElementById('statusFilter').value = kind;
+    }
     if (kind === 'today')    document.getElementById('dateFilter').value = new Date().toISOString().slice(0, 10);
 
     filterTable();
@@ -552,8 +723,7 @@ function openRecordDetail(btn) {
     const d = btn.dataset;
     const rows = [
         ['Date & Time', d.date],
-        ['Module', d.module],
-        ['Type', d.kind],
+        ['Category', d.module],
         ['Record', d.record],
         ['Reference', d.record_sub],
         ['Action', d.action],
@@ -567,7 +737,25 @@ function openRecordDetail(btn) {
     const actions = document.getElementById('recordDetailActions');
     actions.innerHTML = '';
 
-    if (d.type !== 'disposal') {
+    // Where each record type is edited (its own module page).
+    const EDIT_PAGES = {
+        borrow: 'tools/borrowing', tool: 'tools', vehicle: 'vehicles', trip: 'travel', maintenance: 'vehicles',
+        motorpool: 'assets-dept', equipment: 'assets-dept', sports: 'sports-dept/equipment', sportsborrow: 'sports-dept/borrowing',
+        personnel: 'personnel', fire: 'security-dept/fire-safety', safetyeq: 'security-dept/fire-safety', inspection: 'security-dept/inspection',
+        keylog: 'security-dept/guard', aircon: 'facilities/aircon', buildingcheck: 'facilities/buildings', cleaning: 'facilities/janitorial',
+        facwo: 'facilities/work-orders', supply: 'facilities/aircon'
+    };
+    if (EDIT_PAGES[d.type] && d.type !== 'disposal') {
+        const edit = document.createElement('a');
+        edit.className = 'btn-maroon';
+        edit.style.textDecoration = 'none';
+        edit.href = BASE_URL + EDIT_PAGES[d.type];
+        edit.innerHTML = '<i class="bi bi-pencil-fill"></i> Open to edit';
+        actions.appendChild(edit);
+    }
+
+    // Disposal marking is only supported by borrow records (reports have no disposal columns).
+    if (d.type === 'borrow') {
         if (d.is_archived !== '1' && d.disposal_status === 'None') {
             const btn1 = document.createElement('button');
             btn1.type = 'button';
@@ -693,7 +881,8 @@ function openReportView(button) {
     document.getElementById('editorReportName').value = button.dataset.report_name || '';
     document.getElementById('editorGeneratedBy').value = button.dataset.generated_by || '';
     document.getElementById('editorTypeModule').value = button.dataset.type_module || 'General';
-    document.getElementById('editorDateRange').value = button.dataset.date_range || 'Last 30 Days';
+    document.getElementById('editorDetails').value = button.dataset.details || '';
+    document.getElementById('editorStatus').value = '';
     document.getElementById('reportEditorTitle').innerHTML = '<i class="bi bi-pencil-fill"></i> View / Edit Report';
     editor.style.display = 'flex';
 }

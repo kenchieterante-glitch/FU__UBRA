@@ -95,7 +95,7 @@ $departments = $departments ?? [];
             <label for="feFilterStatus">Status</label>
             <select id="feFilterStatus" onchange="applyFeFilters()">
               <option value="">All Statuses</option>
-              <option value="New">New</option>
+              <option value="New">Good</option>
               <option value="Refillable">Refillable</option>
               <option value="Defective">Defective</option>
               <option value="Missing">Missing</option>
@@ -158,7 +158,7 @@ $departments = $departments ?? [];
               <span class="leg-title">Fire Extinguisher</span>
               <span class="leg-item leg-clickable" data-status="normal" onclick="filterMapByStatus('normal')" role="button" tabindex="0"><span class="leg-dot leg-dot-gray"></span> Normal</span>
               <span class="leg-item leg-clickable" data-status="warning" onclick="filterMapByStatus('warning')" role="button" tabindex="0"><span class="leg-dot leg-dot-red"></span> Warning</span>
-              <span class="leg-item leg-clickable" data-status="new" onclick="filterMapByStatus('new')" role="button" tabindex="0"><span class="leg-dot leg-dot-green"></span> New Installed</span>
+              <span class="leg-item leg-clickable" data-status="new" onclick="filterMapByStatus('new')" role="button" tabindex="0"><span class="leg-dot leg-dot-green"></span> Good</span>
               <span class="leg-item leg-clickable" data-status="expires" onclick="filterMapByStatus('expires')" role="button" tabindex="0"><span class="leg-dot leg-dot-amber"></span> Expires Soon</span>
             </div>
             <div class="map-legend" id="legendAircon" style="display:none">
@@ -289,7 +289,7 @@ $departments = $departments ?? [];
         <div class="fg">
           <label>Status</label>
           <select name="status">
-            <option>New</option>
+            <option value="New">Good</option>
             <option>Refillable</option>
             <option>Defective</option>
             <option>Missing</option>
@@ -498,6 +498,9 @@ document.querySelectorAll('.reg-pane').forEach(attachTableTools);
   // coloring uses whichever tab is active; the Critical Alerts stat card
   // always reads the Fire Extinguisher status specifically, regardless of
   // which tab is open, so that headline number never silently changes.
+  // The date columns already say how new a unit is, so a brand-new extinguisher is simply shown as Good.
+  function feStatusLabel(s) { return s === 'New' ? 'Good' : s; }
+
   function computeAreaStatus(buildingName, tab) {
     if (!buildingName) return 'normal';
 
@@ -641,7 +644,7 @@ document.querySelectorAll('.reg-pane').forEach(attachTableTools);
       target.innerHTML = `
         <div class="fe-card ${daysLeft < 0 ? 'fe-urgent' : daysLeft < 30 ? 'fe-warn' : 'fe-ok'}">
           <div class="fec-id">${esc(u.id)}</div>
-          <div class="fec-status status-${u.status.toLowerCase().replace(' ', '')}">${esc(u.status)}</div>
+          <div class="fec-status status-${u.status.toLowerCase().replace(' ', '')}">${esc(feStatusLabel(u.status))}</div>
           <div class="fec-row"><span>Type</span><strong>${esc(u.type)}</strong></div>
           <div class="fec-row"><span>Floor</span><strong>${esc(u.floor || 'Ground Floor')}</strong></div>
           <div class="fec-row"><span>Weight</span><strong>${u.kg} kg</strong></div>
@@ -844,7 +847,7 @@ document.querySelectorAll('.reg-pane').forEach(attachTableTools);
       return `
       <div class="fe-card fe-urgent fe-card-clickable" role="button" tabindex="0" title="View ${esc(u.id)} on the campus map" onclick="openOverdueFeDetail('${esc(u.id).replace(/'/g, "\\'")}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
         <div class="fec-id">${esc(u.id)}</div>
-        <div class="fec-status status-${u.status.toLowerCase().replace(' ','')}">${esc(u.status)}</div>
+        <div class="fec-status status-${u.status.toLowerCase().replace(' ','')}">${esc(feStatusLabel(u.status))}</div>
         <div class="fec-row"><span>Department</span><strong>${esc(u.loc)}</strong></div>
         <div class="fec-row"><span>Next Due</span><strong class="text-danger">${esc(u.nextDue)} (${Math.abs(daysLeft)}d overdue)</strong></div>
         <div class="fec-row"><span>Assigned Guard</span><strong>${esc(u.assigned)}</strong></div>
@@ -898,7 +901,7 @@ document.querySelectorAll('.reg-pane').forEach(attachTableTools);
       <div class="fe-card ${sev} fe-collapsed">
         <button type="button" class="fe-card-toggle" title="Expand/collapse" onclick="toggleFeCard(this)"><i class="bi bi-chevron-down"></i></button>
         <div class="fec-id">${esc(u.id)}</div>
-        <div class="fec-status status-${u.status.toLowerCase().replace(' ', '')}">${esc(u.status)}</div>
+        <div class="fec-status status-${u.status.toLowerCase().replace(' ', '')}">${esc(feStatusLabel(u.status))}</div>
         <div class="fec-body">
           <div class="fec-row"><span>Department</span><strong>${esc(u.loc)} (${esc(u.floor || 'Ground Floor')})</strong></div>
           <div class="fec-row"><span>Type</span><strong>${esc(u.type)}</strong></div>
@@ -1062,7 +1065,7 @@ document.querySelectorAll('.reg-pane').forEach(attachTableTools);
       ].join(' ');
     };
     return [
-      u.id, u.unit, u.loc, u.floor, u.type, u.status, u.condition,
+      u.id, u.unit, u.loc, u.floor, u.type, feStatusLabel(u.status), u.condition,
       u.inspector, u.tech, u.assigned, u.installedBy,
       dateForms(u.nextDue), dateForms(u.lastInsp), dateForms(u.lastClean),
     ].filter(v => v !== undefined && v !== null).join(' ').toLowerCase();

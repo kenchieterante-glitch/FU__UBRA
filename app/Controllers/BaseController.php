@@ -178,6 +178,44 @@ abstract class BaseController extends Controller
      * than added as a new column, so every caller and every existing log
      * row stays compatible with the activity_logs table exactly as it is.
      */
+    /**
+     * Runs a group of database writes as ONE transaction: all of them are saved, or none are.
+     * Inside $fn, call lockRow() first for anything two people could change at once, and throw
+     * \RuntimeException('message') when the record was taken or changed by someone else.
+     * Returns ['ok' => true, 'value' => ...] or ['ok' => false, 'conflict' => bool, 'error' => 'message'].
+     */
+    protected function atomic(callable $fn): array
+    {
+        $db = db_connect();
+        $db->transStart();
+        try {
+            $value = $fn($db);
+        } catch (\RuntimeException $e) {
+            $db->transRollback();
+            return ['ok' => false, 'conflict' => true, 'error' => $e->getMessage()];
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Transaction failed: ' . $e->getMessage());
+            return ['ok' => false, 'conflict' => false, 'error' => 'Could not save. Nothing was changed; please try again.'];
+        }
+        $db->transComplete();
+        if ($db->transStatus() === false) {
+            return ['ok' => false, 'conflict' => false, 'error' => 'Could not save. Nothing was changed; please try again.'];
+        }
+
+        return ['ok' => true, 'value' => $value];
+    }
+
+    /** Reads one row and locks it until the surrounding transaction ends (SELECT ... FOR UPDATE). Table names are fixed in code, never user input. */
+    protected function lockRow(string $table, int $id): ?array
+    {
+        if (!in_array($table, ['tools', 'facility_keys', 'borrow_records'], true)) {
+            throw new \InvalidArgumentException('Table not lockable.');
+        }
+
+        return db_connect()->query("SELECT * FROM `{$table}` WHERE id = ? FOR UPDATE", [$id])->getRowArray() ?: null;
+    }
+
     protected function logActivity(string $module, string $action): void
     {
         try {

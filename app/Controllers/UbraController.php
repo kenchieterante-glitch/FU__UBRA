@@ -160,6 +160,9 @@ class UbraController extends BaseController
             ]);
         }
 
+        // Drop the filler word the panel flagged, in case the model still uses it.
+        $reply = preg_replace('/\s*\bshortly\b/i', '', (string) $reply);
+
         $empId = $this->currentEmpId();
         if ($empId !== '') {
             $this->chatLogModel->logTurn($empId, 'user', $userMessage);
@@ -635,6 +638,9 @@ class UbraController extends BaseController
                 $ctx['lines'][] = 'Fire extinguishers: ' . $fe->countAllResults() . ' total | ' . (new \App\Models\FireExtinguisherModel())->where('next_due <', $today)->countAllResults() . ' overdue for check | ' . (new \App\Models\FireExtinguisherModel())->where('expires_on <', $today)->countAllResults() . ' expired';
                 $ctx['lines'][] = 'Other safety equipment (alarms, smoke detectors, exit signs): ' . (new \App\Models\SafetyEquipmentModel())->countAllResults() . ' total';
                 $ctx['lines'][] = 'Keys currently borrowed: ' . (new \App\Models\KeyBorrowLogModel())->where('status', 'Active')->countAllResults();
+                $vh = new VehicleModel();
+                $ctx['lines'][] = 'Vehicles: ' . $vh->where('is_archived', 0)->countAllResults() . ' total | ' . (new VehicleModel())->where('is_archived', 0)->where('availability', 'Available')->countAllResults() . ' available | ' . (new VehicleModel())->where('is_archived', 0)->where('gps_status', 'Online')->countAllResults() . ' online on GPS';
+                $ctx['lines'][] = 'Trips today: ' . (new \App\Models\TravelModel())->where('travel_date', $today)->where('is_archived', 0)->countAllResults() . ' | in transit: ' . (new \App\Models\TravelModel())->where('status', 'In Transit')->countAllResults() . ' | awaiting approval: ' . (new \App\Models\TravelModel())->whereIn('status', ['Submitted', 'Reviewed'])->countAllResults();
                 $ctx['lines'][] = 'Safety inspections this month: ' . (new \App\Models\SafetyInspectionModel())->where('inspection_month', $month)->countAllResults() . ' recorded | ' . (new \App\Models\SafetyInspectionModel())->where('inspection_month', $month)->where('safety_status', 'Unsafe')->countAllResults() . ' marked unsafe';
             } elseif ($dept === 'assets') {
                 $v = new VehicleModel();
@@ -684,7 +690,7 @@ class UbraController extends BaseController
             . "- If a request is genuinely ambiguous, ask one short clarifying question instead of guessing.\n\n"
             . "DON'T GUESS AT DATA: Only state a specific number, name, ID, or date if it is in the snapshot above or in the conversation itself. If you don't have a detail, say to check the relevant page of their portal instead of inventing one.\n\n"
             . "FILE REPORTS: You cannot attach files yourself. A real downloadable link is produced automatically when the user names a format (pdf/excel/csv) together with 'report' or 'summary' (e.g. 'generate a pdf report this month'). If asked for a file, tell them to phrase it that way.\n\n"
-            . "Be concise, professional, and action-oriented. Use bullet points and bold for key figures.";
+            . "Be concise, professional, and action-oriented. Use bullet points and bold for key figures. Never use filler or promise-style wording such as 'shortly', 'in a moment' or 'right away'; just give the answer.";
     }
 
     private function buildFullSystemPrompt(array $ctx): string
@@ -693,7 +699,7 @@ class UbraController extends BaseController
             . "CURRENT SYSTEM SNAPSHOT ({$ctx['current_date']} {$ctx['current_time']}, viewer role: " . ($ctx['role'] ?: 'unknown') . "):\n"
             . "- Vehicles: " . ($ctx['total_vehicles'] ?? 0) . " total | " . ($ctx['available_vehicles'] ?? 0) . " available\n"
             . "- Personnel: " . ($ctx['total_personnel'] ?? 0) . " total | " . ($ctx['on_duty'] ?? 0) . " on duty\n"
-            . "- Tools & Equipment: " . ($ctx['total_assets'] ?? 0) . " total | " . ($ctx['borrowed_tools'] ?? 0) . " currently borrowed\n"
+            . "- Equipment: " . ($ctx['total_assets'] ?? 0) . " total | " . ($ctx['borrowed_tools'] ?? 0) . " currently borrowed\n"
             . "- Safety: " . ($ctx['overdue_fire_extinguishers'] ?? 0) . " overdue fire extinguisher inspections | " . ($ctx['open_work_orders'] ?? 0) . " open maintenance work orders\n"
             . "- Janitorial: " . ($ctx['janitorial_zones_cleaned'] ?? 0) . "/" . ($ctx['janitorial_zones_total'] ?? 0) . " zones cleaned today\n"
             . "- Travel: " . ($ctx['pending_trip_tickets'] ?? 0) . " trip tickets awaiting dispatch/approval\n"
@@ -706,12 +712,12 @@ class UbraController extends BaseController
             . "- Dashboard — campus-wide KPI overview (pending requests, active borrowings, vehicles in use, maintenance due, cleaning completion).\n"
             . "- Personnel Management — staff records, by category (Drivers, Janitors, Carpentries Shop, Maintenance, Construction Workers), Job Order personnel, contracts.\n"
             . "- Vehicle Management — fleet records, fuel logs, fuel-need predictions; GPS Tracker (live status) and Trip Ticket (travel requests/dispatch) live under the same section.\n"
-            . "- Tools Management — all tools/equipment by category (Power Tools, Supplies & Materials), borrowing ledger.\n"
+            . "- Equipment Management — all tools/equipment by category (Power Tools, Supplies & Materials), borrowing ledger.\n"
             . "- Maintenance (Safety) — fire extinguisher and aircon condition tracked on a campus map by building/floor, plus maintenance work orders; Guard page handles gate check-in/out.\n"
             . "- Janitorial Monitoring — cleaning zones by building (and now by floor within a building), staff shift assignments, consumable inventory/refill log.\n"
             . "- Calendar — scheduling for cleaning and maintenance.\n"
             . "- Notifications — system alerts, scoped by role (e.g. a Facilities or Security account only sees notifications relevant to their own modules).\n"
-            . "- Information Hub — cross-system activity/records log and report exports (PDF/Excel/CSV).\n"
+            . "- Reports — cross-system activity/records log and report exports (PDF/Excel/CSV).\n"
             . "- Settings — general/AI/email/notification configuration and user accounts (Administrator and Security Head roles only).\n\n"
             . "ROLES: Administrator sees everything. Security Head, Tools Head (\"Maintenance\"), Facilities Supervisor, and Janitorial Supervisor each have a restricted sidebar/dashboard scoped to their own area — if a user with one of these roles asks about a module they can't see, explain that it's outside their role's access rather than assuming something is broken.\n\n"
             . "HOW TO FOLLOW INSTRUCTIONS:\n"
@@ -720,7 +726,7 @@ class UbraController extends BaseController
             . "- If asked to redo or correct something, treat the correction as replacing your prior approach, not adding to it.\n\n"
             . "DON'T GUESS AT DATA: Only state a specific number, name, ID, or date if it's in the snapshot above or the conversation itself. If asked for a detail you don't have (e.g. a specific unit's exact status, a particular person's schedule), say to check the relevant module page rather than inventing a plausible-sounding answer.\n\n"
             . "FILE REPORTS: You can never generate or attach a file yourself — that's handled separately, before your reply is even generated, whenever a message names a format (pdf/excel/csv/spreadsheet) together with 'report' or 'summary'. If you are ever the one responding to a file/report/export request, that means the automatic handler didn't recognize it — do NOT say you cannot attach files. Instead, tell the user plainly: mention a format together with the word 'report' or 'summary' (e.g. 'generate a pdf report for tools this month') and a real downloadable link will be produced instead of this reply.\n\n"
-            . "Be concise, professional, and action-oriented. Use bullet points and bold for key figures. Stay focused on UBRA operations only.";
+            . "Be concise, professional, and action-oriented. Use bullet points and bold for key figures. Never use filler or promise-style wording such as 'shortly', 'in a moment' or 'right away'; just give the answer. Stay focused on UBRA operations only.";
     }
 
     private function getApiKey(): string

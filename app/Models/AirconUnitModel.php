@@ -5,6 +5,8 @@ use CodeIgniter\Model;
 class AirconUnitModel extends Model
 {
     protected $table         = 'aircon_units';
+    use \App\Models\Concerns\HidesArchived;
+    protected string $archiveType = 'aircon';
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
     protected $allowedFields = [

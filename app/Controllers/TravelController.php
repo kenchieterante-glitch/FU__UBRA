@@ -112,6 +112,13 @@ class TravelController extends BaseController
             return redirect()->back()->withInput()->with('error', 'Requester, destination, purpose, travel date, departure time, and return time are all required.');
         }
 
+        if ($travelDate < date('Y-m-d')) {
+            return redirect()->back()->withInput()->with('error', 'The travel date cannot be in the past.');
+        }
+        if ($return <= $departure) {
+            return redirect()->back()->withInput()->with('error', 'The return time must be later than the departure time.');
+        }
+
         $requester = $this->personnelModel->find($requesterId);
         $tripId    = $this->travelModel->generateTripId();
 
@@ -213,6 +220,10 @@ class TravelController extends BaseController
             return redirect()->to('/travel')->with('error', 'Trip ticket not found.');
         }
 
+        if (!in_array($trip['status'], ['Submitted', 'Reviewed'], true)) {
+            return redirect()->to('/travel')->with('error', "Only a submitted or reviewed ticket can be approved (this one is {$trip['status']}).");
+        }
+
         $data = [
             'status'            => 'Approved',
             'last_activity_at'  => date('Y-m-d H:i:s'),
@@ -228,6 +239,9 @@ class TravelController extends BaseController
             $vehicle = $this->vehicleModel->find($vehicleId);
             if ($vehicle && $vehicle['availability'] === 'In Use') {
                 return redirect()->to('/travel')->with('error', 'That vehicle is already in use on another trip.');
+            }
+            if ($vehicle && in_array($vehicle['availability'], ['Maintenance', 'Inactive'], true)) {
+                return redirect()->to('/travel')->with('error', "That vehicle is not available ({$vehicle['availability']}).");
             }
             $data['assigned_vehicle_id'] = $vehicleId;
         }
@@ -294,6 +308,10 @@ class TravelController extends BaseController
             return redirect()->to('/travel')->with('error', 'Trip ticket not found.');
         }
 
+        if (!in_array($trip['status'], ['Submitted', 'Reviewed', 'Approved'], true)) {
+            return redirect()->to('/travel')->with('error', "A ticket that is {$trip['status']} can no longer be rejected.");
+        }
+
         $this->freeAssignedVehicle($id);
         $this->travelModel->update($id, [
             'status'           => 'Rejected',
@@ -348,6 +366,10 @@ class TravelController extends BaseController
             return redirect()->back()->with('error', 'Trip ticket not found.');
         }
 
+        if ($trip['status'] !== 'Approved' || !empty($trip['check_in_time'])) {
+            return redirect()->back()->with('error', 'Only an approved trip that has not left yet can be checked in.');
+        }
+
         $this->travelModel->update($id, [
             'check_in_time'    => date('Y-m-d H:i:s'),
             'status'           => 'In Transit',
@@ -367,6 +389,10 @@ class TravelController extends BaseController
         $trip = $this->travelModel->find($id);
         if (!$trip) {
             return redirect()->back()->with('error', 'Trip ticket not found.');
+        }
+
+        if ($trip['status'] !== 'In Transit' || !empty($trip['check_out_time'])) {
+            return redirect()->back()->with('error', 'Only a trip that is in transit can be checked out.');
         }
 
         $this->freeAssignedVehicle($id);

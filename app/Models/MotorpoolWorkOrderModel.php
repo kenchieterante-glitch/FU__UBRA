@@ -7,6 +7,8 @@ use CodeIgniter\Model;
 class MotorpoolWorkOrderModel extends Model
 {
     protected $table         = 'motorpool_work_orders';
+    use \App\Models\Concerns\HidesArchived;
+    protected string $archiveType = 'motorpool';
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = ['wo_number', 'wo_type', 'vehicle_id', 'equipment_id', 'issue', 'priority', 'status', 'requested_by', 'assigned_to', 'created_at', 'updated_at', 'completed_at'];

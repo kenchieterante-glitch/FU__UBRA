@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 <div class="page-header">
   <div>
-    <h1><?= esc($page_title ?? 'Facilities Status') ?></h1>
+    <h1><?= esc($page_title ?? 'Facilities Monitoring') ?></h1>
     <p class="page-subtitle">Click a box to see the records behind it.</p>
   </div>
 </div>

@@ -13,17 +13,15 @@ class AuthController extends BaseController
 
     // Which account roles may sign in through each department portal. Administrators may use any portal.
     private const PORTAL_ROLES = [
-        'facilities' => ['facilities', 'janitorial'],
+        'facilities' => ['facilities', 'janitorial', 'sports'],
         'safety'     => ['security', 'safety'],
         'asset'      => ['assets', 'tools'],
-        'iysp'       => ['sports'],
     ];
 
     private const PORTAL_NAMES = [
         'facilities' => 'Facilities Administration and General Services',
         'safety'     => 'Safety and Security Department',
         'asset'      => 'Asset Acquisition and Monitoring Department',
-        'iysp'       => 'Sports Equipment Monitoring',
     ];
 
     private function loginUrl(string $portal): string
@@ -57,6 +55,7 @@ class AuthController extends BaseController
         $throttleKey = 'login_' . md5(strtolower($employeeId) . '|' . $this->request->getIPAddress());
         $tries = (int) (cache($throttleKey) ?? 0);
         if ($tries >= 5) {
+            $this->auditSignIn("Sign-in blocked for ID {$employeeId}: too many failed attempts (locked 5 minutes)", null);
             return redirect()->to($this->loginUrl($portal))->with('error', 'Too many failed attempts. Please wait 5 minutes and try again.');
         }
 
@@ -73,6 +72,7 @@ class AuthController extends BaseController
                 return redirect()->to($this->loginUrl($portal))->with('error', 'Your FU account was verified, but it has no UBRA access yet. Please ask the UBRA administrator to create your account.');
             }
             cache()->save($throttleKey, $tries + 1, 300);
+            $this->auditSignIn("Failed sign-in for ID {$employeeId}: no such account", null);
             return redirect()->to($this->loginUrl($portal))->with('error', 'Invalid employee ID or password.');
         }
 
@@ -117,12 +117,24 @@ class AuthController extends BaseController
             ]);
 
             $this->setNoStoreHeaders();
+            $this->auditSignIn("Signed in: {$fullName} ({$role})" . ($misLogin['ok'] ? ' via FU MIS' : ''), $userId);
 
             return redirect()->to($this->roleLandingUrl());
         }
 
         cache()->save($throttleKey, $tries + 1, 300);
+        $this->auditSignIn("Failed sign-in for ID {$employeeId}: wrong password (attempt " . ($tries + 1) . ' of 5)', $user['department_id'] ?? null);
         return redirect()->to($this->loginUrl($portal))->with('error', 'Invalid employee ID or password.');
+    }
+
+    // Sign-in events go in the audit log (Settings > Audit Logs). The password is never written.
+    private function auditSignIn(string $action, $userId): void
+    {
+        try {
+            (new \App\Models\ActivityLogModel())->insert(['user_id' => $userId ?: null, 'module' => 'Security', 'action' => $action]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Audit log insert failed: ' . $e->getMessage());
+        }
     }
 
     public function login()
@@ -139,7 +151,6 @@ class AuthController extends BaseController
             'facilities' => 'Facilities Administration and General Services',
             'safety'     => 'Safety and Security Department',
             'asset'      => 'Asset Acquisition and Monitoring Department',
-            'iysp'       => 'Sports Equipment Monitoring',
         ];
         $portalKey = (string) $this->request->getGet('portal');
 
@@ -152,6 +163,9 @@ class AuthController extends BaseController
     public function logout()
     {
         $session = service('session');
+        if ($session->get('isLoggedIn')) {
+            $this->auditSignIn('Signed out: ' . $session->get('full_name') . ' (' . $session->get('role') . ')', $session->get('user_id'));
+        }
         $session->destroy();
         $this->setNoStoreHeaders();
 

@@ -318,7 +318,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Module</label>
+                <label>Category</label>
                 <select id="sumModule">
                     <?php foreach ($summary_modules as $m): ?><option value="<?= esc($m['value']) ?>"><?= esc($m['label']) ?></option><?php endforeach; ?>
                 </select>

@@ -96,11 +96,19 @@ $draft_count = $draft_count ?? 0;
                                     <option value="">All Categories</option>
                                     <?php
                                     $catAllowed = \App\Models\NotificationModel::allowedModulesForRole((string) session()->get('role'));
-                                    foreach (['Vehicle Inspection', 'Vehicle Expiry', 'Trip Ticket Request', 'Trip Ticket Assignment', 'Travel Reminder', 'Vehicle Service Due', 'Motor Pool Work Order', 'Equipment Needs Repair', 'Air-Con Cleaning', 'Janitorial Assignment', 'Inventory Low Stock', 'Tool Borrowed', 'Tool Due Soon', 'Tool Overdue', 'Sports Equipment Due Soon', 'Fire Extinguisher Installed', 'Fire Extinguisher Expiring Soon', 'Aircon Unit Registered', 'Aircon Needs Cleaning', 'Cleaning Scheduled', 'Urgent Cleaning Scheduled', 'Consumable Low Stock', 'Hazardous Waste Alert', 'Maintenance Scheduled', 'Sports Equipment Borrowed', 'Sports Equipment Overdue', 'Sports Equipment Needs Repair', 'Job Order Expiring Soon', 'Job Order Expired', 'Contract Expiring Soon', 'Contract Expired', 'Personnel Document Incomplete'] as $catName):
+                                    $byMain = [];
+                                    foreach (\App\Models\NotificationModel::CATEGORY_GROUP as $catName => [$mainCat, $typeName]) {
                                         $catModule = \App\Models\NotificationModel::CATEGORY_MODULE[$catName] ?? null;
                                         if ($catAllowed !== null && $catModule !== null && !in_array($catModule, $catAllowed, true)) continue;
-                                    ?>
-                                    <option value="<?= esc($catName) ?>"><?= esc($catName) ?></option>
+                                        $byMain[$mainCat][$typeName][] = $catName;
+                                    }
+                                    foreach ($byMain as $mainCat => $types): ?>
+                                    <optgroup label="<?= esc($mainCat) ?>">
+                                        <option value="group:<?= esc($mainCat) ?>">All <?= esc($mainCat) ?></option>
+                                        <?php foreach ($types as $typeName => $cats): foreach ($cats as $catName): ?>
+                                        <option value="<?= esc($catName) ?>"><?= esc($typeName) ?> — <?= esc($catName) ?></option>
+                                        <?php endforeach; endforeach; ?>
+                                    </optgroup>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -211,7 +219,7 @@ $draft_count = $draft_count ?? 0;
                                         default => $catRoute,
                                     };
                                 }
-                                if ($roleKey === 'security' && $catRoute) $catRoute = 'security-dept/fire-safety';
+                                if ($roleKey === 'security' && $catRoute && !in_array($catRoute, ['vehicles', 'travel'], true)) $catRoute = 'security-dept/fire-safety';
                                 if ($roleKey === 'sports' && $catRoute) $catRoute = 'sports-dept/borrowing';
                                 // Matches NotificationController::index()'s $today_count definition exactly.
                                 $isToday = substr($n['created_at'] ?? '', 0, 10) === date('Y-m-d');
@@ -221,6 +229,7 @@ $draft_count = $draft_count ?? 0;
                                 class="notif-row <?= $isRead ? 'row-read' : 'row-unread' ?><?= ($catRoute && !$isDraft) ? ' row-clickable' : '' ?>"
                                 data-id="<?= $n['id'] ?>"
                                 data-cat="<?= strtolower(esc($n['category'] ?? '')) ?>"
+                                data-group="<?= esc(strtolower(\App\Models\NotificationModel::CATEGORY_GROUP[$n['category'] ?? ''][0] ?? '')) ?>"
                                 data-pri="<?= esc($priority) ?>"
                                 data-read="<?= $isRead ? 'read' : 'unread' ?>"
                                 data-today="<?= $isToday ? '1' : '0' ?>"
@@ -235,6 +244,7 @@ $draft_count = $draft_count ?? 0;
                                 </td>
                                 <td>
                                     <div class="cat-label"><?= esc($n['category'] ?? '—') ?></div>
+                                    <?php $grp = \App\Models\NotificationModel::CATEGORY_GROUP[$n['category'] ?? ''] ?? null; if ($grp): ?><div class="cat-sub" style="font-size:11px;color:#8a6d6f;"><?= esc($grp[0] . ' · ' . $grp[1]) ?></div><?php endif; ?>
                                     <div class="cat-sub"><?= esc($n['recipient'] ?? '') ?></div>
                                 </td>
                                 <td class="desc-cell"><?= esc($n['description'] ?? '—') ?></td>
@@ -442,7 +452,7 @@ function filterTable() {
         const matchStatus = statDraftOnly
             ? row.dataset.status === 'draft'
             : row.dataset.status !== 'draft';
-        const matchCat   = !cat  || row.dataset.cat.includes(cat);
+        const matchCat   = !cat  || (cat.startsWith('group:') ? row.dataset.group === cat.slice(6) : row.dataset.cat.includes(cat));
         const matchPri   = !pri  || row.dataset.pri === pri;
         const matchRead  = !read || row.dataset.read === read;
         const matchToday = !statTodayOnly || row.dataset.today === '1';
@@ -455,7 +465,7 @@ function filterTable() {
 }
 
 // ── Summary cards → filter shortcuts ─────────────────────────────
-// Same as Vehicle Management / Tools Management: the cards stay right
+// Same as Vehicle Management / Equipment Management: the cards stay right
 // where they are, the table just filters in place, no hiding the cards
 // and no "Back to Overview" bar.
 function filterNotifByStat(kind) {

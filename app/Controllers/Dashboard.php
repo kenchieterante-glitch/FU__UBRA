@@ -54,7 +54,7 @@ class Dashboard extends BaseController
         $allBorrowRecords = $borrowModel->getAllWithDetails();
 
         // ── Pending Requests: real open items across Tools and Maintenance ──
-        // Source of truth is tools.availability, same as Tools Management —
+        // Source of truth is tools.availability, same as Equipment Management —
         // not borrow_records — so this number matches exactly what shows up
         // when you click through and filter the Tools table to "Borrowed".
         $borrowedToolRows   = $toolsModel->where('availability', 'Borrowed')->where('is_archived', 0)->findAll();
@@ -238,7 +238,7 @@ class Dashboard extends BaseController
                 'icon' => 'bi-hourglass-split',
                 'tone' => 'pending',
                 'title' => "{$borrowedTools} tools currently borrowed",
-                'subtitle' => 'Tracked in Tools Management',
+                'subtitle' => 'Tracked in Equipment Management',
                 'time' => 'Today',
                 'url' => 'tools',
             ],
@@ -272,38 +272,36 @@ class Dashboard extends BaseController
         $inspThisMo  = (new \App\Models\SafetyInspectionModel())->where('inspection_month', $month)->countAllResults();
         $pers        = new \App\Models\PersonnelModel();
         $pCount      = fn() => $pers->where('is_archived', 0)->where('status !=', 'Inactive')->countAllResults();
+        $toolCount = fn(string $cat) => (new ToolsModel())->where('category', $cat)->where('is_archived', 0)->countAllResults() . ' items';
+        // Three main categories (same grouping as the Reports Hub); each link carries its type as 'group'.
         $deptSections = [
-            ['title' => 'Facilities', 'icon' => 'bi-building-gear', 'url' => 'facilities/status', 'links' => [
-                // Repair Requests hidden for now: ['label' => 'Repair Requests', 'url' => 'facilities/work-orders', 'count' => $facOpen . ' open'],
-                ['label' => 'Aircon Care', 'url' => 'facilities/aircon', 'icon' => 'bi-snow2', 'count' => $facAir . ' due'],
-                ['label' => 'Waste Watch', 'url' => 'facilities/waste', 'icon' => 'bi-recycle', 'count' => $wastePending . ' to weigh today'],
-                ['label' => 'Building Check', 'url' => 'facilities/buildings', 'icon' => 'bi-building-check', 'count' => $facCheck . ' urgent'],
+            ['title' => 'Facilities Monitoring', 'icon' => 'bi-building-gear', 'url' => 'facilities/status', 'links' => [
+                ['group' => 'Repairs & Aircon', 'label' => 'Aircon Care', 'url' => 'facilities/aircon', 'icon' => 'bi-snow2', 'count' => $facAir . ' due'],
+                ['group' => 'Repairs & Aircon', 'label' => 'Building Check', 'url' => 'facilities/buildings', 'icon' => 'bi-building-check', 'count' => $facCheck . ' urgent'],
+                ['group' => 'Waste Watch', 'label' => 'Waste Watch', 'url' => 'facilities/waste', 'icon' => 'bi-recycle', 'count' => $wastePending . ' to weigh today'],
+                ['group' => 'Sports', 'label' => 'Sports Equipment', 'url' => 'tools/sports-equipment', 'icon' => 'bi-trophy-fill', 'count' => $toolCount('Sports Equipment')],
+                ['group' => 'Personnel', 'label' => 'All Personnel', 'url' => 'personnel', 'icon' => 'bi-people-fill', 'count' => $pCount() . ' active'],
+                ['group' => 'Personnel', 'label' => 'Drivers', 'url' => 'personnel/drivers', 'icon' => 'bi-person-vcard-fill', 'count' => ''],
+                ['group' => 'Personnel', 'label' => 'Janitors', 'url' => 'personnel/janitors', 'icon' => 'bi-brush', 'count' => ''],
+                ['group' => 'Personnel', 'label' => 'Carpentries Shop', 'url' => 'personnel/carpentries', 'icon' => 'bi-hammer', 'count' => ''],
+                ['group' => 'Personnel', 'label' => 'Maintenance', 'url' => 'personnel/maintenance', 'icon' => 'bi-wrench', 'count' => ''],
+                ['group' => 'Personnel', 'label' => 'Construction Workers', 'url' => 'personnel/construction-workers', 'icon' => 'bi-cone-striped', 'count' => ''],
+            ]],
+            ['title' => 'Equipment Management', 'icon' => 'bi-tools', 'url' => 'tools', 'links' => [
+                ['group' => 'Tools', 'label' => 'All Equipment', 'url' => 'tools', 'icon' => 'bi-boxes', 'count' => $borrowedTools . ' borrowed'],
+                ['group' => 'Tools', 'label' => 'Supplies & Materials', 'url' => 'tools/consumable', 'icon' => 'bi-box-seam-fill', 'count' => $toolCount('Consumable')],
+                ['group' => 'Tools', 'label' => 'Borrowing', 'url' => 'tools/borrowing', 'icon' => 'bi-hand-index-thumb-fill', 'count' => $dueBackToday . ' due today'],
+                ['group' => 'Power Tools', 'label' => 'Power Tools', 'url' => 'tools/power-tools', 'icon' => 'bi-lightning-fill', 'count' => $toolCount('Power Tools')],
+                ['group' => 'Vehicle', 'label' => 'Vehicle List', 'url' => 'vehicles', 'icon' => 'bi-truck', 'count' => $fleetStats['total'] . ' vehicles'],
+                ['group' => 'Vehicle', 'label' => 'GPS Tracker', 'url' => 'gps', 'icon' => 'bi-geo-alt-fill', 'count' => $gpsOnline . ' online'],
+                ['group' => 'Vehicle', 'label' => 'Trip Ticket', 'url' => 'travel', 'icon' => 'bi-ticket-perforated', 'count' => $tripsOpen . ' open'],
             ]],
             ['title' => 'Safety and Security', 'icon' => 'bi-shield-fill-check', 'url' => 'safety', 'links' => [
-                ['label' => 'Fire Safety', 'url' => 'safety', 'icon' => 'bi-fire', 'count' => $overdueFe . ' overdue'],
-                ['label' => 'Safety Inspection', 'url' => 'security-dept/inspection', 'icon' => 'bi-clipboard2-check', 'count' => $inspThisMo . ' this month'],
-                ['label' => 'Guard Monitoring', 'url' => 'safety/guard-dashboard', 'icon' => 'bi-shield-check', 'count' => $keysOut . ' out · ' . $scansToday . ' scans today'],
-                ['label' => 'List of Keys', 'url' => 'security-dept/keys', 'icon' => 'bi-list-ul', 'count' => $keysOut . ' out'],
-            ]],
-            ['title' => 'Vehicle Management', 'icon' => 'bi-truck', 'url' => 'vehicles/dashboard', 'links' => [
-                ['label' => 'Vehicle List', 'url' => 'vehicles', 'icon' => 'bi-truck', 'count' => $fleetStats['total'] . ' vehicles'],
-                ['label' => 'GPS Tracker', 'url' => 'gps', 'icon' => 'bi-geo-alt-fill', 'count' => $gpsOnline . ' online'],
-                ['label' => 'Trip Ticket', 'url' => 'travel', 'icon' => 'bi-ticket-perforated', 'count' => $tripsOpen . ' open'],
-            ]],
-            ['title' => 'Personnel Management', 'icon' => 'bi-people', 'url' => 'personnel', 'links' => [
-                ['label' => 'All Personnel', 'url' => 'personnel', 'icon' => 'bi-people-fill', 'count' => $pCount() . ' active'],
-                ['label' => 'Drivers', 'url' => 'personnel/drivers', 'icon' => 'bi-person-vcard-fill', 'count' => ''],
-                ['label' => 'Janitors', 'url' => 'personnel/janitors', 'icon' => 'bi-brush', 'count' => ''],
-                ['label' => 'Carpentries Shop', 'url' => 'personnel/carpentries', 'icon' => 'bi-hammer', 'count' => ''],
-                ['label' => 'Maintenance', 'url' => 'personnel/maintenance', 'icon' => 'bi-wrench', 'count' => ''],
-                ['label' => 'Construction Workers', 'url' => 'personnel/construction-workers', 'icon' => 'bi-cone-striped', 'count' => ''],
-            ]],
-            ['title' => 'Tools Management', 'icon' => 'bi-tools', 'url' => 'tools', 'links' => [
-                ['label' => 'All Tools', 'url' => 'tools', 'icon' => 'bi-boxes', 'count' => $borrowedTools . ' borrowed'],
-                ['label' => 'Power Tools', 'url' => 'tools/power-tools', 'icon' => 'bi-lightning-fill', 'count' => (new ToolsModel())->where('category', 'Power Tools')->where('is_archived', 0)->countAllResults() . ' items'],
-                ['label' => 'Supplies & Materials', 'url' => 'tools/consumable', 'icon' => 'bi-box-seam-fill', 'count' => (new ToolsModel())->where('category', 'Consumable')->where('is_archived', 0)->countAllResults() . ' items'],
-                ['label' => 'Sports Equipment', 'url' => 'tools/sports-equipment', 'icon' => 'bi-trophy-fill', 'count' => (new ToolsModel())->where('category', 'Sports Equipment')->where('is_archived', 0)->countAllResults() . ' items'],
-                ['label' => 'Borrowing', 'url' => 'tools/borrowing', 'icon' => 'bi-hand-index-thumb-fill', 'count' => $dueBackToday . ' due today'],
+                ['group' => 'Fire Safety', 'label' => 'Fire Safety', 'url' => 'safety', 'icon' => 'bi-fire', 'count' => $overdueFe . ' overdue'],
+                ['group' => 'Fire Safety', 'label' => 'Building Information', 'url' => 'security-dept/buildings', 'icon' => 'bi-buildings', 'count' => count(\App\Models\FireExtinguisherModel::BUILDINGS) . ' buildings'],
+                ['group' => 'Fire Safety', 'label' => 'Safety Inspection', 'url' => 'security-dept/inspection', 'icon' => 'bi-clipboard2-check', 'count' => $inspThisMo . ' this month'],
+                ['group' => 'Security', 'label' => 'Guard Monitoring', 'url' => 'safety/guard-dashboard', 'icon' => 'bi-shield-check', 'count' => $keysOut . ' out · ' . $scansToday . ' scans today'],
+                ['group' => 'Security', 'label' => 'List of Keys', 'url' => 'security-dept/keys', 'icon' => 'bi-list-ul', 'count' => $keysOut . ' out'],
             ]],
         ];
 

@@ -118,6 +118,13 @@ class WasteController extends BaseController
             return redirect()->to('/facilities/waste')->with('error', 'Pick a station and a date that is today or earlier.');
         }
 
+        foreach (['non_bio_kg', 'bio_kg', 'hazardous_kg'] as $k) {
+            $raw = trim((string) $this->request->getPost($k));
+            if ($raw !== '' && (!is_numeric($raw) || (float) $raw < 0)) {
+                return redirect()->to('/facilities/waste')->with('error', 'Weights must be numbers of 0 or more (kg).');
+            }
+        }
+
         $num = fn($k) => max(0, round((float) $this->request->getPost($k), 2));
         $nb = $num('non_bio_kg'); $b = $num('bio_kg'); $h = $num('hazardous_kg');
         $data = [

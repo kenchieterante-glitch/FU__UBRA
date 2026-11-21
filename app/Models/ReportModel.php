@@ -8,7 +8,7 @@ class ReportModel extends Model
     protected $primaryKey    = 'id';
     protected $useTimestamps = true;
     protected $allowedFields = [
-        'report_name', 'generated_by_id', 'type_module', 'status',
+        'report_name', 'generated_by_id', 'type_module', 'details', 'submitted_by', 'status',
         'file_path', 'is_archived', 'archived_at', 'last_activity_at'
     ];
 

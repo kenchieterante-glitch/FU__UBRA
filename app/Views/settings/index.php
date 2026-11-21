@@ -5,6 +5,9 @@
   $users = $users ?? [];
   $logs = $logs ?? [];
   $sys_info = $sys_info ?? [];
+  $canManageArchive = $canManageArchive ?? false;
+  $retentionByDept = $retentionByDept ?? [];
+  $expiredByDept = $expiredByDept ?? [];
 ?>
 <link rel="stylesheet" href="<?= base_url('Assets/css/settings.css') . '?v=' . @filemtime(FCPATH.'Assets/css/settings.css') ?>">
 
@@ -36,8 +39,10 @@
                 ['id'=>'ai',            'icon'=>'bi-robot',            'label'=>'AI Configuration'],
                 ['id'=>'security',      'icon'=>'bi-shield-fill-check','label'=>'Security'],
                 ['id'=>'audit',         'icon'=>'bi-journal-text',     'label'=>'Audit Logs'],
+                ['id'=>'archive',       'icon'=>'bi-archive-fill',     'label'=>'Archive & Retention'],
             ];
             foreach ($navItems as $item):
+                if ($item['id'] === 'archive' && !$canManageArchive) continue;
             ?>
             <button class="stg-nav-btn" data-tab="<?= $item['id'] ?>" onclick="switchTab('<?= $item['id'] ?>')">
                 <i class="bi <?= $item['icon'] ?>"></i>
@@ -182,7 +187,7 @@
 
             <!-- ── PERMISSIONS ─────────────────────────────────────── -->
             <div id="tab-permissions" class="tab-pane">
-                <div class="tab-title">Module Permissions</div>
+                <div class="tab-title">Category Permissions</div>
                 <p class="tab-desc">Which roles can access each module. Read-only reference — enforced at controller level.</p>
                 <?php
                 $perms = [
@@ -399,13 +404,40 @@
                 </div>
             </div>
 
+            <!-- ── ARCHIVE & RETENTION ────────────────────────────── -->
+            <?php if ($canManageArchive): ?>
+            <div id="tab-archive" class="tab-pane">
+                <div class="tab-title">Archive &amp; Retention</div>
+                <p style="margin:0 0 14px;color:#666;font-size:13px;max-width:560px;">Archived records are kept for the number of months set by each department. After that they can be permanently deleted (archive first, then delete).</p>
+                <form method="post" action="<?= base_url('records/retention') ?>" id="retForm" style="max-width:560px;">
+                    <?= csrf_field() ?>
+                    <?php foreach ($retentionByDept as $dept => $months): $slug2 = \App\Libraries\DepartmentScope::CATEGORIES[$dept]['slug']; $due = (int) ($expiredByDept[$dept] ?? 0); ?>
+                    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.08);">
+                        <label for="ret_<?= esc($slug2) ?>" style="flex:1;font-weight:600;margin:0;"><?= esc($dept) ?></label>
+                        <input type="number" id="ret_<?= esc($slug2) ?>" name="months[<?= esc($slug2) ?>]" min="1" max="120" value="<?= (int) $months ?>" style="width:76px;padding:6px 8px;border:1px solid rgba(0,0,0,.2);border-radius:8px;text-align:center;font-weight:600;">
+                        <span style="font-size:13px;color:#555;width:62px;">month(s)</span>
+                        <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap;<?= $due > 0 ? 'background:#fdecea;color:#c62828;' : 'background:#e8f5e9;color:#2e7d32;' ?>"><?= $due > 0 ? $due . ' ready to delete' : 'Nothing expired' ?></span>
+                    </div>
+                    <?php endforeach; ?>
+                </form>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px;">
+                    <button type="submit" form="retForm" class="btn-save"><i class="bi bi-check2-circle"></i> Save retention</button>
+                    <form method="post" action="<?= base_url('records/purge-archive') ?>" style="margin:0;" onsubmit="return confirm('Permanently delete every archived record that is past its department retention period? This cannot be undone.');">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn-save" style="background:#2b2b33;"><i class="bi bi-trash3-fill"></i> Delete expired archives</button>
+                    </form>
+                </div>
+                <p style="margin:10px 0 0;font-size:12px;color:#888;">Deleting cannot be undone. Archive records from the Reports page first.</p>
+            </div>
+            <?php endif; ?>
+
             <!-- ── AUDIT LOGS ──────────────────────────────────────── -->
             <div id="tab-audit" class="tab-pane">
                 <div class="tab-title">Audit Log</div>
                 <div class="table-scroll">
                     <table class="stg-table">
                         <thead>
-                            <tr><th>Module</th><th>Activity</th><th>Date &amp; Time</th></tr>
+                            <tr><th>Category</th><th>Activity</th><th>Date &amp; Time</th></tr>
                         </thead>
                         <tbody>
                             <?php if (empty($logs)): ?>

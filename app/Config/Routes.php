@@ -48,6 +48,8 @@ $routes->get('facilities-dashboard', 'FacilitiesDashboardController::index');
 $routes->get('janitorial-dashboard', 'JanitorialDashboardController::index');
 // The department portal picker is gone: everyone signs in directly and lands on their own department.
 // Old /portals links keep working by sending people to the sign-in page.
+// Public: students and visitors can view the evacuation map without signing in.
+$routes->get('evacuation-map', 'EvacuationController::index');
 $routes->get('portals', static fn () => redirect()->to(base_url('login')));
 $routes->get('portals/(:segment)', static fn () => redirect()->to(base_url('login')));
 // Guard Station: the guard account's own desk (keys + gate), desktop version of the guard app
@@ -65,6 +67,7 @@ $routes->get('security-dept/plan-image', 'SecurityDeptController::planImage');
 $routes->get('security-dept/barcodes', 'SecurityDeptController::barcodes');
 $routes->get('security-dept/barcodes/pdf', 'SecurityDeptController::barcodesPdf');
 $routes->get('security-dept/keys', 'SecurityDeptController::keyList');
+$routes->get('security-dept/buildings', 'SecurityDeptController::buildings');
 $routes->post('security-dept/keys', 'SecurityDeptController::storeKey');
 $routes->post('security-dept/keys/pdf', 'SecurityDeptController::keysPdf');
 $routes->post('security-dept/keys/(:num)/delete', 'SecurityDeptController::deleteKey/$1');
@@ -98,6 +101,8 @@ $routes->post('sports-dept/equipment', 'SportsDeptController::storeEquipment');
 $routes->get('facilities', 'FacilitiesController::overview');
 $routes->get('facilities/status', 'FacilitiesController::status');
 $routes->get('facilities/waste', 'WasteController::index');
+// Disposal now lives under Reports; keep old links working.
+$routes->get('facilities/disposal', static fn () => redirect()->to(base_url('reports?view=disposal')));
 $routes->post('facilities/waste/log', 'WasteController::log');
 $routes->get('facilities/(:segment)', 'FacilitiesController::index/$1');
 $routes->post('facilities/work-orders', 'FacilitiesController::store');
@@ -106,6 +111,8 @@ $routes->post('facilities/tools/(:num)/toggle', 'FacilitiesController::toggleFac
 $routes->post('facilities/inspections', 'FacilitiesController::storeInspection');
 $routes->post('facilities/supplies', 'FacilitiesController::storeSupply');
 $routes->post('facilities/aircon-units', 'FacilitiesController::storeAircon');
+$routes->post('facilities/aircon-units/report-damaged', 'FacilitiesController::reportDamagedAircon');
+$routes->post('facilities/aircon-units/dispose', 'FacilitiesController::disposeAircon');
 
 // ============================================================
 // PERSONNEL
@@ -301,6 +308,7 @@ $routes->post('notifications/deleteDraft/(:num)', 'NotificationController::delet
 // ============================================================
 $routes->get ('reports',                    'RecordsController::index');
 $routes->post('reports/update',             'ReportController::update');
+$routes->post('reports/submit',             'ReportController::submit');
 $routes->post('reports/update/(:num)',      'ReportController::update/$1');
 $routes->get ('reports/chartData',          'ReportController::chartData');
 
@@ -332,6 +340,9 @@ $routes->get ('settings/getSetting/(:any)','SettingsController::getSetting/$1');
 $routes->get ('records', 'RecordsController::index');
 $routes->post('records/markForDisposal/(:any)/(:num)', 'RecordsController::markForDisposal/$1/$2');
 $routes->post('records/authorizeDisposal', 'RecordsController::authorizeDisposal');
+$routes->post('records/retention', 'RecordsController::saveRetention');
+$routes->post('records/purge-archive', 'RecordsController::purgeArchive');
+$routes->post('records/bulk', 'RecordsController::bulk');
 $routes->get ('records/export/(:any)', 'RecordsController::exportReport/$1');
 
 // ============================================================

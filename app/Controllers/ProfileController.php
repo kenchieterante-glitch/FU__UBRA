@@ -49,10 +49,28 @@ class ProfileController extends BaseController
             return redirect()->to('/profile')->with('error', 'Could not find your account.');
         }
 
+        $name  = trim((string) $this->request->getPost('name'));
+        $email = trim((string) $this->request->getPost('email'));
+        $empId = trim((string) $this->request->getPost('emp_id'));
+        if ($name === '' || $email === '' || $empId === '') {
+            return redirect()->to('/profile')->with('error', 'Name, email and employee ID cannot be empty.');
+        }
+        // The employee ID is the login name, so two accounts must never share one.
+        $selfId = $user['department_id'];
+        $clash = $this->db->table('users')->groupStart()->where('emp_id', $empId)->orWhere('username', $empId)->groupEnd()
+            ->where('department_id !=', $selfId)->countAllResults();
+        if ($clash > 0) {
+            return redirect()->to('/profile')->with('error', 'That employee ID is already used by another account.');
+        }
+        $emailClash = $this->db->table('users')->where('email', $email)->where('department_id !=', $selfId)->countAllResults();
+        if ($emailClash > 0) {
+            return redirect()->to('/profile')->with('error', 'That email is already used by another account.');
+        }
+
         $update = [
-            'full_name' => $this->request->getPost('name'),
-            'email'     => $this->request->getPost('email'),
-            'emp_id'    => $this->request->getPost('emp_id'),
+            'full_name' => $name,
+            'email'     => $email,
+            'emp_id'    => $empId,
         ];
 
         $photoFile = $this->request->getFile('photo');
@@ -83,7 +101,7 @@ class ProfileController extends BaseController
 
         $this->db->table('users')->where('department_id', $user['department_id'])->update($update);
 
-        $this->session->set('full_name', $this->request->getPost('name'));
+        $this->session->set(['full_name' => $name, 'emp_id' => $empId]);
         $this->session->setFlashdata('success', 'Profile updated successfully.');
         return redirect()->to('/profile');
     }
@@ -98,13 +116,18 @@ class ProfileController extends BaseController
         $current = $this->request->getPost('current_password');
         $new     = $this->request->getPost('new_password');
 
-        if ($user && password_verify($current, $user['password'])) {
+        $confirm = $this->request->getPost('confirm_password');
+        if (!$user || !password_verify((string) $current, $user['password'])) {
+            $this->session->setFlashdata('error', 'Current password is incorrect.');
+        } elseif (strlen((string) $new) < 8) {
+            $this->session->setFlashdata('error', 'The new password must be at least 8 characters.');
+        } elseif ($confirm !== null && $confirm !== $new) {
+            $this->session->setFlashdata('error', 'The new password and its confirmation do not match.');
+        } else {
             $this->db->table('users')->where('department_id', $user['department_id'])->update([
                 'password' => password_hash($new, PASSWORD_BCRYPT),
             ]);
             $this->session->setFlashdata('success', 'Password changed successfully.');
-        } else {
-            $this->session->setFlashdata('error', 'Current password is incorrect.');
         }
 
         return redirect()->to('/profile');

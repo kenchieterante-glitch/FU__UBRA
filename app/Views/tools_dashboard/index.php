@@ -30,9 +30,9 @@
 <div class="role-dash-panel">
     <div class="role-dash-panel-title"><i class="bi bi-tools"></i> Tools Overview</div>
     <div class="stat-cards">
-        <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Total Tools" data-url="<?= base_url('tools') ?>">
+        <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Total Equipment" data-url="<?= base_url('tools') ?>">
             <span class="stat-icon tone-maroon"><i class="bi bi-tools"></i></span>
-            <h3>Total Tools</h3>
+            <h3>Total Equipment</h3>
             <div class="value"><?= (int) $total_tools ?></div>
         </div>
         <div class="stat-card stat-card-clickable" onclick="toggleKpiBanner(this)" role="button" tabindex="0" data-label="Available Tools" data-url="<?= base_url('tools') ?>">

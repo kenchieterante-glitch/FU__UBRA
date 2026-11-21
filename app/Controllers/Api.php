@@ -321,7 +321,7 @@ class Api extends BaseController
 
     // Full borrow/return log for one tool — who has (or had) it, and who
     // brought it back. Pulls from the same borrow_records/return_records
-    // tables the web Tools Management "Records" page reads, so mobile and
+    // tables the web Equipment Management "Records" page reads, so mobile and
     // web always show the same history for a given asset.
     public function toolHistory($code = null)
     {
@@ -413,32 +413,50 @@ class Api extends BaseController
         // returnTool() from ever finding a "Borrowed" consumable to act on.
         $isConsumable = $tool['category'] === 'Consumable';
 
-        $borrowModel->insert([
-            'tool_id'         => $tool['id'],
-            'quantity'        => $quantity,
-            'borrower'        => $borrowerName,
-            'department'      => $department,
-            'borrowed_date'   => date('Y-m-d'),
-            'expected_return' => $isConsumable ? null : date('Y-m-d', strtotime('+' . self::BORROW_MAX_DAYS . ' days')),
-            'status'          => $isConsumable ? 'Consumed' : 'Borrowed',
-            'created_at'      => date('Y-m-d H:i:s'),
-            'last_activity_at'=> date('Y-m-d H:i:s'),
-        ]);
+        // One transaction: lock the tool, re-read what is really left (someone may have just borrowed it), then save the record, the stock and the status together.
+        $saved = $this->atomic(function () use ($borrowModel, $toolsModel, $tool, $quantity, $stockTracked, $isConsumable, $borrowerName, $department) {
+            $locked = $this->lockRow('tools', (int) $tool['id']);
+            if (!$locked) {
+                throw new \RuntimeException('Tool not found.');
+            }
+            $stockNow = $locked['current_stock'] !== null ? (float) $locked['current_stock'] : null;
+            if ($stockTracked && $stockNow !== null && $quantity > $stockNow) {
+                throw new \RuntimeException('Only ' . $stockNow . ' left; someone else just took some.');
+            }
+            if (!$stockTracked && !$isConsumable && $locked['availability'] !== 'Available') {
+                throw new \RuntimeException('That tool was just taken by someone else.');
+            }
 
-        $remainingStock = $stockTracked ? (float) $tool['current_stock'] - $quantity : null;
+            $borrowModel->insert([
+                'tool_id'         => $tool['id'],
+                'quantity'        => $quantity,
+                'borrower'        => $borrowerName,
+                'department'      => $department,
+                'borrowed_date'   => date('Y-m-d'),
+                'expected_return' => $isConsumable ? null : date('Y-m-d', strtotime('+' . self::BORROW_MAX_DAYS . ' days')),
+                'status'          => $isConsumable ? 'Consumed' : 'Borrowed',
+                'created_at'      => date('Y-m-d H:i:s'),
+                'last_activity_at'=> date('Y-m-d H:i:s'),
+            ]);
 
-        // A depleted consumable is out of stock, not "Borrowed" — that word
-        // implies something checked out pending return, which a consumable
-        // never is. Only non-consumables ever flip to "Borrowed".
-        $availability = $isConsumable
-            ? (($remainingStock !== null && $remainingStock <= 0) ? 'Consumed' : 'Available')
-            : ((!$stockTracked || $remainingStock <= 0) ? 'Borrowed' : 'Available');
+            $remaining = $stockTracked ? (float) $stockNow - $quantity : null;
+            // A depleted consumable is out of stock, not "Borrowed"; only non-consumables ever flip to "Borrowed".
+            $availability = $isConsumable
+                ? (($remaining !== null && $remaining <= 0) ? 'Consumed' : 'Available')
+                : ((!$stockTracked || $remaining <= 0) ? 'Borrowed' : 'Available');
 
-        $toolsModel->update($tool['id'], array_filter([
-            'availability'      => $availability,
-            'current_stock'     => $stockTracked ? $remainingStock : null,
-            'last_activity_at'  => date('Y-m-d H:i:s'),
-        ], fn($v) => $v !== null));
+            $toolsModel->update($tool['id'], array_filter([
+                'availability'      => $availability,
+                'current_stock'     => $stockTracked ? $remaining : null,
+                'last_activity_at'  => date('Y-m-d H:i:s'),
+            ], fn($v) => $v !== null));
+
+            return [$remaining, $availability];
+        });
+        if (!$saved['ok']) {
+            return $this->response->setStatusCode($saved['conflict'] ? 409 : 500)->setJSON(['message' => $saved['error']]);
+        }
+        [$remainingStock, $availability] = $saved['value'];
 
         $notif = new NotificationModel();
         if ($isConsumable && $remainingStock !== null) {
@@ -560,33 +578,39 @@ class Api extends BaseController
         // outstanding on it — a partial return keeps it Borrowed (with its
         // own `quantity` column left untouched as the historical record of
         // what was originally borrowed) so a later scan can return the rest.
-        if ($isFullReturn) {
-            $borrowModel->update($borrowRecord['id'], [
-                'status'            => 'Returned',
+        // One transaction: lock the borrow record and the tool, make sure nobody returned it a moment ago, then save all three changes together.
+        $saved = $this->atomic(function () use ($borrowModel, $returnModel, $toolsModel, $borrowRecord, $tool, $isFullReturn, $returnedQty, $condition, $remarks, $stockTracked) {
+            $lockedBorrow = $this->lockRow('borrow_records', (int) $borrowRecord['id']);
+            if (!$lockedBorrow || $lockedBorrow['status'] !== 'Borrowed') {
+                throw new \RuntimeException('This tool was just returned by someone else.');
+            }
+            $lockedTool = $this->lockRow('tools', (int) $tool['id']);
+
+            // A full return closes the borrow record; a partial return keeps it Borrowed so a later scan can return the rest.
+            $borrowModel->update($borrowRecord['id'], $isFullReturn
+                ? ['status' => 'Returned', 'last_activity_at' => date('Y-m-d H:i:s')]
+                : ['last_activity_at' => date('Y-m-d H:i:s')]);
+
+            $returnModel->insert([
+                'borrow_id'         => $borrowRecord['id'],
+                'tool_id'           => $tool['id'],
+                'quantity_returned' => $returnedQty,
+                'returned_by'       => $borrowRecord['borrower'],
+                'return_date'       => date('Y-m-d'),
+                'condition_status'  => $condition,
+                'remarks'           => $remarks,
+            ]);
+
+            $toolsModel->update($tool['id'], [
+                'availability'      => 'Available',
+                'condition_status'  => $condition,
+                'current_stock'     => $stockTracked ? (float) $lockedTool['current_stock'] + $returnedQty : $lockedTool['current_stock'],
                 'last_activity_at'  => date('Y-m-d H:i:s'),
             ]);
-        } else {
-            $borrowModel->update($borrowRecord['id'], [
-                'last_activity_at'  => date('Y-m-d H:i:s'),
-            ]);
+        });
+        if (!$saved['ok']) {
+            return $this->response->setStatusCode($saved['conflict'] ? 409 : 500)->setJSON(['message' => $saved['error']]);
         }
-
-        $returnModel->insert([
-            'borrow_id'         => $borrowRecord['id'],
-            'tool_id'           => $tool['id'],
-            'quantity_returned' => $returnedQty,
-            'returned_by'       => $borrowRecord['borrower'],
-            'return_date'       => date('Y-m-d'),
-            'condition_status'  => $condition,
-            'remarks'           => $remarks,
-        ]);
-
-        $toolsModel->update($tool['id'], [
-            'availability'      => 'Available',
-            'condition_status'  => $condition,
-            'current_stock'     => $stockTracked ? (float) $tool['current_stock'] + $returnedQty : $tool['current_stock'],
-            'last_activity_at'  => date('Y-m-d H:i:s'),
-        ]);
 
         if ($tool['category'] === 'Sports Equipment') {
             $notif = new NotificationModel();
@@ -1477,18 +1501,27 @@ class Api extends BaseController
         $model = new KeyBorrowLogModel();
         $nextNo = $model->countAllResults() + 1;
 
-        $model->insert([
-            'log_number'    => 'KL-' . str_pad((string) $nextNo, 3, '0', STR_PAD_LEFT),
-            'borrower_id'   => $empId,
-            'full_name'     => $person['full_name'],
-            'department'    => $person['department_name'] ?? '',
-            'key_item'      => $key['key_name'],
-            'key_id'        => $key['id'],
-            'scan_in'       => date('Y-m-d H:i:s'),
-            'status'        => 'Active',
-            'guard_on_duty' => $body['guard_name'] ?? null,
-        ]);
-        $keyModel->update($key['id'], ['status' => 'Borrowed']);
+        $saved = $this->atomic(function () use ($model, $keyModel, $key, $person, $empId, $nextNo, $body) {
+            $locked = $this->lockRow('facility_keys', (int) $key['id']);
+            if (!$locked || $locked['status'] === 'Borrowed') {
+                throw new \RuntimeException("\"{$key['key_name']}\" was just checked out by someone else.");
+            }
+            $model->insert([
+                'log_number'    => 'KL-' . str_pad((string) $nextNo, 3, '0', STR_PAD_LEFT),
+                'borrower_id'   => $empId,
+                'full_name'     => $person['full_name'],
+                'department'    => $person['department_name'] ?? '',
+                'key_item'      => $key['key_name'],
+                'key_id'        => $key['id'],
+                'scan_in'       => date('Y-m-d H:i:s'),
+                'status'        => 'Active',
+                'guard_on_duty' => $body['guard_name'] ?? null,
+            ]);
+            $keyModel->update($key['id'], ['status' => 'Borrowed']);
+        });
+        if (!$saved['ok']) {
+            return $this->response->setStatusCode($saved['conflict'] ? 409 : 500)->setJSON(['message' => $saved['error']]);
+        }
 
         return $this->response->setJSON(['message' => "\"{$key['key_name']}\" checked out to {$person['full_name']}."]);
     }
@@ -1518,11 +1551,18 @@ class Api extends BaseController
             return $this->response->setStatusCode(409)->setJSON(['message' => "\"{$key['key_name']}\" isn't currently checked out."]);
         }
 
-        $model->update($log['id'], [
-            'scan_out' => date('Y-m-d H:i:s'),
-            'status'   => 'Returned',
-        ]);
-        $keyModel->update($key['id'], ['status' => 'Available']);
+        $saved = $this->atomic(function () use ($model, $keyModel, $key, $log) {
+            $lockedKey = $this->lockRow('facility_keys', (int) $key['id']);
+            $stillOut = $model->where('id', $log['id'])->where('status', 'Active')->first();
+            if (!$lockedKey || !$stillOut) {
+                throw new \RuntimeException("\"{$key['key_name']}\" was just returned by someone else.");
+            }
+            $model->update($log['id'], ['scan_out' => date('Y-m-d H:i:s'), 'status' => 'Returned']);
+            $keyModel->update($key['id'], ['status' => 'Available']);
+        });
+        if (!$saved['ok']) {
+            return $this->response->setStatusCode($saved['conflict'] ? 409 : 500)->setJSON(['message' => $saved['error']]);
+        }
 
         return $this->response->setJSON(['message' => "\"{$key['key_name']}\" returned."]);
     }

@@ -3,20 +3,20 @@
 namespace App\Libraries;
 
 /**
- * Which Tools Management categories (the Power Tools / Supplies / … tabs)
+ * Which Equipment Management categories (the Power Tools / Supplies / … tabs)
  * each role may see and act on. Same idea as PersonnelScope: AuthFilter,
  * ToolsController and the sidebar all read this one definition.
  */
 class ToolsScope
 {
-    /** Tool category (tools.category) => its Tools Management page. */
+    /** Tool category (tools.category) => its Equipment Management page. */
     public const CATEGORY_ROUTES = [
         'Power Tools'      => 'tools/power-tools',
         'Consumable'       => 'tools/consumable',
         'Sports Equipment' => 'tools/sports-equipment',
     ];
 
-    /** Roles limited to some tool categories. Roles not listed here see all of Tools Management (or none, per AuthFilter). */
+    /** Roles limited to some tool categories. Roles not listed here see all of Equipment Management (or none, per AuthFilter). */
     private const ROLE_CATEGORIES = [
         'personnel & tools' => ['Power Tools'],
     ];
@@ -48,7 +48,7 @@ class ToolsScope
         return array_merge(array_map(static fn($c) => self::CATEGORY_ROUTES[$c], $allowed), self::SCOPED_ACTION_PREFIXES);
     }
 
-    /** The page a scoped role lands on for Tools Management. */
+    /** The page a scoped role lands on for Equipment Management. */
     public static function homeFor(string $role): string
     {
         $allowed = self::categoriesFor($role);

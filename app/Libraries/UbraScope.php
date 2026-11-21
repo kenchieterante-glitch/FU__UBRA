@@ -11,7 +11,7 @@ class UbraScope
     // Words that clearly belong to one department. Used to refuse questions that wander into another department's area.
     private const KEYWORDS = [
         'facilities' => ['waste watch', 'waste', 'garbage', 'trash', 'segregation', 'aircon', 'air-con', 'air con', 'janitor', 'cleaning', 'repair request', 'building check', 'supplies', 'consumable', 'detergent'],
-        'security'   => ['fire extinguisher', 'fire safety', 'smoke detector', 'fire alarm', 'exit sign', 'guard', 'key log', 'keys', 'floor plan', 'inspection'],
+        'security'   => ['fire extinguisher', 'fire safety', 'smoke detector', 'fire alarm', 'exit sign', 'guard', 'key log', 'keys', 'floor plan', 'inspection', 'vehicle', 'vehicles', 'trip ticket', 'gps', 'fleet', 'driver', 'drivers'],
         'assets'     => ['vehicle', 'vehicles', 'driver', 'drivers', 'trip ticket', 'motor pool', 'gps', 'fleet', 'mechanical equipment', 'generator'],
         'sports'     => ['sports', 'basketball', 'volleyball', 'badminton', 'racket', 'soccer', 'table tennis'],
         'tools'      => ['tools', 'power tool', 'borrowing ledger'],
@@ -32,11 +32,12 @@ class UbraScope
         ],
         'security' => [
             'name'   => 'Safety and Security Department',
-            'scope'  => 'fire safety equipment (extinguishers, smoke detectors, alarms, exit signs), floor plans, guard monitoring and keys, and safety inspections',
+            'scope'  => 'fire safety equipment (extinguishers, smoke detectors, alarms, exit signs), floor plans, guard monitoring and keys, safety inspections, and vehicle management (vehicle list, GPS tracker, trip tickets)',
             'quick'  => [
                 ['bi-fire', 'Fire safety status', 'Give me a fire safety status — what is expired, overdue or needs attention?'],
                 ['bi-key', 'Keys', 'Which keys are borrowed right now, and by whom?'],
                 ['bi-clipboard2-check', 'Inspections', 'Which buildings are unsafe or still not inspected this month?'],
+                ['bi-truck', 'Vehicles and trips', 'Which vehicles are in use and what trips are open today?'],
                 ['bi-file-earmark-text', 'Weekly report', 'Generate a brief weekly safety and security report.'],
             ],
         ],

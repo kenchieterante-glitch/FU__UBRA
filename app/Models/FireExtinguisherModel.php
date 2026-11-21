@@ -5,6 +5,8 @@ use CodeIgniter\Model;
 class FireExtinguisherModel extends Model
 {
     protected $table         = 'fire_extinguishers';
+    use \App\Models\Concerns\HidesArchived;
+    protected string $archiveType = 'fire';
     protected $primaryKey    = 'id';
     protected $useTimestamps = false;
     protected $allowedFields = [

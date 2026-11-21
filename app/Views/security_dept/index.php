@@ -154,13 +154,13 @@ $zoomSelect = function (string $svgId) use ($buildings) {
   <?php foreach ($equipment_types as $i => $t): ?>
     <div class="fs-pane" id="fs-pane-<?= $i ?>" style="<?= $i === 0 ? '' : 'display:none' ?>">
       <div class="table-wrap">
-        <table class="sj-table">
+        <table class="sj-table" data-bulk-endpoint="<?= base_url('records/bulk') ?>" data-bulk-actions="archive">
           <thead><tr><th>Code</th><th>Building</th><th>Floor</th><th>Details</th><th>Status</th><th>Next Check</th></tr></thead>
           <tbody class="fs-body">
             <?php $list = $equipment_by_type[$t] ?? []; if (empty($list)): ?>
               <tr><td colspan="6" class="empty-row">No <?= esc(strtolower($t)) ?> recorded yet.</td></tr>
             <?php else: foreach ($list as $r): $shown = $r['status'] !== 'Working' ? $r['status'] : ($r['due'] === 'OK' ? 'Good' : $r['due']); ?>
-              <tr class="fs-row" style="cursor:pointer" onclick="showFsDetail(this)"
+              <tr class="fs-row" style="cursor:pointer" onclick="showFsDetail(this)"<?= !empty($r['bulk']) ? ' data-bulk-key="' . esc($r['bulk']) . '"' : '' ?>
                   data-type="<?= esc($r['type']) ?>" data-code="<?= esc($r['code']) ?>" data-building="<?= esc($r['building']) ?>" data-floor="<?= esc($r['floor'] ?? '') ?>"
                   data-status="<?= esc($r['status']) ?>" data-due="<?= esc($r['due']) ?>" data-shown="<?= esc($shown) ?>" data-next="<?= esc((string) $r['next']) ?>"
                   data-installed="<?= esc((string) ($r['installed'] ?? '')) ?>" data-expires="<?= esc((string) ($r['expires'] ?? '')) ?>" data-detail="<?= esc((string) $r['detail']) ?>" data-remarks="<?= esc((string) ($r['remarks'] ?? '')) ?>">
@@ -331,13 +331,13 @@ $zoomSelect = function (string $svgId) use ($buildings) {
 
   <div class="g-pane" id="g-history" style="display:none">
     <div class="table-wrap">
-      <table class="sj-table">
+      <table class="sj-table" data-bulk-endpoint="<?= base_url('records/bulk') ?>" data-bulk-actions="archive">
         <thead><tr><th>Log #</th><th>Borrower</th><th>Key Item</th><th>Date Borrowed</th><th>Returned</th><th>Status</th></tr></thead>
         <tbody class="g-body">
           <?php if (empty($key_logs)): ?>
             <tr><td colspan="6" class="empty-row">No borrowing history yet.</td></tr>
           <?php else: foreach ($key_logs as $l): $st = $l['status'] === 'Active' ? 'Borrowed' : 'Returned'; ?>
-            <tr class="g-row" style="cursor:pointer" onclick="showKeyDetail(<?= (int) $l['id'] ?>)" data-id="<?= (int) $l['id'] ?>" data-status="<?= $st ?>" data-time="<?= esc($l['scan_in']) ?>">
+            <tr class="g-row" style="cursor:pointer" onclick="showKeyDetail(<?= (int) $l['id'] ?>)" data-id="<?= (int) $l['id'] ?>"<?= $st === 'Returned' ? ' data-bulk-key="keylog:' . (int) $l['id'] . '"' : '' ?> data-status="<?= $st ?>" data-time="<?= esc($l['scan_in']) ?>">
               <td><strong><?= esc($l['log_number']) ?></strong></td>
               <td><?= esc($l['full_name']) ?></td>
               <td><?= esc($l['key_item']) ?></td>

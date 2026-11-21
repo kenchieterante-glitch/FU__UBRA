@@ -102,7 +102,7 @@ class ToolsController extends BaseApiController
             'category'    => 'Tool Borrowed',
             'description' => "{$tool['asset_name']} borrowed by " . ($borrower ?: 'an unrecorded borrower')
                 . ($department ? " ({$department})" : '') . " — due back on {$dueText}.",
-            'recipient'   => 'Tools & Equipment Office',
+            'recipient'   => 'Equipment Office',
             'priority'    => 'MODERATE',
             'status'      => 'Pending',
             'is_read'     => 0,
