@@ -94,7 +94,7 @@
     }
     bar.appendChild(btn('Print selected', 'bi-printer', false, function () { printSelected(table, sel); }));
     var clear = document.createElement('a');
-    clear.href = '#'; clear.textContent = 'Clear'; clear.style.cssText = 'margin-left:auto;color:#555;';
+    clear.href = '#'; clear.textContent = 'Clear'; clear.style.cssText = 'margin-left:auto;color:var(--text);';
     clear.onclick = function (e) { e.preventDefault(); setAll(table, false); };
     bar.appendChild(clear);
     bar.style.display = 'flex';
@@ -123,7 +123,7 @@
     var w = window.open('', '_blank');
     if (!w) { uiToast('Allow pop-ups to print the selected rows.', true); return; }
     w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title><style>' +
-      'body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:24px}h1{font-size:18px;margin:0 0 4px;color:#800000}p{margin:0 0 14px;color:#666;font-size:12px}' +
+      'body{font-family:Arial,Helvetica,sans-serif;color:var(--text);margin:24px}h1{font-size:18px;margin:0 0 4px;color:#800000}p{margin:0 0 14px;color:var(--text);font-size:12px}' +
       'table{border-collapse:collapse;width:100%}th,td{border:1px solid #bbb;padding:6px 8px;font-size:12px;text-align:left;vertical-align:top}th{background:#800000;color:#fff}' +
       '</style></head><body><h1>' + esc(title) + '</h1><p>' + sel.length + ' selected row' + (sel.length === 1 ? '' : 's') + ' — printed ' + new Date().toLocaleString() + '</p>' +
       '<table><thead>' + head + '</thead><tbody>' + body + '</tbody></table></body></html>');
@@ -158,7 +158,7 @@
   }
 
   function enhance(table) {
-    if (table.hasAttribute('data-no-bulk') || table.closest('.modal-overlay, .modal-box') || table.querySelector('.ac-check, .hide-from-bulk')) return;
+    if (table.hasAttribute('data-no-bulk') || table.closest('.cal-wrapper') || table.closest('.modal-overlay, .modal-box') || table.querySelector('.ac-check, .hide-from-bulk')) return;
     var any = false;
     Array.prototype.slice.call(table.querySelectorAll('tbody > tr')).forEach(function (tr) {
       var item = rowItem(tr, table);

@@ -9,15 +9,17 @@
     <!-- ── HEADER ─────────────────────────────────────────────── -->
     <div class="ubra-accent-bar"></div>
     <div class="ubra-panel-header">
-      <div class="ubra-header-text">
-        <div class="ubra-eyebrow">UBRA INTELLIGENCE</div>
-        <h1 class="ubra-title">Mr. UBRA</h1>
-        <p class="ubra-subtext"><span class="pulse-dot"></span> Operations assistant &middot; online</p>
+      <div class="ubra-header-id">
+        <div class="ubra-header-avatar"><i class="bi bi-robot"></i></div>
+        <div class="ubra-header-text">
+          <h1 class="ubra-title">Mr. UBRA</h1>
+          <p class="ubra-subtext"><span class="pulse-dot"></span> Online &middot; Operations assistant</p>
+        </div>
       </div>
       <div class="ubra-header-actions">
-        <button type="button" class="ubra-clear-btn" id="speakToggle" onclick="toggleSpeakReplies()" title="Read Mr. UBRA's answers aloud" aria-pressed="false"><i class="bi bi-volume-mute" id="speakIcon"></i> Voice replies</button>
-        <button type="button" class="ubra-clear-btn" onclick="openChatHistory()">History</button>
-        <button type="button" class="ubra-clear-btn" onclick="clearChat()">Clear</button>
+        <button type="button" class="ubra-icon-btn" id="speakToggle" onclick="toggleSpeakReplies()" title="Read Mr. UBRA's answers aloud" aria-label="Voice replies" aria-pressed="false"><i class="bi bi-volume-mute" id="speakIcon"></i></button>
+        <button type="button" class="ubra-icon-btn" onclick="openChatHistory()" title="Chat history" aria-label="Chat history"><i class="bi bi-clock-history"></i></button>
+        <button type="button" class="ubra-icon-btn" onclick="clearChat()" title="Clear chat" aria-label="Clear chat"><i class="bi bi-trash3"></i></button>
       </div>
     </div>
 
@@ -49,7 +51,11 @@
       <!-- Conversation thread -->
       <div class="ubra-convo">
         <div class="ubra-messages" id="chatMessages">
-          <div class="ubra-greeting">Good <?= date('H') < 12 ? 'morning' : (date('H') < 17 ? 'afternoon' : 'evening') ?>, <?= esc($greet_name ?? 'there') ?>.</div>
+          <div class="ubra-welcome">
+            <div class="ubra-welcome-avatar"><i class="bi bi-robot"></i></div>
+            <h2 class="ubra-welcome-title">Good <?= date('H') < 12 ? 'morning' : (date('H') < 17 ? 'afternoon' : 'evening') ?>, <?= esc($greet_name ?? 'there') ?>.</h2>
+            <p class="ubra-welcome-sub">How can I help with your operations today?</p>
+          </div>
         </div>
       </div>
     </div>
@@ -66,12 +72,28 @@
           oninput="clearInputError()"
         >
         <button type="button" class="ubra-mic-btn" id="micBtn" onclick="toggleMic()" title="Speak your question" aria-label="Speak your question" style="display:none"><i class="bi bi-mic-fill"></i></button>
-        <button type="button" class="ubra-send-btn" id="sendBtn" onclick="sendMessage()">
-          Send <i class="bi bi-arrow-right"></i>
+        <button type="button" class="ubra-send-btn" id="sendBtn" onclick="sendMessage()" title="Send" aria-label="Send">
+          <i class="bi bi-arrow-up"></i>
         </button>
       </div>
       <div class="ubra-input-error" id="inputError">Type a message before sending.</div>
       <div class="ubra-voice-hint" id="voiceHint" style="display:none"></div>
+      <div class="ubra-suggest">
+              <?php
+                $suggest = !empty($quick_actions) ? $quick_actions : [
+                    ['bi-truck', 'Fleet health check', 'Give me a fleet health check — vehicle status, GPS status, and anything needing attention.'],
+                    ['bi-people', 'Who is on duty today?', 'Who is on duty today?'],
+                    ['bi-person-dash', 'Any unassigned personnel?', 'Are there any unassigned personnel right now?'],
+                    ['bi-file-earmark-text', 'Weekly report', 'Generate a brief weekly operations report.'],
+                ];
+                foreach ($suggest as [$sIcon, $sTitle, $sPrompt]): ?>
+              <button type="button" class="ubra-suggest-card" onclick="quickPrompt(<?= esc(json_encode($sPrompt), 'attr') ?>)">
+                <span class="ubra-suggest-icon"><i class="bi <?= esc($sIcon) ?>"></i></span>
+                <span class="ubra-suggest-text"><?= esc($sTitle) ?></span>
+              </button>
+              <?php endforeach; ?>
+            </div>
+      <p class="ubra-disclaimer">Mr. UBRA can make mistakes. Please verify important information.</p>
     </div>
 
   </div>
@@ -252,11 +274,16 @@ function appendMessage(role, text, download = null) {
 
     if (role === 'assistant') {
         row.innerHTML = `
-            <div class="ubra-avatar">U</div>
+            <div class="ubra-avatar"><i class="bi bi-robot"></i></div>
             <div class="ubra-msg-col">
                 <div class="ubra-bubble assistant">${renderMarkdown(text)}</div>
-                <div class="ubra-msg-time">${time}</div>
+                <div class="ubra-msg-meta"><span class="ubra-msg-time">${time}</span><button type="button" class="ubra-copy-btn" title="Copy answer" aria-label="Copy answer"><i class="bi bi-clipboard"></i> Copy</button></div>
             </div>`;
+        row.querySelector('.ubra-copy-btn').addEventListener('click', function () {
+            const btn = this, plain = row.querySelector('.ubra-bubble').innerText;
+            const done = () => { btn.innerHTML = '<i class="bi bi-check2"></i> Copied'; setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy'; }, 1500); };
+            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(plain).then(done, done); else done();
+        });
     } else {
         row.innerHTML = `
             <div class="ubra-msg-col">
@@ -296,10 +323,10 @@ function setLoading(state) {
         indicator.id        = 'typingIndicator';
         indicator.className = 'ubra-msg-row assistant';
         indicator.innerHTML = `
-            <div class="ubra-avatar">U</div>
+            <div class="ubra-avatar"><i class="bi bi-robot"></i></div>
             <div class="ubra-msg-col">
-                <div class="ubra-bubble assistant ubra-typing">
-                    <span></span><span></span><span></span>
+                <div class="ubra-bubble assistant ubra-typing" role="status" aria-label="Mr. UBRA is typing">
+                    <span></span><span></span><span></span><em>Mr. UBRA is typing</em>
                 </div>
             </div>`;
         container.appendChild(indicator);

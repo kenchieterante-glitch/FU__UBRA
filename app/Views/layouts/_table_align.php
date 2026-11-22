@@ -7,7 +7,7 @@
     var hasControl = c.querySelector('button, form, .btn, .rec-view-btn, .action-cell, input[type=checkbox]:not(.bulk-check), a.icon-btn, a[class*="btn"]');
     return !!hasControl && text.length <= 14;
   }
-  function align(table) {
+  function align(table) { if (table.closest('.cal-wrapper')) return;
     var ths = table.querySelectorAll('thead th');
     if (!ths.length || table.closest('.modal-overlay, .modal-box')) return;
     var rows = Array.prototype.filter.call(table.querySelectorAll('tbody > tr'), function (r) { return r.cells.length >= ths.length && !r.querySelector('.empty-row'); });

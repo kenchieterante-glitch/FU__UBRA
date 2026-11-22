@@ -32,6 +32,7 @@ class ProfileController extends BaseController
 
         $data = [
             'title' => 'My Profile',
+            'pageCss' => 'profile.css',
             'user'  => $this->currentUser(),
         ];
 

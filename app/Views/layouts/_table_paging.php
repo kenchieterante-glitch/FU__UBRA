@@ -1,11 +1,11 @@
 <style>
-  .tp-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;padding:.8rem 1rem;margin-top:2px;border-top:1px solid rgba(0,0,0,.1);font-size:.8rem;color:#666}
+  .tp-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;padding:.8rem 1rem;margin-top:2px;border-top:1px solid rgba(0,0,0,.1);font-size:.8rem;color:var(--text)}
   .tp-pages{display:flex;align-items:center;gap:.3rem}
   .tp-btn{min-width:30px;height:30px;padding:0 .5rem;border-radius:6px;border:1.5px solid rgba(0,0,0,.15);background:#fff;color:#222;font-size:.78rem;cursor:pointer}
   .tp-btn:hover:not(:disabled){border-color:#800000;color:#800000}
   .tp-btn.active{background:#1f2937;border-color:#1f2937;color:#fff}
   .tp-btn:disabled{opacity:.4;cursor:not-allowed}
-  .tp-gap{color:#888;padding:0 .2rem}
+  .tp-gap{color:var(--text);padding:0 .2rem}
   tr.tp-hide{display:none !important}
   .tp-footer.tp-off{display:none !important}
   [data-theme="dark"] .tp-footer{color:#aaa;border-top-color:rgba(255,255,255,.12)}
@@ -19,7 +19,7 @@
   var SKIP_IDS = { activityTable: 1, notifTable: 1 };   // these already page themselves
 
   function eligible(table) {
-    if (table.hasAttribute('data-no-page') || SKIP_IDS[table.id] || table.closest('.modal-overlay, .modal-box')) return false;
+    if (table.hasAttribute('data-no-page') || table.closest('.cal-wrapper') || SKIP_IDS[table.id] || table.closest('.modal-overlay, .modal-box')) return false;
     if (table.parentElement && table.parentElement.closest('table')) return false;   // nested table
     return true;
   }

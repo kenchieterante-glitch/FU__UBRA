@@ -221,7 +221,7 @@ function printKeyQr() {
     '.lb{width:30mm;height:38mm;box-sizing:border-box;border:0.25mm dashed #777;padding:1.5mm;text-align:center;overflow:hidden}' +
     '.lb img{width:26mm;height:26mm;display:block;margin:0 auto}' +
     '.n{font-weight:700;font-size:7pt;line-height:1.1;margin-top:1mm;max-height:8mm;overflow:hidden}' +
-    '.p{font-size:5pt;color:#333;line-height:1.1;margin-top:.5mm;max-height:4mm;overflow:hidden}' +
+    '.p{font-size:5pt;color:var(--text);line-height:1.1;margin-top:.5mm;max-height:4mm;overflow:hidden}' +
     '</style><div class="lb"><img src="' + qrDataUrl(k.uid, 260) + '"><div class="n">' + esc(k.name) + '</div><div class="p">' + esc(k.place || '') + '</div></div>');
   w.document.close();
   setTimeout(() => { w.focus(); w.print(); }, 400);

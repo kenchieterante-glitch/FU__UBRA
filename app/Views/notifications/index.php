@@ -411,7 +411,7 @@ $draft_count = $draft_count ?? 0;
       <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:500;cursor:pointer;">
         <input type="checkbox" id="cmText" style="width:auto;margin:0;"> Also text this person when the message is sent
       </label>
-      <div style="font-size:12px;color:#111;margin:4px 0 0 26px;">Works when you pick a person (not a group). Saved in the SMS Outbox; really sent once an SMS gateway is connected.</div>
+      <div style="font-size:12px;color:var(--text);margin:4px 0 0 26px;">Works when you pick a person (not a group). Saved in the SMS Outbox; really sent once an SMS gateway is connected.</div>
       <div class="modal-actions">
         <button type="button" class="btn-secondary" onclick="closeComposeModal()">Cancel</button>
         <button type="submit" class="btn-approve"><i class="bi bi-save2"></i> Save Draft</button>

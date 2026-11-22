@@ -248,6 +248,7 @@ async function refreshBorrowing() {
   if (document.hidden || borrowingRefreshing) return;
   if (Array.from(document.querySelectorAll('.modal')).some(m => m.style.display === 'flex')) return;
   if (document.getElementById('borrowFilterPopup')?.classList.contains('visible')) return;
+  if (document.querySelector('#borrowingTable .bulk-check:checked')) return; // rows are ticked: don't redraw the table under the user
 
   borrowingRefreshing = true;
   try {
@@ -255,11 +256,14 @@ async function refreshBorrowing() {
     if (!res.ok) return;
     const data = await res.json();
 
-    document.querySelector('#borrowingTable tbody').innerHTML = data.rows_html;
     borrowDetails = data.details || borrowDetails;
-
-    filterBorrowingTable();
-    sortBorrowingRows();
+    // Only redraw the rows when they really changed, so the tick boxes don't flicker.
+    if (data.rows_html !== window.__lastBorrowRowsHtml) {
+      window.__lastBorrowRowsHtml = data.rows_html;
+      document.querySelector('#borrowingTable tbody').innerHTML = data.rows_html;
+      filterBorrowingTable();
+      sortBorrowingRows();
+    }
   } catch (e) {
     // Silent - a missed refresh just tries again next interval.
   } finally {

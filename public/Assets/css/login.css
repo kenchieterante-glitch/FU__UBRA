@@ -147,7 +147,7 @@ body {
 
     text-align: center;
 
-    color: #111;
+    color: var(--text);
 
 }
 

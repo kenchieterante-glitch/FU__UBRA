@@ -328,7 +328,7 @@
 }
 
 .module-card-ai .mc-sub {
-    color: #888;
+    color: var(--text);
 }
 
 .mc-arrow {
@@ -354,7 +354,7 @@
 .dept-card-head { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #7b0f1a; text-decoration: none; margin-bottom: 8px; font-size: 15px; }
 .dept-link { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 4px; border-top: 1px solid rgba(0,0,0,.07); color: inherit; text-decoration: none; font-size: 13.5px; }
 .dept-link i { color: #7b0f1a; margin-right: 6px; }
-.dept-link small { color: #111; }
+.dept-link small { color: var(--text); }
 .dept-link:hover { background: rgba(123,15,26,.05); }
 
 /* Main dashboard: all status boxes visible at once, same size, nothing cut off */

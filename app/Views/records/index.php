@@ -15,64 +15,66 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
     <!-- ── PAGE HEADER ──────────────────────────────────────────── -->
     <div class="page-header">
         <div>
-            <h1>Reports</h1>
+            <h1>Report Center</h1>
             <p class="page-subtitle"><?= $scopedToJanitorial ? 'Janitorial records and activity only.' : ($scopeModules ? implode(' and ', $scopeModules) . ' records and activity only.' : 'View, manage and generate reports for all categories in one place.') ?></p>
         </div>
     </div>
 
+    <?php $startView = $startView ?? 'records'; $disposalRows = $disposalRows ?? []; $archivedRows = $archivedRows ?? []; $canArchive = $canArchive ?? false; ?>
     <!-- ── STATS CARDS ──────────────────────────────────────────── -->
-    <div class="stat-cards">
-        <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('total')" role="button" tabindex="0">
+    <div class="stat-cards<?= !empty($canManageArchive) ? ' rec-stats-7' : '' ?>">
+        <div class="stat-card stat-card-clickable<?= $startView === 'records' ? ' is-active' : '' ?>" id="tabRecords" data-stat="total" onclick="<?= !empty($canArchive) ? "switchRecView('records');" : '' ?>filterRecordsByStat('total')" role="button" tabindex="0">
             <span class="stat-icon tone-maroon"><i class="bi bi-folder2-open"></i></span>
             <h3>Total Records</h3>
             <div class="value"><?= (int) $stats['total_records'] ?></div>
         </div>
-        <div class="stat-card stat-card-clickable" onclick="<?= !empty($canArchive) ? "switchRecView('archived')" : "filterRecordsByStat('archived')" ?>" role="button" tabindex="0">
+        <div class="stat-card stat-card-clickable<?= $startView === 'archived' ? ' is-active' : '' ?>" id="tabArchived" data-stat="archived" onclick="<?= !empty($canArchive) ? "switchRecView('archived')" : "filterRecordsByStat('archived')" ?>" role="button" tabindex="0">
             <span class="stat-icon tone-neutral"><i class="bi bi-archive-fill"></i></span>
             <h3>Archived Records</h3>
-            <div class="value"><?= (int) $stats['archived_records'] ?></div>
+            <div class="value"><?= !empty($canArchive) ? count($archivedRows) : (int) $stats['archived_records'] ?></div>
         </div>
-        <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('reports')" role="button" tabindex="0">
+        <?php if (!empty($canManageArchive)): ?>
+        <div class="stat-card stat-card-clickable<?= $startView === 'disposal' ? ' is-active' : '' ?>" id="tabDisposal" data-stat="disposal" onclick="switchRecView('disposal')" role="button" tabindex="0">
+            <span class="stat-icon tone-red"><i class="bi bi-trash3"></i></span>
+            <h3>Disposed Records</h3>
+            <div class="value"><?= count($disposalRows) ?></div>
+        </div>
+        <?php endif; ?>
+        <div class="stat-card stat-card-clickable" data-stat="reports" onclick="filterRecordsByStat('reports')" role="button" tabindex="0">
             <span class="stat-icon tone-gold"><i class="bi bi-file-earmark-text"></i></span>
             <h3>Reports Generated</h3>
             <div class="value"><?= (int) $stats['reports_generated'] ?></div>
         </div>
-        <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('pending')" role="button" tabindex="0" title="Reports waiting to be completed">
+        <div class="stat-card stat-card-clickable" data-stat="pending" onclick="filterRecordsByStat('pending')" role="button" tabindex="0" title="Reports waiting to be completed">
             <span class="stat-icon tone-gold"><i class="bi bi-hourglass-split"></i></span>
             <h3>Pending Reports</h3>
             <div class="value"><?= (int) ($stats['reports_pending'] ?? 0) ?></div>
         </div>
-        <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('completed')" role="button" tabindex="0" title="Reports that are done">
+        <div class="stat-card stat-card-clickable" data-stat="completed" onclick="filterRecordsByStat('completed')" role="button" tabindex="0" title="Reports that are done">
             <span class="stat-icon tone-green"><i class="bi bi-check2-circle"></i></span>
             <h3>Completed Reports</h3>
             <div class="value"><?= (int) ($stats['reports_completed'] ?? 0) ?></div>
         </div>
-        <div class="stat-card stat-card-clickable" onclick="filterRecordsByStat('today')" role="button" tabindex="0">
+        <div class="stat-card stat-card-clickable" data-stat="today" onclick="filterRecordsByStat('today')" role="button" tabindex="0">
             <span class="stat-icon tone-green"><i class="bi bi-calendar-day"></i></span>
             <h3>Today's Activities</h3>
             <div class="value"><?= (int) $stats['today_activities'] ?></div>
         </div>
     </div>
 
-    <?php $startView = $startView ?? 'records'; $disposalRows = $disposalRows ?? []; $archivedRows = $archivedRows ?? []; $canArchive = $canArchive ?? false; ?>
     <style>
-      .rec-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:rgba(128,0,0,.07);margin-bottom:16px}
-      .rec-tab{border:0;background:transparent;padding:8px 18px;border-radius:9px;font-weight:600;font-size:14px;color:#555;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
-      .rec-tab.active{background:#800000;color:#fff;box-shadow:0 2px 6px rgba(128,0,0,.25)}
-      .rec-tab .tab-count{font-size:11px;padding:1px 8px;border-radius:999px;background:rgba(0,0,0,.12)}
-      .rec-tab.active .tab-count{background:rgba(255,255,255,.25)}
-      .dsp-empty{padding:34px 12px;text-align:center;color:#888}
+      @media (min-width:1100px){.rec-stats-7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}.rec-stats-7 .stat-card{flex:none;width:auto;min-width:0;max-width:none;padding-left:8px;padding-right:8px}.rec-stats-7 .stat-card h3{white-space:normal;text-align:center;min-height:2.6em;display:flex;align-items:center;justify-content:center}}
+      .stat-card.is-active{border-color:#800000;box-shadow:0 0 0 2px rgba(128,0,0,.25),var(--shadow)}
+      /* Category filter: small chips */
+      .rec-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+      .rec-tabs .rec-tab{border:1px solid #d6d6dd;background:var(--card,#fff);padding:5px 12px;border-radius:999px;font-weight:600;font-size:12.5px;color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+      .rec-tabs .rec-tab:hover{border-color:#800000;color:#800000}
+      .rec-tabs .rec-tab.active{background:#800000;border-color:#800000;color:#fff}
+      .rec-tabs .tab-count{font-size:11px;padding:0 7px;border-radius:999px;background:rgba(0,0,0,.1)}
+      .rec-tabs .rec-tab.active .tab-count{background:rgba(255,255,255,.25)}
+      .dsp-empty{padding:34px 12px;text-align:center;color:var(--text)}
       .dsp-empty i{font-size:30px;display:block;margin-bottom:8px;color:#c9a9a9}
     </style>
-    <?php if (!empty($canArchive)): ?>
-    <div class="rec-tabs" role="tablist">
-        <button type="button" class="rec-tab<?= $startView === 'records' ? ' active' : '' ?>" id="tabRecords" role="tab" onclick="switchRecView('records')"><i class="bi bi-list-task"></i> Records</button>
-        <button type="button" class="rec-tab<?= $startView === 'archived' ? ' active' : '' ?>" id="tabArchived" role="tab" onclick="switchRecView('archived')"><i class="bi bi-archive"></i> Archived <span class="tab-count"><?= count($archivedRows) ?></span></button>
-        <?php if (!empty($canManageArchive)): ?>
-        <button type="button" class="rec-tab<?= $startView === 'disposal' ? ' active' : '' ?>" id="tabDisposal" role="tab" onclick="switchRecView('disposal')"><i class="bi bi-trash3"></i> Disposal <span class="tab-count"><?= count($disposalRows) ?></span></button>
-        <?php endif; ?>
-    </div>
-    <?php endif; ?>
 
     <div id="viewRecords"<?= $startView !== 'records' ? ' style="display:none"' : '' ?>>
     <!-- ── FILTER BAR ───────────────────────────────────────────── -->
@@ -267,7 +269,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
         ?>
         <div class="rec-table-card">
             <div class="rec-table-head">
-                <div class="rec-table-title"><i class="bi bi-archive-fill"></i> Archived Records <span style="font-weight:400;font-size:13px;color:#888;">· all modules</span></div>
+                <div class="rec-table-title"><i class="bi bi-archive-fill"></i> Archived Records <span style="font-weight:400;font-size:13px;color:var(--text);">· all modules</span></div>
             </div>
             <div style="padding:0 1.2rem 10px;">
                 <div class="rec-tabs" style="margin:6px 0 4px;" role="tablist" id="arcCatTabs">
@@ -276,7 +278,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                     <button type="button" class="rec-tab" data-cat="<?= esc($cn) ?>" onclick="filterArchived(this.dataset.cat)"><i class="bi <?= esc(\App\Libraries\DepartmentScope::CATEGORIES[$cn]['icon']) ?>"></i> <?= esc($cn) ?> <span class="tab-count"><?= (int) $arcCount[$cn] ?></span></button>
                     <?php endforeach; ?>
                 </div>
-                <p style="margin:6px 0 0;font-size:12px;color:#8a6d6f;">Tick records to <strong>Restore</strong> them to their module or <strong>Delete permanently</strong>. Records past their department's retention (<?= esc(implode(' · ', array_map(fn($d, $m) => "$d $m mo", array_keys($retentionByDept), $retentionByDept))) ?>) can also be cleared in Settings → Archive &amp; Retention.</p>
+                <p style="margin:6px 0 0;font-size:12px;color:var(--text);">Tick records to <strong>Restore</strong> them to their module or <strong>Delete permanently</strong>. Records past their department's retention (<?= esc(implode(' · ', array_map(fn($d, $m) => "$d $m mo", array_keys($retentionByDept), $retentionByDept))) ?>) can also be cleared in Settings → Archive &amp; Retention.</p>
             </div>
             <div class="table-scroll">
                 <table class="rec-table" id="archivedTable" data-bulk-endpoint="<?= base_url('records/bulk') ?>" data-bulk-actions="restore,delete">
@@ -309,7 +311,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
         ?>
         <div class="rec-table-card">
             <div class="rec-table-head">
-                <div class="rec-table-title"><i class="bi bi-trash3"></i> Disposal Log <span style="font-weight:400;font-size:13px;color:#888;">· all modules</span></div>
+                <div class="rec-table-title"><i class="bi bi-trash3"></i> Disposal Log <span style="font-weight:400;font-size:13px;color:var(--text);">· all modules</span></div>
                 <div class="rec-table-actions">
                     <a class="rec-btn-outline" href="<?= base_url('facilities/aircon') ?>" style="text-decoration:none;"><i class="bi bi-snow2"></i> Dispose aircon units</a>
                 </div>
@@ -321,7 +323,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                     <button type="button" class="rec-tab" data-cat="<?= esc($cn) ?>" onclick="filterDisposal(this.dataset.cat)"><i class="bi <?= esc(\App\Libraries\DepartmentScope::CATEGORIES[$cn]['icon']) ?>"></i> <?= esc($cn) ?> <span class="tab-count"><?= (int) $dspCount[$cn] ?></span></button>
                     <?php endforeach; ?>
                 </div>
-                <p style="margin:6px 0 0;font-size:12px;color:#8a6d6f;">To dispose of equipment from any module, select it in the <strong>Records</strong> tab and choose <strong>Dispose selected</strong>. It is logged here under its category.</p>
+                <p style="margin:6px 0 0;font-size:12px;color:var(--text);">To dispose of equipment from any module, select it in the <strong>Records</strong> tab and choose <strong>Dispose selected</strong>. It is logged here under its category.</p>
             </div>
             <div class="table-scroll">
                 <table class="rec-table" id="disposalTable">
@@ -424,7 +426,7 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
                     <select name="category" id="subType" required></select>
                 </div>
                 <div class="form-group"><label>Details</label><textarea name="details" rows="5" required></textarea></div>
-                <p style="font-size:12px;color:#666;margin:0;">Submitted reports start as Pending and can be tracked here until they are marked Completed.</p>
+                <p style="font-size:12px;color:var(--text);margin:0;">Submitted reports start as Pending and can be tracked here until they are marked Completed.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="document.getElementById('submitReportModal').style.display='none'">Cancel</button>
@@ -434,26 +436,86 @@ $slug = fn($s) => strtolower(str_replace(' ', '-', trim((string) $s)));
     </div>
 </div>
 
-<div id="exportModal" class="modal-overlay" style="display:none;">
-    <div class="modal-box modal-sm">
-        <div class="modal-header">
-            <h3 id="exportModalTitle"><i class="bi bi-download"></i> Export</h3>
-            <button class="modal-close" onclick="closeExportModal()"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label>Which category do you want to export?</label>
-                <select id="exportModuleSelect">
-                    <option value=""><?= $scopeModules ? 'All my categories' : 'All Categories' ?></option>
-                    <?php foreach ($shownCats as $cn): $cc = \App\Libraries\DepartmentScope::CATEGORIES[$cn]; ?>
-                        <option value="<?= esc($cc['slug']) ?>"><?= esc($cn) ?></option>
-                    <?php endforeach; ?>
-                </select>
+<style>
+  .xp-box{max-width:520px;width:calc(100% - 32px);padding:0;overflow:hidden;border-radius:16px}
+  .xp-head{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid var(--line)}
+  .xp-head-icon{width:44px;height:44px;border-radius:12px;background:var(--ubra-accent-soft,#f6ecec);color:var(--maroon);display:flex;align-items:center;justify-content:center;font-size:21px;flex:0 0 auto}
+  .xp-head h3{margin:0;font-size:18px;font-weight:700;color:var(--text)}
+  .xp-head p{margin:2px 0 0;font-size:13px;color:var(--text)}
+  .xp-close{margin-left:auto;border:0;background:transparent;width:34px;height:34px;border-radius:9px;color:var(--text);font-size:16px;cursor:pointer}
+  .xp-close:hover{background:var(--bg-subtle)}
+  .xp-body{padding:20px 24px;display:grid;gap:20px}
+  .xp-label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);margin-bottom:8px;display:block}
+  .xp-seg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .xp-opt{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer;text-align:left;color:var(--text);font-size:14px;font-weight:600;transition:border-color .15s,background .15s,box-shadow .15s}
+  .xp-opt:hover{border-color:var(--maroon)}
+  .xp-opt.on{border-color:var(--maroon);background:var(--ubra-accent-soft,#f6ecec);box-shadow:0 0 0 3px rgba(128,0,0,.1)}
+  .xp-opt i{font-size:20px;color:var(--maroon)}
+  .xp-opt small{display:block;font-weight:500;font-size:12px;color:var(--text)}
+  .xp-cats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .xp-cats .xp-opt{padding:10px 12px;font-size:13.5px}
+  .xp-cats .xp-opt i{font-size:17px}
+  .xp-range{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .xp-range input{height:42px;border:1px solid #d4d4dc;border-radius:10px;padding:0 12px;background:var(--card);color:var(--text);font-size:14px;width:100%}
+  .xp-range input:focus{outline:none;border-color:var(--maroon);box-shadow:0 0 0 3px rgba(128,0,0,.14)}
+  .xp-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .xp-chip{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;cursor:pointer}
+  .xp-chip:hover{border-color:var(--maroon);color:var(--maroon)}
+  .xp-note{display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-radius:10px;background:var(--bg-subtle);font-size:13px;color:var(--text)}
+  .xp-note i{color:var(--maroon);margin-top:1px}
+  .xp-foot{display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:16px 24px;border-top:1px solid var(--line);background:var(--bg-subtle)}
+  .xp-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:14px;font-weight:600;cursor:pointer}
+  .xp-btn:hover{background:var(--bg-subtle)}
+  .xp-btn.primary{background:var(--maroon);border-color:var(--maroon);color:#fff}
+  .xp-btn.primary:hover{background:var(--maroon-dark)}
+  @media(max-width:520px){.xp-seg,.xp-cats,.xp-range{grid-template-columns:1fr}}
+</style>
+<div id="exportModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeExportModal()">
+    <div class="modal-box xp-box" role="dialog" aria-labelledby="exportModalTitle">
+        <div class="xp-head">
+            <span class="xp-head-icon"><i class="bi bi-box-arrow-down"></i></span>
+            <div>
+                <h3 id="exportModalTitle">Export records</h3>
+                <p>Choose what to include, then download.</p>
             </div>
+            <button type="button" class="xp-close" onclick="closeExportModal()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeExportModal()">Cancel</button>
-            <button type="button" class="btn-maroon" onclick="confirmExport()">Export</button>
+        <div class="xp-body">
+            <div>
+                <span class="xp-label">Format</span>
+                <div class="xp-seg" id="xpFormat">
+                    <button type="button" class="xp-opt" data-format="pdf" onclick="setExportFormat('pdf')"><i class="bi bi-file-earmark-pdf"></i><span>PDF<small>Print-ready report</small></span></button>
+                    <button type="button" class="xp-opt" data-format="excel" onclick="setExportFormat('excel')"><i class="bi bi-file-earmark-excel"></i><span>Excel<small>Open in a spreadsheet</small></span></button>
+                </div>
+            </div>
+            <div>
+                <span class="xp-label">Category</span>
+                <input type="hidden" id="exportModuleSelect" value="">
+                <div class="xp-cats" id="xpCats">
+                    <button type="button" class="xp-opt on" data-cat="" onclick="setExportCat('')"><i class="bi bi-grid-fill"></i><span><?= $scopeModules ? 'All my categories' : 'All categories' ?></span></button>
+                    <?php foreach ($shownCats as $cn): $cc = \App\Libraries\DepartmentScope::CATEGORIES[$cn]; ?>
+                    <button type="button" class="xp-opt" data-cat="<?= esc($cc['slug']) ?>" onclick="setExportCat(this.dataset.cat)"><i class="bi <?= esc($cc['icon']) ?>"></i><span><?= esc($cn) ?></span></button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <div>
+                <span class="xp-label">Date range <span style="text-transform:none;letter-spacing:0;font-weight:500">(optional)</span></span>
+                <div class="xp-range">
+                    <input type="date" id="exportFrom" aria-label="From date">
+                    <input type="date" id="exportTo" aria-label="To date">
+                </div>
+                <div class="xp-chips">
+                    <button type="button" class="xp-chip" onclick="setExportRange('today')">Today</button>
+                    <button type="button" class="xp-chip" onclick="setExportRange('week')">Last 7 days</button>
+                    <button type="button" class="xp-chip" onclick="setExportRange('month')">This month</button>
+                    <button type="button" class="xp-chip" onclick="setExportRange('')">All time</button>
+                </div>
+            </div>
+            <div class="xp-note" id="xpFilters" style="display:none"><i class="bi bi-funnel"></i><span id="xpFiltersText"></span></div>
+        </div>
+        <div class="xp-foot">
+            <button type="button" class="xp-btn" onclick="closeExportModal()">Cancel</button>
+            <button type="button" class="xp-btn primary" id="xpGo" onclick="confirmExport()"><i class="bi bi-download"></i> <span id="xpGoText">Export</span></button>
         </div>
     </div>
 </div>
@@ -552,10 +614,40 @@ document.querySelectorAll('.rec-icon-filter').forEach(group => {
 let exportFormat = 'pdf';
 
 function openExportModal(format) {
-    exportFormat = format;
-    document.getElementById('exportModuleSelect').value = getIconFilterValue('moduleFilterGroup');
-    document.getElementById('exportModalTitle').textContent = 'Export ' + (format === 'pdf' ? 'PDF' : 'Excel');
+    setExportFormat(format);
+    setExportCat(getIconFilterValue('moduleFilterGroup') || '');
+    document.getElementById('exportFrom').value = '';
+    document.getElementById('exportTo').value = '';
+    // Remind the user which table filters are also applied.
+    const parts = [];
+    const st = document.getElementById('statusFilter').value, dt = document.getElementById('dateFilter').value,
+          q = document.getElementById('searchInput').value.trim(), kd = getIconFilterValue('kindFilterGroup');
+    if (kd) parts.push('type: ' + kd); if (st) parts.push('status: ' + st); if (dt) parts.push('date: ' + dt); if (q) parts.push('search: "' + q + '"');
+    const note = document.getElementById('xpFilters');
+    note.style.display = parts.length ? 'flex' : 'none';
+    document.getElementById('xpFiltersText').textContent = parts.length ? 'Your current filters are also applied (' + parts.join(', ') + ').' : '';
     document.getElementById('exportModal').style.display = 'flex';
+}
+
+function setExportFormat(format) {
+    exportFormat = format;
+    document.querySelectorAll('#xpFormat .xp-opt').forEach(b => b.classList.toggle('on', b.dataset.format === format));
+    document.getElementById('xpGoText').textContent = 'Export ' + (format === 'pdf' ? 'PDF' : 'Excel');
+}
+
+function setExportCat(cat) {
+    document.getElementById('exportModuleSelect').value = cat;
+    document.querySelectorAll('#xpCats .xp-opt').forEach(b => b.classList.toggle('on', (b.dataset.cat || '') === cat));
+}
+
+function setExportRange(kind) {
+    const f = document.getElementById('exportFrom'), t = document.getElementById('exportTo');
+    const iso = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    const now = new Date();
+    if (kind === 'today') { f.value = t.value = iso(now); }
+    else if (kind === 'week') { const s = new Date(now); s.setDate(s.getDate() - 6); f.value = iso(s); t.value = iso(now); }
+    else if (kind === 'month') { f.value = iso(new Date(now.getFullYear(), now.getMonth(), 1)); t.value = iso(now); }
+    else { f.value = ''; t.value = ''; }
 }
 
 function closeExportModal() {
@@ -569,6 +661,8 @@ function confirmExport() {
         status: document.getElementById('statusFilter').value,
         date:   document.getElementById('dateFilter').value,
         search: document.getElementById('searchInput').value.trim(),
+        date_from: document.getElementById('exportFrom').value,
+        date_to:   document.getElementById('exportTo').value,
     });
     window.location.href = `<?= base_url('records/export/') ?>${exportFormat}?${params.toString()}`;
     closeExportModal();
@@ -593,6 +687,20 @@ function filterTable() {
 
     currentPage = 1;
     applyPagination();
+
+    // Keep the highlighted status box in step with what the filters are really showing.
+    const today = new Date().toISOString().slice(0, 10);
+    let which = null;
+    if (!mod && !term) {
+        if (!kind && !status && !date) which = 'total';
+        else if (kind === 'archive' && !status && !date) which = 'archived';
+        else if (kind === 'report' && !status && !date) which = 'reports';
+        else if (kind === 'report' && status === 'pending' && !date) which = 'pending';
+        else if (kind === 'report' && status === 'completed' && !date) which = 'completed';
+        else if (!kind && !status && date === today) which = 'today';
+    }
+    const recView = document.getElementById('viewRecords');
+    if (!recView || recView.style.display !== 'none') setActiveStat(which);
 }
 
 function resetFilters() {
@@ -617,8 +725,9 @@ function switchRecView(which) {
     Object.keys(views).forEach(k => {
         const v = document.getElementById(views[k]), tb = document.getElementById(tabs[k]);
         if (v) v.style.display = k === which ? '' : 'none';
-        if (tb) tb.classList.toggle('active', k === which);
+        
     });
+    setActiveStat(which === 'records' ? 'total' : which);
     history.replaceState(null, '', which === 'records' ? location.pathname : '?view=' + which);
 }
 
@@ -632,7 +741,12 @@ function filterDisposal(cat) {
     document.querySelectorAll('#disposalTable tbody tr[data-cat]').forEach(r => { r.style.display = (!cat || r.dataset.cat === cat) ? '' : 'none'; });
 }
 
+function setActiveStat(kind) {
+    document.querySelectorAll('.stat-card[data-stat]').forEach(c => c.classList.toggle('is-active', c.dataset.stat === kind));
+}
 function filterRecordsByStat(kind) {
+    // These filters act on the Records table, so leave the Archived / Disposal view first.
+    if (document.getElementById('viewRecords') && document.getElementById('viewRecords').style.display === 'none') switchRecView('records');
     setIconFilterValue('moduleFilterGroup', '');
     setIconFilterValue('kindFilterGroup', '');
     document.getElementById('statusFilter').value = '';
@@ -648,6 +762,7 @@ function filterRecordsByStat(kind) {
     if (kind === 'today')    document.getElementById('dateFilter').value = new Date().toISOString().slice(0, 10);
 
     filterTable();
+    setActiveStat(kind);
 }
 
 document.querySelectorAll('.stat-card-clickable').forEach(card => {

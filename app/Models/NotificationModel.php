@@ -51,7 +51,7 @@ class NotificationModel extends Model
         'Personnel Document Incomplete'    => 'personnel',
     ];
 
-    // Notification category -> [main category, type]; same three-category grouping as the Reports Hub and the dashboard.
+    // Notification category -> [main category, type]; same three-category grouping as the Report Center and the dashboard.
     public const CATEGORY_GROUP = [
         'Air-Con Cleaning'                => ['Facilities', 'Repairs & Aircon'],
         'Aircon Unit Registered'          => ['Facilities', 'Repairs & Aircon'],

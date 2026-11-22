@@ -90,7 +90,7 @@ class RecordsController extends BaseController
         }
 
         return view('records/index', [
-            'title'               => 'Reports',
+            'title'               => 'Report Center',
             'pageCss'             => 'records.css',
             'stats'               => $stats,
             'activities'          => $activities,
@@ -1116,6 +1116,7 @@ class RecordsController extends BaseController
         ];
         foreach ($candidates as $path) {
             if (is_file($path)) {
+                $path = $this->smallLogo($path);
                 $mime = match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
                     'jpg', 'jpeg' => 'image/jpeg',
                     default       => 'image/png',
@@ -1124,6 +1125,29 @@ class RecordsController extends BaseController
             }
         }
         return '';
+    }
+
+    // The logo file is 800x800 (750 KB); Dompdf re-decodes it on every export and that alone
+    // took about a minute. The header only shows it at 60 px, so use a small cached copy.
+    private function smallLogo(string $path): string
+    {
+        $cache = WRITEPATH . 'cache/pdf_logo_' . md5($path . filemtime($path)) . '.png';
+        if (is_file($cache)) return $cache;
+        if (!function_exists('imagecreatefromstring')) return $path;
+        $src = @imagecreatefromstring((string) file_get_contents($path));
+        if (!$src) return $path;
+        $w = imagesx($src); $h = imagesy($src); $size = 160;
+        if ($w <= $size && $h <= $size) { imagedestroy($src); return $path; }
+        $ratio = min($size / $w, $size / $h);
+        $nw = max(1, (int) round($w * $ratio)); $nh = max(1, (int) round($h * $ratio));
+        $dst = imagecreatetruecolor($nw, $nh);
+        imagealphablending($dst, false); imagesavealpha($dst, true);
+        imagefill($dst, 0, 0, imagecolorallocatealpha($dst, 0, 0, 0, 127));
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+        if (!is_dir(dirname($cache))) @mkdir(dirname($cache), 0775, true);
+        $ok = @imagepng($dst, $cache, 9);
+        imagedestroy($src); imagedestroy($dst);
+        return $ok ? $cache : $path;
     }
 
     // Shared centered header — system name, module name, and logo when one
@@ -1144,44 +1168,13 @@ class RecordsController extends BaseController
 
     private function exportPDF(array $activities, string $moduleLabel)
     {
-        $rows = '';
-        foreach ($activities as $a) {
-            $dateStr = !empty($a['date']) ? date('M j, Y', strtotime($a['date'])) : '—';
-            $rows .= '<tr>'
-                . '<td>' . esc($dateStr) . '</td>'
-                . '<td>' . esc($a['category'] ?? $a['module']) . ' &mdash; ' . esc($a['type_label'] ?? '') . '</td>'
-                . '<td>' . esc($a['record']) . '<br><span class="sub">' . esc($a['record_sub']) . '</span></td>'
-                . '<td>' . esc($a['performed_by']) . '</td>'
-                . '<td>' . esc($a['status']) . '</td>'
-                . '</tr>';
+        // Drawn straight onto the page (see RecordsPdf) - building an HTML table for Dompdf took ~40 ms per row.
+        @set_time_limit(120);
+        $logo = '';
+        foreach ([FCPATH . 'images/UBRA LOGO (no background).png', FCPATH . 'uploads/logo.png', FCPATH . 'Assets/images/logo.png'] as $c) {
+            if (is_file($c)) { $logo = $this->smallLogo($c); break; }
         }
-        if ($rows === '') {
-            $rows = '<tr><td colspan="5" style="text-align:center;color:#888;">No matching records.</td></tr>';
-        }
-
-        $html = '<html><head><style>
-                body { font-family: Helvetica, Arial, sans-serif; color: #222; }
-                .doc-header { text-align: center; margin-bottom: 16px; }
-                .doc-logo { display: block; margin: 0 auto 8px; height: 60px; }
-                .doc-system-name { font-size: 15px; font-weight: bold; letter-spacing: .04em; color: #800000; }
-                .doc-module-name { font-size: 13px; font-weight: bold; margin-top: 2px; }
-                .meta { color: #666; font-size: 11px; margin-top: 6px; }
-                table { border-collapse: collapse; width: 100%; }
-                th, td { border: 1px solid #ccc; padding: 6px 8px; font-size: 11px; text-align: left; vertical-align: top; }
-                th { background: #800000; color: #fff; }
-                .sub { color: #888; font-size: 9.5px; }
-            </style></head><body>
-                ' . $this->docHeaderHtml($moduleLabel, count($activities)) . '
-                <table>
-                    <thead><tr><th>Date</th><th>Category</th><th>Record</th><th>Performed By</th><th>Status</th></tr></thead>
-                    <tbody>' . $rows . '</tbody>
-                </table>
-            </body></html>';
-
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('letter', 'portrait');
-        $dompdf->render();
+        $pdf = \App\Libraries\RecordsPdf::render($activities, $moduleLabel, $logo);
 
         $filenameModule = strtolower(str_replace(' ', '-', $moduleLabel));
         $filename = 'fu-ubra-' . $filenameModule . '-records-' . date('Y-m-d') . '.pdf';
@@ -1190,7 +1183,7 @@ class RecordsController extends BaseController
             ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->setHeader('Pragma', 'no-cache')
-            ->setBody($dompdf->output());
+            ->setBody($pdf);
     }
 
     private function exportCSV(array $activities, string $moduleLabel, bool $asExcel = false)

@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 <style>
   /* Black, readable text on this page (the default grey was too faint) */
-  .page-subtitle, .text-muted, .stat-card h3, .status-table .sj-table td, .gc-title { color: #111 !important; }
+  .page-subtitle, .text-muted, .stat-card h3, .status-table .sj-table td, .gc-title { color: var(--text) !important; }
 </style>
 <div class="page-header">
   <div>

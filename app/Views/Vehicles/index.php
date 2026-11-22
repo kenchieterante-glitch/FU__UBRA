@@ -487,16 +487,21 @@ if (vehiclesUrlEdit) {
 async function refreshVehicles() {
   if (document.getElementById('vehicleDetailModal')?.style.display === 'flex') return;
   if (document.getElementById('fuelLogModal')?.style.display === 'flex') return;
+  if (document.querySelector('#vehiclesTableBody .bulk-check:checked')) return; // rows are ticked: don't redraw the table under the user
 
   try {
     const res = await fetch('<?= base_url('vehicles/refresh') ?>', { headers: csrfHeaders() });
     if (!res.ok) return;
     const data = await res.json();
 
-    document.getElementById('vehiclesTableBody').innerHTML = data.rows_html;
-    // The old cached row order now points at detached nodes — clear it so
-    // the next sort/"Default" recaptures fresh ones from the new rows.
-    vehiclesOriginalOrder = null;
+    const vehicleRowsChanged = data.rows_html !== window.__lastVehicleRowsHtml;
+    if (vehicleRowsChanged) {
+      window.__lastVehicleRowsHtml = data.rows_html;
+      document.getElementById('vehiclesTableBody').innerHTML = data.rows_html;
+      // The old cached row order now points at detached nodes — clear it so
+      // the next sort/"Default" recaptures fresh ones from the new rows.
+      vehiclesOriginalOrder = null;
+    }
     vehicleDetails = data.vehicle_details_json ? JSON.parse(data.vehicle_details_json) : vehicleDetails;
 
     const maintenanceCount = (data.vehicles || []).filter(v => v.inspection_status === 'Expired' || v.availability === 'Maintenance').length;
@@ -508,8 +513,10 @@ async function refreshVehicles() {
 
     // Re-apply whatever search/type/availability filter and sort the user
     // currently has set — fresh rows would otherwise show unfiltered.
-    filterVehiclesTable();
-    applyVehiclesSort();
+    if (vehicleRowsChanged) {
+      filterVehiclesTable();
+      applyVehiclesSort();
+    }
   } catch (e) {
     // Silent — a missed refresh just tries again next interval.
   }

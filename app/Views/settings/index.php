@@ -14,45 +14,62 @@
 <div class="stg-wrapper">
 
     <!-- ── PAGE HEADER ──────────────────────────────────────────── -->
-    <div class="page-header">
-        <div>
-            <h1 class="page-title"><i class="bi bi-gear-fill"></i> System Settings</h1>
-            <p class="page-subtitle">Manage application preferences and integrations.</p>
+    <header class="stg-hero">
+        <div class="stg-hero-text">
+            <h1 class="stg-hero-title">Settings</h1>
+            <p class="stg-hero-sub">Manage how UBRA looks, who can use it, and what it connects to.</p>
         </div>
-    </div>
+        <div class="stg-status" role="status">
+            <span class="stg-pill ok"><span class="dot"></span> All systems operational</span>
+            <span class="stg-pill"><i class="bi bi-hdd-stack"></i> Server <strong><?= esc($sys_info['server'] ?? '—') ?></strong></span>
+            <span class="stg-pill"><i class="bi bi-database"></i> Database <strong><?= esc($sys_info['database'] ?? '—') ?></strong></span>
+            <span class="stg-pill"><i class="bi bi-tag"></i> <strong>v<?= esc(ltrim((string) ($sys_info['version'] ?? '—'), 'v')) ?></strong></span>
+        </div>
+    </header>
 
     <!-- ── LAYOUT: NAV + CONTENT + SIDEBAR ──────────────────────── -->
     <div class="stg-body">
 
         <!-- Left nav -->
-        <nav class="stg-nav">
+        <nav class="stg-nav" aria-label="Settings sections">
+            <div class="stg-search">
+                <i class="bi bi-search"></i>
+                <input type="search" id="stgSearch" placeholder="Search settings" autocomplete="off" aria-label="Search settings">
+            </div>
             <?php
-            $navItems = [
-                ['id'=>'general',       'icon'=>'bi-sliders',          'label'=>'General'],
-                ['id'=>'users',         'icon'=>'bi-people-fill',      'label'=>'Users'],
-                ['id'=>'roles',         'icon'=>'bi-shield-lock-fill', 'label'=>'Roles'],
-                ['id'=>'permissions',   'icon'=>'bi-key-fill',         'label'=>'Permissions'],
-                ['id'=>'email',         'icon'=>'bi-envelope-fill',    'label'=>'Email Settings'],
-                ['id'=>'notifications', 'icon'=>'bi-bell-fill',        'label'=>'Notification Settings'],
-                ['id'=>'google',        'icon'=>'bi-calendar3',        'label'=>'Google Calendar'],
-                ['id'=>'gps',           'icon'=>'bi-broadcast',        'label'=>'GPS API'],
-                ['id'=>'ai',            'icon'=>'bi-robot',            'label'=>'AI Configuration'],
-                ['id'=>'security',      'icon'=>'bi-shield-fill-check','label'=>'Security'],
-                ['id'=>'audit',         'icon'=>'bi-journal-text',     'label'=>'Audit Logs'],
-                ['id'=>'archive',       'icon'=>'bi-archive-fill',     'label'=>'Archive & Retention'],
+            $navGroups = [
+                'Preferences'    => [['general', 'bi-sliders', 'General']],
+                'Access'         => [['users', 'bi-people-fill', 'Users'], ['roles', 'bi-shield-lock-fill', 'Roles'], ['permissions', 'bi-key-fill', 'Permissions']],
+                'Communication'  => [['email', 'bi-envelope-fill', 'Email'], ['notifications', 'bi-bell-fill', 'Notifications']],
+                'Integrations'   => [['google', 'bi-calendar3', 'Google Calendar'], ['gps', 'bi-broadcast', 'GPS API'], ['ai', 'bi-robot', 'AI Configuration']],
+                'Security & Data'=> [['security', 'bi-shield-fill-check', 'Security'], ['audit', 'bi-journal-text', 'Audit Logs'], ['archive', 'bi-archive-fill', 'Archive & Retention']],
             ];
-            foreach ($navItems as $item):
-                if ($item['id'] === 'archive' && !$canManageArchive) continue;
+            foreach ($navGroups as $groupName => $items):
+                $visible = array_filter($items, fn($i) => !($i[0] === 'archive' && !$canManageArchive));
+                if (!$visible) continue;
             ?>
-            <button class="stg-nav-btn" data-tab="<?= $item['id'] ?>" onclick="switchTab('<?= $item['id'] ?>')">
-                <i class="bi <?= $item['icon'] ?>"></i>
-                <?= $item['label'] ?>
-            </button>
+            <div class="stg-nav-group" data-group>
+                <div class="stg-nav-label"><?= esc($groupName) ?></div>
+                <?php foreach ($visible as [$id, $icon, $label]): ?>
+                <button type="button" class="stg-nav-btn" data-tab="<?= $id ?>" data-label="<?= esc($label) ?>" data-icon="<?= $icon ?>" onclick="switchTab('<?= $id ?>')">
+                    <span class="stg-nav-ico"><i class="bi <?= $icon ?>"></i></span>
+                    <span><?= esc($label) ?></span>
+                </button>
+                <?php endforeach; ?>
+            </div>
             <?php endforeach; ?>
+            <div class="stg-nav-empty" id="stgNavEmpty" style="display:none">No settings match your search.</div>
         </nav>
 
         <!-- Tab content -->
         <div class="stg-content">
+            <div class="stg-content-head">
+                <span class="stg-content-ico"><i class="bi bi-sliders" id="stgHeadIcon"></i></span>
+                <div>
+                    <h2 class="stg-content-title" id="stgHeadTitle">General</h2>
+                    <p class="stg-content-desc" id="stgHeadDesc"></p>
+                </div>
+            </div>
 
             <!-- ── GENERAL ────────────────────────────────────────── -->
             <div id="tab-general" class="tab-pane active">
@@ -130,7 +147,7 @@
                             <tr>
                                 <td>
                                     <div class="user-cell">
-                                        <span class="user-avatar"><?= strtoupper(substr((string)($u['emp_id'] ?? ''), 0, 1)) ?></span>
+                                        <span class="user-avatar"><?= strtoupper(substr((string) (($u['email'] ?? '') !== '' ? $u['email'] : ($u['emp_id'] ?? '?')), 0, 1)) ?></span>
                                         <strong><?= esc($u['emp_id']) ?></strong>
                                     </div>
                                 </td>
@@ -408,14 +425,14 @@
             <?php if ($canManageArchive): ?>
             <div id="tab-archive" class="tab-pane">
                 <div class="tab-title">Archive &amp; Retention</div>
-                <p style="margin:0 0 14px;color:#666;font-size:13px;max-width:560px;">Archived records are kept for the number of months set by each department. After that they can be permanently deleted (archive first, then delete).</p>
+                <p style="margin:0 0 14px;color:var(--text);font-size:13px;max-width:560px;">Archived records are kept for the number of months set by each department. After that they can be permanently deleted (archive first, then delete).</p>
                 <form method="post" action="<?= base_url('records/retention') ?>" id="retForm" style="max-width:560px;">
                     <?= csrf_field() ?>
                     <?php foreach ($retentionByDept as $dept => $months): $slug2 = \App\Libraries\DepartmentScope::CATEGORIES[$dept]['slug']; $due = (int) ($expiredByDept[$dept] ?? 0); ?>
                     <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.08);">
                         <label for="ret_<?= esc($slug2) ?>" style="flex:1;font-weight:600;margin:0;"><?= esc($dept) ?></label>
                         <input type="number" id="ret_<?= esc($slug2) ?>" name="months[<?= esc($slug2) ?>]" min="1" max="120" value="<?= (int) $months ?>" style="width:76px;padding:6px 8px;border:1px solid rgba(0,0,0,.2);border-radius:8px;text-align:center;font-weight:600;">
-                        <span style="font-size:13px;color:#555;width:62px;">month(s)</span>
+                        <span style="font-size:13px;color:var(--text);width:62px;">month(s)</span>
                         <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap;<?= $due > 0 ? 'background:#fdecea;color:#c62828;' : 'background:#e8f5e9;color:#2e7d32;' ?>"><?= $due > 0 ? $due . ' ready to delete' : 'Nothing expired' ?></span>
                     </div>
                     <?php endforeach; ?>
@@ -427,7 +444,7 @@
                         <button type="submit" class="btn-save" style="background:#2b2b33;"><i class="bi bi-trash3-fill"></i> Delete expired archives</button>
                     </form>
                 </div>
-                <p style="margin:10px 0 0;font-size:12px;color:#888;">Deleting cannot be undone. Archive records from the Reports page first.</p>
+                <p style="margin:10px 0 0;font-size:12px;color:var(--text);">Deleting cannot be undone. Archive records from the Reports page first.</p>
             </div>
             <?php endif; ?>
 
@@ -464,34 +481,6 @@
             </div>
 
         </div><!-- end stg-content -->
-
-        <!-- Right: System Info -->
-        <div class="stg-sysinfo">
-            <div class="sysinfo-card">
-                <div class="si-title">System Info</div>
-                <div class="si-row"><span>Version</span><strong><?= esc($sys_info['version'] ?? '—') ?></strong></div>
-                <div class="si-row"><span>Server</span><strong class="text-success"><?= esc($sys_info['server'] ?? '—') ?></strong></div>
-                <div class="si-row"><span>Database</span><strong class="text-success"><?= esc($sys_info['database'] ?? '—') ?></strong></div>
-                <div class="si-divider"></div>
-                <div class="si-label">Connections</div>
-                <div class="si-conn"><span class="conn-dot online"></span> GPS Connection</div>
-                <div class="si-conn"><span class="conn-dot online"></span> Calendar Connection</div>
-                <div class="si-conn"><span class="conn-dot online"></span> AI Connection</div>
-            </div>
-
-            <div class="ubra-mini">
-                <div class="ubra-header">
-                    <span class="ubra-icon">U</span>
-                    <div>
-                        <div class="ubra-name">MR. UBRA Health</div>
-                    </div>
-                </div>
-                <div class="ubra-health-msg">
-                    <i class="bi bi-check-circle-fill text-success"></i>
-                    Everything operational.<br>No critical issues detected.
-                </div>
-            </div>
-        </div>
 
     </div><!-- end stg-body -->
 </div>
@@ -562,14 +551,52 @@
     });
 })();
 // ── Tab switching ──────────────────────────────────────────────
+const STG_META = {
+    general:       ['General', 'Appearance, voice reminders and the names shown across the system.'],
+    users:         ['Users', 'Everyone who can sign in, and the role each person has.'],
+    roles:         ['Roles', 'System roles and their access levels. Assign roles to users in the Users section.'],
+    permissions:   ['Permissions', 'Which roles can open each module. Read-only reference; enforced by the system.'],
+    email:         ['Email', 'Outgoing mail through Gmail SMTP (PHPMailer).'],
+    notifications: ['Notifications', 'Choose which alerts are sent and how.'],
+    google:        ['Google Calendar', 'Sync maintenance events and cleaning cycles to the shared calendar.'],
+    gps:           ['GPS API', 'Connection settings for the vehicle trackers.'],
+    ai:            ['AI Configuration', 'Settings for Mr. UBRA, the operations assistant.'],
+    security:      ['Security', 'How accounts, sessions and records are protected.'],
+    audit:         ['Audit Logs', 'A trail of what happened in the system and when.'],
+    archive:       ['Archive & Retention', 'How long archived records are kept before they can be cleared.'],
+};
 function switchTab(id) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.stg-nav-btn').forEach(b => b.classList.remove('active'));
     const pane = document.getElementById('tab-' + id);
     if (pane) pane.classList.add('active');
-    document.querySelector(`[data-tab="${id}"]`)?.classList.add('active');
+    const btn = document.querySelector(`.stg-nav-btn[data-tab="${id}"]`);
+    if (btn) {
+        btn.classList.add('active');
+        document.getElementById('stgHeadIcon').className = 'bi ' + btn.dataset.icon;
+    }
+    const m = STG_META[id] || [btn ? btn.dataset.label : '', ''];
+    document.getElementById('stgHeadTitle').textContent = m[0];
+    document.getElementById('stgHeadDesc').textContent = m[1];
     history.replaceState(null, '', '#' + id);
 }
+
+// ── Search the settings list ─────────────────────────────────────
+document.getElementById('stgSearch')?.addEventListener('input', function () {
+    const q = this.value.trim().toLowerCase();
+    let shown = 0;
+    document.querySelectorAll('.stg-nav-group').forEach(g => {
+        let any = 0;
+        g.querySelectorAll('.stg-nav-btn').forEach(b => {
+            const hit = !q || b.dataset.label.toLowerCase().includes(q) || (STG_META[b.dataset.tab] || ['', ''])[1].toLowerCase().includes(q);
+            b.style.display = hit ? '' : 'none';
+            if (hit) any++;
+        });
+        g.style.display = any ? '' : 'none';
+        shown += any;
+    });
+    document.getElementById('stgNavEmpty').style.display = shown ? 'none' : '';
+});
 
 // Restore tab from URL hash
 const hash = location.hash.replace('#','');

@@ -495,9 +495,11 @@ if (toolsUrlFilter) filterToolsByStat(toolsUrlFilter);
 // Refill/View Details), so an in-progress form never gets swapped out
 // from under the user.
 let toolsRefreshing = false;
+let lastToolsRowsHtml = null; // rows are only redrawn when they really changed, so tick boxes don't flicker
 async function refreshTools() {
   if (document.hidden || toolsRefreshing) return; // don't poll in the background or overlap requests
   if (Array.from(document.querySelectorAll('.modal')).some(m => m.style.display === 'flex')) return;
+  if (document.querySelector('#toolsTableBody .bulk-check:checked')) return; // rows are ticked: don't redraw the table under the user
 
   toolsRefreshing = true;
   try {
@@ -506,8 +508,12 @@ async function refreshTools() {
     if (!res.ok) return;
     const data = await res.json();
 
-    document.getElementById('toolsTableBody').innerHTML = data.rows_html;
-    toolsOriginalOrder = null; // old cached order now points at detached nodes
+    const toolsRowsChanged = data.rows_html !== lastToolsRowsHtml;
+    if (toolsRowsChanged) {
+      lastToolsRowsHtml = data.rows_html;
+      document.getElementById('toolsTableBody').innerHTML = data.rows_html;
+      toolsOriginalOrder = null; // old cached order now points at detached nodes
+    }
     toolDetails = data.tool_details_json ? JSON.parse(data.tool_details_json) : toolDetails;
 
     if (data.refill_log_json) {
@@ -526,8 +532,10 @@ async function refreshTools() {
     // Re-apply whatever search/category/availability/condition filter and
     // sort the user currently has set — fresh rows would otherwise show
     // unfiltered.
-    filterToolsTable();
-    applyToolsSort();
+    if (toolsRowsChanged) {
+      filterToolsTable();
+      applyToolsSort();
+    }
   } catch (e) {
     // Silent — a missed refresh just tries again next interval.
   } finally {

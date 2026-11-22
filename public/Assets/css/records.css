@@ -384,7 +384,7 @@
 }
 
 .kind-record { background: #e0e7ff; color: #3730a3; }
-.kind-archive { background: #f3f4f6; color: #4b5563; }
+.kind-archive { background: #f3f4f6; color: var(--text); }
 .kind-report { background: #fce7f3; color: #9d174d; }
 
 /* Action text (colored, with implied state) */
@@ -400,8 +400,8 @@
 .act-completed { color: var(--success); }
 .act-cancelled { color: var(--danger); }
 .act-generated { color: #7c3aed; }
-.act-archived { color: #111; }
-.act-disposed { color: #4b5563; }
+.act-archived { color: var(--text); }
+.act-disposed { color: var(--text); }
 
 /* Status pill */
 .stat-pill {
