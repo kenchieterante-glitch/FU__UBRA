@@ -70,7 +70,15 @@ $draft_count = $draft_count ?? 0;
         <!-- Notification log -->
         <div class="table-panel">
             <div class="table-toolbar">
-                <h2 class="panel-title">Operational Alerts Log</h2>
+                <div class="notif-title-block">
+                    <h2 class="panel-title">Operational Alerts Log</h2>
+                    <?php $critCount = count(array_filter($notifications, fn($x) => strtoupper($x['priority'] ?? '') === 'CRITICAL')); ?>
+                    <div class="nq-tabs" role="tablist" id="notifQuickTabs">
+                        <button type="button" class="nq-tab active" data-q="all" onclick="setNotifQuick('all')">All <span><?= count($notifications) ?></span></button>
+                        <button type="button" class="nq-tab" data-q="unread" onclick="setNotifQuick('unread')">Unread <span><?= (int) $unread_count ?></span></button>
+                        <button type="button" class="nq-tab" data-q="critical" onclick="setNotifQuick('critical')">Critical <span><?= (int) $critCount ?></span></button>
+                    </div>
+                </div>
                 <div class="toolbar-right">
                     <div class="toolbar-search">
                       <input type="text" id="searchInput" class="search-box" placeholder="Search alerts…" title="Search by alert, recipient, or category" oninput="filterTable()">
@@ -130,18 +138,14 @@ $draft_count = $draft_count ?? 0;
                 <table class="notif-table" id="notifTable">
                     <thead>
                         <tr>
-                            <th style="width:28px"></th>
-                            <th>Category</th>
-                            <th>Description</th>
-                            <th>Recipient</th>
-                            <th>Date &amp; Time</th>
-                            <th>Priority</th>
-                            <th>Action</th>
+                            <th style="width:64px"></th>
+                            <th>Notification</th>
+                            <th class="nf-th-act">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($notifications)): ?>
-                            <tr><td colspan="7" class="empty-row">
+                            <tr><td colspan="3" class="empty-row">
                                 <i class="bi bi-bell-slash" style="font-size:2rem;color:var(--border);display:block;margin-bottom:.5rem"></i>
                                 No notifications yet. They'll appear here as operations generate alerts.
                             </td></tr>
@@ -237,26 +241,35 @@ $draft_count = $draft_count ?? 0;
                                 data-search="<?= strtolower(esc(($n['category'] ?? '') . ' ' . ($n['description'] ?? '') . ' ' . ($n['recipient'] ?? ''))) ?>"
                                 <?php if ($catRoute && !$isDraft): ?>data-route="<?= base_url($catRoute) ?>" title="Go to <?= esc($n['category'] ?? 'related module') ?>"<?php endif; ?>
                             >
-                                <td>
+                                <td class="nf-lead">
                                     <span class="cat-dot <?= $priClass ?>">
                                         <i class="bi <?= $catIcon ?>"></i>
                                     </span>
                                 </td>
-                                <td>
-                                    <div class="cat-label"><?= esc($n['category'] ?? '—') ?></div>
-                                    <?php $grp = \App\Models\NotificationModel::CATEGORY_GROUP[$n['category'] ?? ''] ?? null; if ($grp): ?><div class="cat-sub" style="font-size:11px;color:#8a6d6f;"><?= esc($grp[0] . ' · ' . $grp[1]) ?></div><?php endif; ?>
-                                    <div class="cat-sub"><?= esc($n['recipient'] ?? '') ?></div>
-                                </td>
-                                <td class="desc-cell"><?= esc($n['description'] ?? '—') ?></td>
-                                <td class="recipient-cell"><?= esc($n['recipient'] ?? '—') ?></td>
-                                <td>
-                                    <div class="datetime-cell">
-                                        <span><?= date('M j, Y', strtotime($n['created_at'])) ?></span>
-                                        <span class="time-muted"><?= date('h:i A', strtotime($n['created_at'])) ?></span>
+                                <td class="nf-main">
+                                    <?php
+                                        $ts   = strtotime($n['created_at']);
+                                        $diff = time() - $ts;
+                                        $ago  = $diff < 60 ? 'Just now'
+                                            : ($diff < 3600 ? floor($diff / 60) . ' min ago'
+                                            : ($diff < 86400 ? floor($diff / 3600) . ' hr ago'
+                                            : ($diff < 172800 ? 'Yesterday'
+                                            : ($diff < 604800 ? floor($diff / 86400) . ' days ago' : date('M j, Y', $ts)))));
+                                        $grp = \App\Models\NotificationModel::CATEGORY_GROUP[$n['category'] ?? ''] ?? null;
+                                    ?>
+                                    <div class="nf-top">
+                                        <span class="cat-label"><?= esc($n['category'] ?? '—') ?></span>
+                                        <span class="pri-badge <?= $priClass ?>"><?= $priority ?></span>
+                                        <span class="nf-time" title="<?= esc(date('M j, Y g:i A', $ts)) ?>"><?= esc($ago) ?></span>
+                                    </div>
+                                    <div class="desc-cell"><?= esc($n['description'] ?? '—') ?></div>
+                                    <div class="nf-meta">
+                                        <?php if ($grp): ?><span><i class="bi bi-diagram-3"></i> <?= esc($grp[0] . ' · ' . $grp[1]) ?></span><?php endif; ?>
+                                        <?php if (!empty($n['recipient'])): ?><span><i class="bi bi-person"></i> <?= esc($n['recipient']) ?></span><?php endif; ?>
+                                        <span><i class="bi bi-clock"></i> <?= esc(date('M j, Y · g:i A', $ts)) ?></span>
                                     </div>
                                 </td>
-                                <td><span class="pri-badge <?= $priClass ?>"><?= $priority ?></span></td>
-                                <td>
+                                <td class="nf-act">
                                     <?php
                                     // "Verify" now always opens the detail popup first (category,
                                     // description — building/date/expiry/installer for Fire
@@ -442,7 +455,27 @@ document.querySelectorAll('#notifTable tbody .notif-row.row-clickable').forEach(
 let statTodayOnly = false;
 let statDraftOnly = false;
 
+function setNotifQuick(q) {
+    const read = document.getElementById('readFilter'), pri = document.getElementById('priFilter');
+    if (read) read.value = (q === 'unread') ? 'unread' : '';
+    if (pri)  pri.value  = (q === 'critical') ? 'CRITICAL' : '';
+    document.querySelectorAll('#notifQuickTabs .nq-tab').forEach(b => b.classList.toggle('active', b.dataset.q === q));
+    filterTable();
+}
+
+function syncNotifQuick() {
+    const read = document.getElementById('readFilter'), pri = document.getElementById('priFilter'), cat = document.getElementById('catFilter'), q = document.getElementById('searchInput');
+    let which = null;
+    if (!(cat && cat.value) && !(q && q.value.trim()) && !statTodayOnly && !statDraftOnly) {
+        if (!read.value && !pri.value) which = 'all';
+        else if (read.value === 'unread' && !pri.value) which = 'unread';
+        else if (pri.value === 'CRITICAL' && !read.value) which = 'critical';
+    }
+    document.querySelectorAll('#notifQuickTabs .nq-tab').forEach(b => b.classList.toggle('active', b.dataset.q === which));
+}
+
 function filterTable() {
+    syncNotifQuick();
     const cat  = document.getElementById('catFilter').value.toLowerCase();
     const pri  = document.getElementById('priFilter').value;
     const read = document.getElementById('readFilter').value;
@@ -498,7 +531,7 @@ function speakStatSummary(kind) {
     if (critical.length) {
         text += ' ' + critical.length + ' critical. ';
         text += critical.slice(0, 3).map(r => {
-            const cat = (r.querySelector('td:nth-child(2)') || {}).textContent || '';
+            const cat = (r.querySelector('.cat-label') || {}).textContent || '';
             const desc = (r.querySelector('.desc-cell') || {}).textContent || '';
             return (cat.trim() ? cat.trim() + '. ' : '') + desc.trim();
         }).join('. Next. ');
