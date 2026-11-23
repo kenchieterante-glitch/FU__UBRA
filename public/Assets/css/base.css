@@ -3182,3 +3182,14 @@ table.gps-table tbody td .vehicle-cell {
 .ai-fab-chips { gap: 6px; }
 .ai-fab-chip { padding: 7px 12px; }
 .ai-fab-messages { padding: 14px 16px; }
+
+
+/* Sidebar: Maintenance trades (Electrician, Plumber, ...) nested under Maintenance */
+.sidebar-nav .nav-sub-group > a { position: relative; }
+.sidebar-nav .nav-submenu a i.nav-sub-caret { display: inline-block; margin-left: auto; font-size: 11px; color: #6e6e7a; padding: 4px; border-radius: 6px; cursor: pointer; transition: transform .15s ease, color .15s; }
+.sidebar-nav .nav-submenu a i.nav-sub-caret:hover { background: rgba(255,255,255,.1); color: #fff; }
+.sidebar-nav .nav-sub-group.open > a i.nav-sub-caret { color: #fff; transform: rotate(180deg); }
+.sidebar-nav .nav-sub-items { display: none; flex-direction: column; gap: 2px; margin: 2px 0 4px 14px; padding-left: 10px; border-left: 1px solid rgba(255,255,255,.08); }
+.sidebar-nav .nav-sub-group.open .nav-sub-items { display: flex; }
+.sidebar-nav .nav-submenu .nav-sub-items a { min-height: 32px; padding: 6px 12px; font-size: 12px; }
+body.sidebar-collapsed .sidebar-nav .nav-sub-items, body.sidebar-collapsed .sidebar-nav .nav-sub-caret { display: none !important; }

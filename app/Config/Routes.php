@@ -122,6 +122,7 @@ $routes->get ('personnel/drivers',   'PersonnelController::drivers');
 $routes->get ('personnel/janitors',  'PersonnelController::janitors');
 $routes->get ('personnel/carpentries','PersonnelController::carpentries');
 $routes->get ('personnel/maintenance','PersonnelController::maintenance');
+$routes->get ('personnel/maintenance/(:segment)','PersonnelController::maintenance/$1');
 $routes->get ('personnel/construction-workers','PersonnelController::constructionWorkers');
 $routes->get ('personnel/security',  'PersonnelController::security');
 $routes->post('personnel/add',       'PersonnelController::add');
@@ -449,6 +450,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes)
     $routes->get('personnel/carpentries', 'PersonnelController::carpentries');
     $routes->get('personnel/construction-workers', 'PersonnelController::constructionWorkers');
     $routes->get('personnel/maintenance', 'PersonnelController::maintenance');
+    $routes->get('personnel/maintenance/(:segment)', 'PersonnelController::maintenance/$1');
     $routes->post('personnel/add', 'PersonnelController::add');
     $routes->post('personnel/edit/(:num)', 'PersonnelController::edit/$1');
     $routes->post('personnel/delete/(:num)', 'PersonnelController::delete/$1');

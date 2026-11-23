@@ -26,7 +26,7 @@ $taskLabel = ($title === 'Drivers') ? 'Vehicle In Use' : 'Assigned Task';
 
 <div class="page-header">
   <div>
-    <h1><?= esc($title) ?></h1>
+    <h1><?= esc($title) ?><?= !empty($tradeLabel) ? ' · ' . esc($tradeLabel) : '' ?></h1>
     <p class="page-subtitle">Manage university personnel, assignments, and operational responsibilities.</p>
   </div>
   <button class="btn-add" onclick="document.getElementById('addModal').style.display='flex'">+ Add Personnel</button>
@@ -141,7 +141,7 @@ $personnelStatCards = [
 <table id="personnelTable" class="data-table">
   <thead>
     <tr>
-      <th>Personnel Detail</th>
+      <th>Name</th>
       <th>Employee ID</th>
       <th>Department</th>
       <th>Type</th>
@@ -169,21 +169,9 @@ $personnelStatCards = [
           // etc. routes (PersonnelController), just computed per row so the
           // Total Personnel overview's own stat cards can filter in place
           // instead of navigating to those separate pages.
-          $positionLower = strtolower((string) ($p['position'] ?? ''));
-          $category = '';
-          if (str_contains($positionLower, 'driver')) {
-            $category = 'drivers';
-          } elseif (str_contains($positionLower, 'janitor') || str_contains($positionLower, 'cleaning')) {
-            $category = 'janitors';
-          } elseif (str_contains($positionLower, 'carpenter')) {
-            $category = 'carpentries';
-          } elseif (str_contains($positionLower, 'maintenance') || str_contains($positionLower, 'physical plant')) {
-            $category = 'maintenance';
-          } elseif (str_contains($positionLower, 'construction')) {
-            $category = 'construction';
-          } elseif (str_contains($positionLower, 'security') || str_contains($positionLower, 'guard')) {
-            $category = 'security';
-          }
+          // One shared rule (PersonnelScope::categoryOf) so these stat-card filters,
+          // the category tabs and the role access never disagree.
+          $category = \App\Libraries\PersonnelScope::categoryOf($p['position'] ?? null) ?? '';
         ?>
         <tr class="personnel-row" onclick="openPersonnelDetail(<?= (int) $p['id'] ?>)"
             data-search="<?= esc(strtolower((string) ($p['full_name'] ?? '') . ' ' . ($p['emp_id'] ?? '') . ' ' . ($p['email'] ?? '') . ' ' . ($p['assigned_task'] ?? '') . ' ' . $departmentName)) ?>"

@@ -56,6 +56,38 @@ class PersonnelModel extends Model
         return $this->like('position', $keyword)->where('is_archived', 0)->findAll();
     }
 
+    /** Everyone whose position belongs to a Personnel category (see PersonnelScope), one list per tab. */
+    public function getByCategory(string $category, bool $activeOnly = true): array
+    {
+        $builder = $this->orderBy('full_name', 'ASC');
+        if ($activeOnly) {
+            $builder->where('is_archived', 0);
+        }
+
+        return array_values(array_filter(
+            $builder->findAll(),
+            static fn($p) => \App\Libraries\PersonnelScope::categoryOf($p['position'] ?? null) === $category
+        ));
+    }
+
+    /** Head-count per category, same rule as getByCategory. */
+    public function countByCategory(bool $activeOnly = true): array
+    {
+        $counts = array_fill_keys(array_keys(\App\Libraries\PersonnelScope::CATEGORY_KEYWORDS), 0);
+        $builder = $this->select('position');
+        if ($activeOnly) {
+            $builder->where('is_archived', 0);
+        }
+        foreach ($builder->findAll() as $p) {
+            $c = \App\Libraries\PersonnelScope::categoryOf($p['position'] ?? null);
+            if ($c !== null) {
+                $counts[$c]++;
+            }
+        }
+
+        return $counts;
+    }
+
     public function getByEmpId(?string $empId)
     {
         if ($empId === null || trim($empId) === '') {

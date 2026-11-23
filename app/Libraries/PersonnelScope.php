@@ -36,20 +36,62 @@ class PersonnelScope
         return self::ROLE_CATEGORIES[strtolower($role)] ?? null;
     }
 
+    /**
+     * Keywords that put a position into a category (case-insensitive, "contains").
+     * Order matters: the first category that matches wins, so a position never
+     * lands in two tabs. Covers the wording used by the FU MIS (e.g. "Carpentry
+     * Staff", "Electrician", "Mason", "Welder") as well as the older names.
+     */
+    public const CATEGORY_KEYWORDS = [
+        'drivers'      => ['driver'],
+        'janitors'     => ['janitor', 'cleaning'],
+        'carpentries'  => ['carpenter', 'carpentry'],
+        'maintenance'  => ['maintenance', 'physical plant', 'plumb', 'electric', 'weld', 'paint', 'mechanic', 'aircon', 'technician', 'repair'],
+        'construction' => ['construction', 'mason', 'labor', 'helper'],
+        'security'     => ['security', 'guard'],
+    ];
+
+    /** Sub-tabs under Maintenance: slug => [label, keywords]. First match wins; anything else is "other". */
+    public const MAINTENANCE_TRADES = [
+        'electrician' => ['Electrician', ['electric']],
+        'plumber'     => ['Plumber',     ['plumb']],
+        'welder'      => ['Welder',      ['weld']],
+        'painter'     => ['Painter',     ['paint']],
+        'mechanic'    => ['Mechanic',    ['mechanic']],
+        'technician'  => ['Technician',  ['technician', 'aircon', 'repair']],
+    ];
+
+    /** Which Maintenance sub-tab a position belongs to ('other' when it is none of the trades). */
+    public static function maintenanceTradeOf(?string $position): string
+    {
+        $p = strtolower((string) $position);
+        foreach (self::MAINTENANCE_TRADES as $slug => [, $keywords]) {
+            foreach ($keywords as $kw) {
+                if (str_contains($p, $kw)) {
+                    return $slug;
+                }
+            }
+        }
+
+        return 'other';
+    }
+
     /** The category a position belongs to (first match wins, same order as the Personnel list), or null. */
     public static function categoryOf(?string $position): ?string
     {
         $p = strtolower((string) $position);
+        if ($p === '') {
+            return null;
+        }
+        foreach (self::CATEGORY_KEYWORDS as $category => $keywords) {
+            foreach ($keywords as $kw) {
+                if (str_contains($p, $kw)) {
+                    return $category;
+                }
+            }
+        }
 
-        return match (true) {
-            str_contains($p, 'driver')                                         => 'drivers',
-            str_contains($p, 'janitor') || str_contains($p, 'cleaning')        => 'janitors',
-            str_contains($p, 'carpenter')                                      => 'carpentries',
-            str_contains($p, 'maintenance') || str_contains($p, 'physical plant') => 'maintenance',
-            str_contains($p, 'construction')                                   => 'construction',
-            str_contains($p, 'security') || str_contains($p, 'guard')          => 'security',
-            default                                                            => null,
-        };
+        return null;
     }
 
     /** Whether the role may see/manage a person with this position. */

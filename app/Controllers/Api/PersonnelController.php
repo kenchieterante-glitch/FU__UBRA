@@ -47,25 +47,23 @@ class PersonnelController extends BaseApiController
 
     public function janitors()
     {
-        $rows = $this->personnelModel
-            ->groupStart()->like('position', 'Janitor')->orLike('position', 'Cleaning')->groupEnd()
-            ->findAll();
+        $rows = $this->personnelModel->getByCategory('janitors', false);
         return $this->ok(['personnel' => $rows]);
     }
 
     public function carpentries()
     {
-        return $this->ok(['personnel' => $this->personnelModel->getByPositionKeyword('Carpenter')]);
+        return $this->ok(['personnel' => $this->personnelModel->getByCategory('carpentries', false)]);
     }
 
     public function constructionWorkers()
     {
-        return $this->ok(['personnel' => $this->personnelModel->getByPositionKeyword('Construction')]);
+        return $this->ok(['personnel' => $this->personnelModel->getByCategory('construction', false)]);
     }
 
     public function maintenance()
     {
-        $rows = $this->personnelModel->like('position', 'Maintenance')->orLike('position', 'Physical Plant')->findAll();
+        $rows = $this->personnelModel->getByCategory('maintenance', false);
         return $this->ok(['personnel' => $rows]);
     }
 
@@ -129,13 +127,15 @@ class PersonnelController extends BaseApiController
     private function getStatCounts(): array
     {
         $m = $this->personnelModel;
+        $byCategory = $m->countByCategory(false);
+
         return [
             'total_personnel_count' => (clone $m)->countAllResults(false),
-            'drivers_count'         => (clone $m)->like('position', 'Driver')->countAllResults(false),
-            'janitors_count'        => (clone $m)->groupStart()->like('position', 'Janitor')->orLike('position', 'Cleaning')->groupEnd()->countAllResults(false),
-            'carpentries_count'     => (clone $m)->like('position', 'Carpenter')->countAllResults(false),
-            'maintenance_count'     => (clone $m)->groupStart()->like('position', 'Maintenance')->orLike('position', 'Physical Plant')->groupEnd()->countAllResults(false),
-            'construction_count'    => (clone $m)->like('position', 'Construction')->countAllResults(false),
+            'drivers_count'         => $byCategory['drivers'],
+            'janitors_count'        => $byCategory['janitors'],
+            'carpentries_count'     => $byCategory['carpentries'],
+            'maintenance_count'     => $byCategory['maintenance'],
+            'construction_count'    => $byCategory['construction'],
             'active_count'          => (clone $m)->where('status', 'Active')->countAllResults(false),
             'on_leave_count'        => (clone $m)->where('status', 'On Leave')->countAllResults(false),
         ];

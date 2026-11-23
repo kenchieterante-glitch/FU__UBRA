@@ -186,7 +186,17 @@
           <?php if ($canSeePersonnelTab('drivers')): ?><a href="<?= base_url('personnel/drivers') ?>" class="<?= navActive('personnel/drivers') ?>"><i class="bi bi-person-vcard-fill"></i> <span class="nav-label">Drivers</span></a><?php endif; ?>
           <?php if ($canSeePersonnelTab('janitors')): ?><a href="<?= base_url('personnel/janitors') ?>" class="<?= navActive('personnel/janitors') ?>"><i class="bi bi-brush"></i> <span class="nav-label">Janitors</span></a><?php endif; ?>
           <?php if ($canSeePersonnelTab('carpentries')): ?><a href="<?= base_url('personnel/carpentries') ?>" class="<?= navActive('personnel/carpentries') ?>"><i class="bi bi-hammer"></i> <span class="nav-label">Carpentries Shop</span></a><?php endif; ?>
-          <?php if ($canSeePersonnelTab('maintenance')): ?><a href="<?= base_url('personnel/maintenance') ?>" class="<?= navActive('personnel/maintenance') ?>"><i class="bi bi-wrench"></i> <span class="nav-label">Maintenance</span></a><?php endif; ?>
+          <?php if ($canSeePersonnelTab('maintenance')): ?>
+          <?php $inMaint = $currentUri === 'personnel/maintenance' || strpos($currentUri, 'personnel/maintenance/') === 0; ?>
+          <div class="nav-sub-group <?= $inMaint ? 'open' : '' ?>">
+            <a href="<?= base_url('personnel/maintenance') ?>" class="<?= $currentUri === 'personnel/maintenance' ? 'active' : '' ?>"><i class="bi bi-wrench"></i> <span class="nav-label">Maintenance</span><i class="bi bi-chevron-down nav-sub-caret" data-sub-caret></i></a>
+            <div class="nav-sub-items">
+              <?php foreach (\App\Libraries\PersonnelScope::MAINTENANCE_TRADES as $tradeSlug => [$tradeLabel]): ?>
+                <a href="<?= base_url('personnel/maintenance/' . $tradeSlug) ?>" class="<?= $currentUri === 'personnel/maintenance/' . $tradeSlug ? 'active' : '' ?>"><span class="nav-label"><?= esc($tradeLabel) ?></span></a>
+              <?php endforeach; ?>
+            </div>
+          </div>
+          <?php endif; ?>
           <?php if ($canSeePersonnelTab('construction')): ?><a href="<?= base_url('personnel/construction-workers') ?>" class="<?= navActive('personnel/construction-workers') ?>"><i class="bi bi-cone-striped"></i> <span class="nav-label">Construction Workers</span></a><?php endif; ?>
           <?php if ($canSeePersonnelTab('security')): ?><a href="<?= base_url('personnel/security') ?>" class="<?= navActive('personnel/security') ?>"><i class="bi bi-shield-check"></i> <span class="nav-label">Security</span></a><?php endif; ?>
         </div>
@@ -1134,6 +1144,12 @@ if (personnelLink && personnelGroup) {
     }
   });
 }
+
+// Maintenance trades: only the caret opens/closes the trade list; the label still opens Maintenance.
+document.querySelectorAll('[data-sub-caret]').forEach(c => c.addEventListener('click', e => {
+  e.preventDefault(); e.stopPropagation();
+  c.closest('.nav-sub-group').classList.toggle('open');
+}));
 
 const toolsLink = document.querySelector('[data-tools-toggle]');
 const toolsGroup = toolsLink?.closest('.nav-parent-group');

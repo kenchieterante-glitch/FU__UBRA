@@ -64,12 +64,7 @@ class PersonnelController extends BaseController
         $data = array_merge([
             'title'       => 'Janitors',
             'pageCss'     => 'personnel.css',
-            'personnel'   => $this->personnelModel->groupStart()
-                                                  ->like('position', 'Janitor')
-                                                  ->orLike('position', 'Cleaning')
-                                                  ->groupEnd()
-                                                  ->where('is_archived', 0)
-                                                  ->findAll() ?: [],
+            'personnel'   => $this->personnelModel->getByCategory('janitors'),
             'departments' => $this->departmentModel->findAll(),
         ], $this->getStatCounts());
 
@@ -85,7 +80,7 @@ class PersonnelController extends BaseController
         $data = array_merge([
             'title'       => 'Carpentries Shop',
             'pageCss'     => 'personnel.css',
-            'personnel'   => $this->personnelModel->getByPositionKeyword('Carpenter') ?: [],
+            'personnel'   => $this->personnelModel->getByCategory('carpentries'),
             'departments' => $this->departmentModel->findAll(),
         ], $this->getStatCounts());
 
@@ -101,12 +96,7 @@ class PersonnelController extends BaseController
         $data = array_merge([
             'title'       => 'Security',
             'pageCss'     => 'personnel.css',
-            'personnel'   => $this->personnelModel->where('is_archived', 0)
-                                                  ->groupStart()
-                                                      ->like('position', 'Security')
-                                                      ->orLike('position', 'Guard')
-                                                  ->groupEnd()
-                                                  ->findAll() ?: [],
+            'personnel'   => $this->personnelModel->getByCategory('security'),
             'departments' => $this->departmentModel->findAll(),
         ], $this->getStatCounts());
 
@@ -122,28 +112,36 @@ class PersonnelController extends BaseController
         $data = array_merge([
             'title'       => 'Construction Workers',
             'pageCss'     => 'personnel.css',
-            'personnel'   => $this->personnelModel->getByPositionKeyword('Construction') ?: [],
+            'personnel'   => $this->personnelModel->getByCategory('construction'),
             'departments' => $this->departmentModel->findAll(),
         ], $this->getStatCounts());
 
         return view('personnel/index', $data);
     }
 
-    public function maintenance()
+    public function maintenance(?string $trade = null)
     {
         if (!session()->get('isLoggedIn')) {
             return redirect()->to('/login');
         }
 
+        // Sub-pages under Maintenance (Electrician, Plumber, ...); no trade = everyone in Maintenance.
+        $trade = $trade === null ? null : strtolower($trade);
+        $trades = PersonnelScope::MAINTENANCE_TRADES;
+        if ($trade !== null && !isset($trades[$trade])) {
+            return redirect()->to('/personnel/maintenance');
+        }
+
+        $rows = $this->personnelModel->getByCategory('maintenance');
+        if ($trade !== null) {
+            $rows = array_values(array_filter($rows, static fn($p) => PersonnelScope::maintenanceTradeOf($p['position'] ?? null) === $trade));
+        }
+
         $data = array_merge([
             'title'       => 'Maintenance',
+            'tradeLabel'  => $trade === null ? '' : ($trades[$trade][0]),
             'pageCss'     => 'personnel.css',
-            'personnel'   => $this->personnelModel->where('is_archived', 0)
-                                                  ->groupStart()
-                                                      ->like('position', 'Maintenance')
-                                                      ->orLike('position', 'Physical Plant')
-                                                  ->groupEnd()
-                                                  ->findAll() ?: [],
+            'personnel'   => $rows,
             'departments' => $this->departmentModel->findAll(),
         ], $this->getStatCounts());
 
@@ -380,29 +378,16 @@ class PersonnelController extends BaseController
 
     private function getStatCounts(): array
     {
+        $byCategory = $this->personnelModel->countByCategory();
+
         return [
             'total_personnel_count' => $this->personnelModel->where('is_archived', 0)->countAllResults(),
-            'drivers_count'         => $this->personnelModel->where('is_archived', 0)->like('position', 'Driver')->countAllResults(),
-            'janitors_count'        => $this->personnelModel->where('is_archived', 0)
-                                                              ->groupStart()
-                                                                  ->like('position', 'Janitor')
-                                                                  ->orLike('position', 'Cleaning')
-                                                              ->groupEnd()
-                                                              ->countAllResults(),
-            'carpentries_count'     => $this->personnelModel->where('is_archived', 0)->like('position', 'Carpenter')->countAllResults(),
-            'maintenance_count'     => $this->personnelModel->where('is_archived', 0)
-                                                              ->groupStart()
-                                                                  ->like('position', 'Maintenance')
-                                                                  ->orLike('position', 'Physical Plant')
-                                                              ->groupEnd()
-                                                              ->countAllResults(),
-            'construction_count'    => $this->personnelModel->where('is_archived', 0)->like('position', 'Construction')->countAllResults(),
-            'security_count'        => $this->personnelModel->where('is_archived', 0)
-                                                              ->groupStart()
-                                                                  ->like('position', 'Security')
-                                                                  ->orLike('position', 'Guard')
-                                                              ->groupEnd()
-                                                              ->countAllResults(),
+            'drivers_count'         => $byCategory['drivers'],
+            'janitors_count'        => $byCategory['janitors'],
+            'carpentries_count'     => $byCategory['carpentries'],
+            'maintenance_count'     => $byCategory['maintenance'],
+            'construction_count'    => $byCategory['construction'],
+            'security_count'        => $byCategory['security'],
             'job_order_count'       => $this->personnelModel->where('is_archived', 0)->where('employment_type', 'JobOrder')->countAllResults(),
             'active_count'          => $this->personnelModel->where('is_archived', 0)->where('status', 'Active')->countAllResults(),
             'on_leave_count'        => $this->personnelModel->where('is_archived', 0)->where('status', 'On Leave')->countAllResults(),

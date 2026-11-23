@@ -271,6 +271,12 @@ class Dashboard extends BaseController
         $scansToday  = (new KeyBorrowLogModel())->where('scan_in >=', $today . ' 00:00:00')->countAllResults();
         $inspThisMo  = (new \App\Models\SafetyInspectionModel())->where('inspection_month', $month)->countAllResults();
         $pers        = new \App\Models\PersonnelModel();
+        $maintTradeCounts = [];
+        foreach ((new \App\Models\PersonnelModel())->getByCategory('maintenance') as $mp) {
+            $k = \App\Libraries\PersonnelScope::maintenanceTradeOf($mp['position'] ?? null);
+            $maintTradeCounts[$k] = ($maintTradeCounts[$k] ?? 0) + 1;
+        }
+        $maintTradeCount = fn(string $slug) => $maintTradeCounts[$slug] ?? 0;
         $pCount      = fn() => $pers->where('is_archived', 0)->where('status !=', 'Inactive')->countAllResults();
         $toolCount = fn(string $cat) => (new ToolsModel())->where('category', $cat)->where('is_archived', 0)->countAllResults() . ' items';
         // Three main categories (same grouping as the Reports Hub); each link carries its type as 'group'.
@@ -285,6 +291,7 @@ class Dashboard extends BaseController
                 ['group' => 'Personnel', 'label' => 'Janitors', 'url' => 'personnel/janitors', 'icon' => 'bi-brush', 'count' => ''],
                 ['group' => 'Personnel', 'label' => 'Carpentries Shop', 'url' => 'personnel/carpentries', 'icon' => 'bi-hammer', 'count' => ''],
                 ['group' => 'Personnel', 'label' => 'Maintenance', 'url' => 'personnel/maintenance', 'icon' => 'bi-wrench', 'count' => ''],
+                ...array_map(static fn($slug, $t) => ['group' => 'Personnel', 'label' => 'Maintenance · ' . $t[0], 'url' => 'personnel/maintenance/' . $slug, 'icon' => 'bi-wrench-adjustable', 'count' => $maintTradeCount($slug) . ' staff'], array_keys(\App\Libraries\PersonnelScope::MAINTENANCE_TRADES), \App\Libraries\PersonnelScope::MAINTENANCE_TRADES),
                 ['group' => 'Personnel', 'label' => 'Construction Workers', 'url' => 'personnel/construction-workers', 'icon' => 'bi-cone-striped', 'count' => ''],
             ]],
             ['title' => 'Equipment Management', 'icon' => 'bi-tools', 'url' => 'tools', 'links' => [
