@@ -247,7 +247,6 @@
 </form>
 
 <div class="auth-footer"><span style="font-family:'Times New Roman', Times, serif;">Foundation University</span> &middot; Operations Portal</div>
-<div class="auth-footer" style="margin-top:6px;"><a href="<?= base_url('evacuation-map') ?>" style="color:#800000;">View campus evacuation map</a></div>
 
 <script>
 function togglePasswordVisibility() {

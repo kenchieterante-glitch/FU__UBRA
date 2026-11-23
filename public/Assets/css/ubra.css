@@ -602,3 +602,52 @@
 .ubra-suggest-card { padding: 8px 16px 8px 10px; border-radius: 999px; gap: 8px; font-size: 13.5px; font-weight: 500; }
 .ubra-suggest-card:hover { transform: none; }
 .ubra-suggest-icon { width: 26px; height: 26px; border-radius: 50%; font-size: 13px; }
+
+/* ══ Landing state — make the empty page feel alive (maroon palette) ══ */
+.ubra-panel { position: relative; }
+.ubra-panel:not(:has(.ubra-msg-row))::before { content: ""; position: absolute; inset: -40px -10% auto -10%; height: 460px; background:
+    radial-gradient(520px 260px at 50% 0%, rgba(128,0,0,.16), transparent 70%),
+    radial-gradient(300px 200px at 18% 30%, rgba(165,42,42,.10), transparent 70%),
+    radial-gradient(300px 200px at 82% 25%, rgba(74,17,25,.10), transparent 70%); pointer-events: none; z-index: 0; }
+.ubra-panel:not(:has(.ubra-msg-row))::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(128,0,0,.16) 1px, transparent 1.4px); background-size: 22px 22px; -webkit-mask-image: radial-gradient(60% 55% at 50% 38%, #000 0%, transparent 75%); mask-image: radial-gradient(60% 55% at 50% 38%, #000 0%, transparent 75%); pointer-events: none; z-index: 0; }
+.ubra-panel > * { position: relative; z-index: 1; }
+:root[data-theme="dark"] .ubra-panel:not(:has(.ubra-msg-row))::after { background-image: radial-gradient(rgba(241,198,198,.18) 1px, transparent 1.4px); }
+
+/* orb */
+.ubra-orb { position: relative; width: 92px; height: 92px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; animation: ubraFloat 5s ease-in-out infinite; }
+.ubra-orb .core { position: relative; z-index: 2; width: 68px; height: 68px; border-radius: 50%; background: radial-gradient(circle at 30% 25%, #b23a3a, var(--maroon) 55%, var(--maroon-deep)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 14px 30px rgba(128,0,0,.35), inset 0 2px 6px rgba(255,255,255,.35); }
+.ubra-orb .ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid rgba(128,0,0,.35); animation: ubraRing 3.2s ease-out infinite; }
+.ubra-orb .ring.r2 { animation-delay: 1.6s; }
+@keyframes ubraRing { 0% { transform: scale(.72); opacity: .9; } 100% { transform: scale(1.35); opacity: 0; } }
+@keyframes ubraFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) { .ubra-orb, .ubra-orb .ring { animation: none; } }
+
+/* greeting */
+.ubra-welcome-hello { margin: 0; font-size: 12.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--maroon); }
+:root[data-theme="dark"] .ubra-welcome-hello { color: #f1c6c6; }
+.ubra-welcome-title { font-size: 44px; line-height: 1.1; margin: 6px 0 8px; }
+.ubra-welcome-title .grad { background: linear-gradient(120deg, var(--maroon-deep), var(--maroon) 45%, #c24545); -webkit-background-clip: text; background-clip: text; color: transparent; font-style: italic; }
+:root[data-theme="dark"] .ubra-welcome-title .grad { background: linear-gradient(120deg, #f1c6c6, #ff9e97); -webkit-background-clip: text; background-clip: text; }
+.ubra-welcome-sub { font-size: 15px; max-width: 520px; margin: 0 auto 14px; }
+.ubra-badges { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+.ubra-badges span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: rgba(128,0,0,.08); color: var(--maroon); font-size: 12px; font-weight: 600; }
+:root[data-theme="dark"] .ubra-badges span { background: rgba(255,255,255,.08); color: #f1c6c6; }
+
+/* composer: bigger, glowing */
+.ubra-panel:not(:has(.ubra-msg-row)) .ubra-input-bar { padding: 10px 12px 10px 22px; border-radius: 30px; box-shadow: 0 10px 30px rgba(128,0,0,.12), 0 2px 6px rgba(16,24,40,.06); }
+.ubra-panel:not(:has(.ubra-msg-row)) .ubra-input-bar .ubra-input { font-size: 16px; padding: 12px 4px; }
+.ubra-panel:not(:has(.ubra-msg-row)) .ubra-input-bar:focus-within { box-shadow: 0 0 0 4px rgba(128,0,0,.14), 0 12px 34px rgba(128,0,0,.18); }
+.ubra-send-btn { background: linear-gradient(135deg, var(--maroon), var(--maroon-deep)); }
+
+/* suggestion cards */
+.ubra-suggest { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 22px; justify-content: stretch; }
+@media (max-width: 640px) { .ubra-suggest { grid-template-columns: 1fr; } .ubra-welcome-title { font-size: 34px; } }
+.ubra-suggest-card { position: relative; display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; text-align: left; background: var(--card); border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(16,24,40,.05); transition: transform .15s, box-shadow .15s, border-color .15s; }
+.ubra-suggest-card:hover { transform: translateY(-3px); border-color: var(--maroon); box-shadow: 0 12px 26px rgba(128,0,0,.14); background: var(--card); }
+.ubra-suggest-icon { width: 42px; height: 42px; border-radius: 12px; font-size: 18px; background: linear-gradient(135deg, rgba(128,0,0,.14), rgba(128,0,0,.06)); }
+.ubra-suggest-body { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.ubra-suggest-text { font-size: 14px; font-weight: 700; color: var(--text); }
+.ubra-suggest-desc { font-size: 12.5px; font-weight: 400; color: var(--text); opacity: .75; }
+.ubra-suggest-go { color: var(--maroon); opacity: 0; transform: translate(-4px, 4px); transition: opacity .15s, transform .15s; }
+.ubra-suggest-card:hover .ubra-suggest-go { opacity: 1; transform: none; }
+:root[data-theme="dark"] .ubra-suggest-go { color: #f1c6c6; }

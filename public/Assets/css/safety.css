@@ -3059,3 +3059,51 @@ table.sup-table td, table.sup-table th { overflow-wrap: anywhere; }
 .dp-fe-grid .fec-id { font-size: .66rem; margin-bottom: .1rem; }
 .dp-fe-grid .fec-status { font-size: .66rem; margin-bottom: .15rem; }
 .dp-fe-grid .fec-row { font-size: .62rem; padding: .08rem 0; gap: .2rem; }
+
+/* ── Overdue Fire Extinguishers: compact ranked list ── */
+.ofe-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+.ofe-summary { display: flex; align-items: center; gap: 10px; padding: 12px 18px; background: var(--bg-subtle); border-bottom: 1px solid var(--line); font-size: 13px; color: var(--text); }
+.ofe-summary strong { font-weight: 700; }
+.ofe-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text); opacity: .4; }
+.ofe-list { display: grid; }
+.ofe-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 110px 140px 18px; align-items: center; gap: 14px; width: 100%; padding: 12px 18px 12px 14px; border: 0; border-bottom: 1px solid var(--line); border-left: 4px solid var(--red); background: transparent; color: var(--text); text-align: left; cursor: pointer; font-size: 13.5px; transition: background .15s; }
+.ofe-row:last-child { border-bottom: 0; }
+.ofe-row:hover { background: var(--bg-subtle); }
+.ofe-row.ofe-high { border-left-color: var(--red); }
+.ofe-row.ofe-mid  { border-left-color: var(--amber); }
+.ofe-row.ofe-low  { border-left-color: #d9b100; }
+.ofe-code { font-family: ui-monospace, Consolas, monospace; font-weight: 700; font-size: 12.5px; color: var(--text); }
+.ofe-loc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ofe-status { justify-self: start; padding: 2px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; background: var(--bg-subtle); color: var(--text); border: 1px solid var(--line); }
+.ofe-days { justify-self: end; font-weight: 700; color: var(--red); white-space: nowrap; }
+.ofe-row.ofe-mid .ofe-days { color: var(--amber); }
+.ofe-row.ofe-low .ofe-days { color: var(--text); }
+.ofe-go { color: var(--text); opacity: .5; font-size: 13px; }
+.ofe-row:hover .ofe-go { opacity: 1; color: var(--maroon); }
+.ofe-more { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border: 0; border-top: 1px solid var(--line); background: var(--bg-subtle); color: var(--maroon); font-weight: 700; font-size: 13px; cursor: pointer; }
+.ofe-more:hover { background: rgba(128,0,0,.07); }
+:root[data-theme="dark"] .ofe-more, :root[data-theme="dark"] .ofe-row:hover .ofe-go { color: #f1c6c6; }
+@media (max-width: 760px) {
+  .ofe-row { grid-template-columns: 1fr auto; row-gap: 4px; }
+  .ofe-loc { grid-column: 1 / -1; order: 3; }
+  .ofe-status { display: none; }
+  .ofe-go { display: none; }
+}
+
+/* Overdue extinguisher popup */
+.ofe-modal { width: 440px; max-width: calc(100vw - 32px); padding: 0; overflow: hidden; border-radius: 16px; }
+.ofe-modal-head { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid var(--line); background: linear-gradient(180deg, var(--bg-subtle), var(--card)); }
+.ofe-modal-ico { width: 44px; height: 44px; border-radius: 12px; background: var(--red-bg); color: var(--red); display: inline-flex; align-items: center; justify-content: center; font-size: 20px; flex: 0 0 auto; }
+.ofe-modal-head h3 { margin: 0; font-size: 17px; font-family: ui-monospace, Consolas, monospace; color: var(--text); }
+.ofe-modal-days { display: inline-block; margin-top: 3px; font-size: 12.5px; font-weight: 700; color: var(--red); }
+.ofe-modal-x { margin-left: auto; width: 34px; height: 34px; border: 0; border-radius: 9px; background: transparent; color: var(--text); cursor: pointer; font-size: 15px; }
+.ofe-modal-x:hover { background: var(--bg-subtle); }
+.ofe-modal-body { padding: 8px 20px 4px; }
+.ofe-kv { display: flex; justify-content: space-between; gap: 18px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--text); }
+.ofe-kv:last-child { border-bottom: 0; }
+.ofe-kv span { opacity: .75; }
+.ofe-kv strong { text-align: right; font-weight: 600; }
+.ofe-modal .modal-actions { padding: 14px 20px 18px; display: flex; justify-content: flex-end; gap: 10px; }
+.ofe-modal .modal-actions button { height: 40px; padding: 0 18px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg-subtle); color: var(--text); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.ofe-modal .modal-actions .btn-maroon { background: var(--maroon); border-color: var(--maroon); color: #fff; }
+.ofe-modal .modal-actions .btn-maroon:hover { background: var(--maroon-dark); }

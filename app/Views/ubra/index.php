@@ -52,9 +52,16 @@
       <div class="ubra-convo">
         <div class="ubra-messages" id="chatMessages">
           <div class="ubra-welcome">
-            <div class="ubra-welcome-avatar"><i class="bi bi-robot"></i></div>
-            <h2 class="ubra-welcome-title">Good <?= date('H') < 12 ? 'morning' : (date('H') < 17 ? 'afternoon' : 'evening') ?>, <?= esc($greet_name ?? 'there') ?>.</h2>
-            <p class="ubra-welcome-sub">How can I help with your operations today?</p>
+            <div class="ubra-orb" aria-hidden="true"><span class="ring r1"></span><span class="ring r2"></span><span class="core"><i class="bi bi-robot"></i></span></div>
+            <?php $firstName = trim(explode(' ', trim((string) ($greet_name ?? 'there')))[0]) ?: 'there'; ?>
+            <p class="ubra-welcome-hello">Good <?= date('H') < 12 ? 'morning' : (date('H') < 17 ? 'afternoon' : 'evening') ?></p>
+            <h2 class="ubra-welcome-title">Hello, <span class="grad"><?= esc($firstName) ?></span>.</h2>
+            <p class="ubra-welcome-sub">I'm Mr. UBRA. Ask me about your operations and I'll answer from your live UBRA data.</p>
+            <div class="ubra-badges">
+              <span><i class="bi bi-lightning-charge-fill"></i> Live data</span>
+              <span><i class="bi bi-file-earmark-arrow-down"></i> Report downloads</span>
+              <span><i class="bi bi-mic-fill"></i> Voice input</span>
+            </div>
           </div>
         </div>
       </div>
@@ -79,20 +86,30 @@
       <div class="ubra-input-error" id="inputError">Type a message before sending.</div>
       <div class="ubra-voice-hint" id="voiceHint" style="display:none"></div>
       <div class="ubra-suggest">
-              <?php
-                $suggest = !empty($quick_actions) ? $quick_actions : [
-                    ['bi-truck', 'Fleet health check', 'Give me a fleet health check — vehicle status, GPS status, and anything needing attention.'],
-                    ['bi-people', 'Who is on duty today?', 'Who is on duty today?'],
-                    ['bi-person-dash', 'Any unassigned personnel?', 'Are there any unassigned personnel right now?'],
-                    ['bi-file-earmark-text', 'Weekly report', 'Generate a brief weekly operations report.'],
-                ];
-                foreach ($suggest as [$sIcon, $sTitle, $sPrompt]): ?>
-              <button type="button" class="ubra-suggest-card" onclick="quickPrompt(<?= esc(json_encode($sPrompt), 'attr') ?>)">
-                <span class="ubra-suggest-icon"><i class="bi <?= esc($sIcon) ?>"></i></span>
-                <span class="ubra-suggest-text"><?= esc($sTitle) ?></span>
-              </button>
-              <?php endforeach; ?>
-            </div>
+        <?php
+          $suggest = !empty($quick_actions) ? $quick_actions : [
+              ['bi-truck', 'Fleet health check', 'Give me a fleet health check — vehicle status, GPS status, and anything needing attention.'],
+              ['bi-people', 'Who is on duty today?', 'Who is on duty today?'],
+              ['bi-person-dash', 'Any unassigned personnel?', 'Are there any unassigned personnel right now?'],
+              ['bi-file-earmark-text', 'Weekly report', 'Generate a brief weekly operations report.'],
+          ];
+          $descs = [
+              'Fleet health check' => 'Vehicle and GPS status at a glance',
+              'Who is on duty today?' => 'See who is working right now',
+              'Any unassigned personnel?' => 'Find people without an assignment',
+              'Weekly report' => 'A short summary you can download',
+          ];
+          foreach ($suggest as [$sIcon, $sTitle, $sPrompt]): ?>
+        <button type="button" class="ubra-suggest-card" onclick="quickPrompt(<?= esc(json_encode($sPrompt), 'attr') ?>)">
+          <span class="ubra-suggest-icon"><i class="bi <?= esc($sIcon) ?>"></i></span>
+          <span class="ubra-suggest-body">
+            <span class="ubra-suggest-text"><?= esc($sTitle) ?></span>
+            <span class="ubra-suggest-desc"><?= esc($descs[$sTitle] ?? 'Ask Mr. UBRA about this') ?></span>
+          </span>
+          <i class="bi bi-arrow-up-right ubra-suggest-go"></i>
+        </button>
+        <?php endforeach; ?>
+      </div>
       <p class="ubra-disclaimer">Mr. UBRA can make mistakes. Please verify important information.</p>
     </div>
 
@@ -112,6 +129,19 @@
 </div>
 
 <script>
+// Rotating example questions in the input placeholder (only while the box is empty and unfocused).
+(function () {
+    const inp = document.getElementById('chatInput');
+    if (!inp) return;
+    const tips = ['Ask Mr. UBRA anything...', 'Who is on duty today?', 'Give me a fleet health check', 'Which fire extinguishers are overdue?', 'Generate a weekly operations report'];
+    let i = 0;
+    setInterval(function () {
+        if (document.activeElement === inp || inp.value) return;
+        i = (i + 1) % tips.length;
+        inp.placeholder = tips[i];
+    }, 3200);
+})();
+
 // ── State ──────────────────────────────────────────────────────
 let chatHistory = [];
 let isLoading   = false;

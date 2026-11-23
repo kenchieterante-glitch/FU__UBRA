@@ -182,7 +182,7 @@
       <h2 class="pane-title"><i class="bi bi-clock-history"></i> Refill Log</h2>
     </div>
     <div class="table-wrap">
-      <table class="sj-table">
+      <table class="sj-table" data-no-bulk data-no-page>
         <thead>
           <tr><th>Item</th><th>Quantity Added</th><th>Date &amp; Time</th><th>Performed By</th></tr>
         </thead>
@@ -475,7 +475,7 @@ function renderJanZoneList() {
     const st = label[getJanStatusValue(key)] || label.untracked;
     return '<tr><td><strong>' + esc(AREAS[key]?.name || key) + '</strong></td><td>' + esc(d.staff || '—') + '</td><td>' + esc(d.shift || '—') + '</td><td>' + done + ' / ' + total + '</td><td><span class="' + st[1] + '">' + st[0] + '</span></td></tr>';
   });
-  body.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="5" class="empty-row">No janitorial zones yet.</td></tr>';
+  setRowsHtml(body, rows.length ? rows.join('') : '<tr><td colspan="5" class="empty-row">No janitorial zones yet.</td></tr>');
 }
 
 // The campus map is open by default; Close hides it and the Map icon brings it back.
@@ -1040,17 +1040,27 @@ function filterInventoryByBuilding(building) {
   renderInventory();
 }
 
+// The 20-second live refresh used to rebuild these tables every time, which made the tick boxes flicker and
+// wiped the selection. Now the rows are only redrawn when they actually changed, and never while some are ticked.
+function setRowsHtml(el, html) {
+  if (!el) return;
+  if (el.dataset.lastHtml === html) return;
+  if (el.querySelector('.bulk-check:checked')) return;
+  el.dataset.lastHtml = html;
+  el.innerHTML = html;
+}
+
 function renderInventory() {
   const indexed = inventoryItems.map((item, i) => ({ item, i }));
   let list = inventoryFilter ? indexed.filter(({ item }) => inventoryStatus(item) === inventoryFilter) : indexed;
   if (inventoryBuildingFilter) list = list.filter(({ item }) => item.building === inventoryBuildingFilter);
 
   if (!list.length) {
-    document.getElementById('inventoryBody').innerHTML = `<tr><td colspan="8"><div class="no-data">No items match this filter.</div></td></tr>`;
+    setRowsHtml(document.getElementById('inventoryBody'), `<tr><td colspan="8"><div class="no-data">No items match this filter.</div></td></tr>`);
     return;
   }
 
-  document.getElementById('inventoryBody').innerHTML = list.map(({ item, i }) => {
+  setRowsHtml(document.getElementById('inventoryBody'), list.map(({ item, i }) => {
     const status = inventoryStatus(item);
     const col = status === 'out' ? 'text-danger' : status === 'low' ? 'text-warn' : '';
     const st  = status === 'out' ? '<span class="inv-badge inv-out">Out of Stock</span>'
@@ -1074,7 +1084,7 @@ function renderInventory() {
         </div>
       </td>
     </tr>`;
-  }).join('');
+  }).join(''));
 }
 
 function renderRefillLog() {

@@ -499,7 +499,7 @@ let lastToolsRowsHtml = null; // rows are only redrawn when they really changed,
 async function refreshTools() {
   if (document.hidden || toolsRefreshing) return; // don't poll in the background or overlap requests
   if (Array.from(document.querySelectorAll('.modal')).some(m => m.style.display === 'flex')) return;
-  if (document.querySelector('#toolsTableBody .bulk-check:checked')) return; // rows are ticked: don't redraw the table under the user
+  if (document.querySelector('#toolsTableBody .bulk-check:checked') || document.querySelector('table.bulk-mode')) return; // rows are ticked: don't redraw the table under the user
 
   toolsRefreshing = true;
   try {

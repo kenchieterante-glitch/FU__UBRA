@@ -1,7 +1,18 @@
+<style>
+/* Each row has its own tick box; the "Select" button next to the filter icon selects (or clears) them all. */
+tbody tr:has(.bulk-check:checked) { background: rgba(128,0,0,.09) !important; }
+.bulk-toggle-row { display: flex; justify-content: flex-end; margin: 0 0 8px; }
+.bulk-toggle { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--text); font-size: 13.5px; font-weight: 600; cursor: pointer; transition: border-color .15s, background .15s, color .15s; }
+.bulk-toggle:hover { border-color: var(--maroon); color: var(--maroon); }
+.bulk-toggle.inline { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 10px; font-size: 16px; flex: 0 0 auto; }
+.bulk-toggle.on { background: var(--maroon); border-color: var(--maroon); color: #fff; }
+.ui-confirm-msg { white-space: pre-line; }
+</style>
 <script>
-// Select-many for every table, working like Aircon Care: a select-all box in the header, a tick box on each row,
-// and an action bar right above the table ("N selected" + Archive / Delete / Export).
-// "Select all" covers every row that matches the current filters, across all pages.
+// Select-many for every table: a tick box on each row, and a "Select" button (next to the table's filter icon) that
+// selects every row matching the current filters, across all pages — press it again to clear. Once something is
+// ticked an action bar shows ("N selected" + Archive / Delete / Print), and every Archive / Restore / Delete asks
+// "Are you sure?" first.
 (function () {
   function rowItem(tr, table) {
     if (tr.dataset.bulkKey) return { key: tr.dataset.bulkKey };
@@ -54,6 +65,56 @@
     return bar;
   }
 
+  var toggles = new WeakMap();   // table -> its "Select" button
+  // Where the "Select" button lives: right next to the table's own filter (funnel) button in its toolbar when
+  // there is one; otherwise on a slim row above the table.
+  function findToolbarHost(table) {
+    var node = table;
+    for (var i = 0; i < 6 && node.parentElement; i++) {
+      node = node.parentElement;
+      if (node.querySelectorAll('table').length !== 1) return null;   // a shared toolbar would be ambiguous
+      var w = node.querySelector('.filter-menu-wrapper');
+      if (w) return w;
+    }
+    return null;
+  }
+  function toggleFor(table) {
+    var t = toggles.get(table);
+    if (t) return t;
+    t = document.createElement('button');
+    t.type = 'button'; t.className = 'bulk-toggle';
+    t.onclick = function () { setAll(table, !allPicked(table)); };
+    var host = findToolbarHost(table);
+    if (host) {
+      t.classList.add('inline');
+      host.style.display = 'flex'; host.style.alignItems = 'center'; host.style.gap = '8px';
+      host.insertBefore(t, host.firstChild);
+    } else {
+      t.classList.add('inline');
+      var row = document.createElement('div');
+      row.className = 'bulk-toggle-row';
+      row.appendChild(t);
+      var anchor = table.closest('.table-wrap, .table-scroll') || table;
+      anchor.parentNode.insertBefore(row, anchor);
+    }
+    toggles.set(table, t);
+    paintToggle(table);
+    return t;
+  }
+  function allPicked(table) {
+    var all = checks(table).filter(function (c) { return matches(table, c.closest('tr')); });
+    return all.length > 0 && all.every(function (c) { return c.checked; });
+  }
+  function paintToggle(table) {
+    var t = toggles.get(table);
+    if (!t) return;
+    var on = allPicked(table);
+    t.classList.toggle('on', on);   // icon only everywhere; the tooltip says what it does
+    t.innerHTML = on ? '<i class="bi bi-x-lg"></i>' : '<i class="bi bi-check2-all"></i>';
+    t.title = on ? 'Clear selection' : 'Select all';
+    t.setAttribute('aria-label', t.title);
+  }
+
   function btn(label, icon, danger, onclick) {
     var b = document.createElement('button');
     b.type = 'button';
@@ -65,6 +126,7 @@
 
   function refresh(table) {
     var bar = barFor(table), sel = selected(table);
+    paintToggle(table);
     if (!sel.length) { bar.style.display = 'none'; bar.innerHTML = ''; if (active === table) active = null; return; }
     active = table;
     var all = checks(table).filter(function (c) { return matches(table, c.closest('tr')); });
@@ -136,7 +198,12 @@
     var word = kind === 'archive' ? 'archive' : (kind === 'restore' ? 'restore' : (kind === 'dispose' ? 'dispose of (and log as disposed)' : (table.dataset.bulkEndpoint ? 'permanently delete' : 'delete')));
     var msg = 'Are you sure you want to ' + word + ' ' + items.length + ' item' + (items.length === 1 ? '' : 's') + '?';
     if (items.length < totalSelected) msg += '\n\n' + (totalSelected - items.length) + ' of your ' + totalSelected + ' selected rows cannot be ' + (kind === 'archive' ? 'archived' : (kind === 'restore' ? 'restored' : 'deleted')) + ' here and will be left as they are.';
-    if (!confirm(msg)) return;
+    var destructive = (kind === 'delete' || kind === 'dispose');
+    if (destructive) msg += '\n\nThis cannot be undone.';
+    var okText = kind === 'archive' ? 'Yes, archive' : (kind === 'restore' ? 'Yes, restore' : (kind === 'dispose' ? 'Yes, dispose' : 'Yes, delete'));
+    var title = (kind === 'archive' ? 'Archive' : (kind === 'restore' ? 'Restore' : (kind === 'dispose' ? 'Dispose' : 'Delete'))) + ' ' + items.length + ' item' + (items.length === 1 ? '' : 's') + '?';
+    uiConfirm(msg, { danger: kind !== 'restore', title: title, okLabel: okText }).then(function (ok) {
+    if (!ok) return;
     var p;
     if (table.dataset.bulkEndpoint) {
       var body = new URLSearchParams();
@@ -155,6 +222,7 @@
     }
     p.then(function (m) { try { sessionStorage.setItem('bulkMsg', m); } catch (e) {} location.reload(); })
      .catch(function () { uiToast('Something went wrong. Please try again.', true); });
+    });
   }
 
   function enhance(table) {
@@ -175,19 +243,15 @@
       placeBox(cell, c);
       any = true;
     });
-    var th = table.querySelector('thead th');
-    if (any && th && !th.querySelector('.bulk-all')) {
-      var a = document.createElement('input');
-      a.type = 'checkbox'; a.className = 'bulk-all'; a.title = 'Select all';
-      a.style.cssText = BOX + 'accent-color:#fff;';
-      a.addEventListener('click', function (e) { e.stopPropagation(); });
-      a.addEventListener('change', function () {
-        if (a.checked && active && active !== table) setAll(active, false);
-        setAll(table, a.checked);
-      });
-      placeBox(th, a);
+    if (any) {
+      toggleFor(table);
     }
   }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (active) setAll(active, false);
+  });
 
 
   document.querySelectorAll('table').forEach(enhance);
@@ -195,8 +259,8 @@
   var pending = null;
   new MutationObserver(function (muts) {
     if (muts.some(function (m) { if (!m.addedNodes.length) return false; var newTable = Array.prototype.some.call(m.addedNodes, function (n) { return n.nodeType === 1 && (n.tagName === 'TABLE' || (n.querySelector && n.querySelector('table'))); }); return newTable || (m.target.closest && m.target.closest('table') && !Array.prototype.every.call(m.addedNodes, function (n) { return n.nodeType === 1 && n.classList.contains('bulk-check'); })); })) {
-      clearTimeout(pending);
-      pending = setTimeout(function () { document.querySelectorAll('table').forEach(enhance); }, 100);
+      // Runs as a microtask, i.e. before the browser paints, so rebuilt rows never show up without their tick box.
+      document.querySelectorAll('table').forEach(enhance);
     }
   }).observe(document.body, { childList: true, subtree: true });
 

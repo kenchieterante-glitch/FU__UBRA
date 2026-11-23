@@ -115,7 +115,7 @@ $departments = $departments ?? [];
     </div>
 
     <div class="dp-section-title"><i class="bi bi-exclamation-triangle-fill"></i> Overdue Fire Extinguishers</div>
-    <div id="overdueFeGrid" class="dp-fe-grid"></div>
+    <div id="overdueFeGrid"></div>
   </div>
 
   <!-- ── MAP & FLOOR PLANS: the icons and the optional map come before the equipment list ── -->
@@ -375,6 +375,33 @@ $departments = $departments ?? [];
         <button type="submit" class="btn-maroon">Add</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Overdue extinguisher detail — opens from the Overdue Fire Extinguishers list -->
+<div class="modal" id="overdueFeModal" onclick="if(event.target===this)closeOverdueFeModal()">
+  <div class="modal-box ofe-modal">
+    <div class="ofe-modal-head">
+      <span class="ofe-modal-ico"><i class="bi bi-fire"></i></span>
+      <div>
+        <h3 id="ofeCode">Fire extinguisher</h3>
+        <span class="ofe-modal-days" id="ofeDays"></span>
+      </div>
+      <button type="button" class="ofe-modal-x" onclick="closeOverdueFeModal()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="ofe-modal-body">
+      <div class="ofe-kv"><span>Status</span><strong id="ofeStatus"></strong></div>
+      <div class="ofe-kv"><span>Building</span><strong id="ofeLoc"></strong></div>
+      <div class="ofe-kv"><span>Floor</span><strong id="ofeFloor"></strong></div>
+      <div class="ofe-kv"><span>Type</span><strong id="ofeType"></strong></div>
+      <div class="ofe-kv"><span>Next due</span><strong id="ofeDue"></strong></div>
+      <div class="ofe-kv"><span>Assigned guard</span><strong id="ofeGuard"></strong></div>
+      <div class="ofe-kv"><span>Installed by</span><strong id="ofeInstaller"></strong></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" onclick="closeOverdueFeModal()">Close</button>
+      <button type="button" class="btn-maroon" id="ofeMapBtn"><i class="bi bi-map"></i> Show on campus map</button>
+    </div>
   </div>
 </div>
 
@@ -831,35 +858,44 @@ document.querySelectorAll('.reg-pane').forEach(attachTableTools);
   // Only previews the first few overdue units so this overview box doesn't
   // grow without bound — "View more" hands off to the full, filterable list
   // already built for the Inspection Readiness KPI card.
-  const OVERDUE_FE_PREVIEW_LIMIT = 6;
+  const OVERDUE_FE_PREVIEW_LIMIT = 5;
 
+  // One compact line per overdue unit, worst first, so the section stays short even with many
+  // overdue extinguishers. Clicking a line opens the unit on the campus map (same as before).
   function renderOverdueFe() {
     const grid = document.getElementById('overdueFeGrid');
     const today = new Date();
-    const overdue = feRegistry.filter(u => u.nextDue && new Date(u.nextDue) < today);
+    const overdue = feRegistry
+      .filter(u => u.nextDue && new Date(u.nextDue) < today)
+      .map(u => ({ u, days: Math.abs(Math.ceil((new Date(u.nextDue) - today) / 86400000)) }))
+      .sort((x, y) => y.days - x.days);
     if (!overdue.length) {
       grid.innerHTML = `<div class="no-data" style="padding:1rem;">No overdue fire extinguishers.</div>`;
       return;
     }
-    const preview = overdue.slice(0, OVERDUE_FE_PREVIEW_LIMIT);
-    grid.innerHTML = preview.map(u => {
-      const daysLeft = Math.ceil((new Date(u.nextDue) - today) / 86400000);
-      return `
-      <div class="fe-card fe-urgent fe-card-clickable" role="button" tabindex="0" title="View ${esc(u.id)} on the campus map" onclick="openOverdueFeDetail('${esc(u.id).replace(/'/g, "\\'")}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
-        <div class="fec-id">${esc(u.id)}</div>
-        <div class="fec-status status-${u.status.toLowerCase().replace(' ','')}">${esc(feStatusLabel(u.status))}</div>
-        <div class="fec-row"><span>Department</span><strong>${esc(u.loc)}</strong></div>
-        <div class="fec-row"><span>Next Due</span><strong class="text-danger">${esc(u.nextDue)} (${Math.abs(daysLeft)}d overdue)</strong></div>
-        <div class="fec-row"><span>Assigned Guard</span><strong>${esc(u.assigned)}</strong></div>
+    const oldest = overdue[0].days;
+    const tier = d => d >= 90 ? 'ofe-high' : d >= 30 ? 'ofe-mid' : 'ofe-low';
+    const rows = overdue.slice(0, OVERDUE_FE_PREVIEW_LIMIT).map(({ u, days }) => `
+      <button type="button" class="ofe-row ${tier(days)}" title="View details of ${esc(u.id)}" onclick="openOverdueFeDetail('${esc(u.id).replace(/'/g, "\'")}')">
+        <span class="ofe-code">${esc(u.id)}</span>
+        <span class="ofe-loc">${esc(u.loc)}</span>
+        <span class="ofe-status status-${u.status.toLowerCase().replace(' ','')}">${esc(feStatusLabel(u.status))}</span>
+        <span class="ofe-days">${days} days overdue</span>
+        <i class="bi bi-chevron-right ofe-go"></i>
+      </button>`).join('');
+    const more = overdue.length > OVERDUE_FE_PREVIEW_LIMIT
+      ? `<button type="button" class="ofe-more" onclick="showStatusList('readiness')">View all ${overdue.length} overdue <i class="bi bi-arrow-right"></i></button>`
+      : '';
+    grid.innerHTML = `
+      <div class="ofe-card">
+        <div class="ofe-summary">
+          <span><strong>${overdue.length}</strong> overdue</span>
+          <span class="ofe-dot"></span>
+          <span>Oldest: <strong>${oldest} days</strong></span>
+        </div>
+        <div class="ofe-list">${rows}</div>
+        ${more}
       </div>`;
-    }).join('');
-
-    if (overdue.length > OVERDUE_FE_PREVIEW_LIMIT) {
-      grid.insertAdjacentHTML('beforeend', `
-        <button type="button" class="overview-link fe-view-more" onclick="showStatusList('readiness')">
-          View all ${overdue.length} overdue →
-        </button>`);
-    }
   }
 
   // Jump straight from an overdue-extinguisher card to its exact spot on the
@@ -868,8 +904,29 @@ document.querySelectorAll('.reg-pane').forEach(attachTableTools);
   function openOverdueFeDetail(id) {
     const u = feRegistry.find(x => x.id === id);
     if (!u) return;
+    const days = u.nextDue ? Math.abs(Math.ceil((new Date(u.nextDue) - new Date()) / 86400000)) : null;
+    const set = (k, v) => { document.getElementById(k).textContent = (v === undefined || v === null || v === '') ? '—' : v; };
+    set('ofeCode', u.id);
+    set('ofeDays', days !== null ? days + ' days overdue' : '');
+    set('ofeStatus', feStatusLabel(u.status));
+    set('ofeLoc', u.loc);
+    set('ofeFloor', u.floor || 'Ground Floor');
+    set('ofeType', u.type);
+    set('ofeDue', u.nextDue);
+    set('ofeGuard', u.assigned);
+    set('ofeInstaller', u.inspector);
+    document.getElementById('ofeMapBtn').onclick = function () { closeOverdueFeModal(); showOverdueFeOnMap(id); };
+    document.getElementById('overdueFeModal').style.display = 'flex';
+  }
+  function closeOverdueFeModal() { document.getElementById('overdueFeModal').style.display = 'none'; }
+
+  // The campus map is hidden until asked for, so switch it on first, then jump to the unit.
+  function showOverdueFeOnMap(id) {
+    const u = feRegistry.find(x => x.id === id);
+    if (!u) return;
 
     if (activeSafetyTab !== 'fe') switchSafetyTab('fe');
+    setCampusMap(true);
 
     zoomToBuilding(u.loc);
 

@@ -487,7 +487,7 @@ if (vehiclesUrlEdit) {
 async function refreshVehicles() {
   if (document.getElementById('vehicleDetailModal')?.style.display === 'flex') return;
   if (document.getElementById('fuelLogModal')?.style.display === 'flex') return;
-  if (document.querySelector('#vehiclesTableBody .bulk-check:checked')) return; // rows are ticked: don't redraw the table under the user
+  if (document.querySelector('#vehiclesTableBody .bulk-check:checked') || document.querySelector('table.bulk-mode')) return; // rows are ticked: don't redraw the table under the user
 
   try {
     const res = await fetch('<?= base_url('vehicles/refresh') ?>', { headers: csrfHeaders() });

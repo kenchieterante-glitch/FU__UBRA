@@ -432,7 +432,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
       <i class="bi bi-search search-icon"></i>
     </div>
     <div class="fe-toolbar-actions">
-      <?= $alertBtns('in', 'Urgent buildings', 'Buildings not inspected yet') ?>
+      <?= $alertBtns('in', 'Urgent buildings', 'Buildings pending inspection') ?>
       <div class="view-switch" data-map="#inMapPanel" data-list="#inTabs, .in-pane" role="group" aria-label="Choose view"><button type="button" data-view="list" title="List view" aria-label="List view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-list-ul"></i></button><button type="button" data-view="grid" title="Map view" aria-label="Map view"><i class="bi bi-check2 vs-check"></i><i class="bi bi-map"></i></button></div>
       <button type="button" class="filter-btn" id="inMapBtn" onclick="toggleSecMap('in')" title="Map" aria-label="Map" style="display:none"><i class="bi bi-map"></i></button>
       <div class="filter-menu-wrapper">
@@ -442,7 +442,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
           <div class="filter-row">
             <label for="inStatusFilter">Safety status</label>
             <select id="inStatusFilter" onchange="applyInFilters()">
-              <option value="">All</option><option>Safe</option><option>Urgent</option><option>Unsafe</option><option value="Not inspected">Not inspected</option>
+              <option value="">All</option><option>Safe</option><option>Urgent</option><option>Unsafe</option><option value="Pending inspection">Pending inspection</option>
             </select>
           </div>
           <div class="filter-row">
@@ -463,7 +463,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
     <?= $zoomSelect('inMapSVG') ?>
     <div class="fac-map-legend">
       <span><i class="map-pass"></i> Safe</span>
-      <span><i style="background:#ffc400"></i> Yellow alert = not inspected yet</span>
+      <span><i style="background:#ffc400"></i> Yellow alert = pending inspection</span>
       <span><i class="map-alert"></i> Red warning = urgent or unsafe</span>
     </div>
     <div class="fac-map-wrap"><svg id="inMapSVG" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:640px;background:#ffffff;"></svg></div>
@@ -479,7 +479,7 @@ $zoomSelect = function (string $svgId) use ($buildings) {
       <table class="sj-table">
         <thead><tr><th>Building</th><th>Safety Status (<?= esc($inspection_month) ?>)</th><th>Inspected By</th><th>Date</th><th>Remarks</th></tr></thead>
         <tbody id="inBody">
-          <?php foreach ($current as $idx => $i): $st = $i['safety_status'] ?? 'Not inspected'; ?>
+          <?php foreach ($current as $idx => $i): $st = $i['safety_status'] ?? 'Pending inspection'; ?>
             <tr class="in-row" style="cursor:pointer" onclick="showInspDetail(this.dataset.name)" data-idx="<?= (int) $idx ?>" data-name="<?= esc($i['building']) ?>" data-status="<?= esc($st) ?>" data-last="<?= esc((string) $i['inspected_at']) ?>">
               <td><strong><?= esc($i['building']) ?></strong></td>
               <?= fac_cell($st) ?>
@@ -579,7 +579,7 @@ const alertBadges = {
   'Overdue': 'zb-overdue badge-blink', 'Needs Repair': 'zb-overdue badge-blink', 'Missing': 'zb-overdue badge-blink',
   'Defective': 'zb-overdue badge-blink', 'Unsafe': 'zb-overdue badge-blink', 'Urgent': 'zb-overdue badge-blink',
   'Key out over 8 hours': 'zb-overdue badge-blink',
-  'Due in 7 Days': 'zb-needs', 'Not inspected': 'zb-needs', 'Awaiting dispatch': 'zb-needs',
+  'Due in 7 Days': 'zb-needs', 'Not inspected': 'zb-needs', 'Pending inspection': 'zb-needs', 'Awaiting dispatch': 'zb-needs',
 };
 function alertCell(c) {
   const cls = alertBadges[c];
@@ -964,7 +964,7 @@ function showKeyDetail(id) {
 <?php endif; ?>
 
 <?php if ($section === 'inspection'): ?>
-const alertData = { in: { items: <?= $alerts_json ?>, titles: { red: 'Urgent buildings', yellow: 'Buildings not inspected yet' }, cols: ['Building', 'Status', 'Remarks'] } };
+const alertData = { in: { items: <?= $alerts_json ?>, titles: { red: 'Urgent buildings', yellow: 'Buildings pending inspection' }, cols: ['Building', 'Status', 'Remarks'] } };
 initAlertIcons();
 const currentInsp = <?= $current_json ?>;
 renderMapImage('inMapSVG', { imageUrl: '<?= base_url('images/MAP.jpg') ?>', stateByName: <?= $map_state_json ?>, legend: 'building',
@@ -997,7 +997,7 @@ function showInspDetail(name) {
   const r = currentInsp.find(x => x.building === name) || {};
   document.getElementById('inspDetailTitle').textContent = name;
   document.getElementById('inspDetailBody').innerHTML = detailGrid([
-    ['Safety status', r.safety_status || 'Not inspected'], ['Inspected by', r.inspected_by || '—'],
+    ['Safety status', r.safety_status || 'Pending inspection'], ['Inspected by', r.inspected_by || '—'],
     ['Date', r.inspected_at ? r.inspected_at.slice(0, 10) : '—'],
   ]) + `<div style="margin-top:14px;"><div class="text-muted">Remarks</div>${esc(r.remarks || '—')}</div>
     <div style="margin-top:16px;"><button type="button" class="btn-maroon-sm" data-building="${esc(name)}" onclick="openInspForm(this.dataset.building)">Record an inspection for this building</button></div>`;

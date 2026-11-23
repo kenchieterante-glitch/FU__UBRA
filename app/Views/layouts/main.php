@@ -515,13 +515,26 @@
         </span>
         <div>
           <strong>Mr. UBRA</strong>
-          <small>Intelligent Operations Assistant</small>
+          <small><span class="ai-fab-online"></span> Online &middot; Operations assistant</small>
         </div>
       </div>
-      <button type="button" class="ai-fab-close" id="aiFabClose" aria-label="Close chat"><i class="bi bi-x-lg"></i></button>
+      <div class="ai-fab-header-actions">
+        <a href="<?= base_url('ubra') ?>" class="ai-fab-close" title="Open full assistant" aria-label="Open full assistant"><i class="bi bi-arrows-angle-expand"></i></a>
+        <button type="button" class="ai-fab-close" id="aiFabClose" aria-label="Close chat"><i class="bi bi-x-lg"></i></button>
+      </div>
     </div>
     <div class="ai-fab-messages" id="aiFabMessages">
-      <div class="ai-fab-msg ai-fab-msg-bot">Hi, I'm Mr. UBRA. Ask me about vehicles, personnel, tools, or anything operational — I can help.</div>
+      <div class="ai-fab-welcome">
+        <div class="ai-fab-welcome-avatar"><i class="bi bi-robot"></i></div>
+        <strong>Hi, I'm Mr. UBRA</strong>
+        <p>Ask me about vehicles, personnel, tools, or anything operational.</p>
+        <div class="ai-fab-chips">
+          <button type="button" class="ai-fab-chip" data-q="Give me a fleet health check — vehicle status, GPS status, and anything needing attention."><i class="bi bi-truck"></i> Fleet health check</button>
+          <button type="button" class="ai-fab-chip" data-q="Who is on duty today?"><i class="bi bi-people"></i> Who is on duty today?</button>
+          <button type="button" class="ai-fab-chip" data-q="Are there any unassigned personnel right now?"><i class="bi bi-person-dash"></i> Unassigned personnel</button>
+          <button type="button" class="ai-fab-chip" data-q="Generate a brief weekly operations report."><i class="bi bi-file-earmark-text"></i> Weekly report</button>
+        </div>
+      </div>
     </div>
     <form class="ai-fab-input-row" id="aiFabForm">
       <input type="text" id="aiFabInput" placeholder="Ask Mr. UBRA…" autocomplete="off">
@@ -1304,6 +1317,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+  panel.querySelectorAll('.ai-fab-chip').forEach(chip => chip.addEventListener('click', () => {
+    input.value = chip.dataset.q;
+    if (form.requestSubmit) form.requestSubmit(); else form.dispatchEvent(new Event('submit', { cancelable: true }));
+  }));
 
   // Same lightweight markdown rendering as the full /ubra assistant page —
   // so **bold**, bullet lists, etc. actually render instead of showing the

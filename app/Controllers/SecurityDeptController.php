@@ -972,7 +972,7 @@ class SecurityDeptController extends BaseController
         $history = (new SafetyInspectionModel())->orderBy('inspected_at', 'DESC')->findAll();
 
         $cols = ['Building', 'Safety Status', 'Inspected By', 'Date', 'Remarks'];
-        $row = fn($i) => [$i['building'], $i['safety_status'] ?? 'Not inspected', $i['inspected_by'] ?? '—', $this->fmtDate($i['inspected_at']), $i['remarks'] ?? '—'];
+        $row = fn($i) => [$i['building'], $i['safety_status'] ?? 'Pending inspection', $i['inspected_by'] ?? '—', $this->fmtDate($i['inspected_at']), $i['remarks'] ?? '—'];
         $by = fn($s) => array_values(array_filter($current, fn($i) => ($i['safety_status'] ?? null) === $s));
         $notDone = array_values(array_filter($current, fn($i) => $i['safety_status'] === null));
 
@@ -988,7 +988,7 @@ class SecurityDeptController extends BaseController
             if (in_array($s, ['Unsafe', 'Urgent'], true)) {
                 $alerts[] = ['cols' => [$i['building'], $s, $i['remarks'] ?? '—'], 'level' => 'red'];
             } elseif ($s === null) {
-                $alerts[] = ['cols' => [$i['building'], 'Not inspected', '—'], 'level' => 'yellow'];
+                $alerts[] = ['cols' => [$i['building'], 'Pending inspection', '—'], 'level' => 'yellow'];
             }
         }
 
@@ -997,13 +997,13 @@ class SecurityDeptController extends BaseController
                 ['key' => 'i_safe', 'label' => 'Safe', 'value' => count($by('Safe')), 'icon' => 'bi-shield-check', 'tone' => 'green'],
                 ['key' => 'i_attn', 'label' => 'Urgent Buildings', 'value' => count($by('Urgent')), 'icon' => 'bi-exclamation-circle-fill', 'tone' => 'amber'],
                 ['key' => 'i_unsafe', 'label' => 'Unsafe', 'value' => count($by('Unsafe')), 'icon' => 'bi-shield-exclamation', 'tone' => 'red'],
-                ['key' => 'i_none', 'label' => 'Not Inspected Yet', 'value' => count($notDone), 'icon' => 'bi-hourglass', 'tone' => 'gold'],
+                ['key' => 'i_none', 'label' => 'Pending Inspection', 'value' => count($notDone), 'icon' => 'bi-hourglass', 'tone' => 'gold'],
             ],
             'stat_detail' => [
                 'i_safe'   => ['title' => 'Safe Buildings', 'columns' => $cols, 'rows' => array_map($row, $by('Safe'))],
                 'i_attn'   => ['title' => 'Urgent Buildings', 'columns' => $cols, 'rows' => array_map($row, $by('Urgent'))],
                 'i_unsafe' => ['title' => 'Unsafe Buildings', 'columns' => $cols, 'rows' => array_map($row, $by('Unsafe'))],
-                'i_none'   => ['title' => 'Buildings Not Inspected Yet', 'columns' => $cols, 'rows' => array_map($row, $notDone)],
+                'i_none'   => ['title' => 'Buildings Pending Inspection', 'columns' => $cols, 'rows' => array_map($row, $notDone)],
             ],
             'current'          => $current,
             'history'          => $history,

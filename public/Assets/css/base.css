@@ -3135,3 +3135,50 @@ table.gps-table tbody td .vehicle-cell {
 :root[data-theme="dark"] .live-badge { background: var(--green-bg); color: var(--green); }
 :root[data-theme="dark"] .tt-badge.zb-overdue { background: var(--red-bg); color: #ff9e97; }
 :root[data-theme="dark"] .tp-btn, :root[data-theme="dark"] .pg-btn { color: #fff; }
+
+/* ══ Mr. UBRA floating assistant — refreshed look ══ */
+.ai-fab-panel { width: 380px; height: 560px; max-height: calc(100vh - 110px); border-radius: 20px; box-shadow: 0 24px 60px rgba(16,24,40,.28), 0 6px 16px rgba(16,24,40,.12); border: 0; animation: aiFabIn .18s ease-out; }
+@keyframes aiFabIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+.ai-fab-header { padding: 16px 18px; background: linear-gradient(135deg, var(--maroon-deep) 0%, var(--maroon) 60%, #a52a2a 100%); }
+.ai-fab-avatar { width: 40px; height: 40px; background: rgba(255,255,255,.18); box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
+.ai-fab-header-title strong { font-size: 15.5px; letter-spacing: .01em; }
+.ai-fab-header-title small { display: flex; align-items: center; gap: 6px; font-size: 11.5px; opacity: .92; margin-top: 2px; }
+.ai-fab-online { width: 8px; height: 8px; border-radius: 50%; background: #5be37d; box-shadow: 0 0 0 3px rgba(91,227,125,.25); }
+.ai-fab-header-actions { display: flex; align-items: center; gap: 2px; }
+.ai-fab-close { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; text-decoration: none; }
+.ai-fab-close:hover { background: rgba(255,255,255,.15); }
+
+.ai-fab-messages { padding: 18px 16px; gap: 12px; background:
+   radial-gradient(circle at 100% 0%, rgba(128,0,0,.07), transparent 45%),
+   radial-gradient(circle at 0% 100%, rgba(128,0,0,.05), transparent 40%),
+   var(--bg-subtle); scroll-behavior: smooth; }
+.ai-fab-msg { font-size: 13.5px; line-height: 1.55; padding: 10px 14px; border-radius: 16px; max-width: 88%; }
+.ai-fab-msg-bot { border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(16,24,40,.05); border-bottom-left-radius: 4px; }
+.ai-fab-msg-user { background: linear-gradient(135deg, var(--maroon), var(--maroon-dark)); box-shadow: 0 3px 8px rgba(128,0,0,.25); border-bottom-right-radius: 4px; }
+.ai-fab-msg-typing { font-style: normal; padding: 8px 4px; }
+
+/* welcome + suggestions (hidden once the conversation starts) */
+.ai-fab-welcome { margin: auto 0; text-align: center; padding: 6px 4px; }
+.ai-fab-welcome-avatar { width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 18px; background: linear-gradient(135deg, var(--maroon), var(--maroon-deep)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 8px 18px rgba(128,0,0,.3); }
+.ai-fab-welcome strong { display: block; font-size: 17px; color: var(--text); }
+.ai-fab-welcome p { margin: 4px 0 16px; font-size: 13px; color: var(--text); }
+.ai-fab-chips { display: grid; gap: 8px; text-align: left; }
+.ai-fab-chip { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color .15s, background .15s, transform .1s; }
+.ai-fab-chip i { width: 26px; height: 26px; border-radius: 8px; background: rgba(128,0,0,.09); color: var(--maroon); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; flex: 0 0 auto; }
+:root[data-theme="dark"] .ai-fab-chip i { background: rgba(255,255,255,.1); color: #f1c6c6; }
+.ai-fab-chip:hover { border-color: var(--maroon); background: rgba(128,0,0,.05); transform: translateY(-1px); }
+.ai-fab-messages:has(.ai-fab-msg) .ai-fab-welcome { display: none; }
+
+/* composer */
+.ai-fab-input-row { padding: 12px 14px; gap: 10px; background: var(--card); border-top: 1px solid var(--line); }
+.ai-fab-input-row input { height: 42px; padding: 0 16px; border-radius: 999px; background: var(--bg-subtle); border: 1px solid var(--line); font-size: 13.5px; color: var(--text); }
+.ai-fab-input-row input:focus { background: var(--card); border-color: var(--maroon); box-shadow: 0 0 0 3px rgba(128,0,0,.12); }
+.ai-fab-input-row button { width: 42px; height: 42px; box-shadow: 0 3px 8px rgba(128,0,0,.28); }
+.ai-fab-fullview { padding: 9px; background: var(--bg-subtle); font-weight: 600; }
+@media (max-width: 480px) { .ai-fab-panel { width: calc(100vw - 24px); height: 70vh; right: -8px; } }
+.ai-fab-welcome-avatar { width: 46px; height: 46px; margin-bottom: 8px; font-size: 22px; border-radius: 14px; }
+.ai-fab-welcome strong { font-size: 16px; }
+.ai-fab-welcome p { margin: 2px 0 12px; font-size: 12.5px; }
+.ai-fab-chips { gap: 6px; }
+.ai-fab-chip { padding: 7px 12px; }
+.ai-fab-messages { padding: 14px 16px; }

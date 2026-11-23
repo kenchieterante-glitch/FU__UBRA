@@ -248,7 +248,7 @@ async function refreshBorrowing() {
   if (document.hidden || borrowingRefreshing) return;
   if (Array.from(document.querySelectorAll('.modal')).some(m => m.style.display === 'flex')) return;
   if (document.getElementById('borrowFilterPopup')?.classList.contains('visible')) return;
-  if (document.querySelector('#borrowingTable .bulk-check:checked')) return; // rows are ticked: don't redraw the table under the user
+  if (document.querySelector('#borrowingTable .bulk-check:checked') || document.querySelector('table.bulk-mode')) return; // rows are ticked: don't redraw the table under the user
 
   borrowingRefreshing = true;
   try {

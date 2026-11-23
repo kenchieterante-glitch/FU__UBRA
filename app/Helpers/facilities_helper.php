@@ -33,6 +33,7 @@ if (!function_exists('fac_cell')) {
             'Due Soon'        => 'tt-badge zb-needs',
             'Expired'         => 'tt-badge zb-overdue badge-blink',
             'Not inspected'   => 'tt-badge zb-needs',
+            'Pending inspection' => 'tt-badge zb-needs',
             'Key Out'         => 'tt-badge zb-needs',
             'Vehicle Out'     => 'tt-badge zb-needs',
             'Awaiting Dispatch' => 'tt-badge zb-needs',
